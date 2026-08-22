@@ -1,0 +1,1198 @@
+---
+/**
+ * CommandPalette - ⌘K surface. Markup only; behaviour in palette.ts.
+ * Opened via keyboard (⌘K / /); the homepage text hint is server-rendered
+ * in index.astro (hidden without JS via the data-theme gate below).
+ */
+import Icon from "./Icon.astro";
+---
+
+<div
+  id="command-palette"
+  class="palette"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Command Palette"
+  aria-hidden="true"
+  hidden
+>
+  <div class="palette-backdrop" aria-hidden="true"></div>
+  <div class="palette-panel" tabindex="-1">
+    <div class="palette-chrome">
+      <button type="button" class="palette-back" aria-label="Back" aria-keyshortcuts="Escape" hidden>
+        <Icon name="arrow-left" size={17} class="palette-svg" />
+      </button>
+      <span id="palette-mobile-title" class="palette-mobile-title" tabindex="-1">Commands</span>
+      <div id="palette-query-slot-desktop" class="palette-query-slot">
+        <div id="palette-query-shell" class="palette-query-shell">
+          <label class="palette-search" for="palette-input">
+            <span class="palette-search-icon-box" aria-hidden="true">
+              <Icon name="search" size={18} class="palette-search-ico" />
+            </span>
+            <input
+              id="palette-input"
+              type="search"
+              autocomplete="off"
+              spellcheck="false"
+              enterkeyhint="search"
+              placeholder="Search or run a command"
+              role="combobox"
+              aria-expanded="true"
+              aria-controls="palette-list"
+              aria-autocomplete="list"
+            />
+          </label>
+        </div>
+      </div>
+      <div id="palette-context-shell" class="palette-context-shell" hidden>
+        <span id="palette-context-title" class="palette-context-title" aria-live="polite"></span>
+      </div>
+      <button type="button" class="palette-close" aria-label="Close command palette" aria-keyshortcuts="Escape">
+        <Icon name="close" size={17} class="palette-svg" />
+      </button>
+    </div>
+    <div class="palette-list-wrap">
+      <div id="palette-list" class="palette-list" role="listbox" aria-label="Results" tabindex="-1"></div>
+    </div>
+    <div id="palette-mobile-dock" class="palette-mobile-dock">
+      <div class="palette-mobile-query-stage">
+        <div class="palette-mobile-input-area">
+          <button id="palette-mobile-search-launch" type="button" class="palette-mobile-search-launch">
+            <Icon name="search" size={17} class="palette-search-ico" />
+            <span class="palette-mobile-search-prompt">Search site and commands</span>
+          </button>
+          <div id="palette-query-slot-mobile" class="palette-query-slot palette-query-slot-mobile"></div>
+        </div>
+        <button id="palette-mobile-close" type="button" class="palette-mobile-close" aria-label="Close command palette">
+          <Icon name="close" size={15} class="palette-svg" />
+        </button>
+      </div>
+    </div>
+    <div id="palette-footer" class="palette-footer" aria-hidden="true">
+      <span id="palette-count" class="palette-count"></span>
+      <div id="palette-footer-hints" class="palette-footer-hints"></div>
+    </div>
+    <div id="palette-status" class="visually-hidden" role="status" aria-live="polite"></div>
+  </div>
+</div>
+
+<script>
+  let paletteLoaded = false;
+  let paletteLoading: Promise<typeof import("../scripts/palette")> | null = null;
+
+  function loadPaletteModule() {
+    if (!paletteLoading) {
+      paletteLoading = import("../scripts/palette").then((m) => {
+        paletteLoaded = true;
+        return m;
+      });
+    }
+    return paletteLoading;
+  }
+
+  function open(mode?: "directory" | "search" | "help", instant?: boolean) {
+    loadPaletteModule().then((m) => {
+      m.openPalette(mode, instant);
+    });
+  }
+
+  document.addEventListener(
+    "pointerover",
+    (e) => {
+      if (paletteLoaded) return;
+      if ((e.target as HTMLElement | null)?.closest(".palette-trigger, .header-palette-trigger, [data-palette-entry], .palette-home-hint")) {
+        loadPaletteModule();
+      }
+    },
+    { passive: true },
+  );
+
+  document.addEventListener(
+    "click",
+    (event) => {
+      if (paletteLoaded) return;
+      const trigger = (event.target as HTMLElement | null)?.closest<HTMLElement>(
+        ".palette-trigger, .header-palette-trigger, [data-palette-entry], .palette-home-hint",
+      );
+      if (!trigger) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      const isMobile = window.matchMedia("(max-width: 38rem)").matches;
+      const requestedMode =
+        (trigger as HTMLElement).dataset?.paletteEntry === "directory" && isMobile
+          ? "directory"
+          : "search";
+      open(requestedMode);
+    },
+    { capture: true },
+  );
+
+  document.addEventListener("keydown", (e) => {
+    if (paletteLoaded) return;
+    if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
+      e.preventDefault();
+      open("search", true);
+      return;
+    }
+    const tag = (e.target as HTMLElement | null)?.tagName;
+    const isInput =
+      tag === "INPUT" ||
+      tag === "TEXTAREA" ||
+      (e.target as HTMLElement | null)?.isContentEditable;
+    if (isInput) return;
+    if (e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      e.preventDefault();
+      open("search", true);
+      return;
+    }
+    if (e.key === "?" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      e.preventDefault();
+      open("help", true);
+      return;
+    }
+  });
+
+  import type { PaletteOpenMode } from "../scripts/palette";
+
+  declare global {
+    interface Window {
+      __openPalette?: (mode?: PaletteOpenMode, instant?: boolean) => void;
+    }
+  }
+  window.__openPalette = open;
+</script>
+
+<style is:global>
+  .palette {
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--z-overlay) + 5);
+    display: grid;
+    place-items: start center;
+    width: 100vw;
+    max-inline-size: 100vw;
+    box-sizing: border-box;
+    padding: clamp(4.5rem, 11vh, 7.5rem) var(--gutter) 2rem;
+    pointer-events: none;
+  }
+  .palette.is-open {
+    pointer-events: auto;
+  }
+  .palette[hidden] {
+    display: none;
+  }
+
+  :root[data-palette="open"] body > :not(.site-chrome) {
+    pointer-events: none;
+  }
+
+  /* the backdrop owns its own blur/tint transition. Fading the whole
+     palette via opacity would make it a backdrop root: the blur below
+     would sample nothing until opacity reached 1 and then pop in. */
+  .palette-backdrop {
+    position: absolute;
+    inset: 0;
+    background: transparent;
+    -webkit-backdrop-filter: blur(0px) saturate(110%);
+    backdrop-filter: blur(0px) saturate(110%);
+    transition:
+      background-color 150ms var(--ease),
+      backdrop-filter 150ms var(--ease),
+      -webkit-backdrop-filter 150ms var(--ease);
+  }
+  .palette.is-open .palette-backdrop {
+    background: color-mix(in oklch, var(--ink) 23%, transparent);
+    -webkit-backdrop-filter: blur(4px) saturate(110%);
+    backdrop-filter: blur(4px) saturate(110%);
+    transition-duration: 250ms;
+  }
+  .palette.is-instant .palette-backdrop {
+    transition: none;
+  }
+
+  .palette-panel {
+    position: relative;
+    width: min(40rem, 100%);
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    max-height: min(38rem, calc(100dvh - 7rem));
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--r-5);
+    border: 1px solid color-mix(in oklch, var(--ink) 13%, transparent);
+    background: color-mix(in oklch, var(--canvas) 94%, transparent);
+    -webkit-backdrop-filter: blur(24px) saturate(130%);
+    backdrop-filter: blur(24px) saturate(130%);
+    box-shadow: var(--shadow-3);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+    transform-origin: top center;
+    filter: blur(2px);
+    will-change: opacity, transform, filter;
+    transition:
+      opacity 150ms var(--ease),
+      transform 150ms var(--ease),
+      filter 150ms var(--ease);
+  }
+  .palette.is-open .palette-panel {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+    transition:
+      opacity 250ms var(--ease),
+      transform 250ms var(--ease),
+      filter 250ms var(--ease);
+  }
+  .palette.is-instant .palette-panel {
+    transition: none;
+  }
+
+  .palette-chrome {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 60px;
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid color-mix(in oklch, var(--ink) 8%, transparent);
+  }
+
+  .palette-query-slot {
+    display: flex;
+    flex: 1;
+    min-inline-size: 0;
+  }
+
+  .palette-mobile-title {
+    display: none;
+  }
+
+  .palette-back {
+    appearance: none;
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .palette-back:hover,
+  .palette-back:focus-visible {
+    color: var(--ink);
+    background: color-mix(in oklch, var(--ink) 7%, transparent);
+  }
+
+  .palette-back[hidden],
+  .palette-context-shell[hidden] {
+    display: none;
+  }
+
+  .palette-query-shell,
+  .palette-context-shell {
+    flex: 1;
+    min-inline-size: 0;
+  }
+
+  .palette-search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+
+  .palette-search-icon-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .palette-search-ico {
+    flex-shrink: 0;
+    color: var(--faint);
+    width: 18px;
+    height: 18px;
+  }
+
+  .palette-context-shell {
+    display: flex;
+    align-items: center;
+  }
+
+  .palette-context-title {
+    display: block;
+    max-inline-size: 100%;
+    overflow-wrap: anywhere;
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    line-height: 1.3;
+    white-space: normal;
+  }
+
+  #palette-input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--text-md);
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    outline: none;
+  }
+  #palette-input::placeholder {
+    color: var(--faint);
+  }
+
+  #palette-input::-webkit-search-decoration,
+  #palette-input::-webkit-search-cancel-button,
+  #palette-input::-webkit-search-results-button,
+  #palette-input::-webkit-search-results-decoration {
+    appearance: none;
+  }
+
+  .palette-close {
+    appearance: none;
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--faint);
+    cursor: pointer;
+    transition:
+      color var(--t-color),
+      border-color var(--t-color),
+      transform var(--dur-1) var(--ease);
+  }
+  .palette-close:hover {
+    color: var(--ink);
+    background: color-mix(in oklch, var(--ink) 7%, transparent);
+    border-color: color-mix(in oklch, var(--ink) 8%, transparent);
+  }
+  .palette-close:focus-visible {
+    color: var(--ink);
+    background: color-mix(in oklch, var(--ink) 7%, transparent);
+  }
+  .palette-close:active {
+    transform: scale(0.96);
+  }
+
+  .palette-list-wrap {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .palette-list-wrap::before,
+  .palette-list-wrap::after {
+    position: absolute;
+    z-index: 1;
+    left: 0;
+    right: 0;
+    height: 0.8rem;
+    pointer-events: none;
+    content: "";
+    opacity: 0.7;
+  }
+
+  .palette-list-wrap::before {
+    top: 0;
+    background: linear-gradient(var(--canvas), transparent);
+  }
+
+  .palette-list-wrap::after {
+    bottom: 0;
+    background: linear-gradient(transparent, var(--canvas));
+  }
+
+  .palette-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: var(--space-2) var(--space-2) var(--space-3);
+    overscroll-behavior: contain;
+    scrollbar-color: color-mix(in oklch, var(--ink) 24%, transparent) transparent;
+    scrollbar-width: thin;
+  }
+
+  .palette-mobile-dock {
+    display: none;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  .palette-group {
+    padding: var(--space-4) var(--space-2) var(--space-2);
+    color: var(--faint);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .palette-group:first-child {
+    padding-top: var(--space-2);
+  }
+
+  .palette-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 3.25rem;
+    min-inline-size: 0;
+    margin-block: 2px;
+    padding: 0.55rem var(--space-3);
+    border-radius: var(--r-4);
+    cursor: pointer;
+    color: var(--ink);
+    border: 1px solid transparent;
+    background: transparent;
+    transition:
+      background-color var(--t-color),
+      border-color var(--t-color),
+      box-shadow var(--t-color),
+      transform var(--t-move);
+  }
+
+  .palette-item[aria-selected="true"] {
+    background: color-mix(in oklch, var(--ink) 6.5%, var(--canvas));
+    border-color: color-mix(in oklch, var(--ink) 12%, transparent);
+    box-shadow:
+      0 2px 8px color-mix(in oklch, var(--ink) 6%, transparent),
+      inset 0 1px 0 color-mix(in oklch, var(--color-1) 22%, transparent);
+    transform: translateY(-1px);
+  }
+
+  .palette-item[aria-selected="true"] .palette-icon {
+    background: color-mix(in oklch, var(--ink) 9%, transparent);
+    color: var(--ink);
+  }
+
+  .palette-item[aria-selected="true"] .palette-label-text {
+    font-weight: var(--font-semibold);
+  }
+
+  .palette-item[aria-selected="true"] .palette-subtitle {
+    color: color-mix(in oklch, var(--ink) 72%, transparent);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .palette-item:hover {
+      background: color-mix(in oklch, var(--ink) 4%, transparent);
+      border-color: color-mix(in oklch, var(--ink) 8%, transparent);
+      transform: translateY(-1px);
+    }
+
+    .palette-item:hover .palette-icon {
+      background: color-mix(in oklch, var(--ink) 6%, transparent);
+      color: var(--ink);
+    }
+
+    .palette-item[aria-selected="true"]:hover {
+      background: color-mix(in oklch, var(--ink) 7.5%, var(--canvas));
+      border-color: color-mix(in oklch, var(--ink) 14%, transparent);
+      box-shadow:
+        0 4px 12px color-mix(in oklch, var(--ink) 8%, transparent),
+        inset 0 1px 0 color-mix(in oklch, var(--color-1) 26%, transparent);
+    }
+  }
+
+  .palette-item:active {
+    background: color-mix(in oklch, var(--ink) 12%, transparent);
+    transform: translateY(0) scale(0.985);
+    transition: background-color var(--t-color), transform var(--dur-1) var(--ease);
+  }
+
+  .palette-item-main {
+    flex: 1;
+    min-inline-size: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .palette-icon {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--r-3);
+    background: color-mix(in oklch, var(--ink) 3%, transparent);
+    color: var(--muted);
+    transition:
+      background-color var(--t-color),
+      color var(--t-color),
+      transform var(--t-move);
+  }
+
+  .palette-icon svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .palette-lucide,
+  .palette-svg {
+    display: inline-block;
+    width: 17px;
+    height: 17px;
+    flex: 0 0 auto;
+  }
+
+  .palette-brand-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+  }
+
+  .palette-icon .palette-brand-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .palette-search-ico {
+    width: 18px;
+    height: 18px;
+  }
+
+  .palette-label {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+    font-weight: var(--font-medium);
+    font-size: var(--text-sm);
+    line-height: 1.3;
+    transition: color var(--t-color);
+  }
+
+  .palette-label-text {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+    transition: font-weight var(--t-color);
+  }
+
+  .palette-badge {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    min-height: 1.15rem;
+    padding: 0.12rem 0.55rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-pill);
+    background: color-mix(in oklch, var(--ink) 4%, transparent);
+    color: var(--muted);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    text-transform: uppercase;
+    transition:
+      background-color var(--t-color),
+      border-color var(--t-color),
+      color var(--t-color);
+  }
+
+  .palette-item[aria-selected="true"] .palette-badge {
+    border-color: var(--rule-strong);
+    background: color-mix(in oklch, var(--ink) 8%, transparent);
+    color: var(--ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .palette-item:hover .palette-badge {
+      border-color: var(--rule-strong);
+      background: color-mix(in oklch, var(--ink) 8%, transparent);
+      color: var(--ink);
+    }
+  }
+
+  .palette-subtitle {
+    display: block;
+    max-inline-size: 100%;
+    color: var(--muted);
+    font-size: var(--text-xs);
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    transition: color var(--t-color);
+  }
+
+  .palette-value {
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .palette-excerpt {
+    font-size: var(--text-xs);
+    color: var(--muted);
+    line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .palette-excerpt mark {
+    background: color-mix(in oklch, var(--color-5) 35%, transparent);
+    color: inherit;
+    border-radius: var(--r-pill);
+    padding: 0 0.3em;
+  }
+
+  .palette-kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-height: 1.5rem;
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: 0.68rem;
+    color: var(--faint);
+    border: 1px solid var(--rule);
+    border-radius: var(--r-pill);
+    padding: 0.1rem 0.45rem;
+    transition:
+      color var(--t-color),
+      border-color var(--t-color),
+      background-color var(--t-color);
+  }
+
+  .palette-item[aria-selected="true"] .palette-kbd {
+    color: var(--ink);
+    border-color: var(--rule-strong);
+    background: color-mix(in oklch, var(--ink) 4%, transparent);
+  }
+
+  .palette-meta {
+    flex: 0 0 auto;
+    max-inline-size: 8rem;
+    overflow-wrap: anywhere;
+    color: var(--faint);
+    font-size: var(--text-xs);
+    white-space: normal;
+  }
+
+  .palette-external {
+    display: inline-grid;
+    place-items: center;
+  }
+
+  .palette-external svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .palette-external .palette-lucide,
+  .palette-external .palette-svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .palette-empty {
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--faint);
+    font-size: var(--text-sm);
+  }
+
+  .palette-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: 2.75rem;
+    padding: var(--space-2) var(--space-3);
+    border-top: 1px solid color-mix(in oklch, var(--ink) 8%, transparent);
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  .palette-count {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .palette-footer-hints {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-4);
+    min-width: 0;
+  }
+
+  .palette-footer-hints span {
+    white-space: nowrap;
+  }
+
+  .palette-footer kbd {
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: 0.68rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--r-pill);
+    padding: 0.08rem 0.45rem;
+    color: var(--muted);
+  }
+
+  .palette-home-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 1.25rem;
+    font-size: var(--text-sm);
+    color: var(--faint);
+    text-decoration-color: transparent;
+    cursor: pointer;
+    transition: color var(--t-color);
+  }
+  .palette-home-hint:hover,
+  .palette-home-hint:focus-visible {
+    color: var(--ink);
+    text-decoration-color: var(--ink);
+  }
+  .palette-home-hint kbd {
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: 0.78em;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--r-pill);
+    padding: 0.12em 0.5em;
+    color: var(--muted);
+  }
+
+  /* no-JS: the boot script is the only thing that sets data-theme, so this
+     hides the server-rendered hint from visitors who can never open it */
+  :root:not([data-theme]) .palette-home-hint {
+    display: none;
+  }
+
+  /* joins the hero line cascade as a 6th slot (after line 5's 250ms).
+     Gated on data-motion; static with reduced motion. */
+  :root[data-motion="on"]:not([data-intro-animated="true"]) .palette-home-hint {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: palette-hint-in 620ms var(--ease-spring) both;
+    animation-delay: 300ms;
+  }
+  :root[data-intro-animated="true"] .palette-home-hint {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  @keyframes palette-hint-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root[data-motion="on"] .palette-home-hint {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+  }
+
+  @media (max-width: 38rem) {
+    .palette-home-hint {
+      display: none;
+    }
+
+    .palette {
+      place-items: end center;
+      padding: 0;
+      top: var(--palette-visual-top, 0px);
+      bottom: auto;
+      block-size: var(--palette-visual-height, 100dvh);
+    }
+    .palette-panel {
+      width: 100%;
+      max-height: min(92dvh, 42rem);
+      block-size: min(92dvh, 42rem);
+      border-radius: var(--r-5) var(--r-5) 0 0;
+      transform: translateY(100%);
+      padding-bottom: 0;
+    }
+    .palette.is-open .palette-panel {
+      transform: none;
+    }
+
+    .palette-chrome {
+      min-height: 56px;
+      padding: var(--space-2) var(--mobile-gutter-end) var(--space-2) var(--mobile-gutter-start);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      border-bottom: 1px solid color-mix(in oklch, var(--ink) 8%, transparent);
+    }
+
+    .palette-chrome > .palette-close,
+    .palette-chrome > .palette-query-slot {
+      display: none !important;
+    }
+
+    .palette-chrome > .palette-back {
+      display: inline-grid;
+      width: 2.25rem;
+      height: 2.25rem;
+    }
+
+    .palette-chrome > .palette-back[hidden] {
+      display: none !important;
+    }
+
+    .palette-mobile-title {
+      display: block;
+      min-inline-size: 0;
+      max-inline-size: 100%;
+      color: var(--ink);
+      font-size: var(--text-md);
+      font-weight: var(--font-medium);
+      line-height: 1.3;
+      overflow-wrap: anywhere;
+    }
+
+    .palette-mobile-title[hidden] {
+      display: none !important;
+    }
+
+    .palette-chrome > .palette-context-shell {
+      display: flex;
+      align-items: center;
+      min-inline-size: 0;
+      flex: 1;
+    }
+
+    .palette-chrome > .palette-context-shell[hidden] {
+      display: none !important;
+    }
+
+    .palette-footer {
+      display: none;
+    }
+
+    .palette-kbd {
+      display: none !important;
+    }
+
+    .palette-list {
+      padding-inline: var(--mobile-gutter-start) var(--mobile-gutter-end);
+      padding-bottom: var(--space-5);
+      scroll-padding-block: var(--space-3);
+    }
+
+    .palette-mobile-dock {
+      position: relative;
+      isolation: isolate;
+      display: flex;
+      align-items: center;
+      padding: var(--space-3) var(--mobile-gutter-end) calc(var(--space-3) + env(safe-area-inset-bottom, 0px)) var(--mobile-gutter-start);
+      background: linear-gradient(to top, var(--canvas) 85%, color-mix(in oklch, var(--canvas) 85%, transparent) 95%, transparent);
+      box-sizing: border-box;
+      min-inline-size: 0;
+      max-inline-size: 100%;
+    }
+
+    .palette-mobile-query-stage {
+      position: relative;
+      display: flex;
+      align-items: center;
+      flex: 1;
+      min-inline-size: 0;
+      max-inline-size: 100%;
+      height: 52px;
+      min-height: 52px;
+      padding: 0 0.375rem 0 0.85rem;
+      border: 1px solid var(--chrome-surface-border);
+      border-radius: var(--r-pill);
+      background: color-mix(in oklch, var(--canvas) 94%, var(--ink));
+      box-shadow: var(--shadow-2), var(--shadow-inset);
+      box-sizing: border-box;
+      overflow: hidden;
+      transition:
+        border-color var(--t-color),
+        box-shadow var(--t-color);
+    }
+
+    .palette[data-palette-mode="search"] .palette-mobile-query-stage {
+      border-color: color-mix(in oklch, var(--ink) 18%, transparent);
+    }
+
+    .palette-mobile-input-area {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr;
+      flex: 1;
+      min-inline-size: 0;
+      height: 100%;
+      align-items: center;
+    }
+
+    .palette-mobile-search-launch {
+      position: relative;
+      z-index: 1;
+      grid-area: 1 / 1;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      inline-size: 100%;
+      height: 100%;
+      padding: 0;
+      border: 0;
+      border-radius: var(--r-pill);
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+      text-align: start;
+      cursor: pointer;
+      transition:
+        opacity var(--dur-2) var(--ease),
+        transform var(--dur-2) var(--ease);
+    }
+
+    .palette-mobile-search-launch .palette-search-ico {
+      flex-shrink: 0;
+      color: var(--faint);
+      width: 17px;
+      height: 17px;
+      transition: color var(--t-color);
+    }
+
+    .palette-mobile-search-launch:hover .palette-search-ico,
+    .palette-mobile-search-launch:focus-visible .palette-search-ico {
+      color: var(--ink);
+    }
+
+    .palette-mobile-search-prompt {
+      flex: 1;
+      min-inline-size: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--muted);
+      transition: color var(--t-color);
+    }
+
+    .palette-mobile-search-launch:hover .palette-mobile-search-prompt,
+    .palette-mobile-search-launch:focus-visible .palette-mobile-search-prompt {
+      color: var(--ink);
+    }
+
+    .palette[data-palette-mode="search"] .palette-mobile-search-launch {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(4px);
+    }
+
+    .palette-query-slot-mobile {
+      position: relative;
+      z-index: 1;
+      grid-area: 1 / 1;
+      display: flex;
+      align-items: center;
+      inline-size: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .palette-mobile-dock .palette-query-shell {
+      inline-size: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(4px);
+      transition:
+        opacity var(--dur-2) var(--ease),
+        transform var(--dur-2) var(--ease);
+    }
+
+    .palette[data-palette-mode="search"] .palette-mobile-dock .palette-query-shell {
+      opacity: 1;
+      pointer-events: auto;
+      transform: none;
+    }
+
+    .palette-mobile-dock .palette-search {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      inline-size: 100%;
+      height: 100%;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    .palette-mobile-dock .palette-search-icon-box {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: auto;
+      height: auto;
+      background: transparent;
+    }
+
+    .palette-mobile-dock .palette-search-ico {
+      width: 17px;
+      height: 17px;
+      color: var(--faint);
+    }
+
+    .palette-mobile-dock #palette-input {
+      flex: 1;
+      min-inline-size: 0;
+      height: 100%;
+      padding: 0;
+      font-size: var(--text-sm);
+      line-height: 1.3;
+      color: var(--ink);
+    }
+
+    .palette-mobile-close {
+      appearance: none;
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 38px;
+      inline-size: 38px;
+      block-size: 38px;
+      margin-inline-start: var(--space-1);
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: color-mix(in oklch, var(--ink) 6%, transparent);
+      color: var(--muted);
+      cursor: pointer;
+      transition:
+        color var(--t-color),
+        background-color var(--t-color),
+        transform var(--dur-1) var(--ease-out);
+    }
+
+    .palette-mobile-close[hidden] {
+      display: none;
+    }
+
+    .palette-mobile-close:hover,
+    .palette-mobile-close:focus-visible {
+      color: var(--ink);
+      background: color-mix(in oklch, var(--ink) 10%, transparent);
+    }
+
+    .palette-mobile-close:active {
+      transform: scale(0.94);
+      background: color-mix(in oklch, var(--ink) 14%, transparent);
+      color: var(--ink);
+      transition-duration: var(--dur-1);
+    }
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .palette-backdrop {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      background: color-mix(in oklch, var(--ink) 45%, transparent);
+      transition: background-color 220ms var(--ease);
+    }
+
+    .palette-panel {
+      background: var(--canvas);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .palette-item,
+    .palette-item[aria-selected="true"],
+    .palette-item:hover,
+    .palette-item:active {
+      transform: none;
+    }
+
+    .palette-icon,
+    .palette-item[aria-selected="true"] .palette-icon,
+    .palette-item:hover .palette-icon {
+      transform: none;
+    }
+
+    .palette-panel {
+      transform: none;
+      transition: opacity 160ms var(--ease);
+    }
+
+    .palette-mobile-search-launch,
+    .palette-mobile-dock .palette-query-shell,
+    .palette-mobile-close {
+      transform: none;
+      transition: opacity var(--t-color), background-color var(--t-color), color var(--t-color);
+    }
+
+    .palette.is-open .palette-panel {
+      transform: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .palette-panel {
+      border: 2px solid CanvasText;
+      background: Canvas;
+      box-shadow: none;
+    }
+    .palette-item[aria-selected="true"] {
+      outline: 2px solid Highlight;
+      box-shadow: none;
+    }
+    .palette-backdrop {
+      background: CanvasText;
+      opacity: 0.35;
+    }
+
+    .palette-mobile-query-stage {
+      border: 2px solid CanvasText;
+      background: Canvas;
+      box-shadow: none;
+    }
+    .palette-mobile-close {
+      border: 1px solid CanvasText;
+    }
+
+    .palette-list-wrap::before,
+    .palette-list-wrap::after {
+      display: none;
+    }
+  }
+
+  @media print {
+    .palette,
+    .palette-home-hint {
+      display: none !important;
+    }
+  }
+</style>
