@@ -1,0 +1,15 @@
+{
+  "/": "/index.md",
+  "/ai/": "/ai.md",
+  "/faq/": "/faq.md",
+  "/work/": "/work.md",
+  "/library/": "/library.md",
+  "/links/": "/links.md",
+  "/more/": "/more.md",
+  "/colophon/": "/colophon.md",
+  "/design/": "/design.md",
+  "/about/": "/about.md",
+  "/contact/": "/contact.md",
+  "/privacy/": "/privacy.md",
+  "/developers/": "/developers.md"
+}
