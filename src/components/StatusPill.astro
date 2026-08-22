@@ -1,0 +1,29 @@
+---
+interface Props {
+  label: string;
+  class?: string;
+}
+
+const { label, class: className } = Astro.props;
+---
+
+<span class:list={["status-pill", className]}>{label}</span>
+
+<style>
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 1.15rem;
+    padding-inline: 0.45rem;
+    border-radius: var(--r-pill);
+    background: color-mix(in oklch, var(--ink) 5.5%, transparent);
+    color: var(--muted);
+    font-size: 0.625rem;
+    font-weight: var(--font-medium);
+    font-family: var(--font-mono);
+    letter-spacing: 0.03em;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+</style>

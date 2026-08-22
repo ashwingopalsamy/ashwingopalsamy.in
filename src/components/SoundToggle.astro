@@ -1,0 +1,124 @@
+---
+/**
+ * SoundToggle
+ *
+ * Mutes or enables the interaction sound accents (sound.ts). Sound is on
+ * by default. Multiple instances (footer + palette actions) stay in sync via
+ * class query + onSoundChange. With no JS the button is inert; the default
+ * (on) matches the SSR-rendered label below, and the client corrects the
+ * state from the stored preference on load.
+ */
+import { SOUND_DEFAULT } from "../scripts/sound";
+import Icon from "./Icon.astro";
+---
+
+<button
+  type="button"
+  class="sound-toggle"
+  aria-label={SOUND_DEFAULT ? "Turn interaction sounds off" : "Turn interaction sounds on"}
+  aria-pressed={SOUND_DEFAULT ? "true" : "false"}
+>
+  <span class="st-on" aria-hidden="true"><Icon name="sound-on" size={18} /></span>
+  <span class="st-off" aria-hidden="true"><Icon name="sound-off" size={18} /></span>
+</button>
+
+<style>
+  .sound-toggle {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    margin: -4px 0;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 50%;
+    user-select: none;
+    transition:
+      color var(--t-color),
+      background-color var(--t-color),
+      transform var(--t-move);
+  }
+
+  .sound-toggle::before {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+  }
+
+  .sound-toggle:hover,
+  .sound-toggle:focus-visible {
+    color: var(--ink);
+    background: color-mix(in oklch, var(--ink) 6%, transparent);
+  }
+
+  .sound-toggle:active {
+    transform: scale(0.96);
+    transition: transform 90ms var(--ease);
+  }
+
+  .st-on,
+  .st-off {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    transition:
+      opacity 200ms var(--ease),
+      transform var(--dur-2) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .sound-toggle:hover .st-on,
+    .sound-toggle:hover .st-off {
+      transform: scale(1.1);
+    }
+  }
+
+  .st-on {
+    opacity: 1;
+  }
+  .st-off {
+    opacity: 0;
+  }
+
+  .sound-toggle[aria-pressed="false"] .st-on {
+    opacity: 0;
+  }
+  .sound-toggle[aria-pressed="false"] .st-off {
+    opacity: 1;
+  }
+</style>
+
+<script>
+  import { isSoundEnabled, setSoundEnabled, onSoundChange } from "../scripts/sound";
+
+  function reflect(enabled: boolean) {
+    document.querySelectorAll<HTMLButtonElement>(".sound-toggle").forEach((btn) => {
+      btn.setAttribute("aria-pressed", String(enabled));
+      btn.setAttribute(
+        "aria-label",
+        enabled ? "Turn interaction sounds off" : "Turn interaction sounds on",
+      );
+    });
+  }
+
+  function init() {
+    document.querySelectorAll<HTMLButtonElement>(".sound-toggle").forEach((btn) => {
+      if (btn.dataset.enhanced) return;
+      btn.dataset.enhanced = "true";
+      btn.addEventListener("click", () => {
+        setSoundEnabled(!isSoundEnabled());
+      });
+    });
+    reflect(isSoundEnabled());
+  }
+
+  onSoundChange(reflect);
+
+  init();
+  document.addEventListener("astro:page-load", init);
+</script>

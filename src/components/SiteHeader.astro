@@ -1,0 +1,429 @@
+---
+import Icon from "./Icon.astro";
+import {
+  activeNavigationIndex,
+  desktopNavigation,
+  isNavigationItemActive,
+  mobileNavigation,
+  resolveBackTarget,
+} from "../data/navigation";
+
+const path = Astro.url.pathname;
+const desktopActiveIndex = activeNavigationIndex(path, desktopNavigation);
+const mobileActiveIndex = activeNavigationIndex(path, mobileNavigation);
+const backTarget = resolveBackTarget(path);
+---
+
+<header class="site-header">
+  <a
+    href={backTarget.href}
+    class="wordmark logo-control nav-glass chrome-surface"
+    aria-label={backTarget.label}
+    data-state={backTarget.isHome ? "home" : "back"}
+  >
+    <span class="logo-mark" aria-hidden="true">
+      <svg
+        viewBox="0 0 1080 1080"
+        width="28"
+        height="28"
+        fill="currentColor"
+        class="wordmark-logo"
+        aria-hidden="true"
+      >
+        <path d="M376.935 380.038h74.012v287.088h-74.012V633.25q-33.276 41.915-93.518 41.915-57.374 0-98.682-43.638Q144 587.316 144 523.582t40.735-107.37Q226.043 372 283.417 372q60.242 0 93.518 41.915zm-136.548 202.11q22.376 22.393 56.799 22.393 34.425 0 56.8-22.393 22.949-22.966 22.949-58.566t-22.949-57.991q-22.375-22.967-56.8-22.967t-56.799 22.967q-22.376 22.392-22.376 57.991t22.376 58.566m497.412-202.11h72.29v273.308q0 66.605-44.178 101.629Q722.309 790 660.345 790q-46.472 0-82.044-17.799-34.996-17.8-53.931-52.25l63.111-36.174q21.802 40.193 75.159 40.193 34.999 0 55.078-18.374t20.081-52.25v-31.005q-32.702 43.637-91.797 43.637-60.816 0-102.125-42.489-40.734-43.063-40.735-104.5 0-60.862 41.309-103.926T646.002 372q59.095 0 91.797 43.637zm-138.27 195.794q22.951 21.82 57.947 21.819 34.999 0 57.373-21.819 22.95-22.392 22.95-56.843 0-33.877-22.95-55.695-22.375-22.393-57.373-22.393-34.996 0-57.947 22.393-22.375 21.818-22.375 55.695 0 34.45 22.375 56.843m355.128 84.404q-14.345 14.354-34.424 14.355-20.082 0-34.424-14.355-14.344-14.353-14.343-34.45t14.343-34.451 34.424-14.354q20.08 0 34.424 14.354Q969 605.689 969 625.786t-14.343 34.45" />
+      </svg>
+    </span>
+    <span class="logo-back" aria-hidden="true">
+      <Icon name="arrow-left" size={16} />
+    </span>
+  </a>
+
+  <nav class="site-nav nav-glass chrome-surface" aria-label="Pages" data-no-active={desktopActiveIndex < 0 ? "true" : undefined} data-active-index={String(Math.max(0, desktopActiveIndex))}>
+    <span class="nav-selection" aria-hidden="true"></span>
+    {desktopNavigation.map((item) => {
+      const active = isNavigationItemActive(path, item.href);
+      return (
+        <a
+          class:list={["quiet-link", { active }]}
+          href={item.href}
+          aria-label={item.ariaLabel || item.label}
+          aria-current={active ? "page" : undefined}
+        >
+          {item.label}
+        </a>
+      );
+    })}
+  </nav>
+
+  <div class="header-actions">
+    <a
+      class="header-palette-trigger palette-trigger nav-glass chrome-surface"
+      href="/library/"
+      aria-label="Open commands"
+      data-palette-entry="directory"
+    >
+      <Icon name="command" size={18} />
+    </a>
+  </div>
+
+  <nav class="site-nav-bottom" aria-label="Pages" data-no-active={mobileActiveIndex < 0 ? "true" : undefined} data-active-index={String(Math.max(0, mobileActiveIndex))}>
+    <span class="nav-selection" aria-hidden="true"></span>
+    {mobileNavigation.map((item) => {
+      const active = isNavigationItemActive(path, item.href);
+      return (
+        <a
+          class:list={["tab", { active }]}
+          href={item.href}
+          aria-label={item.ariaLabel || item.label}
+          aria-current={active ? "page" : undefined}
+        >
+          <span class="tab-icon" aria-hidden="true"><Icon name={item.icon} size={15} /></span>
+          <span class="tab-label">{item.label}</span>
+        </a>
+      );
+    })}
+  </nav>
+</header>
+
+<style>
+  .site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    padding-top: 2.75rem;
+    pointer-events: none;
+  }
+
+  .logo-control,
+  .logo-control *,
+  .site-nav,
+  .site-nav *,
+  .header-palette-trigger,
+  .header-palette-trigger *,
+  .site-nav-bottom,
+  .site-nav-bottom * {
+    pointer-events: auto;
+  }
+
+  .nav-glass {
+    border-radius: var(--r-pill);
+  }
+
+  .logo-control {
+    position: relative;
+    display: grid;
+    grid-template-areas: "logo-stack";
+    width: var(--chrome-size);
+    height: var(--chrome-size);
+    flex: 0 0 var(--chrome-size);
+    place-items: center;
+    padding: 0;
+    border-radius: 50%;
+    text-decoration: none;
+    overflow: hidden;
+    transition: transform var(--dur-2) var(--ease-out), background-color var(--t-color), border-color var(--t-color);
+  }
+
+  .logo-mark,
+  .logo-back {
+    grid-area: logo-stack;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    transition:
+      opacity var(--dur-2) var(--ease-out),
+      filter var(--dur-2) var(--ease-out),
+      transform var(--dur-2) var(--ease-out),
+      visibility var(--dur-2);
+  }
+
+  .logo-mark {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+    pointer-events: auto;
+    visibility: visible;
+  }
+
+  .logo-back {
+    color: var(--muted);
+    opacity: 0;
+    filter: blur(4px);
+    transform: scale(0.75);
+    pointer-events: none;
+    visibility: hidden;
+    transition:
+      color var(--t-color),
+      opacity var(--dur-2) var(--ease-out),
+      filter var(--dur-2) var(--ease-out),
+      transform var(--dur-2) var(--ease-out),
+      visibility var(--dur-2);
+  }
+
+  .logo-back :global(.ui-icon) {
+    display: block;
+    transform-origin: center;
+    transition: transform var(--dur-2) var(--ease-out);
+  }
+
+  .logo-control[data-state="back"] .logo-mark {
+    opacity: 0;
+    filter: blur(4px);
+    transform: scale(0.75);
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  .logo-control[data-state="back"] .logo-back {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+    pointer-events: auto;
+    visibility: visible;
+  }
+
+  .wordmark-logo {
+    display: block;
+    width: 28px;
+    height: 28px;
+    color: var(--ink);
+    transition: transform var(--dur-2) var(--ease-out), color var(--t-color);
+  }
+
+  .site-nav {
+    --nav-slot: 4.35rem;
+    --nav-gap: 0.2rem;
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, var(--nav-slot));
+    gap: var(--nav-gap);
+    block-size: var(--chrome-size);
+    box-sizing: border-box;
+    padding: 0.25rem;
+    margin-inline-start: auto;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    font-size: 0.9375rem;
+  }
+
+  .nav-selection {
+    position: absolute;
+    inset-block: 0.25rem;
+    inset-inline-start: 0.25rem;
+    width: var(--nav-slot);
+    border-radius: var(--r-pill);
+    background: var(--ink);
+    box-shadow: var(--shadow-1);
+    pointer-events: none;
+    transform: translate3d(0, 0, 0);
+    transition: transform var(--dur-3) var(--ease), background-color var(--t-color), opacity var(--t-color);
+  }
+
+  .site-nav[data-no-active] .nav-selection,
+  .site-nav-bottom[data-no-active] .nav-selection {
+    opacity: 0;
+  }
+
+  .site-nav[data-active-index="1"] .nav-selection,
+  .site-nav-bottom[data-active-index="1"] .nav-selection {
+    transform: translate3d(calc(100% + var(--nav-gap)), 0, 0);
+  }
+
+  .site-nav[data-active-index="2"] .nav-selection,
+  .site-nav-bottom[data-active-index="2"] .nav-selection {
+    transform: translate3d(calc(200% + var(--nav-gap) + var(--nav-gap)), 0, 0);
+  }
+
+  .site-nav-bottom[data-active-index="3"] .nav-selection {
+    transform: translate3d(calc(300% + var(--nav-gap) + var(--nav-gap) + var(--nav-gap)), 0, 0);
+  }
+
+  .site-nav-bottom[data-active-index="4"] .nav-selection {
+    transform: translate3d(calc(400% + var(--nav-gap) + var(--nav-gap) + var(--nav-gap) + var(--nav-gap)), 0, 0);
+  }
+
+  .site-nav .quiet-link {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    block-size: 100%;
+    line-height: 1;
+    place-items: center;
+    padding-inline: var(--space-2);
+    border-radius: var(--r-pill);
+    text-decoration: none;
+    transition: color var(--t-color), opacity var(--t-color), transform var(--dur-1) var(--ease-out);
+  }
+
+  .site-nav .quiet-link.active {
+    color: var(--canvas);
+  }
+
+  .header-actions {
+    display: none;
+    align-items: center;
+    gap: var(--space-2);
+    min-inline-size: 0;
+  }
+
+  .header-palette-trigger {
+    display: none;
+    width: var(--chrome-size);
+    height: var(--chrome-size);
+    place-items: center;
+    padding: 0;
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .site-nav-bottom {
+    display: none;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  .logo-control:active,
+  .header-palette-trigger:active,
+  .site-nav a:active,
+  .site-nav-bottom a:active {
+    transform: scale(0.97);
+    transition-duration: var(--dur-1);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .logo-control[data-state="home"]:hover .wordmark-logo,
+    .logo-control[data-state="home"]:focus-visible .wordmark-logo {
+      transform: scale(1.04);
+    }
+
+    .logo-control[data-state="back"]:hover .logo-back,
+    .logo-control[data-state="back"]:focus-visible .logo-back {
+      color: var(--ink);
+    }
+
+    .logo-control[data-state="back"]:hover .logo-back :global(.ui-icon),
+    .logo-control[data-state="back"]:focus-visible .logo-back :global(.ui-icon) {
+      transform: scale(1.28);
+    }
+
+    .site-nav .quiet-link:not(.active):hover,
+    .site-nav .quiet-link:not(.active):focus-visible {
+      color: var(--ink);
+    }
+  }
+
+  @media (max-width: 38rem) {
+    .site-header {
+      padding-top: calc(1.25rem + env(safe-area-inset-top, 0px));
+      pointer-events: auto;
+    }
+
+    .site-nav {
+      display: none;
+    }
+
+    .header-actions {
+      display: flex;
+    }
+
+    .site-header .chrome-surface {
+      background: color-mix(in oklch, var(--canvas) 94%, var(--ink));
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+
+    .header-palette-trigger {
+      display: grid;
+    }
+
+    .site-nav-bottom {
+      --nav-gap: 0.125rem;
+      --nav-slot: calc((100% - 1rem) / 5);
+      position: fixed;
+      right: var(--mobile-gutter-end);
+      bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+      left: var(--mobile-gutter-start);
+      z-index: var(--z-sticky);
+      display: grid;
+      min-inline-size: 0;
+      max-inline-size: 100%;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: var(--nav-gap);
+      padding: 0.25rem;
+      border: 1px solid var(--chrome-surface-border);
+      border-radius: var(--r-pill);
+      background: color-mix(in oklch, var(--canvas) 94%, var(--ink));
+      box-shadow: var(--shadow-2), var(--shadow-inset);
+    }
+
+    .site-nav-bottom .nav-selection {
+      inset-block: 0.25rem;
+      width: var(--nav-slot);
+    }
+
+    .site-nav-bottom .tab {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      min-width: 0;
+      max-width: 100%;
+      min-inline-size: 0;
+      min-height: 44px;
+      grid-template-columns: 0.9rem auto;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      padding-inline: 0;
+      border-radius: var(--r-pill);
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: var(--font-medium);
+      text-decoration: none;
+      transition: color var(--t-color), transform var(--dur-1) var(--ease-out);
+    }
+
+    .site-nav-bottom .tab.active {
+      color: var(--canvas);
+    }
+
+    .tab-icon {
+      display: grid;
+      width: 0.9rem;
+      place-items: center;
+      opacity: 0;
+      transition: opacity var(--dur-2) var(--ease-out);
+    }
+
+    .tab.active .tab-icon {
+      opacity: 1;
+    }
+
+    .tab-label {
+      white-space: nowrap;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav-selection {
+      transition: opacity var(--t-color), background-color var(--t-color);
+    }
+
+    .logo-control,
+    .logo-mark,
+    .logo-back,
+    .logo-back :global(.ui-icon),
+    .header-palette-trigger,
+    .site-nav a,
+    .site-nav-bottom a,
+    .wordmark-logo {
+      transform: none !important;
+      transition: none !important;
+      filter: none !important;
+    }
+  }
+</style>

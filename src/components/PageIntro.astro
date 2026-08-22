@@ -1,0 +1,82 @@
+---
+interface Props {
+  title: string;
+  lede?: string;
+  eyebrow?: string;
+}
+
+const { title, lede, eyebrow } = Astro.props;
+const hasSlot = Astro.slots.has("default");
+---
+
+<header class="page-intro" data-enter>
+  {eyebrow && <p class="page-intro-eyebrow">{eyebrow}</p>}
+  <h1>{title}{hasSlot && <Fragment><span class="page-intro-badge"><slot /></span></Fragment>}</h1>
+  {lede && <p class="page-intro-lede">{lede}</p>}
+</header>
+
+<style>
+  .page-intro {
+    display: grid;
+    gap: 1.25rem;
+    max-inline-size: 100%;
+    margin: 0 0 1.25rem;
+  }
+
+  .page-intro-eyebrow,
+  .page-intro-lede,
+  .page-intro h1 {
+    margin: 0;
+  }
+
+  .page-intro-eyebrow {
+    color: var(--faint);
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .page-intro h1 {
+    max-inline-size: 18ch;
+    color: var(--ink);
+    font-size: var(--type-page-title-size);
+    font-weight: var(--type-page-title-weight);
+    letter-spacing: var(--type-page-title-tracking);
+    line-height: var(--type-page-title-leading);
+    text-wrap: balance;
+  }
+
+  .page-intro-badge {
+    display: inline-flex;
+    vertical-align: middle;
+    margin-inline-start: 0.5rem;
+  }
+
+  .page-intro-lede {
+    max-inline-size: 64ch;
+    color: var(--muted);
+    font-size: var(--text-base);
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+
+  @media (max-width: 38rem) {
+    .page-intro {
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .page-intro h1 {
+      max-inline-size: 100%;
+    }
+
+    .page-intro-lede {
+      text-align: justify;
+      text-justify: inter-word;
+      hyphens: none;
+      -webkit-hyphens: none;
+      text-wrap: pretty;
+    }
+  }
+</style>

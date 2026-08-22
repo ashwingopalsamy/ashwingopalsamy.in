@@ -1,0 +1,703 @@
+---
+import { site } from "../data/home";
+import { buildMeta } from "../lib/build";
+import Icon from "./Icon.astro";
+import SoundToggle from "./SoundToggle.astro";
+import ThemeToggle from "./ThemeToggle.astro";
+
+const shortSha = buildMeta.commit;
+---
+
+<footer class="site-footer">
+  <div class="footer-links">
+    <a class="footer-link" href="/colophon/" aria-label="Colophon">
+      <Icon name="info" size={15} class="footer-link-icon" />
+      <span class="footer-link-label">Colophon</span>
+    </a>
+    <span class="footer-link-sep" aria-hidden="true"></span>
+    <a class="footer-link" href="/developers/" aria-label="Developers: resources and API">
+      <Icon name="terminal" size={15} class="footer-link-icon" />
+      <span class="footer-link-label">Developers</span>
+    </a>
+  </div>
+
+  <button
+    id="local-time"
+    type="button"
+    class="clock"
+    aria-label="Pollachi IST. Showing Ashwin's local timezone, Pollachi. Activate to see your timezone."
+  >
+    <span class="dot" aria-hidden="true"></span>
+    <span id="clock-time" class="mono">Pollachi</span>
+    <span id="clock-zone" class="zone">IST</span>
+    <span id="clock-zone-compact" class="zone-compact" aria-hidden="true">IST</span>
+    <span id="clock-tooltip" class="clock-tooltip" aria-hidden="true"></span>
+  </button>
+
+  <div class="footer-controls" aria-label="Footer controls">
+    <a
+      id="repo-btn"
+      class="repo-btn"
+      href={shortSha ? `${site.repoUrl}/commit/${shortSha}` : site.repoUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={shortSha ? `Source code at commit ${shortSha}` : "View source code on GitHub"}
+    >
+      <svg class="repo-github-icon" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+      </svg>
+      <span class="repo-tooltip" aria-hidden="true" id="repo-tooltip"></span>
+    </a>
+    <SoundToggle />
+    <ThemeToggle />
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-rows: auto;
+    align-items: center;
+    gap: 0.5rem;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    margin-top: var(--space-footer);
+    padding: 1.25rem 0 calc(2rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--rule);
+    color: var(--faint);
+    transition: border-color var(--t-color);
+  }
+
+  .footer-links {
+    display: flex;
+    grid-column: 2;
+    grid-row: 1;
+    align-items: center;
+    justify-content: center;
+    gap: 0.85rem;
+    min-width: 0;
+    min-inline-size: 0;
+  }
+
+  .footer-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-block-size: 2.75rem;
+    font-size: var(--text-sm);
+    color: var(--faint);
+    text-decoration: none;
+    transition: color var(--t-color);
+  }
+
+  .footer-link:hover,
+  .footer-link:focus-visible {
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .footer-link-sep {
+    width: 1px;
+    height: 0.9rem;
+    flex-shrink: 0;
+    background: var(--rule-strong);
+    align-self: center;
+    transition: background-color var(--t-color);
+  }
+
+
+  .repo-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: var(--faint);
+    text-decoration: none;
+    transition: color var(--t-color), background-color var(--t-color);
+  }
+
+  .repo-btn:hover,
+  .repo-btn:focus-visible {
+    color: var(--ink);
+    background: color-mix(in oklch, var(--ink) 6%, transparent);
+  }
+
+  .repo-btn:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  .repo-btn:active {
+    transform: scale(0.92);
+  }
+
+  .repo-github-icon {
+    flex-shrink: 0;
+    transition: transform var(--dur-2) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .repo-btn:hover .repo-github-icon {
+      transform: scale(1.12);
+    }
+  }
+
+  .repo-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    transform: translateY(4px) scale(0.98);
+    transform-origin: 100% 100%;
+    inline-size: max-content;
+    max-inline-size: min(18rem, calc(100vw - var(--mobile-gutter-start) - var(--mobile-gutter-end)));
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--r-pill);
+    background: var(--ink);
+    color: var(--canvas);
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    white-space: nowrap;
+    text-align: center;
+    line-height: 1.4;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 50ms ease-out,
+      transform 50ms ease-out;
+  }
+
+  .repo-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    right: 0.9rem;
+    border: 5px solid transparent;
+    border-top-color: var(--ink);
+  }
+
+  .repo-btn:focus-visible .repo-tooltip,
+  .repo-btn:hover .repo-tooltip {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition:
+      opacity 150ms ease-out,
+      transform 150ms ease-out;
+    transition-delay: 120ms;
+  }
+
+  .clock {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-self: start;
+    grid-column: 1;
+    grid-row: 1;
+    gap: 0.5rem;
+    min-block-size: 2.75rem;
+    padding: 0 0.5rem;
+    border: 0;
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    transition: color var(--t-color);
+  }
+
+  .clock:hover {
+    color: var(--ink);
+  }
+
+  .clock:focus-visible,
+  .footer-controls :global(button:focus-visible) {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  .clock-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    transform: translateY(4px) scale(0.98);
+    transform-origin: 0% 100%;
+    inline-size: max-content;
+    max-inline-size: min(18rem, calc(100vw - var(--mobile-gutter-start) - var(--mobile-gutter-end)));
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--r-pill);
+    background: var(--ink);
+    color: var(--canvas);
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 50ms ease-out,
+      transform 50ms ease-out;
+  }
+
+  .clock-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 1rem;
+    border: 5px solid transparent;
+    border-top-color: var(--ink);
+  }
+
+  .clock:focus-visible .clock-tooltip,
+  .clock:hover .clock-tooltip {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition:
+      opacity 150ms ease-out,
+      transform 150ms ease-out;
+    transition-delay: 80ms;
+  }
+
+  .footer-controls {
+    display: flex;
+    grid-column: 3;
+    grid-row: 1;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.25rem;
+    min-block-size: 2.75rem;
+  }
+
+  .footer-controls :global(.sound-toggle),
+  .footer-controls :global(.theme-toggle) {
+    width: 44px;
+    height: 44px;
+    margin: 0;
+  }
+
+  .footer-controls :global(.sound-toggle::before),
+  .footer-controls :global(.theme-toggle::before) {
+    inset: 0;
+  }
+
+  .mono {
+    position: relative;
+    top: var(--mono-optical-shift);
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: var(--text-sm);
+    letter-spacing: 0.01em;
+    font-feature-settings: "tnum";
+  }
+
+  .zone {
+    position: relative;
+    top: var(--mono-optical-shift);
+    color: var(--faint);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+    transition: color var(--t-color);
+  }
+
+  .zone-compact {
+    display: none;
+    position: relative;
+    top: var(--mono-optical-shift);
+    color: var(--faint);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+    min-inline-size: 0;
+  }
+
+  .footer-link :global(.footer-link-icon) {
+    display: none;
+  }
+
+  .clock:hover .zone {
+    color: var(--muted);
+  }
+
+  .dot {
+    --presence: var(--vermilion);
+    width: 8px;
+    height: 8px;
+    flex: 0 0 8px;
+    border-radius: 50%;
+    background: var(--presence);
+    transition:
+      background-color var(--t-color),
+      transform var(--t-move);
+  }
+
+  .clock:active .dot {
+    transform: scale(0.75);
+  }
+
+  @media (max-width: 38rem) {
+    .site-footer {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-rows: auto;
+      column-gap: 0.375rem;
+      padding: 1rem 0 calc(1.25rem + env(safe-area-inset-bottom, 0px));
+      border-top: 0;
+    }
+
+    .footer-links {
+      grid-column: 2;
+      grid-row: 1;
+      justify-content: center;
+      justify-self: center;
+      gap: 0.4rem;
+      min-inline-size: 0;
+      white-space: nowrap;
+    }
+
+    .footer-link {
+      min-block-size: 2.75rem;
+      font-size: var(--text-xs);
+    }
+
+    .clock {
+      min-width: 0;
+      grid-column: 1;
+      grid-row: 1;
+      gap: 0.375rem;
+      white-space: nowrap;
+    }
+
+    .footer-controls {
+      min-block-size: 2.75rem;
+      min-inline-size: 0;
+      grid-column: 3;
+      grid-row: 1;
+      gap: 0;
+    }
+
+    .zone {
+      display: none;
+    }
+
+    .zone-compact {
+      display: none;
+    }
+
+    .mono {
+      font-size: var(--text-xs);
+    }
+
+    .clock-tooltip {
+      right: auto;
+      left: 0;
+    }
+
+    .clock-tooltip::after {
+      right: auto;
+      left: 1rem;
+    }
+
+    .repo-tooltip {
+      right: auto;
+      left: 0;
+    }
+
+    .repo-tooltip::after {
+      right: auto;
+      left: 0.9rem;
+    }
+  }
+
+
+
+  @media (max-width: 22rem) {
+    .footer-link-label {
+      display: none;
+    }
+
+    .footer-links {
+      gap: 0;
+    }
+
+    .footer-link {
+      inline-size: 2.75rem;
+      justify-content: center;
+    }
+
+    .footer-link :global(.footer-link-icon) {
+      display: block;
+    }
+  }
+
+</style>
+
+<script>
+  import { playAccent } from "../scripts/sound";
+  import { tickPresence } from "../scripts/presence";
+  import { showToast } from "../scripts/toast";
+
+  const ASHWIN_TZ = "Asia/Kolkata";
+  const ASHWIN_LOCATION = "Pollachi";
+  type Mode = "ashwin" | "visitor" | "delta";
+  let mode: Mode = "ashwin";
+  let greeted = false;
+  let showSeconds = false;
+  let tickInterval: ReturnType<typeof setInterval> | undefined;
+  let visibilityBound = false;
+  const visitorTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  function timeFormatter(tz: string, seconds = false) {
+    return new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      ...(seconds ? { second: "2-digit" } : {}),
+      hour12: false,
+      timeZone: tz,
+    });
+  }
+
+  const fmt = {
+    ashwin: timeFormatter(ASHWIN_TZ),
+    visitor: timeFormatter(visitorTz),
+  };
+
+  const fmtSec = {
+    ashwin: timeFormatter(ASHWIN_TZ, true),
+    visitor: timeFormatter(visitorTz, true),
+  };
+
+  function offsetMinutes(tz: string, date: Date): number {
+    const parts: Record<string, string> = {};
+    for (const part of new Intl.DateTimeFormat("en-US", {
+      timeZone: tz,
+      hour12: false,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }).formatToParts(date)) {
+      parts[part.type] = part.value;
+    }
+    const asUTC = Date.UTC(
+      Number(parts.year),
+      Number(parts.month) - 1,
+      Number(parts.day),
+      Number(parts.hour),
+      Number(parts.minute),
+      Number(parts.second),
+    );
+    return (asUTC - date.getTime()) / 60000;
+  }
+
+  function deltaLabel(now: Date): string {
+    const delta = Math.round(offsetMinutes(ASHWIN_TZ, now) - offsetMinutes(visitorTz, now));
+    if (delta === 0) return "Same zone";
+    const abs = Math.abs(delta);
+    const hours = Math.floor(abs / 60);
+    const minutes = abs % 60;
+    const span = minutes ? `${hours}h ${minutes}m` : `${hours}h`;
+    return `${span} ${delta > 0 ? "ahead" : "behind"}`;
+  }
+
+  function deltaAriaLabel(now: Date): string {
+    const delta = Math.round(offsetMinutes(ASHWIN_TZ, now) - offsetMinutes(visitorTz, now));
+    if (delta === 0) return "Same timezone as you";
+    const abs = Math.abs(delta);
+    const hours = Math.floor(abs / 60);
+    const minutes = abs % 60;
+    const span = minutes ? `${hours}h ${minutes}m` : `${hours}h`;
+    return `${span} ${delta > 0 ? "ahead of" : "behind"} you`;
+  }
+
+  function render() {
+    const footer = document.querySelector<HTMLElement>(".site-footer");
+    const btn = footer?.querySelector<HTMLButtonElement>("#local-time");
+    const timeEl = footer?.querySelector<HTMLElement>("#clock-time");
+    const zoneEl = footer?.querySelector<HTMLElement>("#clock-zone");
+    const compactZoneEl = footer?.querySelector<HTMLElement>("#clock-zone-compact");
+    const tooltipEl = footer?.querySelector<HTMLElement>("#clock-tooltip");
+    const dot = footer?.querySelector<HTMLElement>(".dot");
+    if (!btn || !timeEl || !zoneEl) return;
+
+    const now = new Date();
+    const presence = tickPresence(now);
+    dot?.style.setProperty("--presence", presence.token);
+    if (dot) dot.dataset.presence = presence.state;
+    if (tooltipEl) tooltipEl.textContent = presence.label;
+
+    const formatterKey = mode === "delta" ? "ashwin" : mode;
+    const compact = window.matchMedia("(max-width: 38rem)").matches;
+    timeEl.textContent = (!compact && showSeconds ? fmtSec[formatterKey] : fmt[formatterKey]).format(now);
+
+    if (mode === "delta") {
+      zoneEl.textContent = deltaLabel(now);
+      if (compactZoneEl) compactZoneEl.textContent = compactDeltaLabel(now);
+      const deltaPrefix = [timeEl.textContent, zoneEl.textContent, tooltipEl?.textContent].filter(Boolean).join(" ");
+      btn.setAttribute("aria-label", `${deltaPrefix}. ${deltaAriaLabel(now)}. Activate to see Ashwin's local time.`);
+      return;
+    }
+
+    const place = mode === "ashwin" ? ASHWIN_LOCATION : visitorTz;
+    zoneEl.textContent = place;
+    if (compactZoneEl) compactZoneEl.textContent = mode === "ashwin" ? "IST" : "You";
+    const ashwinPrefix = [timeEl.textContent, zoneEl.textContent, tooltipEl?.textContent].filter(Boolean).join(" ");
+    btn.setAttribute(
+      "aria-label",
+      mode === "ashwin"
+        ? `${ashwinPrefix}. Showing Ashwin's local time, ${ASHWIN_LOCATION}. Activate to see it in your timezone.`
+        : `${ashwinPrefix}. Showing your local time, ${place}. Activate to see the gap between our timezones.`,
+    );
+  }
+
+  function compactDeltaLabel(now: Date): string {
+    const delta = Math.round(offsetMinutes(ASHWIN_TZ, now) - offsetMinutes(visitorTz, now));
+    if (delta === 0) return "Same";
+    const abs = Math.abs(delta);
+    const hours = Math.floor(abs / 60);
+    const minutes = abs % 60;
+    return `${delta > 0 ? "+" : "−"}${hours}:${String(minutes).padStart(2, "0")}`;
+  }
+
+  let minuteTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  function stopClock() {
+    if (tickInterval !== undefined) {
+      clearInterval(tickInterval);
+      tickInterval = undefined;
+    }
+    if (minuteTimeout !== undefined) {
+      clearTimeout(minuteTimeout);
+      minuteTimeout = undefined;
+    }
+  }
+
+  function startClock() {
+    stopClock();
+    render();
+    if (document.visibilityState === "hidden") return;
+
+    if (showSeconds) {
+      tickInterval = setInterval(render, 1000);
+    } else {
+      const now = new Date();
+      const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds() + 50;
+      minuteTimeout = setTimeout(() => {
+        render();
+        tickInterval = setInterval(render, 60000);
+      }, Math.max(50, msUntilNextMinute));
+    }
+  }
+
+  function init() {
+    const footer = document.querySelector<HTMLElement>(".site-footer");
+    const btn = footer?.querySelector<HTMLButtonElement>("#local-time");
+    if (!btn) return;
+
+    if (!btn.dataset.enhanced) {
+      btn.dataset.enhanced = "true";
+
+      btn.addEventListener("click", () => {
+        mode = mode === "ashwin" ? "visitor" : mode === "visitor" ? "delta" : "ashwin";
+        render();
+        playAccent("tick");
+      });
+
+      const seconds = (on: boolean) => () => {
+        if (showSeconds === on) return;
+        showSeconds = on;
+        startClock();
+      };
+      btn.addEventListener("pointerenter", seconds(true));
+      btn.addEventListener("pointerleave", seconds(false));
+      btn.addEventListener("focus", seconds(true));
+      btn.addEventListener("blur", seconds(false));
+
+      if (visitorTz === ASHWIN_TZ) {
+        const greet = () => {
+          if (greeted) return;
+          greeted = true;
+          showToast({ message: "Same clock as me.", anchor: btn, duration: 3000 });
+        };
+        btn.addEventListener("pointerenter", greet);
+        btn.addEventListener("click", greet);
+      } else {
+        btn.addEventListener("pointerenter", () => {
+          try {
+            if (sessionStorage.getItem("tz-gap") || sessionStorage.getItem("greeted") === "pending") return;
+          } catch {
+            return;
+          }
+          const now = new Date();
+          const delta = Math.round(offsetMinutes(ASHWIN_TZ, now) - offsetMinutes(visitorTz, now));
+          if (Math.abs(delta) < 180) return;
+          try {
+            sessionStorage.setItem("tz-gap", "1");
+          } catch {
+            return;
+          }
+          showToast({ message: deltaLabel(now), anchor: btn, duration: 3200 });
+        });
+      }
+    }
+
+    startClock();
+  }
+
+  function onVisibility() {
+    if (document.visibilityState === "hidden") {
+      stopClock();
+      return;
+    }
+    startClock();
+  }
+
+  if (!visibilityBound) {
+    visibilityBound = true;
+    document.addEventListener("visibilitychange", onVisibility);
+  }
+
+  init();
+  document.addEventListener("astro:page-load", init);
+</script>
+
+<script>
+  const REPO_BANTERS = [
+    "View source code",
+    "Wanna fork? Go for it.",
+    "Inspired? Steal freely.",
+    "Borrow. Remix. Ship.",
+    "Open source. Go wild.",
+    "Peek inside.",
+    "Read the code.",
+  ];
+
+  let repoBanterIndex = -1;
+
+  function nextBanter(): string {
+    const pool = REPO_BANTERS.filter((_, i) => i !== repoBanterIndex);
+    const pick = pool[Math.floor(Math.random() * pool.length)]!;
+    repoBanterIndex = REPO_BANTERS.indexOf(pick);
+    return pick;
+  }
+
+  function initRepoBtn() {
+    const btn = document.getElementById("repo-btn");
+    const tooltip = document.getElementById("repo-tooltip");
+    if (!btn || !tooltip || btn.dataset.repoEnhanced === "true") return;
+    btn.dataset.repoEnhanced = "true";
+
+    tooltip.textContent = nextBanter();
+
+    btn.addEventListener("pointerenter", () => {
+      tooltip.textContent = nextBanter();
+    });
+  }
+
+  initRepoBtn();
+  document.addEventListener("astro:page-load", initRepoBtn);
+</script>
