@@ -1,0 +1,1167 @@
+/**
+ * prose.css - the shared long-form reading layer.
+ *
+ * One typographic system for every markdown body: notes, book/watch takes, and
+ * craft write-ups. Designed to feel like the rest of the site - same OKLCH ramp,
+ * same hairlines, same restraint - and to carry the engine's components:
+ * callouts, diagrams, math, code figures, tables, footnotes.
+ *
+ * Theme: driven by [data-theme] (and the no-JS prefers-color-scheme fallback).
+ * Code highlighting is dual-theme Shiki CSS variables (`--shiki-light/dark`).
+ *
+ * Selector discipline: every rule is scoped under `.prose`, so the page shell
+ * (header, footer, the library index) is never touched by accident.
+ */
+
+/* ------------------------------------------------------------------ */
+/*  tokens                                                             */
+/* ------------------------------------------------------------------ */
+
+.prose {
+  /* prose-local spacing - independent of global section rhythm */
+  --p-gap: 1.05em;
+  --h2-mt: 2.75rem;
+  --h3-mt: 2rem;
+
+  color: var(--ink);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  max-inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.prose :is(h2, h3, h4, h5, h6, li, blockquote, figcaption, summary) {
+  overflow-wrap: anywhere;
+}
+.prose p {
+  overflow-wrap: break-word;
+}
+
+/* ------------------------------------------------------------------ */
+/*  headings                                                            */
+/* ------------------------------------------------------------------ */
+
+.prose :is(h2, h3, h4, h5, h6) {
+  position: relative;
+  scroll-margin-top: calc(var(--header-zone) + 1rem);
+  font-weight: var(--font-semibold);
+  letter-spacing: -0.012em;
+  line-height: var(--leading-tight);
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.prose h2 {
+  margin: var(--h2-mt) 0 0.7rem;
+  font-size: var(--text-xl);
+}
+.prose h3 {
+  margin: var(--h3-mt) 0 0.55rem;
+  font-size: var(--text-lg);
+}
+.prose h4 {
+  margin: 1.5rem 0 0.45rem;
+  font-size: var(--text-base);
+  color: var(--muted);
+  letter-spacing: 0;
+}
+.prose h5,
+.prose h6 {
+  margin: 1.25rem 0 0.4rem;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+/* the anchor link - hover/focus reveal, CSS-drawn # glyph keeps it out of
+   textContent (TOC + screen readers stay clean). */
+.prose .h-anchor {
+  position: absolute;
+  inset-inline-start: -1.1em;
+  top: 0;
+  width: 1.1em;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: var(--ghost);
+  opacity: 0;
+  transition: opacity var(--t-color);
+}
+.prose .h-anchor svg { display: block; }
+.prose :is(h2, h3, h4, h5, h6):hover .h-anchor,
+.prose :is(h2, h3, h4, h5, h6):focus-within .h-anchor {
+  opacity: 1;
+}
+.prose .h-anchor:hover,
+.prose .h-anchor:focus-visible {
+  color: var(--vermilion);
+  opacity: 1;
+}
+/* on coarse pointers (touch), keep the anchor always visible so it's
+   discoverable without a hover state */
+@media (pointer: coarse) {
+  .prose .h-anchor { opacity: 0.55; }
+}
+
+/* ------------------------------------------------------------------ */
+/*  paragraphs, emphasis, links                                         */
+/* ------------------------------------------------------------------ */
+
+.prose p {
+  margin: 0;
+  color: var(--ink);
+}
+.prose p + p {
+  margin-top: var(--p-gap);
+}
+/* tight follow-on after a heading */
+.prose :is(h2, h3, h4, h5, h6) + p {
+  margin-top: 0;
+}
+
+.prose strong {
+  font-weight: 600;
+  color: var(--ink);
+  transition: font-weight var(--t-color);
+}
+.prose em { font-style: italic; }
+.prose :is(strong, em) a { color: inherit; }
+
+.prose a {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.5px;
+  text-decoration-color: color-mix(in oklch, currentColor 18%, transparent);
+  text-underline-offset: 4px;
+  text-decoration-skip-ink: auto;
+  transition:
+    text-decoration-color var(--t-color),
+    color var(--t-color);
+}
+.prose a:hover,
+.prose a:focus-visible {
+  text-decoration-color: color-mix(in oklch, currentColor 55%, transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .prose :is(p, li, blockquote):hover strong,
+  .prose strong:hover {
+    font-weight: var(--font-hover-bold);
+  }
+}
+
+.prose .external-icon {
+  display: inline-flex;
+  margin-inline-start: 0.16em;
+  vertical-align: 0.1em;
+  color: var(--faint);
+  transition: color var(--t-color), transform var(--dur-2) var(--ease-out);
+  text-decoration: none;
+}
+.prose .external:hover .external-icon,
+.prose .external:focus-visible .external-icon { color: var(--muted); }
+@media (hover: hover) and (pointer: fine) {
+  .prose .external:hover .external-icon,
+  .prose .external:focus-visible .external-icon { transform: translate(1px, -1px); }
+}
+
+/* ------------------------------------------------------------------ */
+/*  inline code                                                        */
+/* ------------------------------------------------------------------ */
+
+.prose :not(pre) > code {
+  font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  font-size: 0.84em;
+  padding: 0.12em 0.5em;
+  border-radius: var(--r-pill);
+  background: color-mix(in oklch, var(--ink) 7%, transparent);
+  color: var(--ink);
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------ */
+/*  code figures                                                       */
+/* ------------------------------------------------------------------ */
+
+.prose .code-figure {
+  position: relative;
+  margin: 1.5rem 0;
+  border: 1px solid var(--chrome-surface-border);
+  border-radius: var(--r-4);
+  background: var(--chrome-surface-bg);
+  box-shadow: var(--chrome-surface-shadow);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  backdrop-filter: blur(20px) saturate(170%);
+  overflow: hidden;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  transition: border-color var(--t-color), background-color var(--t-color), box-shadow var(--t-color);
+}
+
+.prose .code-figure::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  padding: 0.3rem 0.7rem;
+  font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--faint);
+  background: linear-gradient(to left, color-mix(in oklch, var(--canvas) 60%, transparent) 70%, transparent);
+  border-bottom-left-radius: 6px;
+  pointer-events: none;
+  z-index: 1;
+}
+/* labels that are just "text" add nothing - hide them */
+.prose .code-figure[data-language="text"]::before,
+.prose .code-figure[data-language=""]::before { content: none; }
+
+/* filename / caption from fence meta (title=main.go) */
+.prose .code-figure > .code-caption {
+  padding: 0.45rem 1.15rem;
+  font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--chrome-surface-border);
+  background: transparent;
+  overflow-wrap: anywhere;
+}
+.prose .code-figure.has-title::before {
+  top: 1.85rem;
+}
+.prose .code-figure.has-title .code-actions {
+  top: calc(1.85rem + 0.28rem);
+}
+
+.prose pre,
+.prose .code-figure > pre {
+  margin: 0;
+  border: 0;
+  background: transparent;
+  padding: 1.05rem 1.15rem;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  tab-size: 4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  overflow-x: auto;
+}
+.prose pre code,
+.prose .code-figure > pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+  white-space: inherit;
+  word-break: inherit;
+  overflow-wrap: inherit;
+}
+
+/* line highlight - // [!code hl] */
+.prose .astro-code .line-highlight {
+  display: inline-block;
+  width: 100%;
+  margin-inline: -1.15rem;
+  padding-inline: 1.15rem;
+  background: color-mix(in oklch, var(--color-5) 18%, transparent);
+  box-shadow: inset 2px 0 0 color-mix(in oklch, var(--color-6) 70%, transparent);
+}
+
+/* code action toolbar: wrap + copy circular buttons */
+.prose .code-actions {
+  position: absolute;
+  top: 0.32rem;
+  inset-inline-end: 0.32rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  opacity: 0;
+  transition: opacity var(--t-color);
+}
+
+.prose .code-figure:hover .code-actions,
+.prose .code-figure:focus-within .code-actions,
+.prose .code-actions:focus-within {
+  opacity: 1;
+}
+
+.prose .code-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--code-border);
+  border-radius: var(--r-pill);
+  background: color-mix(in oklch, var(--canvas) 75%, transparent);
+  color: var(--faint);
+  cursor: pointer;
+  transition:
+    color var(--t-color),
+    border-color var(--t-color),
+    background-color var(--t-color),
+    transform var(--t-move);
+}
+
+.prose .code-btn svg { width: 13px; height: 13px; }
+.prose .code-btn:hover { color: var(--ink); border-color: var(--rule-strong); transform: scale(1.08); }
+.prose .code-btn:active { transform: scale(0.92); }
+.prose .code-btn.is-done {
+  color: var(--acc-green);
+  border-color: color-mix(in oklch, var(--acc-green) 45%, transparent);
+  opacity: 1;
+}
+.prose .code-btn[aria-pressed="true"] {
+  color: var(--ink);
+}
+
+@media (pointer: coarse) {
+  .prose .code-actions { opacity: 0.85; }
+}
+/* when the language label is shown, nudge the actions toolbar below/beside it */
+.prose .code-figure[data-language]:not([data-language="text"]):not([data-language=""]) .code-actions {
+  top: 1.95rem;
+}
+
+/* ------------------------------------------------------------------ */
+/*  dual-theme Shiki variables                                         */
+/* ------------------------------------------------------------------ */
+
+.prose .astro-code {
+  background: transparent !important;       /* the figure supplies the bg */
+}
+.prose .astro-code,
+.prose .astro-code span {
+  color: var(--shiki-light, var(--shiki-fg));
+}
+:root[data-theme="dark"] .prose .astro-code,
+:root[data-theme="dark"] .prose .astro-code span {
+  color: var(--shiki-dark, var(--shiki-fg));
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .prose .astro-code,
+  :root:not([data-theme]) .prose .astro-code span {
+    color: var(--shiki-dark, var(--shiki-fg));
+  }
+}
+/* italics/bold from theme palettes follow the same variable swap */
+:root[data-theme="dark"] .prose .astro-code span[style*="font-style:italic"] {
+  font-style: italic;
+}
+
+/* ------------------------------------------------------------------ */
+/*  lists                                                              */
+/* ------------------------------------------------------------------ */
+
+.prose ul,
+.prose ol {
+  margin: var(--p-gap) 0;
+  padding-left: 1.25rem;
+}
+.prose li { margin: 0.35em 0; }
+.prose li:first-child { margin-top: 0; }
+.prose li:last-child { margin-bottom: 0; }
+
+.prose ul { list-style: none; padding-left: 1.1rem; }
+.prose ul > li {
+  position: relative;
+  padding-left: 0.9rem;
+}
+.prose ul > li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 4px;
+  height: 4px;
+  background: var(--ghost);
+  transform: rotate(45deg);
+}
+/* nested ordered inside unordered keeps digits */
+.prose ol ol,
+.prose ul ol { list-style: decimal; padding-left: 1.25rem; }
+.prose ol ol > li,
+.prose ul ol > li { padding-left: 0; }
+.prose ul ol > li::before,
+.prose ol ol > li::before { content: none; }
+.prose ul ul { padding-left: 1.1rem; }
+.prose ul ul > li::before {
+  border: 1px solid var(--ghost);
+  background: transparent;
+}
+.prose ol { list-style: decimal; font-variant-numeric: tabular-nums; }
+.prose ol > li::marker { color: var(--faint); font-size: 0.85em; }
+
+/* task lists (GFM) */
+.prose :is(ul, ol):has(> li > input[type="checkbox"]) {
+  list-style: none;
+  padding-left: 0.2rem;
+}
+.prose li > input[type="checkbox"] {
+  margin-inline-end: 0.45em;
+  accent-color: var(--vermilion);
+  vertical-align: -0.12em;
+}
+
+/* ------------------------------------------------------------------ */
+/*  blockquotes (plain pull-asides)                                    */
+/* ------------------------------------------------------------------ */
+
+.prose blockquote {
+  margin: var(--p-gap) 0;
+  padding: 0.2rem 0 0.2rem 1.1rem;
+  border-inline-start: 2px solid var(--rule-strong);
+  color: var(--muted);
+  font-style: italic;
+  transition: border-color var(--t-color), color var(--t-color);
+}
+.prose blockquote p { color: inherit; }
+.prose blockquote p + p { margin-top: 0.5em; }
+
+/* ------------------------------------------------------------------ */
+/*  callouts (admonitions)                                             */
+/* ------------------------------------------------------------------ */
+
+.prose blockquote.callout {
+  --cx: var(--muted);
+  --cx-ink: var(--ink);
+
+  margin: 1.6rem 0;
+  padding: 0.95rem 1.05rem 0.85rem;
+  border-inline-start: 0;
+  border: 1px solid var(--chrome-surface-border);
+  border-inline-start: 3px solid var(--cx);
+  border-radius: var(--r-4);
+  background: var(--chrome-surface-bg);
+  box-shadow: var(--chrome-surface-shadow);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  backdrop-filter: blur(20px) saturate(170%);
+  color: var(--ink);
+  font-style: normal;
+  transition: border-color var(--t-color), background-color var(--t-color), box-shadow var(--t-color);
+}
+.prose .callout-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cx);
+}
+.prose .callout-icon {
+  display: inline-flex;
+  color: var(--cx);
+}
+.prose .callout-icon svg { display: block; }
+.prose .callout-label { line-height: 1; }
+/* first paragraph after the head sits a touch closer */
+.prose .callout-head + p,
+.prose .callout-head + .callout-body { margin-top: 0; }
+
+/* kind mapped to accent token */
+.prose .callout-note      { --cx: var(--muted);   --cx-ink: var(--ink); }
+.prose .callout-tip       { --cx: var(--acc-green); }
+.prose .callout-important { --cx: var(--acc-violet); }
+.prose .callout-warning   { --cx: var(--acc-amber); }
+.prose .callout-caution   { --cx: var(--acc-red); }
+.prose .callout-warning .callout-head { color: var(--cx-label-warning); }
+
+/* ------------------------------------------------------------------ */
+/*  tables                                                             */
+/* ------------------------------------------------------------------ */
+
+.prose .table-scroll {
+  margin: var(--p-gap) 0;
+  overflow-x: auto;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.prose table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.35rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.prose th,
+.prose td {
+  text-align: start;
+  padding: 0.68rem 0.75rem;
+}
+.prose thead th {
+  font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--faint);
+  background: var(--surface-row-rest);
+  border-top: 1px solid var(--chrome-surface-border);
+  border-bottom: 1px solid var(--chrome-surface-border);
+}
+.prose thead th:first-child,
+.prose tbody td:first-child {
+  border-left: 1px solid var(--chrome-surface-border);
+  border-radius: var(--surface-row-radius) 0 0 var(--surface-row-radius);
+}
+.prose thead th:last-child,
+.prose tbody td:last-child {
+  border-right: 1px solid var(--chrome-surface-border);
+  border-radius: 0 var(--surface-row-radius) var(--surface-row-radius) 0;
+}
+.prose tbody td {
+  background: var(--surface-row-rest);
+  border-top: 1px solid var(--chrome-surface-border);
+  border-bottom: 1px solid var(--chrome-surface-border);
+}
+.prose td :not(pre) > code { font-size: 0.85em; white-space: nowrap; }
+
+/* ------------------------------------------------------------------ */
+/*  hr                                                                 */
+/* ------------------------------------------------------------------ */
+
+.prose hr {
+  border: 0;
+  width: 4px;
+  height: 4px;
+  margin: 3.25rem auto;
+  background: var(--ghost);
+  transform: rotate(45deg);
+  transition: background-color var(--t-color);
+}
+
+/* ------------------------------------------------------------------ */
+/*  diagrams (Mermaid)                                                 */
+/* ------------------------------------------------------------------ */
+
+.prose .diagram {
+  margin: 1.75rem 0;
+  border: 1px solid var(--chrome-surface-border);
+  border-radius: var(--r-4);
+  background: var(--chrome-surface-bg);
+  box-shadow: var(--chrome-surface-shadow);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  backdrop-filter: blur(20px) saturate(170%);
+  overflow: hidden;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  transition: border-color var(--t-color), background-color var(--t-color), box-shadow var(--t-color);
+}
+.prose .diagram-canvas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 7rem;
+  padding: 1.15rem 0.85rem;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.prose .diagram-canvas:empty::before {
+  content: "";
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  border: 2px solid var(--rule-strong);
+  border-top-color: var(--vermilion);
+  animation: diagram-spin 0.8s linear infinite;
+}
+@keyframes diagram-spin { to { transform: rotate(360deg); } }
+.prose .diagram.is-rendered .diagram-canvas:empty::before { content: none; }
+
+.prose .diagram-canvas svg,
+.diagram-overlay-stage svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.prose .diagram-canvas .label,
+.prose .diagram-canvas foreignObject,
+.diagram-overlay-stage .label,
+.diagram-overlay-stage foreignObject {
+  font-family: "Inter Variable", system-ui, -apple-system, sans-serif;
+  font-size: 0.8125rem;
+  color: var(--ink);
+}
+
+.prose .diagram-canvas .node rect,
+.prose .diagram-canvas .node circle,
+.prose .diagram-canvas .node ellipse,
+.prose .diagram-canvas .node polygon,
+.prose .diagram-canvas .node path,
+.diagram-overlay-stage .node rect,
+.diagram-overlay-stage .node circle,
+.diagram-overlay-stage .node ellipse,
+.diagram-overlay-stage .node polygon,
+.diagram-overlay-stage .node path {
+  rx: 6px;
+  ry: 6px;
+  stroke-width: 1.25px;
+}
+
+/* Clusters / Subgraphs */
+.prose .diagram-canvas .cluster rect,
+.diagram-overlay-stage .cluster rect {
+  rx: 8px;
+  ry: 8px;
+  stroke: var(--rule-strong) !important;
+  stroke-dasharray: 4 3;
+  fill: color-mix(in oklch, var(--ink) 2%, var(--canvas)) !important;
+}
+
+/* Edge labels */
+.prose .diagram-canvas .edgeLabel,
+.diagram-overlay-stage .edgeLabel {
+  background-color: var(--canvas) !important;
+  color: var(--ink) !important;
+  font-size: 0.75rem !important;
+  line-height: 1.35;
+}
+
+.prose .diagram-canvas .edgeLabel span,
+.prose .diagram-canvas .edgeLabel p,
+.diagram-overlay-stage .edgeLabel span,
+.diagram-overlay-stage .edgeLabel p {
+  background-color: var(--canvas) !important;
+  color: var(--ink) !important;
+  padding: 1px 4px;
+  border-radius: var(--r-2);
+}
+
+/* Sequence diagram elements */
+.prose .diagram-canvas .actor,
+.diagram-overlay-stage .actor {
+  stroke: var(--rule-strong) !important;
+  fill: var(--canvas) !important;
+  rx: 6px;
+  ry: 6px;
+}
+
+.prose .diagram-canvas .actor-line,
+.diagram-overlay-stage .actor-line {
+  stroke: var(--rule-strong) !important;
+  stroke-dasharray: 3 3;
+}
+
+.prose .diagram-canvas .note,
+.diagram-overlay-stage .note {
+  fill: color-mix(in oklch, var(--acc-amber) 10%, var(--canvas)) !important;
+  stroke: color-mix(in oklch, var(--acc-amber) 50%, var(--rule-strong)) !important;
+  rx: 5px;
+  ry: 5px;
+}
+
+.prose .diagram-canvas .noteText,
+.diagram-overlay-stage .noteText {
+  fill: var(--ink) !important;
+  color: var(--ink) !important;
+  font-size: 0.775rem !important;
+}
+
+/* Semantic Role-Based Node Classes */
+.prose .diagram-canvas .node.diag-ingress rect,
+.prose .diagram-canvas .node.diag-ingress circle,
+.prose .diagram-canvas .node.diag-ingress polygon,
+.prose .diagram-canvas .node.diag-ingress path,
+.diagram-overlay-stage .node.diag-ingress rect,
+.diagram-overlay-stage .node.diag-ingress circle,
+.diagram-overlay-stage .node.diag-ingress polygon,
+.diagram-overlay-stage .node.diag-ingress path,
+.prose .diagram-canvas .node.diag-gateway rect,
+.prose .diagram-canvas .node.diag-gateway circle,
+.prose .diagram-canvas .node.diag-gateway polygon,
+.prose .diagram-canvas .node.diag-gateway path,
+.diagram-overlay-stage .node.diag-gateway rect,
+.diagram-overlay-stage .node.diag-gateway circle,
+.diagram-overlay-stage .node.diag-gateway polygon,
+.diagram-overlay-stage .node.diag-gateway path,
+.prose .diagram-canvas .node.diag-client rect,
+.prose .diagram-canvas .node.diag-client circle,
+.prose .diagram-canvas .node.diag-client polygon,
+.prose .diagram-canvas .node.diag-client path,
+.diagram-overlay-stage .node.diag-client rect,
+.diagram-overlay-stage .node.diag-client circle,
+.diagram-overlay-stage .node.diag-client polygon,
+.diagram-overlay-stage .node.diag-client path {
+  fill: color-mix(in oklch, var(--acc-blue) 12%, var(--canvas)) !important;
+  stroke: var(--acc-blue) !important;
+  stroke-width: 1.5px !important;
+}
+
+.prose .diagram-canvas .node.diag-success rect,
+.prose .diagram-canvas .node.diag-success circle,
+.prose .diagram-canvas .node.diag-success polygon,
+.prose .diagram-canvas .node.diag-success path,
+.diagram-overlay-stage .node.diag-success rect,
+.diagram-overlay-stage .node.diag-success circle,
+.diagram-overlay-stage .node.diag-success polygon,
+.diagram-overlay-stage .node.diag-success path,
+.prose .diagram-canvas .node.diag-allowed rect,
+.prose .diagram-canvas .node.diag-allowed circle,
+.prose .diagram-canvas .node.diag-allowed polygon,
+.prose .diagram-canvas .node.diag-allowed path,
+.diagram-overlay-stage .node.diag-allowed rect,
+.diagram-overlay-stage .node.diag-allowed circle,
+.diagram-overlay-stage .node.diag-allowed polygon,
+.diagram-overlay-stage .node.diag-allowed path,
+.prose .diagram-canvas .node.diag-fast rect,
+.prose .diagram-canvas .node.diag-fast circle,
+.prose .diagram-canvas .node.diag-fast polygon,
+.prose .diagram-canvas .node.diag-fast path,
+.diagram-overlay-stage .node.diag-fast rect,
+.diagram-overlay-stage .node.diag-fast circle,
+.diagram-overlay-stage .node.diag-fast polygon,
+.diagram-overlay-stage .node.diag-fast path {
+  fill: color-mix(in oklch, var(--acc-green) 12%, var(--canvas)) !important;
+  stroke: var(--acc-green) !important;
+  stroke-width: 1.5px !important;
+}
+
+.prose .diagram-canvas .node.diag-error rect,
+.prose .diagram-canvas .node.diag-error circle,
+.prose .diagram-canvas .node.diag-error polygon,
+.prose .diagram-canvas .node.diag-error path,
+.diagram-overlay-stage .node.diag-error rect,
+.diagram-overlay-stage .node.diag-error circle,
+.diagram-overlay-stage .node.diag-error polygon,
+.diagram-overlay-stage .node.diag-error path,
+.prose .diagram-canvas .node.diag-rejected rect,
+.prose .diagram-canvas .node.diag-rejected circle,
+.prose .diagram-canvas .node.diag-rejected polygon,
+.prose .diagram-canvas .node.diag-rejected path,
+.diagram-overlay-stage .node.diag-rejected rect,
+.diagram-overlay-stage .node.diag-rejected circle,
+.diagram-overlay-stage .node.diag-rejected polygon,
+.diagram-overlay-stage .node.diag-rejected path,
+.prose .diagram-canvas .node.diag-slow rect,
+.prose .diagram-canvas .node.diag-slow circle,
+.prose .diagram-canvas .node.diag-slow polygon,
+.prose .diagram-canvas .node.diag-slow path,
+.diagram-overlay-stage .node.diag-slow rect,
+.diagram-overlay-stage .node.diag-slow circle,
+.diagram-overlay-stage .node.diag-slow polygon,
+.diagram-overlay-stage .node.diag-slow path,
+.prose .diagram-canvas .node.diag-compromised rect,
+.prose .diagram-canvas .node.diag-compromised circle,
+.prose .diagram-canvas .node.diag-compromised polygon,
+.prose .diagram-canvas .node.diag-compromised path,
+.diagram-overlay-stage .node.diag-compromised rect,
+.diagram-overlay-stage .node.diag-compromised circle,
+.diagram-overlay-stage .node.diag-compromised polygon,
+.diagram-overlay-stage .node.diag-compromised path {
+  fill: color-mix(in oklch, var(--acc-red) 12%, var(--canvas)) !important;
+  stroke: var(--acc-red) !important;
+  stroke-width: 1.5px !important;
+}
+
+.prose .diagram-canvas .node.diag-storage rect,
+.prose .diagram-canvas .node.diag-storage circle,
+.prose .diagram-canvas .node.diag-storage polygon,
+.prose .diagram-canvas .node.diag-storage path,
+.diagram-overlay-stage .node.diag-storage rect,
+.diagram-overlay-stage .node.diag-storage circle,
+.diagram-overlay-stage .node.diag-storage polygon,
+.diagram-overlay-stage .node.diag-storage path,
+.prose .diagram-canvas .node.diag-queue rect,
+.prose .diagram-canvas .node.diag-queue circle,
+.prose .diagram-canvas .node.diag-queue polygon,
+.prose .diagram-canvas .node.diag-queue path,
+.diagram-overlay-stage .node.diag-queue rect,
+.diagram-overlay-stage .node.diag-queue circle,
+.diagram-overlay-stage .node.diag-queue polygon,
+.diagram-overlay-stage .node.diag-queue path,
+.prose .diagram-canvas .node.diag-cache rect,
+.prose .diagram-canvas .node.diag-cache circle,
+.prose .diagram-canvas .node.diag-cache polygon,
+.prose .diagram-canvas .node.diag-cache path,
+.diagram-overlay-stage .node.diag-cache rect,
+.diagram-overlay-stage .node.diag-cache circle,
+.diagram-overlay-stage .node.diag-cache polygon,
+.diagram-overlay-stage .node.diag-cache path,
+.prose .diagram-canvas .node.diag-db rect,
+.prose .diagram-canvas .node.diag-db circle,
+.prose .diagram-canvas .node.diag-db polygon,
+.prose .diagram-canvas .node.diag-db path,
+.diagram-overlay-stage .node.diag-db rect,
+.diagram-overlay-stage .node.diag-db circle,
+.diagram-overlay-stage .node.diag-db polygon,
+.diagram-overlay-stage .node.diag-db path {
+  fill: color-mix(in oklch, var(--acc-amber) 12%, var(--canvas)) !important;
+  stroke: var(--acc-amber) !important;
+  stroke-width: 1.5px !important;
+}
+
+.prose .diagram-canvas .node.diag-compute rect,
+.prose .diagram-canvas .node.diag-compute circle,
+.prose .diagram-canvas .node.diag-compute polygon,
+.prose .diagram-canvas .node.diag-compute path,
+.diagram-overlay-stage .node.diag-compute rect,
+.diagram-overlay-stage .node.diag-compute circle,
+.diagram-overlay-stage .node.diag-compute polygon,
+.diagram-overlay-stage .node.diag-compute path,
+.prose .diagram-canvas .node.diag-runtime rect,
+.prose .diagram-canvas .node.diag-runtime circle,
+.prose .diagram-canvas .node.diag-runtime polygon,
+.prose .diagram-canvas .node.diag-runtime path,
+.diagram-overlay-stage .node.diag-runtime rect,
+.diagram-overlay-stage .node.diag-runtime circle,
+.diagram-overlay-stage .node.diag-runtime polygon,
+.diagram-overlay-stage .node.diag-runtime path,
+.prose .diagram-canvas .node.diag-engine rect,
+.prose .diagram-canvas .node.diag-engine circle,
+.prose .diagram-canvas .node.diag-engine polygon,
+.prose .diagram-canvas .node.diag-engine path,
+.diagram-overlay-stage .node.diag-engine rect,
+.diagram-overlay-stage .node.diag-engine circle,
+.diagram-overlay-stage .node.diag-engine polygon,
+.diagram-overlay-stage .node.diag-engine path,
+.prose .diagram-canvas .node.diag-handler rect,
+.prose .diagram-canvas .node.diag-handler circle,
+.prose .diagram-canvas .node.diag-handler polygon,
+.prose .diagram-canvas .node.diag-handler path,
+.diagram-overlay-stage .node.diag-handler rect,
+.diagram-overlay-stage .node.diag-handler circle,
+.diagram-overlay-stage .node.diag-handler polygon,
+.diagram-overlay-stage .node.diag-handler path {
+  fill: color-mix(in oklch, var(--acc-violet) 12%, var(--canvas)) !important;
+  stroke: var(--acc-violet) !important;
+  stroke-width: 1.5px !important;
+}
+
+.prose .diagram-canvas .node.diag-warning rect,
+.prose .diagram-canvas .node.diag-warning circle,
+.prose .diagram-canvas .node.diag-warning polygon,
+.prose .diagram-canvas .node.diag-warning path,
+.diagram-overlay-stage .node.diag-warning rect,
+.diagram-overlay-stage .node.diag-warning circle,
+.diagram-overlay-stage .node.diag-warning polygon,
+.diagram-overlay-stage .node.diag-warning path {
+  fill: color-mix(in oklch, var(--acc-amber) 16%, var(--canvas)) !important;
+  stroke: var(--acc-amber) !important;
+  stroke-width: 1.5px !important;
+}
+
+.prose .diagram-source {
+  display: none;                       /* shown until enhanced / on failure */
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--rule);
+  padding: 0.85rem 1.05rem;
+  overflow-x: auto;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+  font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--muted);
+  background: transparent;
+}
+/* no-JS / pre-enhancement: source is the content */
+.prose .diagram:not(.is-enhanced) .diagram-source { display: block; }
+.prose .diagram:not(.is-enhanced) .diagram-canvas { display: none; }
+/* enhanced: source hidden, canvas shown (until error) */
+.prose .diagram.is-enhanced .diagram-source { display: none; }
+.prose .diagram.is-enhanced .diagram-canvas { display: flex; }
+.prose .diagram.has-error .diagram-source { display: block; }
+.prose .diagram.has-error .diagram-canvas { display: none; }
+
+.prose .diagram-error {
+  padding: 0.6rem 1.05rem;
+  font-size: 0.78rem;
+  color: var(--acc-red);
+  border-top: 1px solid color-mix(in oklch, var(--acc-red) 30%, transparent);
+  background: color-mix(in oklch, var(--acc-red) 6%, transparent);
+}
+
+/* expand button - client-injected into rendered diagrams */
+.prose .diagram-expand {
+  position: absolute;
+  top: 0.5rem;
+  inset-inline-end: 0.5rem;
+  z-index: 1;
+  display: none;                       /* only when JS injects it */
+  width: 1.8rem;
+  height: 1.8rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--code-border);
+  border-radius: 50%;
+  background: color-mix(in oklch, var(--canvas) 70%, transparent);
+  color: var(--faint);
+  cursor: pointer;
+}
+.prose .diagram.is-rendered .diagram-expand {
+  display: inline-flex;
+  position: static;                    /* sit on a figcaption-like row */
+}
+.prose .diagram.is-rendered .diagram-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 0.75rem 0.6rem;
+  border-top: 1px solid var(--rule);
+}
+.prose .diagram-expand:hover { color: var(--ink); }
+.prose .diagram-expand:active { transform: scale(0.94); }
+
+/* the expand overlay - appended to body by prose.ts */
+.diagram-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: color-mix(in oklch, var(--canvas) 88%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  animation: diagram-fade var(--dur-2) var(--ease) both;
+}
+.diagram-overlay-stage {
+  position: relative;
+  max-width: min(1100px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  padding: 1.5rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-5);
+  background: var(--canvas);
+  box-shadow: var(--shadow-3);
+  animation: diagram-zoom var(--dur-3) var(--ease-spring) both;
+}
+.diagram-overlay-stage svg { display: block; max-width: 100%; height: auto; }
+.diagram-overlay-close {
+  position: absolute;
+  top: -0.9rem;
+  inset-inline-end: -0.9rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--rule-strong);
+  border-radius: 50%;
+  background: var(--canvas);
+  color: var(--ink);
+  cursor: pointer;
+}
+@keyframes diagram-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes diagram-zoom {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .diagram-overlay,
+  .diagram-overlay-stage { animation: none; }
+  .prose .diagram-canvas:empty::before { animation: none; }
+}
+
+/* ------------------------------------------------------------------ */
+/*  math (KaTeX)                                                       */
+/* ------------------------------------------------------------------ */
+
+.prose .math-display {
+  display: block;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+  text-align: center;
+  padding: 0.25rem 0;
+}
+.prose .math-display .katex-display { margin: 0; }
+/* keep block math from being wider than the column then clipped on
+   small screens - let it scroll, never break layout */
+.prose .math-inline .katex { font-size: 1.05em; }
+
+/* ------------------------------------------------------------------ */
+/*  images, figures                                                    */
+/* ------------------------------------------------------------------ */
+
+.prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--r-4);
+  margin: 1.5rem auto;
+}
+.prose figure {
+  margin: 1.75rem 0;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+}
+.prose figcaption {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--faint);
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* ------------------------------------------------------------------ */
+/*  misc inline                                                        */
+/* ------------------------------------------------------------------ */
+
+.prose kbd {
+  font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  font-size: 0.8em;
+  padding: 0.1em 0.5em;
+  border: 1px solid var(--rule-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--r-pill);
+  background: color-mix(in oklch, var(--ink) 5%, var(--canvas));
+  color: var(--ink);
+}
+.prose mark {
+  background: color-mix(in oklch, var(--acc-amber) 55%, transparent);
+  color: var(--ink);
+  padding: 0.05em 0.35em;
+  border-radius: var(--r-pill);
+}
+.prose abbr[title] { cursor: help; text-decoration: underline dotted; text-underline-offset: 2px; }
+.prose del { color: var(--faint); }
+.prose ins { text-decoration: none; background: color-mix(in oklch, var(--acc-green) 28%, transparent); }
+.prose sub,
+.prose sup { font-size: 0.72em; line-height: 0; }
+
+/* ------------------------------------------------------------------ */
+/*  details / summary (collapsibles)                                   */
+/* ------------------------------------------------------------------ */
+
+.prose details {
+  margin: 1.5rem 0;
+  padding: 0.85rem 1.05rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-4);
+  transition: border-color var(--t-color);
+  max-inline-size: 100%;
+  min-inline-size: 0;
+}
+.prose summary {
+  cursor: pointer;
+  font-weight: 550;
+  color: var(--ink);
+  list-style: none;
+}
+.prose summary::-webkit-details-marker { display: none; }
+.prose summary::before {
+  content: "";
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin: 0 0.65rem 0.18rem 0.15rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  color: var(--faint);
+  transform: rotate(45deg);
+  transition: transform var(--dur-2) var(--ease-out), color var(--t-color);
+}
+.prose details[open] summary::before { transform: rotate(225deg) translate(-1px, -1px); }
+
+/* ------------------------------------------------------------------ */
+/*  footnotes                                                          */
+/* ------------------------------------------------------------------ */
+
+.prose .footnotes,
+.prose section[data-footnotes] {
+  margin-top: 3rem;
+  padding: 1.1rem 1.2rem;
+  border-radius: var(--r-4);
+  background: color-mix(in oklch, var(--ink) 3%, transparent);
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.prose .footnotes p,
+.prose section[data-footnotes] p { color: inherit; }
+.prose .footnote-ref { font-size: 0.78em; vertical-align: super; }
+.prose .footnote-backref { text-decoration: none; }
+
+/* floating footnote preview (JS) - no-JS keeps normal jump links */
+.fn-preview {
+  position: absolute;
+  z-index: var(--z-overlay);
+  max-width: min(22rem, calc(100vw - 2rem));
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--r-4);
+  border: 1px solid var(--rule-strong);
+  background: var(--canvas);
+  color: var(--ink);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  box-shadow: var(--shadow-2);
+  pointer-events: auto;
+}
+.fn-preview[hidden] { display: none !important; }
+.fn-preview .footnote-backref { display: none; }
+.fn-preview p { margin: 0; }
+.fn-preview p + p { margin-top: 0.5em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fn-preview { transition: none; }
+}
+
+@media print {
+  .fn-preview { display: none !important; }
+}
+
+/* ------------------------------------------------------------------ */
+/*  responsive                                                         */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 38rem) {
+  .prose { font-size: 1rem; line-height: 1.68; }
+  .prose p {
+    text-align: justify;
+    text-justify: inter-word;
+    hyphens: none;
+    -webkit-hyphens: none;
+    text-wrap: pretty;
+  }
+  .prose h2 { font-size: 1.2rem; --h2-mt: 2.25rem; }
+  .prose h3 { font-size: 1.0625rem; }
+  .prose .diagram { margin: 1.25rem 0; }
+  /* headings anchors stay reachable on touch (see pointer:coarse above) */
+}
+
+/* ------------------------------------------------------------------ */
+/*  print                                                              */
+/* ------------------------------------------------------------------ */
+
+@media print {
+  .prose .h-anchor,
+  .prose .code-copy,
+  .prose .diagram-expand,
+  .prose .diagram-toolbar { display: none !important; }
+  .prose .code-figure { border-color: var(--color-4); background: var(--color-1); }
+  .prose .diagram { break-inside: avoid; border-color: var(--color-4); }
+  .prose a { color: var(--color-9); text-decoration: underline; }
+  .prose .external-icon { display: none; }
+}

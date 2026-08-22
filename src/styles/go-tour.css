@@ -1,0 +1,555 @@
+/**
+ * go-tour.css - Pixel-perfect port of the Go 1.27 Interactive Tour design.
+ * High-contrast syntax tokens, shadow-powered cards, pristine callout boxes, circular icon buttons, and default soft-wrapping.
+ */
+
+:root {
+  /* Syntax Highlighting - Clean Day */
+  --code-bg: #ffffff;
+  --code-border: rgba(0, 0, 0, 0.05);
+  --code-text: #18181b;
+  --code-kw: #7c3aed;
+  --code-func: #2563eb;
+  --code-type: #0891b2;
+  --code-str: #16a34a;
+  --code-const: #ea580c;
+  --code-comment: #8e8e93;
+
+  /* Card and Pill Shadows */
+  --gt-shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.04), 0 2px 8px -2px rgba(0, 0, 0, 0.04), 0 8px 24px -4px rgba(0, 0, 0, 0.04);
+  --gt-shadow-card-hover: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.06), 0 12px 32px -4px rgba(0, 0, 0, 0.06);
+  --gt-border-subtle: rgba(0, 0, 0, 0.06);
+  --gt-pill-bg: #ffffff;
+}
+
+:root[data-theme="dark"] {
+  /* Syntax Highlighting - Clean Night */
+  --code-bg: #0c0f13;
+  --code-border: rgba(255, 255, 255, 0.07);
+  --code-text: #f4f4f5;
+  --code-kw: #c084fc;
+  --code-func: #60a5fa;
+  --code-type: #38bdf8;
+  --code-str: #4ade80;
+  --code-const: #fb923c;
+  --code-comment: #71717a;
+
+  /* Card and Pill Shadows */
+  --gt-shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 2px 12px 0 rgba(0, 0, 0, 0.5), 0 12px 32px -4px rgba(0, 0, 0, 0.6);
+  --gt-shadow-card-hover: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 4px 16px 0 rgba(0, 0, 0, 0.6), 0 16px 40px -4px rgba(0, 0, 0, 0.7);
+  --gt-border-subtle: rgba(255, 255, 255, 0.08);
+  --gt-pill-bg: #101317;
+}
+
+/* Note layout width */
+.note[data-note-tour="go-1-27"] {
+  max-inline-size: min(100%, 52rem);
+  margin-inline: auto;
+}
+
+/* Section Headings & Dividers - 1:1 Match to Original Standalone App */
+.note[data-note-tour="go-1-27"] .prose h2 {
+  font-size: 1.38rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-top: 4.5rem;
+  margin-bottom: 0.85rem;
+  padding-top: 3.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.note[data-note-tour="go-1-27"] .prose h2:first-of-type,
+.note[data-note-tour="go-1-27"] .prose > section:first-of-type h2 {
+  margin-top: 2rem;
+  padding-top: 0;
+  border-top: none;
+}
+
+:root[data-theme="dark"] .note[data-note-tour="go-1-27"] .prose h2 {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* Syntax Token Rules */
+.tok-kw { color: var(--code-kw); font-weight: 500; }
+.tok-func { color: var(--code-func); }
+.tok-type { color: var(--code-type); }
+.tok-str { color: var(--code-str); }
+.tok-const { color: var(--code-const); }
+.tok-comment { color: var(--code-comment); font-style: italic; }
+.tok-text { color: var(--code-text); }
+
+/* Snippet Card Container */
+.go-tour-snippet {
+  position: relative;
+  margin: 1.75rem 0 2rem;
+  border-radius: 1.15rem;
+  background: var(--code-bg);
+  box-shadow: var(--gt-shadow-card);
+  overflow: hidden;
+  transition: box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+.go-tour-snippet:hover {
+  box-shadow: var(--gt-shadow-card-hover);
+}
+
+/* Top Control Bar */
+.go-tour-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 0.55rem 0.95rem;
+  background: var(--code-bg);
+  border-bottom: 1px solid var(--code-border);
+  font-size: 0.78rem;
+  user-select: none;
+  flex-wrap: wrap;
+}
+
+/* Tab Switcher (Go 1.27 vs Go 1.26) */
+.go-tour-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2.5px;
+  border-radius: var(--r-pill);
+  background: color-mix(in oklch, var(--ink) 5%, transparent);
+}
+
+.go-tour-tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0.22rem 0.75rem;
+  border-radius: var(--r-pill);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: var(--font-medium);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.go-tour-tab:hover {
+  color: var(--ink);
+}
+
+.go-tour-tab[aria-selected="true"] {
+  background: var(--canvas);
+  color: var(--ink);
+  box-shadow: 0 1px 3px color-mix(in oklch, var(--ink) 12%, transparent);
+}
+
+.go-tour-filename {
+  font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: var(--font-medium);
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+
+/* Circular Round Action Buttons */
+.go-tour-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.go-tour-btn {
+  appearance: none;
+  border: 1px solid var(--gt-border-subtle);
+  background: var(--gt-pill-bg);
+  color: var(--muted);
+  border-radius: var(--r-pill);
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.go-tour-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.go-tour-btn:hover {
+  background: var(--ink);
+  color: var(--canvas);
+  border-color: var(--ink);
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px color-mix(in oklch, var(--ink) 15%, transparent);
+}
+
+.go-tour-btn:active {
+  transform: scale(0.92);
+}
+
+.go-tour-btn[aria-pressed="true"],
+.go-tour-btn.is-active {
+  background: var(--gt-pill-bg);
+  color: var(--ink);
+  border-color: var(--rule-strong);
+}
+
+.go-tour-btn-reset:hover {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+}
+
+.go-tour-btn-run {
+  background: var(--ink);
+  color: var(--canvas);
+  border-color: var(--ink);
+}
+
+.go-tour-btn-run:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 14px color-mix(in oklch, var(--ink) 25%, transparent);
+  filter: brightness(1.1);
+}
+
+.go-tour-btn.is-done {
+  background: #059669;
+  color: #ffffff;
+  border-color: #059669;
+}
+
+/* Code Container & Default Soft-Wrapping */
+.go-tour-editor {
+  position: relative;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  padding: 1.15rem 1.35rem;
+  overflow-x: auto;
+}
+
+.go-tour-editor pre {
+  margin: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  font-size: 0.835rem;
+  line-height: 1.68;
+  letter-spacing: -0.01em;
+  tab-size: 4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.go-tour-editor pre code {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: var(--code-text);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  white-space: inherit;
+  word-break: inherit;
+  overflow-wrap: inherit;
+}
+
+.go-tour-textarea {
+  width: 100%;
+  min-height: 220px;
+  box-sizing: border-box;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--code-text);
+  font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  font-size: 0.835rem;
+  line-height: 1.68;
+  letter-spacing: -0.01em;
+  tab-size: 4;
+  resize: vertical;
+  outline: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Terminal Drawer */
+.go-tour-terminal {
+  border-top: 1px solid var(--code-border);
+  background: color-mix(in oklch, var(--ink) 2%, var(--canvas));
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.go-tour-terminal[hidden] {
+  display: none;
+}
+
+.go-tour-term-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 1.15rem;
+  background: color-mix(in oklch, var(--ink) 3%, transparent);
+  border-bottom: 1px solid color-mix(in oklch, var(--code-border) 60%, transparent);
+  font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  font-size: 0.7rem;
+  color: var(--muted);
+  user-select: none;
+}
+
+.go-tour-term-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.go-tour-term-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.go-tour-term-time {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.go-tour-term-bench {
+  padding: 0.1rem 0.55rem;
+  border-radius: var(--r-pill);
+  background: color-mix(in oklch, var(--ink) 6%, transparent);
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.go-tour-term-body {
+  margin: 0;
+  padding: 0.95rem 1.35rem;
+  overflow-x: auto;
+  font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  font-size: 0.79rem;
+  line-height: 1.6;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+
+/* Callout / Notes Cards - 1:1 Clean Day & Clean Night match (NO double stroke) */
+.note[data-note-tour="go-1-27"] blockquote,
+.note[data-note-tour="go-1-27"] .callout,
+.go-callout {
+  border: none !important;
+  border-left: none !important;
+  border-radius: 1rem !important;
+  background: rgba(244, 244, 246, 0.6) !important;
+  padding: 1rem 1.25rem !important;
+  margin: 1.5rem 0 1.75rem !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.03) !important;
+}
+
+:root[data-theme="dark"] .note[data-note-tour="go-1-27"] blockquote,
+:root[data-theme="dark"] .note[data-note-tour="go-1-27"] .callout,
+:root[data-theme="dark"] .go-callout {
+  background: rgba(22, 27, 34, 0.6) !important;
+  border: none !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.4) !important;
+}
+
+.go-callout-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.go-callout-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e11d48;
+  opacity: 0.85;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.go-callout-label {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8e8e93;
+}
+
+:root[data-theme="dark"] .go-callout-label {
+  color: #71717a;
+}
+
+.go-callout-body {
+  margin: 0;
+  font-family: inherit;
+  font-size: 0.93em;
+  line-height: 1.65;
+  color: #52525b;
+}
+
+:root[data-theme="dark"] .go-callout-body {
+  color: #a1a1aa;
+}
+
+.go-callout-body strong {
+  font-weight: 600;
+  color: #0a0a0a;
+}
+
+:root[data-theme="dark"] .go-callout-body strong {
+  color: #f4f4f5;
+}
+
+.go-callout-body code,
+.note[data-note-tour="go-1-27"] .go-callout code {
+  font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace !important;
+  font-size: 0.86em !important;
+  padding: 0.12em 0.5em !important;
+  border-radius: var(--r-pill) !important;
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  color: #18181b !important;
+  font-weight: 500 !important;
+}
+
+:root[data-theme="dark"] .go-callout-body code,
+:root[data-theme="dark"] .note[data-note-tour="go-1-27"] .go-callout code {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #f4f4f5 !important;
+}
+
+/* Spec & Citation Pill Badges - Pixel-perfect match to SpecFooter */
+.go-spec-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  margin-bottom: 2.5rem;
+  font-size: 0.75rem;
+  flex-wrap: wrap;
+  width: 100%;
+  user-select: none;
+}
+
+.go-spec-pills {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.prose .go-spec-pill,
+.prose a.go-spec-pill,
+.go-spec-pill,
+.go-spec-pills a {
+  height: 1.75rem;
+  padding: 0 0.85rem;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: #52525b;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  text-decoration: none !important;
+  text-decoration-line: none !important;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root[data-theme="dark"] .prose .go-spec-pill,
+:root[data-theme="dark"] .prose a.go-spec-pill,
+:root[data-theme="dark"] .go-spec-pill,
+:root[data-theme="dark"] .go-spec-pills a {
+  background: #101317;
+  color: #a1a1aa;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.prose .go-spec-pill:hover,
+.prose a.go-spec-pill:hover,
+.go-spec-pill:hover,
+.go-spec-pills a:hover {
+  color: #ffffff !important;
+  border-color: #0a0a0a !important;
+  background: #0a0a0a !important;
+  text-decoration: none !important;
+  text-decoration-line: none !important;
+  transform: scale(1.03);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+:root[data-theme="dark"] .prose .go-spec-pill:hover,
+:root[data-theme="dark"] .prose a.go-spec-pill:hover,
+:root[data-theme="dark"] .go-spec-pill:hover,
+:root[data-theme="dark"] .go-spec-pills a:hover {
+  color: #090a0c !important;
+  border-color: #f4f4f5 !important;
+  background: #f4f4f5 !important;
+}
+
+.go-spec-pill svg {
+  width: 13px;
+  height: 13px;
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+}
+
+.go-spec-pill:hover svg {
+  opacity: 1;
+}
+
+.go-spec-pill .pill-ext {
+  width: 9.5px;
+  height: 9.5px;
+  opacity: 0.4;
+}
+
+.go-spec-authors {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 11.5px;
+  color: #8e8e93;
+  white-space: nowrap;
+}
+
+:root[data-theme="dark"] .go-spec-authors {
+  color: #71717a;
+}
+
+.go-spec-authors svg {
+  width: 13px;
+  height: 13px;
+  opacity: 0.6;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .go-tour-snippet,
+  .go-tour-btn,
+  .go-spec-pill,
+  .go-tour-terminal {
+    transition: none !important;
+  }
+}
