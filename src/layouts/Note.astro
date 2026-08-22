@@ -1,0 +1,664 @@
+---
+/**
+ * Note.astro - the long-form reading layout for `/library/notes/*`.
+ *
+ * Everything the blog engine offers is assembled here:
+ *   - article chrome: back link, "notes" label, balanced H1, meta row
+ *     (date · reading time · tags, "Updated" stamp, lede)
+ *   - an auto table of contents (render()'s `headings`), with scroll-spy
+ *   - the `.prose` body, scrolled into by the balcony's reading-progress hairline
+ *   - after the article: prev/next navigation, related-by-tag notes, an
+ *     "edit this page" link to the source on GitHub
+ *   - JSON-LD: enriched BlogPosting + BreadcrumbList
+ *   - KaTeX CSS linked only when the note body contains math
+ *
+ * The layout is presentation; the markdown pipeline (mermaid, callouts, math,
+ * code figures, anchors) already ran at build. Client behaviour lives in
+ * `src/scripts/prose.ts`, loaded by this layout.
+ */
+import { render, type CollectionEntry } from "astro:content";
+import Page from "./Page.astro";
+import { site } from "../data/home";
+import { noteJsonLd, noteBreadcrumbJsonLd } from "../lib/jsonld";
+import { wordCount } from "../lib/jsonld-safe";
+import { plainText, readingTimeMinutes, excerpt } from "../lib/markdown-text";
+import { ogPath } from "../lib/og-url";
+import { linkedTagSet, tagHref, isLinkedTag } from "../lib/tags";
+import { absUrl, slashPath } from "../lib/urls";
+import Icon from "../components/Icon.astro";
+import DetailHeader from "../components/DetailHeader.astro";
+import GoTourEnhancement from "../components/GoTourEnhancement.astro";
+import katexCss from "katex/dist/katex.min.css?url";
+import "../styles/prose.css";
+
+interface Props {
+  entry: CollectionEntry<"notes">;
+  prev?: { id: string; title: string; date: Date } | null;
+  next?: { id: string; title: string; date: Date } | null;
+  related?: { id: string; title: string }[];
+}
+
+const { entry, prev, next, related = [] } = Astro.props;
+const { Content, headings } = await render(entry);
+
+const body = entry.body ?? "";
+const minutes = readingTimeMinutes(body);
+const words = wordCount(plainText(body));
+const autoExcerpt = excerpt(body, 200);
+const description = entry.data.description ?? autoExcerpt;
+const notePath = slashPath(`/blog/${entry.id}`);
+const mdPath = `/blog/${entry.id}.md`;
+const image = ogPath(`blog/${entry.id}`);
+const linkedTags = await linkedTagSet();
+
+/** True when the note body contains KaTeX-bound math ($…$ / $$…$$). */
+function bodyHasMath(md: string): boolean {
+  if (/\$\$[\s\S]+?\$\$/.test(md)) return true;
+  return /(?<!\$)\$(?!\$)[^$\n]+?\$(?!\$)/.test(md);
+}
+const hasMath = bodyHasMath(body);
+
+
+const fmtDate = (d: Date) =>
+  d.toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
+
+const tocItems = (headings ?? []).filter((h) => h.depth === 2 || h.depth === 3);
+const showToc = tocItems.length >= 4;
+
+const editUrl = `${site.repoUrl}/blob/main/src/content/library/notes/${entry.id}.md`;
+
+const jsonLd = [
+  noteJsonLd(entry, notePath, {
+    description,
+    readingMinutes: minutes,
+    tags: entry.data.tags,
+    wordCount: words,
+    image,
+  }),
+  noteBreadcrumbJsonLd(entry.data.title, notePath),
+];
+  const isGoTour = entry.id === "go-1-27-interactive-tour";
+---
+
+<Page
+  title={entry.data.title}
+  description={description}
+  ogType="article"
+  ogImage={image}
+  ogImageAlt={entry.data.title}
+  publishedTime={entry.data.date}
+  modifiedTime={entry.data.updated ?? entry.data.date}
+  jsonLd={jsonLd}
+  alternateFeeds={[
+    { href: absUrl("/library/feed.xml"), title: "Library RSS", type: "application/rss+xml" },
+    { href: absUrl("/library/feed.json"), title: "Library JSON Feed", type: "application/feed+json" },
+  ]}
+  alternates={[
+    { href: absUrl(mdPath), type: "text/markdown", title: "Markdown source" },
+  ]}
+>
+  {hasMath && <link slot="head" rel="stylesheet" href={katexCss} />}
+  <article class="note" data-note data-has-math={hasMath ? "true" : undefined} data-note-tour={isGoTour ? "go-1-27" : undefined}>
+    <div class="note-progress" aria-hidden="true"><div class="note-progress-bar"></div></div>
+
+    <div class="note-layout">
+      <div class="note-main">
+        <DetailHeader title={entry.data.title} lede={entry.data.description}>
+          <Fragment slot="meta">
+            <span class="note-facts">
+              <time class="note-date mono" datetime={entry.data.date.toISOString()}>
+                {fmtDate(entry.data.date)}
+              </time>
+              <span class="note-read">{minutes} min read</span>
+              {entry.data.updated && <span class="note-updated">Updated {fmtDate(entry.data.updated)}</span>}
+            </span>
+            {entry.data.tags && entry.data.tags.length > 0 && (
+              <span class="note-tags">
+                {entry.data.tags.map((t) =>
+                  isLinkedTag(t, linkedTags) ? (
+                    <a class="note-tag" href={tagHref(t)}>#{t}</a>
+                  ) : (
+                    <span class="note-tag">#{t}</span>
+                  ),
+                )}
+              </span>
+            )}
+          </Fragment>
+          <Fragment slot="action">
+            <button type="button" class="note-copy-link" data-copy-link aria-label="Copy link to this note">
+              <Icon name="copy" size={13} /><span>Copy link</span>
+            </button>
+          </Fragment>
+        </DetailHeader>
+
+        {showToc && (
+          <details class="note-toc note-toc-narrow">
+            <summary><span>On this page</span><Icon name="chevron-down" size={14} /></summary>
+            <ol class="note-toc-list">
+              {tocItems.map((h) => (
+                <li class:list={["note-toc-item", { "is-sub": h.depth === 3 }]}>
+                  <a href={`#${h.slug}`} data-toc-link data-toc-target={h.slug}>{h.text}</a>
+                </li>
+              ))}
+            </ol>
+          </details>
+        )}
+
+        <div class="prose" data-enter>
+          <Content />
+        </div>
+
+        <footer class="note-foot">
+          <p class="note-edit">
+            <a href={editUrl} target="_blank" rel="noopener noreferrer"><span>Edit source</span><Icon name="arrow-up-right" size={14} /></a>
+          </p>
+
+          {(prev || next) && (
+            <nav class="note-pager" aria-label="More notes">
+              {prev ? (
+                <a class="note-page note-prev" href={`/blog/${prev.id}`} rel="prev" title="Previous note" data-note-nav="prev">
+                  <span class="note-page-dir"><span class="note-page-icon"><Icon name="arrow-left" size={15} /></span>Previous note</span>
+                  <span class="note-page-title">{prev.title}</span>
+                </a>
+              ) : <span class="note-page note-prev is-empty" aria-hidden="true"></span>}
+              {next ? (
+                <a class="note-page note-next" href={`/blog/${next.id}`} rel="next" title="Next note" data-note-nav="next">
+                  <span class="note-page-dir">Next note<span class="note-page-icon"><Icon name="arrow-right" size={15} /></span></span>
+                  <span class="note-page-title">{next.title}</span>
+                </a>
+              ) : <span class="note-page note-next is-empty" aria-hidden="true"></span>}
+            </nav>
+          )}
+
+          {related.length > 0 && (
+            <section class="note-related">
+              <h2 class="note-related-title">Related notes</h2>
+              <ul class="note-related-list">
+                {related.map((r) => (
+                  <li>
+                    <a href={`/blog/${r.id}`}><span>{r.title}</span><Icon name="chevron-right" size={15} /></a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </footer>
+      </div>
+    </div>
+    {isGoTour && <GoTourEnhancement />}
+  </article>
+</Page>
+
+<script>
+  import "../scripts/prose";
+</script>
+
+<style>
+  .note {
+    position: relative;
+    max-inline-size: min(100%, var(--measure-prose));
+    min-inline-size: 0;
+  }
+
+  .note-layout,
+  .note-main,
+  .note-header,
+  .note-foot {
+    max-inline-size: 100%;
+    min-inline-size: 0;
+  }
+
+  .note-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    z-index: var(--z-progress);
+    background: transparent;
+    pointer-events: none;
+  }
+  .note-progress-bar {
+    height: 100%;
+    width: 100%;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    background: var(--vermilion);
+    will-change: transform;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .note-progress { display: none; }
+  }
+
+  .note-layout {
+    position: relative;
+  }
+
+  .note-facts {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem 1rem;
+  }
+
+  .note-facts > * + * {
+    position: relative;
+  }
+
+  .note-facts > * + *::before {
+    position: absolute;
+    top: 50%;
+    left: -0.58rem;
+    width: 3px;
+    height: 3px;
+    background: var(--ghost);
+    content: "";
+    transform: translateY(-50%) rotate(45deg);
+  }
+
+  .note-date {
+    color: var(--muted);
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .note-read,
+  .note-updated { color: var(--faint); }
+
+  .note-tags {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.65rem;
+    align-items: baseline;
+    max-inline-size: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .note-tag {
+    font-size: 0.75rem;
+    color: var(--faint);
+    text-decoration: none;
+    transition: color var(--t-color);
+  }
+
+  a.note-tag:hover { color: var(--ink); }
+
+  .note-toc-narrow {
+    margin: -1.5rem 0 2.75rem;
+    padding: 0.8rem 1rem;
+    border-radius: var(--r-4);
+    background: var(--chrome-surface-bg);
+    border: 1px solid var(--chrome-surface-border);
+    box-shadow: var(--chrome-surface-shadow);
+    -webkit-backdrop-filter: blur(20px) saturate(170%);
+    backdrop-filter: blur(20px) saturate(170%);
+    transition: background-color var(--t-color), border-color var(--t-color);
+    max-inline-size: 100%;
+    min-inline-size: 0;
+  }
+  .note-toc-narrow summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    min-block-size: 44px;
+    font-size: 0.85rem;
+    font-weight: 540;
+    color: var(--muted);
+    list-style: none;
+    border-radius: 4px;
+  }
+  .note-toc-narrow summary:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+  .note-toc-narrow summary::-webkit-details-marker { display: none; }
+  .note-toc-narrow summary :global(.ui-icon) { transition: transform var(--dur-2) var(--ease-out); }
+  .note-toc-narrow[open] summary :global(.ui-icon) { transform: rotate(180deg); }
+  .note-toc-narrow[open] summary { margin-bottom: 0.7rem; }
+
+  .note-toc-rail {
+    display: none;
+  }
+
+  .note-toc-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+  }
+  .note-toc-item a {
+    font-size: 0.9rem;
+    color: var(--muted);
+    text-decoration: none;
+    line-height: 1.4;
+    display: inline-block;
+    transition: color var(--t-color);
+    max-inline-size: 100%;
+    overflow-wrap: anywhere;
+  }
+  .note-toc-item a:hover { color: var(--ink); }
+  .note-toc-item.is-sub { padding-left: 1.1rem; }
+  .note-toc-item a[aria-current="true"] {
+    color: var(--vermilion);
+  }
+
+  @media (min-width: 72rem) {
+    .note-toc-narrow { display: none; }
+
+    .note-toc-rail {
+      display: block;
+      position: fixed;
+      right: clamp(0.75rem, 2.5vw, 2.5rem);
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 40;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .note-toc-rail-track {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      padding: 0.5rem 0;
+      pointer-events: auto;
+    }
+
+    .note-toc-btn {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      margin: 0;
+      width: 2.25rem;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      cursor: pointer;
+      outline: none;
+      border-radius: var(--r-pill);
+      position: relative;
+    }
+
+    .note-toc-btn:focus-visible {
+      outline: var(--focus-ring);
+      outline-offset: 2px;
+    }
+
+    .note-toc-dash {
+      display: block;
+      border-radius: var(--r-pill);
+      transition: width var(--dur-2) var(--ease-out), height var(--dur-2) var(--ease-out), background-color var(--t-color), opacity var(--t-color), box-shadow var(--t-color);
+      width: 14px;
+      height: 1.5px;
+      background: var(--muted);
+      opacity: 0.35;
+    }
+
+    .note-toc-btn.is-sub .note-toc-dash {
+      width: 9px;
+      opacity: 0.25;
+    }
+
+    .note-toc-btn:hover .note-toc-dash {
+      width: 20px;
+      height: 2px;
+      opacity: 0.85;
+      background: var(--ink);
+    }
+
+    .note-toc-btn.is-sub:hover .note-toc-dash {
+      width: 15px;
+      height: 2px;
+      opacity: 0.85;
+      background: var(--ink);
+    }
+
+    .note-toc-btn.is-active .note-toc-dash {
+      width: 26px;
+      height: 2.5px;
+      opacity: 1;
+      background: var(--ink);
+      box-shadow: none;
+    }
+
+    .note-toc-btn.is-sub.is-active .note-toc-dash {
+      width: 22px;
+      height: 2.5px;
+      opacity: 1;
+      background: var(--ink);
+      box-shadow: none;
+    }
+
+    .note-toc-tooltip {
+      position: absolute;
+      right: calc(100% + 0.75rem);
+      top: 0;
+      transform: translateY(-50%);
+      padding: 0.32rem 0.8rem;
+      border-radius: var(--r-pill);
+      background: color-mix(in oklch, var(--canvas) 94%, var(--ink) 6%);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--rule);
+      color: var(--ink);
+      font-size: 0.75rem;
+      font-weight: var(--font-medium);
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+      transition: top 0.12s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    :root[data-theme="dark"] .note-toc-tooltip {
+      background: color-mix(in oklch, var(--canvas) 88%, var(--ink) 12%);
+      border-color: color-mix(in oklch, var(--rule) 80%, transparent);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.25);
+    }
+
+    .note-toc-rail-track.is-hovered .note-toc-tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .note-toc-dash,
+    .note-toc-tooltip {
+      transition: none !important;
+    }
+  }
+
+  .note-foot {
+    margin-top: clamp(3.5rem, 8vw, 5.5rem);
+  }
+  .note-edit { margin: 0; }
+  .note-edit a {
+    display: inline-flex;
+    min-block-size: 44px;
+    align-items: center;
+    gap: 0.4rem;
+    padding-inline: 0.7rem;
+    border-radius: var(--r-pill);
+    background: var(--chrome-surface-bg);
+    border: 1px solid var(--chrome-surface-border);
+    box-shadow: var(--chrome-surface-shadow);
+    -webkit-backdrop-filter: blur(20px) saturate(170%);
+    backdrop-filter: blur(20px) saturate(170%);
+    font-size: 0.85rem;
+    color: var(--faint);
+    text-decoration: none;
+    transition: color var(--t-color), background-color var(--t-color), border-color var(--t-color);
+  }
+  .note-edit a:hover {
+    color: var(--ink);
+    background: var(--surface-row-hover);
+    border-color: color-mix(in oklch, var(--ink) 18%, transparent);
+  }
+
+  .note-pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+  }
+  .note-page {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-block-size: 7rem;
+    padding: 1rem;
+    border-radius: var(--r-4);
+    background: var(--chrome-surface-bg);
+    border: 1px solid var(--chrome-surface-border);
+    box-shadow: var(--chrome-surface-shadow);
+    -webkit-backdrop-filter: blur(20px) saturate(170%);
+    backdrop-filter: blur(20px) saturate(170%);
+    text-decoration: none;
+    color: var(--ink);
+    min-width: 0;
+    transition:
+      transform var(--dur-2) var(--ease-out),
+      background-color var(--t-color),
+      border-color var(--t-color),
+      box-shadow var(--dur-2) var(--ease-out);
+  }
+  .note-next { text-align: end; align-items: flex-end; }
+  .note-page.is-empty { visibility: hidden; }
+  .note-page-dir {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 520;
+    color: var(--faint);
+    transition: color var(--t-color);
+  }
+  .note-page-icon {
+    display: grid;
+    transition: transform var(--dur-2) var(--ease-out);
+  }
+  .note-page-title {
+    font-size: 1rem;
+    font-weight: 520;
+    line-height: 1.35;
+    color: var(--ink);
+    transition: color var(--t-color);
+    text-decoration: none;
+    max-width: 100%;
+    text-wrap: pretty;
+    overflow-wrap: anywhere;
+  }
+  .note-page:active { background: var(--surface-row-press); }
+
+  @media (hover: hover) and (pointer: fine) {
+    .note-page:hover,
+    .note-page:focus-visible {
+      transform: translateY(-2px);
+      background: var(--surface-row-hover);
+      border-color: color-mix(in oklch, var(--ink) 18%, transparent);
+      box-shadow: var(--shadow-2);
+    }
+    .note-page:hover .note-page-dir,
+    .note-page:focus-visible .note-page-dir { color: var(--vermilion); }
+    .note-prev:hover .note-page-icon,
+    .note-prev:focus-visible .note-page-icon { transform: translateX(-1.5px); }
+    .note-next:hover .note-page-icon,
+    .note-next:focus-visible .note-page-icon { transform: translateX(1.5px); }
+  }
+
+  .note-related {
+    margin-top: clamp(2.75rem, 6vw, 4rem);
+  }
+  .note-related-title {
+    margin: 0 0 0.85rem;
+    color: var(--ink);
+    font-size: 1rem;
+    font-weight: 580;
+    letter-spacing: -0.01em;
+  }
+  .note-related-list {
+    margin: 0.6rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .note-related-list:hover a {
+      opacity: 0.45;
+      filter: blur(0.2px);
+      transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
+    }
+    .note-related-list:hover a:hover,
+    .note-related-list:hover a:focus-visible {
+      opacity: 1;
+      filter: none;
+    }
+  }
+  .note-related-list a {
+    display: flex;
+    min-block-size: 40px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 0.85rem;
+    margin-inline: -0.85rem;
+    border-radius: var(--r-3);
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    font-size: var(--text-sm);
+    color: var(--ghost);
+    text-decoration: none;
+    transition:
+      color var(--t-color),
+      background-color var(--t-color),
+      opacity var(--dur-2) var(--ease),
+      filter var(--dur-2) var(--ease),
+      transform var(--dur-1) var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .note-related-list a:hover,
+    .note-related-list a:focus-visible {
+      color: var(--ink);
+      background: color-mix(in oklch, var(--ink) 3.5%, transparent);
+    }
+  }
+  .note-related-list a:active {
+    background: color-mix(in oklch, var(--ink) 6.5%, transparent);
+    transform: scale(0.995);
+  }
+
+  @media (max-width: 38rem) {
+    .note-lede {
+      text-align: justify;
+      text-justify: inter-word;
+      hyphens: none;
+      -webkit-hyphens: none;
+      text-wrap: pretty;
+    }
+    .note-pager { grid-template-columns: 1fr; }
+    .note-next { text-align: start; align-items: flex-start; }
+    .note-page { min-block-size: 6.25rem; }
+    .note-page.is-empty { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .note-page-icon { transform: none !important; }
+  }
+</style>

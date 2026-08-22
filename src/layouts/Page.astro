@@ -1,0 +1,404 @@
+---
+import { ClientRouter } from "astro:transitions";
+import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
+import "../styles/fonts.css";
+import "../styles/global.css";
+import { site } from "../data/home";
+import { buildMeta } from "../lib/build";
+import { organizationJsonLd, personJsonLd } from "../lib/jsonld";
+import { stringifyJsonLd } from "../lib/jsonld-safe";
+import { CANVAS_DARK, CANVAS_LIGHT } from "../lib/theme";
+import { OG_HEIGHT, OG_WIDTH } from "../lib/og";
+import { coreMarkdownMirrorPath } from "../lib/urls";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import CommandPalette from "../components/CommandPalette.astro";
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** visible page heading ("{label}"). Optional; omit for pages that
+      carry their own on-page title (e.g. article detail routes, homepage). */
+  label?: string;
+  bodyClass?: string;
+  /** Optional page-specific JSON-LD node(s), emitted after the Person node.
+      Pages pass ProfilePage/Article/etc. and reference the Person by @id. */
+  jsonLd?: object | object[];
+  /** Absolute URL to a 1200x630 card. Defaults to the generated /og.png. */
+  ogImage?: string;
+  ogImageAlt?: string;
+  ogType?: string;
+  /** RSS/JSON Feed autodiscovery links, emitted in <head>. */
+  alternateFeeds?: { href: string; title: string; type: string }[];
+  /** Optional alternate representations (e.g. text/markdown). */
+  alternates?: { href: string; type: string; title?: string }[];
+  /** robots meta. Default indexes; pass "noindex" (etc.) for utility/error pages. */
+  robots?: string;
+  /** Exclude the whole page from the Pagefind index (stubs, 404). */
+  pagefind?: boolean;
+  /** Article times for ogType=article notes. */
+  publishedTime?: Date;
+  modifiedTime?: Date;
+}
+
+const {
+  title = site.title,
+  description = site.description,
+  label,
+  bodyClass,
+  jsonLd,
+  ogImage = `${site.url}/og.png`,
+  ogImageAlt = `${site.name} · builds the infrastructure behind global payments`,
+  ogType = "website",
+  alternateFeeds,
+  alternates,
+  robots = "index,follow,max-image-preview:large,max-snippet:-1",
+  pagefind = true,
+  publishedTime,
+  modifiedTime,
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, site.url);
+const explicitMarkdownAlternate = alternates?.find((alt) => alt.type === "text/markdown");
+const generatedMarkdownMirror = coreMarkdownMirrorPath(Astro.url.pathname);
+const markdownAlternate = explicitMarkdownAlternate ?? (generatedMarkdownMirror
+  ? { href: generatedMarkdownMirror, type: "text/markdown", title: "Markdown version" }
+  : undefined);
+const otherAlternates = alternates?.filter((alt) => alt.type !== "text/markdown");
+const structuredData = [personJsonLd(), organizationJsonLd()];
+const isHome = Astro.url.pathname === "/" || Astro.url.pathname === "";
+const documentTitle = isHome
+  ? `${site.name} · Staff Software Engineer, Payments Infrastructure`
+  : title === site.title || title.includes(site.name)
+    ? title
+    : `${title} · ${site.name}`;
+---
+
+<!doctype html>
+<html
+  lang="en"
+  data-build-at={buildMeta.builtAt}
+  data-build-commit={buildMeta.commit ?? undefined}
+>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+    <link
+      rel="preload"
+      href={interLatin}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <script
+      is:inline
+      set:html={`(function () {
+        var CANVAS_DARK = ${JSON.stringify(CANVAS_DARK)};
+        var CANVAS_LIGHT = ${JSON.stringify(CANVAS_LIGHT)};
+        function resolveTheme() {
+          var t = null;
+          try {
+            t = localStorage.getItem("theme");
+          } catch (e) {}
+          if (t !== "light" && t !== "dark") {
+            t = window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+          }
+          return t;
+        }
+
+        function applyTheme() {
+          var theme = resolveTheme();
+          document.documentElement.dataset.theme = theme;
+          if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            document.documentElement.dataset.motion = "on";
+          }
+          try {
+            if (sessionStorage.getItem("intro-animated") === "true") {
+              document.documentElement.dataset.introAnimated = "true";
+            }
+          } catch (e) {}
+          var tc = document.querySelector('meta[name="theme-color"]:not([media])');
+          if (!tc) {
+            tc = document.createElement("meta");
+            tc.setAttribute("name", "theme-color");
+            document.head.appendChild(tc);
+          }
+          tc.setAttribute("content", theme === "dark" ? CANVAS_DARK : CANVAS_LIGHT);
+        }
+
+        applyTheme();
+        document.addEventListener("astro:after-swap", applyTheme);
+      })();`}
+    />
+
+    <title>{documentTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content={site.name} />
+    <meta name="robots" content={robots} />
+    <link rel="canonical" href={canonical} />
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:locale" content="en_IN" />
+    <meta property="og:title" content={documentTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content={String(OG_WIDTH)} />
+    <meta property="og:image:height" content={String(OG_HEIGHT)} />
+    <meta property="og:image:type" content="image/png" />
+    {ogImageAlt && <meta property="og:image:alt" content={ogImageAlt} />}
+    {ogType === "article" && <meta property="article:author" content={site.name} />}
+    {publishedTime && (
+      <meta property="article:published_time" content={publishedTime.toISOString()} />
+    )}
+    {modifiedTime && (
+      <meta property="article:modified_time" content={modifiedTime.toISOString()} />
+    )}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@ashwin2125" />
+    <meta name="twitter:creator" content="@ashwin2125" />
+    <meta name="twitter:image" content={ogImage} />
+    {ogImageAlt && <meta name="twitter:image:alt" content={ogImageAlt} />}
+    <meta name="twitter:title" content={documentTitle} />
+    <meta name="twitter:description" content={description} />
+
+    <script type="application/ld+json" is:inline set:html={stringifyJsonLd(structuredData)} />
+    {Array.isArray(jsonLd)
+      ? jsonLd.map((node) => (
+          <script type="application/ld+json" is:inline set:html={stringifyJsonLd(node)} />
+        ))
+      : jsonLd && <script type="application/ld+json" is:inline set:html={stringifyJsonLd(jsonLd)} />}
+
+    {alternateFeeds?.map((feed) => (
+      <link
+        rel="alternate"
+        type={feed.type}
+        title={feed.title}
+        href={feed.href.startsWith("http") ? feed.href : new URL(feed.href, site.url).href}
+      />
+    ))}
+    {markdownAlternate && (
+        <link
+          rel="alternate"
+          type={markdownAlternate.type}
+          title={markdownAlternate.title}
+          href={markdownAlternate.href.startsWith("http") ? markdownAlternate.href : new URL(markdownAlternate.href, site.url).href}
+          data-astro-prefetch="false"
+        />
+    )}
+    {otherAlternates?.map((alt) =>
+        <link
+          rel="alternate"
+          type={alt.type}
+          title={alt.title}
+          href={alt.href.startsWith("http") ? alt.href : new URL(alt.href, site.url).href}
+        />
+    )}
+
+    <link rel="author" href="/humans.txt" />
+    <link rel="ai-catalog" type="application/json" href="/.well-known/ai-catalog.json" />
+
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/svg+xml" href="/favicon-dark.svg" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content={CANVAS_LIGHT} media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content={CANVAS_DARK} media="(prefers-color-scheme: dark)" />
+    <ClientRouter />
+    <script type="speculationrules" is:inline>
+      {
+        "prerender": [{
+          "where": {
+            "and": [
+              { "href_matches": "/*" },
+              { "not": { "href_matches": ["/*.md", "/pagefind/*", "/og/*", "/api/*"] } },
+              { "not": { "selector_matches": "[data-no-prerender]" } }
+            ]
+          },
+          "eagerness": "conservative"
+        }]
+      }
+    </script>
+    <slot name="head" />
+  </head>
+  <body>
+    <a href="#main" class="skip-link">Skip to content</a>
+    <div class="site-chrome" transition:persist="site-chrome" data-pagefind-ignore>
+      <div class="column column-header">
+        <SiteHeader />
+      </div>
+      <CommandPalette />
+    </div>
+    <div class:list={["column", "column-body", bodyClass]}>
+      <main
+        id="main"
+        data-route-content
+        data-navigation-phase="idle"
+        data-pagefind-body={pagefind ? "" : undefined}
+        data-pagefind-ignore={pagefind ? undefined : "true"}
+      >
+        {label && <h1 class="page-label">{label}</h1>}
+        <slot />
+      </main>
+      <SiteFooter />
+    </div>
+
+    <script>
+      import { initConsole } from "../scripts/console";
+      import { initTelemetry } from "../scripts/telemetry";
+      import "../scripts/webmcp";
+      import { playAccent } from "../scripts/sound";
+      import { onPageCleanup } from "../scripts/lifecycle";
+      import "../scripts/navigation-shell";
+      import "../scripts/floating-toc";
+      initConsole();
+      initTelemetry();
+      declare global {
+        interface Window {
+          __siteInitialRevealComplete?: boolean;
+          __siteIntroAnimated?: boolean;
+        }
+      }
+
+      function enhance() {
+        const isHomePage = Boolean(document.querySelector(".column-body.home"));
+        if (isHomePage) {
+          window.__siteIntroAnimated = true;
+          try {
+            sessionStorage.setItem("intro-animated", "true");
+          } catch (e) {}
+        }
+
+        const items = document.querySelectorAll<HTMLElement>("[data-enter]:not(.entered)");
+        if (window.__siteInitialRevealComplete) {
+          items.forEach((el) => el.classList.add("entered"));
+          return;
+        }
+        window.__siteInitialRevealComplete = true;
+        const motionOn = document.documentElement.dataset.motion === "on";
+        const REVEAL_ORDER_CAP = isHomePage ? 6 : 1;
+
+        if (!motionOn || !("IntersectionObserver" in window)) {
+          items.forEach((el) => el.classList.add("entered"));
+          return;
+        }
+
+        // Read phase FIRST (before mutating styles/classes to prevent forced reflow)
+        const viewportCutoff = window.innerHeight * 0.92;
+        const aboveFold: HTMLElement[] = [];
+        const toObserve: HTMLElement[] = [];
+
+        if (isHomePage) {
+          items.forEach((el) => {
+            if (el.getBoundingClientRect().top < viewportCutoff) {
+              aboveFold.push(el);
+            } else {
+              toObserve.push(el);
+            }
+          });
+        } else {
+          items.forEach((el, index) => {
+            if (index === 0) aboveFold.push(el);
+            else toObserve.push(el);
+          });
+        }
+
+        // Above-fold content renders immediately with 0 render delay
+        aboveFold.forEach((el) => el.classList.add("entered"));
+
+        // Below-fold content gets initial-enter and reveals when scrolled in
+        toObserve.forEach((el) => el.classList.add("initial-enter"));
+
+        function reveal(el: HTMLElement, order: number) {
+          if (
+            el.classList.contains("revealing") ||
+            el.classList.contains("entered")
+          )
+            return;
+          el.style.setProperty(
+            "--reveal-order",
+            String(Math.min(order, REVEAL_ORDER_CAP))
+          );
+          let settled = false;
+          const settle = () => {
+            if (settled) return;
+            settled = true;
+            el.removeEventListener("animationend", onAnimationDone);
+            el.removeEventListener("animationcancel", onAnimationDone);
+            el.classList.remove("revealing");
+            el.classList.add("entered");
+            el.style.willChange = "auto";
+          };
+          const onAnimationDone = (event: AnimationEvent) => {
+            if (event.target !== el) return;
+            settle();
+          };
+          el.addEventListener("animationend", onAnimationDone);
+          el.addEventListener("animationcancel", onAnimationDone);
+          onPageCleanup(() => {
+            el.removeEventListener("animationend", onAnimationDone);
+            el.removeEventListener("animationcancel", onAnimationDone);
+          });
+          el.classList.add("revealing");
+        }
+
+        if (toObserve.length) {
+          const io = new IntersectionObserver(
+            (entries, obs) => {
+              let order = 0;
+              entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                const el = entry.target as HTMLElement;
+                reveal(el, order++);
+                obs.unobserve(el);
+              });
+            },
+            { rootMargin: "0px", threshold: 0 }
+          );
+          toObserve.forEach((el) => io.observe(el));
+          onPageCleanup(() => io.disconnect());
+        }
+      }
+
+      enhance();
+      document.addEventListener("astro:page-load", enhance);
+
+      const chord = (e: KeyboardEvent) =>
+        e.altKey && e.shiftKey && (e.key === "v" || e.key === "V");
+      document.addEventListener("keydown", (e) => {
+        if (chord(e)) {
+          document.documentElement.dataset.accent = "off-hours";
+          playAccent("pop");
+        }
+      });
+      document.addEventListener("keyup", () => {
+        if (document.documentElement.dataset.accent === "off-hours") {
+          delete document.documentElement.dataset.accent;
+        }
+      });
+
+    </script>
+  </body>
+</html>
+
+<style>
+  .page-label {
+    margin: 0;
+    max-inline-size: 18ch;
+    color: var(--ink);
+    font-size: clamp(1.85rem, 4vw, 2.45rem);
+    font-weight: 620;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
+    text-wrap: balance;
+  }
+
+  main:has(.page-label) :global(> .page-label + *) {
+    margin-top: var(--space-content-lead);
+  }
+</style>
