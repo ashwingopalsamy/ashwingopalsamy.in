@@ -1,0 +1,218 @@
+---
+import Icon from "./Icon.astro";
+import SocialProfilePreviews from "./SocialProfilePreviews.astro";
+import { site, socials, resumeUrl } from "../data/home";
+import { getGithubContributions } from "../lib/github-contributions";
+
+const quickLinks = socials.filter(
+  (s) => s.id === "github" || s.id === "linkedin" || s.id === "x"
+);
+const contributions = await getGithubContributions();
+---
+
+<section class="contact" aria-label="Contact and Profiles" data-enter>
+  <h2 class="visually-hidden">Contact and Profiles</h2>
+  <p class="contact-lede">
+    Working on payments infrastructure, AI, or something else entirely?
+  </p>
+
+  <div class="contact-row">
+    <div class="cta-row">
+      <a class="cta cta-primary" href={site.cal} target="_blank" rel="noopener noreferrer">
+        Let's talk
+      </a>
+      {
+        resumeUrl && (
+          <a class="cta cta-secondary" href={resumeUrl} download="AshwinGopalsamy_Resume.pdf">
+            Resume
+          </a>
+        )
+      }
+    </div>
+
+    <span class="row-sep" aria-hidden="true"></span>
+
+    <div class="contact-social-links">
+      <SocialProfilePreviews links={quickLinks} contributions={contributions} />
+      <a class="chip-all" href="/links/" aria-label="All links: view social and contact links">
+        all links
+        <Icon name="arrow-right" size={13} strokeWidth={2.2} />
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .contact-lede {
+    margin-top: 1.5rem;
+    color: var(--muted);
+    transition: color var(--t-color);
+  }
+
+  .contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: 1.25rem;
+  }
+
+  .cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .cta {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.75rem;
+    padding: 0.65rem 1.3rem;
+    border-radius: var(--r-pill);
+    font-weight: 500;
+    font-size: 0.9375rem;
+    text-decoration: none;
+    overflow: hidden;
+    transition:
+      transform var(--dur-2) var(--ease-out),
+      box-shadow var(--t-move),
+      background-color var(--t-color),
+      border-color var(--t-color),
+      color var(--t-color);
+  }
+
+  .cta:hover,
+  .cta:focus-visible {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-2);
+  }
+
+  .cta:focus-visible {
+    outline-offset: 3px;
+  }
+
+  .cta:active {
+    transform: scale(0.96);
+    transition: transform var(--dur-1) var(--ease);
+  }
+
+  .cta-primary {
+    background: var(--ink);
+    color: var(--canvas);
+    box-shadow:
+      var(--shadow-inset),
+      var(--shadow-1);
+  }
+
+  .cta-secondary {
+    background: var(--cta-secondary-bg);
+    color: var(--ink);
+    border: 1px solid var(--cta-secondary-border);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    backdrop-filter: blur(12px) saturate(160%);
+  }
+
+  .cta-secondary:hover,
+  .cta-secondary:focus-visible {
+    background: color-mix(in oklch, var(--ink) 7%, transparent);
+    border-color: color-mix(in oklch, var(--ink) 18%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cta:hover,
+    .cta:focus-visible {
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .cta-secondary {
+      background: var(--canvas);
+      border-color: var(--rule-strong);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+
+  .row-sep {
+    width: 1px;
+    height: 1.1rem;
+    align-self: center;
+    flex-shrink: 0;
+    background: var(--rule-strong);
+    transition: background-color var(--t-color);
+  }
+
+  .contact-social-links {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .chip-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    height: 2.75rem;
+    padding: 0 1.1rem;
+    border-radius: var(--r-pill);
+    border: 1px solid var(--rule-strong);
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 0.9375rem;
+    white-space: nowrap;
+    text-decoration: none;
+    transition:
+      background-color var(--t-color),
+      color var(--t-color),
+      border-color var(--t-color),
+      transform var(--dur-2) var(--ease-out);
+  }
+
+
+  .chip-all:hover,
+  .chip-all:focus-visible {
+    background: var(--ink);
+    color: var(--canvas);
+    border-color: var(--ink);
+    transform: translateY(-3px);
+    text-decoration: none;
+  }
+
+  .chip-all:active {
+    transform: translateY(-1px) scale(0.97);
+    transition: transform 90ms var(--ease);
+  }
+
+  @media (max-width: 38rem) {
+    .contact-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.9rem;
+    }
+    .row-sep {
+      display: none;
+    }
+    .cta-row {
+      flex-wrap: nowrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 21rem;
+      margin-inline: auto;
+    }
+    .cta-row:has(.cta:only-child) .cta {
+      flex: 0 1 auto;
+      min-width: 11rem;
+    }
+    .cta {
+      flex: 1;
+      justify-content: center;
+    }
+    .contact-social-links {
+      justify-content: center;
+      width: 100%;
+    }
+  }
+</style>

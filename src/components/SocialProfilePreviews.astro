@@ -1,0 +1,881 @@
+---
+import { currentRole, site, type SocialLink } from "../data/home";
+import {
+  formatContributionDate,
+  formatContributionTotal,
+  toContributionWeeks,
+  type ContributionSnapshot,
+} from "../lib/github-contributions";
+import { profileIconPaths } from "../lib/profile-icons";
+
+interface Props {
+  links: SocialLink[];
+  contributions: ContributionSnapshot;
+}
+
+const { links, contributions } = Astro.props;
+const previewLinks = links.filter((link) => link.id === "github" || link.id === "linkedin" || link.id === "x");
+const weeks = toContributionWeeks(contributions);
+const contributionTotal = formatContributionTotal(contributions.total);
+const firstDate = formatContributionDate(contributions.start);
+const lastDay = new Date(`${contributions.start}T00:00:00.000Z`);
+lastDay.setUTCDate(lastDay.getUTCDate() + contributions.counts.length - 1);
+const lastDate = formatContributionDate(lastDay.toISOString().slice(0, 10));
+const graphLabel = `${contributionTotal}, from ${firstDate} to ${lastDate}.`;
+
+function iconPath(link: SocialLink): string {
+  return profileIconPaths[link.id] ?? "";
+}
+---
+
+<div class="social-preview" data-social-preview>
+  <div class="social-preview__triggers" role="group" aria-label="Social profiles">
+    {
+      previewLinks.map((link, index) => (
+        <a
+          class="chip"
+          aria-label={link.label}
+          href={link.href}
+          target="_blank"
+          rel="me noopener noreferrer"
+          data-social-preview-trigger
+          data-preview-id={link.id}
+          data-preview-index={index}
+        >
+          <svg viewBox="0 0 24 24" width={link.id === "linkedin" ? 17 : 16} height={link.id === "linkedin" ? 17 : 16} aria-hidden="true" fill="currentColor">
+            <path d={iconPath(link)} />
+          </svg>
+          <span class="visually-hidden">{link.label}</span>
+        </a>
+      ))
+    }
+  </div>
+
+  <div class="social-preview__bridge" aria-hidden="true"></div>
+
+  <aside class="social-preview__panel" data-social-preview-panel aria-label="Social profile preview" hidden>
+    {
+      previewLinks.map((link) =>
+        link.id === "github" ? (
+          <article class="social-preview__card social-preview__card--github" data-social-preview-card data-preview-id={link.id} aria-label="GitHub profile preview" hidden>
+            <div class="social-preview__github-header">
+              <img class="social-preview__avatar social-preview__avatar--github" src="/portrait.webp" alt="" width="40" height="40" loading="lazy" decoding="async" />
+              <div class="social-preview__identity">
+                <div class="social-preview__github-topline">
+                  <a class="social-preview__profile-link" href={link.href} target="_blank" rel="me noopener noreferrer">@ashwingopalsamy</a>
+                  <a class="social-preview__cta social-preview__cta--github" href={link.href} target="_blank" rel="me noopener noreferrer">View Code<span class="visually-hidden"> on Ashwin Gopalsamy's GitHub profile</span></a>
+                </div>
+                <p>{contributionTotal}</p>
+              </div>
+            </div>
+            <div class="contribution-graph" data-contribution-graph role="img" aria-label={graphLabel}>
+              <div class="contribution-grid" style={`--week-count: ${weeks.length}`} data-contribution-grid>
+                <template class="contribution-template">
+                  {
+                    weeks.map((week) =>
+                      week.map((day) =>
+                        day ? (
+                          <span
+                            class={`contribution-cell contribution-cell--${day.level}`}
+                            data-day={`${day.count},${day.date}`}
+                            aria-hidden="true"
+                          ></span>
+                        ) : (
+                          <span class="contribution-cell contribution-cell--empty" aria-hidden="true"></span>
+                        ),
+                      ),
+                    )
+                  }
+                </template>
+              </div>
+              <div class="contribution-tooltip" data-contribution-tooltip aria-hidden="true" hidden></div>
+            </div>
+          </article>
+        ) : link.id === "linkedin" ? (
+          <article class="social-preview__card social-preview__card--linkedin" data-social-preview-card data-preview-id={link.id} aria-label="LinkedIn profile preview" hidden>
+            <div class="social-preview__banner social-preview__linkedin-banner">
+              <img class="social-preview__banner-image" src="/LinkedInBanner.jpeg" alt="" width="1400" height="349" loading="lazy" decoding="async" />
+              <img class="social-preview__avatar social-preview__avatar--featured" src="/portrait.webp" alt="" width="56" height="56" loading="lazy" decoding="async" />
+            </div>
+            <div class="social-preview__profile-body">
+              <div class="social-preview__profile-topline">
+                <div class="social-preview__name-row">
+                  <p class="social-preview__name">Ashwin Gopalsamy</p>
+                  <span class="social-preview__verified social-preview__verified--linkedin" role="img" aria-label="Verified account"></span>
+                </div>
+                <a class="social-preview__cta social-preview__cta--linkedin" href={link.href} target="_blank" rel="me noopener noreferrer">Connect<span class="visually-hidden"> with Ashwin Gopalsamy on LinkedIn</span></a>
+              </div>
+              <p class="social-preview__meta">
+                {currentRole.role}<br />{currentRole.company} · {site.locationShort}
+              </p>
+            </div>
+          </article>
+        ) : (
+          <article class="social-preview__card social-preview__card--x" data-social-preview-card data-preview-id={link.id} aria-label="X profile preview" hidden>
+            <div class="social-preview__banner social-preview__x-banner">
+              <img class="social-preview__banner-image" src="/TwitterBanner.webp" alt="" width="1500" height="500" loading="lazy" decoding="async" />
+              <svg class="social-preview__x-mark" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d={iconPath(link)} /></svg>
+              <img class="social-preview__avatar social-preview__avatar--featured" src="/TwitterPfP.jpg" alt="" width="56" height="56" loading="lazy" decoding="async" />
+            </div>
+            <div class="social-preview__x-body">
+              <div class="social-preview__x-action-row">
+                <a class="social-preview__cta social-preview__cta--x" href={link.href} target="_blank" rel="me noopener noreferrer">Follow<span class="visually-hidden"> Ashwin Gopalsamy on X (Twitter)</span></a>
+              </div>
+              <div class="social-preview__name-row social-preview__x-name-row">
+                <p class="social-preview__name">@ashwin2125</p>
+                <img class="social-preview__verified social-preview__verified--x" src="/Twitter_Verified_Badge.svg" alt="Verified account" width="16" height="16" loading="lazy" decoding="async" />
+              </div>
+              <p class="social-preview__meta">Distributed Systems · Fintech · AI</p>
+            </div>
+          </article>
+        ),
+      )
+    }
+  </aside>
+</div>
+
+<style>
+  .social-preview {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .social-preview__triggers {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .chip {
+    position: relative;
+    z-index: 1;
+    display: inline-grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid var(--rule-strong);
+    border-radius: 50%;
+    color: var(--faint);
+    text-decoration: none;
+    transition:
+      background-color var(--t-color),
+      color var(--t-color),
+      border-color var(--t-color),
+      transform var(--t-move);
+  }
+
+
+  @media (hover: hover) and (pointer: fine) {
+    .chip:hover {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--canvas);
+      text-decoration: none;
+      transform: translateY(-3px);
+    }
+  }
+
+  .chip:focus-visible {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--canvas);
+    text-decoration: none;
+    transform: translateY(-3px);
+  }
+
+  .chip:active {
+    transform: translateY(-1px) scale(0.96);
+    transition: transform var(--dur-1) var(--ease);
+  }
+
+  .social-preview__bridge {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 100%;
+    block-size: 0.75rem;
+  }
+
+  .social-preview__panel {
+    position: absolute;
+    inset-block-end: calc(100% + 0.5rem);
+    inset-inline-start: 0;
+    z-index: var(--z-raised);
+    box-sizing: content-box;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--r-5);
+    background: var(--canvas);
+    box-shadow: var(--shadow-3);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-50%);
+    transition:
+      inset-inline-start var(--dur-3) cubic-bezier(0.33, 1, 0.68, 1),
+      width var(--dur-3) cubic-bezier(0.33, 1, 0.68, 1),
+      height var(--dur-3) cubic-bezier(0.33, 1, 0.68, 1),
+      opacity var(--dur-2) var(--ease);
+    isolation: isolate;
+  }
+
+  .social-preview__panel.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .social-preview__panel.is-instant {
+    transition: none;
+  }
+
+  .social-preview__panel.is-animating {
+    will-change: inset-inline-start, width, height, opacity;
+  }
+
+  .social-preview__card {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline-start: 0;
+    width: max-content;
+    max-width: calc(100vw - 2 * var(--space-3));
+    background: var(--canvas);
+    color: var(--ink);
+  }
+
+  .social-preview__card.is-active {
+    z-index: 1;
+  }
+
+  .social-preview__card.is-measuring {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .social-preview__panel[hidden],
+  .social-preview__card[hidden],
+  .contribution-tooltip[hidden] {
+    display: none;
+  }
+
+  .social-preview__card--github {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  .social-preview__github-header {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .social-preview__avatar {
+    display: block;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center 28%;
+  }
+
+  .social-preview__avatar--github {
+    width: 2.5rem;
+    height: 2.5rem;
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--ink) 12%, transparent);
+  }
+
+  .social-preview__identity {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .social-preview__profile-link,
+  .social-preview__name {
+    margin: 0;
+    color: var(--ink);
+    font-size: 1rem;
+    font-weight: var(--font-semibold);
+    line-height: 1.25;
+  }
+
+  .social-preview__profile-link {
+    text-decoration: none;
+  }
+
+  .social-preview__profile-link:hover,
+  .social-preview__profile-link:focus-visible {
+    text-decoration: underline;
+    text-decoration-thickness: 0.5px;
+    text-decoration-color: color-mix(in oklch, currentColor 55%, transparent);
+    text-underline-offset: 4px;
+    text-decoration-skip-ink: auto;
+  }
+
+  .social-preview__identity p,
+  .social-preview__meta {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+  }
+
+  .social-preview__github-topline,
+  .social-preview__profile-topline {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-2);
+  }
+
+  .social-preview__github-topline {
+    align-items: baseline;
+  }
+
+  .social-preview__profile-topline {
+    align-items: center;
+  }
+
+  .social-preview__name-row {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+
+  .social-preview__name-row .social-preview__name {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .contribution-graph {
+    position: relative;
+    width: min(22rem, calc(100vw - 6rem));
+  }
+
+  .contribution-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-columns: repeat(var(--week-count), minmax(0, 1fr));
+    grid-template-rows: repeat(7, minmax(0, 1fr));
+    gap: 1.5px;
+  }
+
+  .contribution-cell {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: color-mix(in oklch, var(--ink) 10%, transparent);
+  }
+
+  .contribution-cell--1 { background: color-mix(in oklch, var(--acc-green) 28%, transparent); }
+  .contribution-cell--2 { background: color-mix(in oklch, var(--acc-green) 46%, transparent); }
+  .contribution-cell--3 { background: color-mix(in oklch, var(--acc-green) 68%, transparent); }
+  .contribution-cell--4 { background: color-mix(in oklch, var(--acc-green) 90%, transparent); }
+  .contribution-cell--empty { background: transparent; }
+
+  .contribution-tooltip {
+    position: absolute;
+    z-index: 2;
+    inset-block-start: var(--tooltip-y, 0px);
+    inset-inline-start: var(--tooltip-x, 50%);
+    max-inline-size: calc(100% - 1rem);
+    padding: 0.3rem 0.65rem;
+    border-radius: var(--r-pill);
+    background: var(--ink);
+    box-shadow: var(--shadow-1);
+    color: var(--canvas);
+    font-size: var(--text-xs);
+    line-height: 1.25;
+    pointer-events: none;
+    text-wrap: nowrap;
+    transform: translate(-50%, calc(-100% - 0.25rem));
+  }
+
+  .social-preview__card--linkedin,
+  .social-preview__card--x {
+    width: min(19rem, calc(100vw - 3rem));
+    overflow: hidden;
+  }
+
+  .social-preview__banner {
+    position: relative;
+  }
+
+  .social-preview__banner-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .social-preview__linkedin-banner {
+    aspect-ratio: 1400 / 349;
+  }
+
+  .social-preview__linkedin-banner .social-preview__banner-image {
+    object-position: center;
+  }
+
+  .social-preview__avatar--featured {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline-start: var(--space-3);
+    z-index: 1;
+    width: 3.5rem;
+    height: 3.5rem;
+    border: 2px solid var(--canvas);
+    transform: translateY(50%);
+  }
+
+  .social-preview__profile-body {
+    display: grid;
+    min-width: 0;
+    gap: var(--space-2);
+    padding: calc(1.75rem + var(--space-2)) var(--space-3) var(--space-3);
+  }
+
+  .social-preview__verified {
+    display: block;
+    flex: 0 0 auto;
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .social-preview__verified--linkedin {
+    background: #0a66c2;
+    -webkit-mask: url("/LinkedIn_Verified_Badge.svg") center / contain no-repeat;
+    mask: url("/LinkedIn_Verified_Badge.svg") center / contain no-repeat;
+  }
+
+  .social-preview__verified--x {
+    object-fit: contain;
+  }
+
+  .social-preview__cta {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    height: fit-content;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--r-pill);
+    color: #fff;
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    line-height: 1.4;
+    text-decoration: none;
+    transition:
+      filter var(--t-color),
+      transform var(--dur-1) var(--ease);
+  }
+
+  .social-preview__cta:hover,
+  .social-preview__cta:focus-visible {
+    filter: brightness(1.14);
+    text-decoration: none;
+  }
+
+  .social-preview__cta:active {
+    transform: scale(0.97);
+  }
+
+  .social-preview__cta--linkedin {
+    background: #0a66c2;
+  }
+
+  .social-preview__cta--github,
+  .social-preview__cta--x {
+    background: var(--ink);
+    color: var(--canvas);
+  }
+
+  .social-preview__x-banner {
+    aspect-ratio: 3 / 1;
+  }
+
+  .social-preview__x-banner .social-preview__banner-image {
+    object-position: 60% center;
+  }
+
+  .social-preview__x-mark {
+    position: absolute;
+    inset-block-start: var(--space-3);
+    inset-inline-end: var(--space-3);
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #f5f5f4;
+    filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.55));
+    opacity: 0.92;
+  }
+
+  .social-preview__x-body {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-3);
+  }
+
+  .social-preview__x-action-row {
+    display: flex;
+    min-block-size: 1.75rem;
+    align-items: flex-start;
+    justify-content: flex-end;
+  }
+
+  .social-preview__x-name-row {
+    width: max-content;
+    max-width: 100%;
+    margin-block-start: var(--space-1);
+  }
+
+  .social-preview__profile-body .social-preview__meta,
+  .social-preview__x-body .social-preview__meta {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chip:hover,
+    .chip:focus-visible,
+    .chip:active {
+      transform: none;
+    }
+
+    .social-preview__panel {
+      transition: opacity var(--dur-2) linear;
+    }
+
+    .social-preview__cta:active {
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  import { pageSignal } from "../scripts/lifecycle";
+
+  function initSocialProfilePreviews() {
+    document.querySelectorAll<HTMLElement>("[data-social-preview]").forEach((root) => {
+      if (root.dataset.enhanced === "true") return;
+
+      const panel = root.querySelector<HTMLElement>("[data-social-preview-panel]")!;
+      const bridge = root.querySelector<HTMLElement>(".social-preview__bridge")!;
+      const triggers = Array.from(root.querySelectorAll<HTMLElement>("[data-social-preview-trigger]"));
+      const cards = Array.from(root.querySelectorAll<HTMLElement>("[data-social-preview-card]"));
+      const graph = root.querySelector<HTMLElement>("[data-contribution-graph]");
+      const tooltip = root.querySelector<HTMLElement>("[data-contribution-tooltip]");
+      if (!panel || !bridge || triggers.length === 0 || cards.length === 0) return;
+
+      root.dataset.enhanced = "true";
+      const signal = pageSignal();
+      const ownerDocument = root.ownerDocument;
+      const hoverQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
+      const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+      let activeCard: HTMLElement | null = null;
+      let activeTrigger: HTMLElement | null = null;
+      let activeIndex = -1;
+      let leaveTimer: number | undefined;
+      let hideTimer: number | undefined;
+      let settleTimer: number | undefined;
+      let openFrame: number | undefined;
+      let lastInputWasKeyboard = false;
+      let suppressFocusOpen = false;
+
+      const cardFor = new Map(cards.map((card) => [card.dataset.previewId, card]));
+      const easing = () => getComputedStyle(root).getPropertyValue("--ease").trim() || "cubic-bezier(0.2, 0, 0, 1)";
+
+      function clearLeaveTimer() {
+        if (leaveTimer !== undefined) window.clearTimeout(leaveTimer);
+        leaveTimer = undefined;
+      }
+
+      function clearHideTimer() {
+        if (hideTimer !== undefined) window.clearTimeout(hideTimer);
+        hideTimer = undefined;
+      }
+
+      function settlePanel() {
+        if (settleTimer !== undefined) window.clearTimeout(settleTimer);
+        settleTimer = window.setTimeout(() => panel.classList.remove("is-animating"), 220);
+      }
+
+      function hideTooltip() {
+        if (tooltip) tooltip.hidden = true;
+      }
+
+      function ensureContributionGrid(card: HTMLElement) {
+        if (card.dataset.previewId !== "github") return;
+        const grid = card.querySelector<HTMLElement>("[data-contribution-grid]");
+        if (!grid || grid.dataset.rendered === "true") return;
+        grid.dataset.rendered = "true";
+        const tpl = grid.querySelector<HTMLTemplateElement>(".contribution-template");
+        if (tpl) {
+          grid.appendChild(tpl.content.cloneNode(true));
+        }
+      }
+
+      function measureCard(card: HTMLElement) {
+        ensureContributionGrid(card);
+        const wasHidden = card.hidden;
+        const wasInert = card.inert;
+        card.classList.add("is-measuring");
+        card.hidden = false;
+        card.inert = true;
+        const size = { width: card.offsetWidth, height: card.offsetHeight };
+        card.hidden = wasHidden;
+        card.inert = wasInert;
+        card.classList.remove("is-measuring");
+        return size;
+      }
+
+      function positionPanel(trigger: HTMLElement, card: HTMLElement) {
+        const { width, height } = measureCard(card);
+        const rootBox = root.getBoundingClientRect();
+        const triggerBox = trigger.getBoundingClientRect();
+        const desiredCenter = triggerBox.left + triggerBox.width / 2;
+        const gutter = 12;
+        const minimumCenter = gutter + width / 2;
+        const maximumCenter = window.innerWidth - gutter - width / 2;
+        const viewportCenter = minimumCenter > maximumCenter
+          ? window.innerWidth / 2
+          : Math.min(Math.max(desiredCenter, minimumCenter), maximumCenter);
+
+        panel.style.insetInlineStart = `${viewportCenter - rootBox.left}px`;
+        panel.style.width = `${width}px`;
+        panel.style.height = `${height}px`;
+      }
+
+      function hideCards() {
+        cards.forEach((card) => {
+          card.getAnimations().forEach((animation) => animation.cancel());
+          card.classList.remove("is-active", "is-measuring");
+          card.hidden = true;
+          card.inert = true;
+        });
+        activeCard = null;
+        activeIndex = -1;
+        hideTooltip();
+      }
+
+      function hidePanel(restoreFocus = false) {
+        clearLeaveTimer();
+        clearHideTimer();
+        if (restoreFocus && activeTrigger && ownerDocument.activeElement !== activeTrigger) {
+          suppressFocusOpen = true;
+          activeTrigger.focus();
+        }
+        if (panel.hidden) return;
+        if (openFrame !== undefined) {
+          window.cancelAnimationFrame(openFrame);
+          openFrame = undefined;
+        }
+        panel.classList.remove("is-open", "is-animating");
+        const conceal = () => {
+          if (panel.classList.contains("is-open")) return;
+          panel.hidden = true;
+          hideCards();
+        };
+        hideTimer = window.setTimeout(conceal, 150);
+      }
+
+      function animateInitialCard(card: HTMLElement) {
+        if (motionQuery.matches) return;
+        const entrance = card.animate(
+          [
+            { opacity: 0, transform: "translateY(6px)" },
+            { opacity: 1, transform: "translateY(0)" },
+          ],
+          { duration: 200, easing: easing(), fill: "both" },
+        );
+        void entrance.finished.then(() => {
+          if (activeCard === card) entrance.cancel();
+        }, () => undefined);
+      }
+
+      function transitionCard(next: HTMLElement, direction: number) {
+        if (activeCard === next) {
+          next.hidden = false;
+          next.inert = false;
+          return;
+        }
+
+        const previous = activeCard;
+        cards.forEach((card) => {
+          if (card === next || card === previous) return;
+          card.getAnimations().forEach((animation) => animation.cancel());
+          card.classList.remove("is-active");
+          card.hidden = true;
+          card.inert = true;
+        });
+
+        activeCard = next;
+        next.getAnimations().forEach((animation) => animation.cancel());
+        next.hidden = false;
+        next.inert = false;
+        next.classList.add("is-active");
+
+        if (!previous) return;
+
+        previous.getAnimations().forEach((animation) => animation.cancel());
+        previous.classList.remove("is-active");
+        previous.inert = true;
+
+        if (motionQuery.matches) {
+          previous.hidden = true;
+          return;
+        }
+
+        const distance = direction * 36;
+        const incoming = next.animate(
+          [
+            { opacity: 0, transform: `translateX(${distance}px)`, filter: "blur(2px)" },
+            { opacity: 1, transform: "translateX(0)", filter: "blur(0)" },
+          ],
+          { duration: 180, easing: easing(), fill: "both" },
+        );
+        const outgoing = previous.animate(
+          [
+            { opacity: 1, transform: "translateX(0)", filter: "blur(0)" },
+            { opacity: 0, transform: `translateX(${-distance}px)`, filter: "blur(2px)" },
+          ],
+          { duration: 180, easing: easing(), fill: "both" },
+        );
+
+        void incoming.finished.then(() => {
+          if (activeCard === next) incoming.cancel();
+        }, () => undefined);
+        void outgoing.finished.then(() => {
+          if (activeCard !== previous) {
+            previous.hidden = true;
+            outgoing.cancel();
+          }
+        }, () => undefined);
+      }
+
+      function openPanel(trigger: HTMLElement, keyboard: boolean) {
+        const id = trigger.dataset.previewId;
+        const index = Number(trigger.dataset.previewIndex ?? -1);
+        const next = id ? cardFor.get(id) : undefined;
+        if (!next || index < 0) return;
+
+        clearLeaveTimer();
+        clearHideTimer();
+        if (keyboard) trigger.after(panel);
+        else bridge.after(panel);
+
+        const opening = panel.hidden;
+        activeTrigger = trigger;
+        if (opening) {
+          panel.classList.add("is-instant");
+          panel.hidden = false;
+        }
+
+        positionPanel(trigger, next);
+        panel.classList.add("is-animating");
+        settlePanel();
+
+        const direction = activeIndex < 0 ? 0 : Math.sign(index - activeIndex) || 1;
+        activeIndex = index;
+        transitionCard(next, direction);
+
+        if (opening) {
+          panel.getBoundingClientRect();
+          panel.classList.remove("is-instant");
+          if (openFrame !== undefined) window.cancelAnimationFrame(openFrame);
+          openFrame = window.requestAnimationFrame(() => {
+            panel.classList.add("is-open");
+            animateInitialCard(next);
+            openFrame = undefined;
+          });
+        } else {
+          panel.classList.add("is-open");
+        }
+      }
+
+      function scheduleHide() {
+        if (root.contains(ownerDocument.activeElement)) return;
+        clearLeaveTimer();
+        leaveTimer = window.setTimeout(() => hidePanel(), 90);
+      }
+
+      function showContributionTooltip(event: PointerEvent) {
+        if (!graph || !tooltip || !(event.target instanceof Element)) return;
+        const cell = event.target.closest<HTMLElement>(".contribution-cell[data-day]");
+        if (!cell || !graph.contains(cell)) return;
+        const raw = cell.dataset.day ?? "";
+        const [countStr, dateStr] = raw.split(",");
+        if (!dateStr) return;
+        const count = Number(countStr ?? 0);
+        const [y, m, d] = dateStr.split("-").map(Number);
+        const dateObj = new Date(Date.UTC(y!, m! - 1, d!));
+        const dateFormatted = dateObj.toLocaleDateString("en-US", { month: "long", day: "numeric", timeZone: "UTC" });
+        const label = count === 1 ? "contribution" : "contributions";
+        const graphBox = graph.getBoundingClientRect();
+        const cellBox = cell.getBoundingClientRect();
+        const x = Math.min(Math.max(cellBox.left - graphBox.left + cellBox.width / 2, 8), graphBox.width - 8);
+        tooltip.textContent = `${count} ${label} on ${dateFormatted}`;
+        tooltip.style.setProperty("--tooltip-x", `${x}px`);
+        tooltip.style.setProperty("--tooltip-y", `${cell.offsetTop}px`);
+        tooltip.hidden = false;
+      }
+
+      root.addEventListener("pointerenter", clearLeaveTimer, { signal });
+      root.addEventListener("pointerleave", (event) => {
+        if (event.pointerType === "mouse") scheduleHide();
+      }, { signal });
+      root.addEventListener("pointerdown", () => {
+        lastInputWasKeyboard = false;
+      }, { signal });
+      root.addEventListener("focusin", clearLeaveTimer, { signal });
+      root.addEventListener("focusout", () => {
+        queueMicrotask(() => {
+          if (!signal.aborted && !root.contains(ownerDocument.activeElement)) scheduleHide();
+        });
+      }, { signal });
+
+      triggers.forEach((trigger) => {
+        trigger.addEventListener("pointerenter", (event) => {
+          if (event.pointerType === "mouse" && hoverQuery.matches) openPanel(trigger, false);
+        }, { signal });
+        trigger.addEventListener("focus", () => {
+          if (suppressFocusOpen) {
+            suppressFocusOpen = false;
+            return;
+          }
+          if (lastInputWasKeyboard) openPanel(trigger, true);
+        }, { signal });
+      });
+
+      ownerDocument.addEventListener("keydown", (event) => {
+        if (event.key === "Tab") lastInputWasKeyboard = true;
+        if (event.key === "Escape" && root.contains(ownerDocument.activeElement)) {
+          event.preventDefault();
+          hidePanel(true);
+        }
+      }, { signal });
+
+      graph?.addEventListener("pointerover", showContributionTooltip, { signal });
+      graph?.addEventListener("pointerleave", hideTooltip, { signal });
+      window.addEventListener("resize", () => {
+        if (!panel.hidden && activeTrigger && activeCard) positionPanel(activeTrigger, activeCard);
+      }, { signal });
+
+      signal.addEventListener("abort", () => {
+        clearLeaveTimer();
+        clearHideTimer();
+        if (settleTimer !== undefined) window.clearTimeout(settleTimer);
+        if (openFrame !== undefined) window.cancelAnimationFrame(openFrame);
+        panel.hidden = true;
+        panel.classList.remove("is-open", "is-instant", "is-animating");
+        hideCards();
+        delete root.dataset.enhanced;
+      }, { once: true });
+    });
+  }
+
+  initSocialProfilePreviews();
+  document.addEventListener("astro:page-load", initSocialProfilePreviews);
+</script>

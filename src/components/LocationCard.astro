@@ -1,0 +1,300 @@
+---
+/**
+ * LocationCard - a static representation of where I am: Pollachi,
+ * Tamil Nadu (10.657°N 76.956°E). Build-time responsive image asset
+ * with CSS marker and accessible fallback: 0 client-side map runtime overhead.
+ */
+import { Image } from "astro:assets";
+import Icon from "./Icon.astro";
+import mapImage from "../assets/map/pollachi@2x.png";
+
+const PIN_LAT = 10.6572;
+const PIN_LON = 76.9558;
+---
+
+<div class="loc-card">
+  <div
+    class="loc-map loc-map-wrap"
+    role="img"
+    aria-label="A calm map of Pollachi, Tamil Nadu, where I am."
+    data-map-status="ready"
+    data-map-init="true"
+  >
+    <Image
+      src={mapImage}
+      alt="Map showing Pollachi, Tamil Nadu"
+      widths={[320, 480, 664, 960, 1328]}
+      sizes="(max-width: 38rem) calc(100vw - 2.5rem), (max-width: 44rem) calc(100vw - 2.5rem), 664px"
+      format="avif"
+      quality={55}
+      class="loc-img"
+      loading="lazy"
+      decoding="async"
+    />
+    <div
+      class="loc-dot is-in"
+      aria-hidden="true"
+      data-pin-lat={PIN_LAT}
+      data-pin-lon={PIN_LON}
+    ></div>
+  </div>
+
+  <div class="loc-fallback" hidden>
+    <p class="loc-fallback-title">Pollachi, Tamil Nadu</p>
+    <p class="loc-fallback-sub">Coordinates below</p>
+    <p class="loc-fallback-coords mono">10.657°N 76.956°E</p>
+  </div>
+
+  <div class="loc-pill">
+    <Icon name="location" size={14} strokeWidth={2} />
+    <span>Pollachi, Tamil Nadu</span>
+  </div>
+
+  <div class="loc-attrib" aria-label="Map attribution">
+    <span>Map data ©</span>{" "}
+    <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>{" "}
+    <span>contributors</span>
+  </div>
+</div>
+
+<style>
+  .loc-card {
+    --loc-marker: var(--ink);
+    --loc-beacon: var(--map-beacon);
+    position: relative;
+    min-height: 0;
+    height: 100%;
+    border-radius: var(--r-5);
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--ink) 10%, transparent);
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklch, var(--ink) 6%, var(--canvas)),
+      color-mix(in oklch, var(--ink) 10%, var(--canvas))
+    );
+    transition: box-shadow var(--t-color);
+  }
+
+  @media (max-width: 38rem) {
+    .loc-card {
+      min-height: 240px;
+      height: auto;
+    }
+  }
+
+  .loc-map-wrap {
+    position: absolute;
+    inset: 0;
+    isolation: isolate;
+    background: var(--canvas);
+    overflow: hidden;
+  }
+
+  .loc-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    filter: var(--loc-map-filter);
+    mix-blend-mode: luminosity;
+    opacity: var(--loc-map-opacity);
+    display: block;
+  }
+
+  .loc-fallback {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 1.25rem 1.1rem;
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklch, var(--ink) 5%, var(--canvas)),
+      color-mix(in oklch, var(--ink) 9%, var(--canvas))
+    );
+  }
+
+  .loc-card.is-fallback .loc-fallback {
+    display: flex;
+  }
+
+  .loc-card.is-fallback .loc-map-wrap,
+  .loc-card.is-fallback .loc-attrib {
+    display: none;
+  }
+
+  .loc-card.is-fallback .loc-pill {
+    display: none;
+  }
+
+  .loc-fallback-title {
+    margin: 0;
+    font-weight: var(--font-medium);
+    font-size: var(--text-sm);
+    color: var(--ink);
+  }
+
+  .loc-fallback-sub {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--muted);
+  }
+
+  .loc-fallback-coords {
+    margin: 0.35rem 0 0;
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  .loc-dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--loc-beacon);
+    border: 2.5px solid var(--canvas);
+    transform: translate(-50%, -50%);
+    animation: loc-pulse 2s ease-out 2 forwards;
+  }
+
+  .loc-dot::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    background: var(--loc-beacon);
+    opacity: 0.45;
+    transform: scale(1);
+    animation: loc-pulse 2s ease-out 2 forwards;
+    pointer-events: none;
+  }
+
+  @keyframes loc-pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.45;
+    }
+    50% {
+      transform: scale(1.75);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0;
+    }
+  }
+
+  .loc-pill {
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.85rem;
+    border-radius: var(--r-pill);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--ink);
+    background: color-mix(in oklch, var(--canvas) 82%, transparent);
+    border: 1px solid color-mix(in oklch, var(--ink) 10%, transparent);
+    box-shadow: var(--shadow-inset), var(--shadow-1);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    backdrop-filter: blur(14px) saturate(160%);
+    transition:
+      opacity var(--t-color),
+      transform var(--t-move),
+      box-shadow var(--t-move);
+  }
+
+  .loc-pill svg {
+    color: var(--loc-marker);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .loc-pill {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+
+    .loc-card:hover .loc-pill,
+    .loc-card:focus-within .loc-pill {
+      opacity: 1;
+      transform: translateY(0);
+      box-shadow: var(--shadow-inset), var(--shadow-2);
+    }
+  }
+
+  .loc-attrib {
+    position: absolute;
+    left: 10px;
+    bottom: 8px;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-size: 0.625rem;
+    color: color-mix(in oklch, var(--ink) 62%, transparent);
+    white-space: nowrap;
+  }
+  .loc-attrib a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .loc-attrib a:hover,
+  .loc-attrib a:focus-visible {
+    color: var(--ink);
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .loc-pill {
+      background: var(--canvas);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loc-dot {
+      animation: none;
+      transform: translate(-50%, -50%);
+      transition: none;
+    }
+    .loc-dot::after {
+      display: none;
+    }
+    .loc-pill {
+      transition: opacity 0.01ms;
+    }
+  }
+</style>
+
+<script>
+  import { tickPresence, PRESENCE_EVENT, type Presence } from "../scripts/presence";
+  import { pageSignal } from "../scripts/lifecycle";
+
+  function syncDotPresence(dot: HTMLElement, presence: Presence) {
+    dot.dataset.presence = presence.state;
+  }
+
+  function initPresenceDot() {
+    const dot = document.querySelector<HTMLElement>(".loc-dot");
+    if (!dot) return;
+    const signal = pageSignal();
+    syncDotPresence(dot, tickPresence(new Date()));
+    document.addEventListener(PRESENCE_EVENT, (e) => {
+      syncDotPresence(dot, (e as CustomEvent<Presence>).detail);
+    }, { signal });
+  }
+
+  initPresenceDot();
+  document.addEventListener("astro:page-load", initPresenceDot);
+</script>

@@ -1,0 +1,288 @@
+---
+import type { CraftItem, NoteItem, PersonItem } from "../data/home";
+import Icon from "./Icon.astro";
+
+/**
+ * ContentList - one row pattern for craft, notes, and good people.
+ *
+ * Row choreography (hover): sibling rows dim to faint values while the
+ * hovered row returns to full ink, indents slightly, and its arrow
+ * nudges. Keyboard focus gets the same treatment via :focus-within.
+ * Placeholder rows carry a muted "(sample)" tag and are never links.
+ */
+
+interface Props {
+  id: string;
+  /** omit when the page layout already carries the label */
+  label?: string;
+  items: (CraftItem | NoteItem | PersonItem)[];
+  variant: "craft" | "notes" | "people";
+}
+
+const { id, label, items, variant } = Astro.props;
+
+function isNote(item: Props["items"][number]): item is NoteItem {
+  return "title" in item;
+}
+
+function formatDate(iso: string): string {
+  return new Date(`${iso}T00:00:00`).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+---
+
+{
+  items.length > 0 && (
+    <section id={id} aria-labelledby={label ? `${id}-label` : undefined} data-enter>
+      {label && (
+        <h2 id={`${id}-label`} class="content-list-heading">
+          {label}
+        </h2>
+      )}
+      <ul class="rows" data-variant={variant} role="list">
+        {items.map((item) => {
+          const title = isNote(item)
+            ? item.title
+            : (item as CraftItem | PersonItem).name;
+          const detail = isNote(item)
+            ? formatDate(item.date)
+            : (item as CraftItem | PersonItem).sentence;
+          const lede = isNote(item) ? item.sentence : undefined;
+
+          const inner = (
+            <>
+              <span class="row-main">
+                <span class="row-title">{title}</span>
+                {variant === "craft" && detail && (
+                  <span class="row-detail">{detail}</span>
+                )}
+                {variant === "notes" && lede && (
+                  <span class="row-lede">{lede}</span>
+                )}
+                {item.placeholder && (
+                  <span class="sample-tag" title="Sample entry, awaiting the real thing">
+                    (sample)
+                  </span>
+                )}
+              </span>
+              {isNote(item) && (
+                <time class="row-date" datetime={item.date}>{detail}</time>
+              )}
+              {item.href && <span class="row-arrow" aria-hidden="true"><Icon name="chevron-right" size={15} /></span>}
+            </>
+          );
+
+          return (
+            <li class="row">
+              {item.href ? (
+                <a class="row-link" href={item.href}>
+                  {inner}
+                </a>
+              ) : (
+                <div class="row-static">{inner}</div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  )
+}
+
+<style>
+  section {
+    margin-top: 0;
+  }
+
+  .content-list-heading {
+    margin: 0 0 1.25rem;
+    font-size: 1rem;
+    font-weight: 580;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    line-height: var(--leading-tight);
+  }
+
+  .rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .rows:hover .row {
+      opacity: 0.45;
+      filter: blur(0.2px);
+      transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
+    }
+
+    .rows:hover .row:hover,
+    .rows:hover .row:focus-within {
+      opacity: 1;
+      filter: none;
+    }
+  }
+
+  .row {
+    transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
+  }
+
+  .row-link,
+  .row-static {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: baseline;
+    gap: var(--space-4);
+    padding: 0.85rem 0.95rem;
+    margin-inline: -0.95rem;
+    border-radius: var(--r-3);
+    background: var(--surface-row-rest);
+    border: none;
+    box-shadow: none;
+    text-decoration: none;
+    color: inherit;
+    transition:
+      background-color var(--t-color),
+      transform var(--dur-1) var(--ease-out);
+  }
+
+  .row-main {
+    min-width: 0;
+  }
+
+  .rows[data-variant="craft"] .row-main {
+    display: grid;
+    grid-template-columns: minmax(12.5rem, 0.75fr) minmax(0, 1.25fr);
+    align-items: baseline;
+    gap: var(--space-4);
+  }
+
+  .row-title {
+    font-weight: 560;
+    font-size: 1.05rem;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    transition: color var(--t-color);
+  }
+
+  .row-detail {
+    color: var(--ghost);
+    font-size: 0.9375rem;
+    line-height: var(--leading-normal);
+    overflow-wrap: anywhere;
+    transition: color var(--t-color);
+  }
+
+  .row-lede {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.9375rem;
+    color: var(--ghost);
+    line-height: var(--leading-normal);
+    transition: color var(--t-color);
+  }
+
+  .row-date {
+    flex-shrink: 0;
+    font-size: 0.8125rem;
+    font-family: var(--font-mono);
+    color: var(--faint);
+    transition: color var(--t-color);
+  }
+
+  .row-arrow {
+    flex-shrink: 0;
+    align-self: center;
+    color: var(--ghost);
+    transition:
+      transform var(--t-move),
+      color var(--t-color);
+  }
+
+  .sample-tag {
+    margin-left: var(--space-2);
+    font-size: 0.75rem;
+    color: var(--faint);
+    white-space: nowrap;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .row-link:hover,
+    .row-link:focus-visible {
+      background: var(--surface-row-hover);
+    }
+
+    .row-link:hover .row-detail,
+    .row-link:hover .row-lede,
+    .row-link:focus-visible .row-detail,
+    .row-link:focus-visible .row-lede {
+      color: var(--muted);
+    }
+
+    .row-link:hover .row-arrow,
+    .row-link:focus-visible .row-arrow {
+      color: var(--ink);
+      transform: translateX(3px);
+    }
+  }
+
+  .row-link:active {
+    background: var(--surface-row-press);
+    transform: scale(0.995);
+  }
+
+  .row-link:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .rows[data-variant="people"] .row-link:hover .row-title,
+  .rows[data-variant="people"] .row-link:focus-visible .row-title {
+    text-decoration: underline;
+    text-decoration-thickness: 0.5px;
+    text-decoration-color: color-mix(in oklch, currentColor 55%, transparent);
+    text-underline-offset: 4px;
+    text-decoration-skip-ink: auto;
+  }
+
+  @media (max-width: 38rem) {
+    .row-link,
+    .row-static {
+      padding: 0.75rem 0.65rem;
+      margin-inline: -0.65rem;
+    }
+
+    .rows[data-variant="craft"] .row-main {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.25rem;
+    }
+
+    .rows[data-variant="notes"] .row-link,
+    .rows[data-variant="notes"] .row-static {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      row-gap: 0.35rem;
+    }
+
+    .rows[data-variant="notes"] .row-main {
+      grid-column: 1;
+    }
+
+    .rows[data-variant="notes"] .row-arrow {
+      grid-column: 2;
+      grid-row: 1;
+      align-self: center;
+    }
+
+    .rows[data-variant="notes"] .row-date {
+      grid-column: 1 / -1;
+      margin-top: 0;
+    }
+  }
+</style>

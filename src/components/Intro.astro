@@ -1,0 +1,195 @@
+---
+/**
+ * Intro - the hero. Two-tone in the "Dead Simple Sites" idiom: primary
+ * statements in ink, softer asides in grey (`.p-ink` / `.p-grey`). Weight
+ * stays normal throughout - emphasis is value (ink vs grey), never bold.
+ *
+ * Links carry the global quiet underline - hidden at rest, drawn on hover.
+ *
+ * The closing paragraph folds in what used to be the "outside work"
+ * section: library / photos / cafes live inline as links.
+ */
+---
+
+<section class="intro" aria-label="Introduction">
+  <h2 class="visually-hidden">About Ashwin Gopalsamy</h2>
+  <p class="lede p-ink line">
+    Hey! I'm <a class="link" href="/more/" aria-label="More about Ashwin: personal notes, photos, and projects"
+      >Ashwin</a
+    >. I build the infrastructure behind global payments.
+  </p>
+
+  <p class="p-grey line">
+    I work from home; on a <a
+      class="link"
+      href="https://youtu.be/UCEWM2Arkfg?si=QUgbgYh7DMKLH3b4"
+      target="_blank"
+      rel="noopener noreferrer"
+      >countryside region wrapped in coconut groves</a
+    >, close enough to the Western Ghats that the weather has opinions.
+  </p>
+
+  <p class="p-grey line">
+    I'm a <a class="link" href="https://developers.pismo.io/pismo-docs" target="_blank" rel="noopener noreferrer"
+      >Staff Engineer at Pismo, a Visa company</a
+    > working on sub-second high-throughput distributed systems. Previously, built <a
+      class="link"
+      href="https://docs.solarisgroup.com/"
+      target="_blank"
+      rel="noopener noreferrer"
+      >core-banking stuff</a
+    >.
+  </p>
+
+  <p class="p-grey line">
+    This fall I start my <a class="link" href="https://cdso.utexas.edu/msai" target="_blank" rel="noopener noreferrer"
+      >Masters in AI at UT Austin</a
+    > alongside my work.
+  </p>
+
+  <p class="p-grey line">
+      Off the clock, I'm happiest around good machinery and cars, or absorbed in technology, anthropology, old history, and long-form work of almost any kind. Here's the <a class="link" href="/library/" aria-label="Library: reading and media library"
+      >library</a
+    > of stuff I love, <a class="link" href="/more/photos/" aria-label="Photos I take: photography collection"
+      >photos I take</a
+    > and <a class="link" href="/more/cafe/" aria-label="Cafes I try: cafe directory and reviews"
+      >cafes I try</a
+    > and <a class="link" href="/more/" aria-label="More outside work: personal essays and projects"
+      >more outside work</a
+    >.
+  </p>
+</section>
+
+<style>
+  .intro {
+    margin-top: 0;
+    font-size: var(--text-md);
+  }
+
+  .intro .p-grey {
+    max-width: var(--measure-hero);
+    line-height: var(--leading-relaxed);
+  }
+
+  .intro p + p {
+    margin-top: 1.5em;
+  }
+
+  .intro p {
+    text-align: justify;
+  }
+
+  .lede {
+    font-size: clamp(1.1rem, 1rem + 0.5vw, 1.25rem);
+    line-height: 1.45;
+    letter-spacing: -0.015em;
+    margin-bottom: 2em;
+    text-wrap: pretty;
+  }
+
+  /* two-tone: value carries emphasis, not weight */
+  .p-ink {
+    color: var(--ink);
+  }
+  .p-grey {
+    color: var(--ghost);
+    transition: color var(--t-color);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .intro .p-grey:hover {
+      color: color-mix(in oklch, var(--ink) 80%, var(--muted));
+    }
+
+    .intro p:hover a,
+    .intro p:hover .link,
+    .intro .link:hover,
+    .intro .link:focus-visible {
+      font-weight: var(--font-hover-lift);
+      background-size: 100% 0.75px;
+    }
+  }
+
+  /* link - normal weight, lifts to ink on hover; living tapered draw on hover/focus */
+  .link {
+    color: var(--ink);
+    font-weight: var(--font-normal);
+    text-decoration: none;
+    white-space: normal;
+    display: inline;
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in oklch, currentColor 55%, transparent) 5%,
+      color-mix(in oklch, currentColor 55%, transparent) 95%,
+      transparent 100%
+    );
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 0.75px;
+    padding-bottom: 2px;
+    transition:
+      font-weight var(--t-color),
+      background-size 320ms var(--ease-out),
+      color var(--t-color);
+  }
+  .link:hover,
+  .link:focus-visible {
+    font-weight: var(--font-hover-lift);
+    background-size: 100% 0.75px;
+  }
+
+  @media (max-width: 38rem) {
+    .intro p {
+      text-align: justify;
+      text-justify: inter-word;
+      hyphens: none;
+      -webkit-hyphens: none;
+      text-wrap: pretty;
+    }
+
+    .intro .lede {
+      font-size: var(--text-lg);
+      text-wrap: pretty;
+    }
+  }
+
+  /* per-line entrance cascade - owns the hero's load motion (the global
+     section-reveal renders the Intro in place, so these don't compound).
+     Gated on data-motion="on"; static with JS off or reduced motion. */
+  :root[data-motion="on"]:not([data-intro-animated="true"]) .intro .line {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: line-in 620ms var(--ease-spring) both;
+  }
+  :root[data-motion="on"]:not([data-intro-animated="true"]) .intro .line:nth-of-type(1) { animation-delay: 40ms; }
+  :root[data-motion="on"]:not([data-intro-animated="true"]) .intro .line:nth-of-type(2) { animation-delay: 100ms; }
+  :root[data-motion="on"]:not([data-intro-animated="true"]) .intro .line:nth-of-type(3) { animation-delay: 155ms; }
+  :root[data-motion="on"]:not([data-intro-animated="true"]) .intro .line:nth-of-type(4) { animation-delay: 205ms; }
+  :root[data-motion="on"]:not([data-intro-animated="true"]) .intro .line:nth-of-type(5) { animation-delay: 250ms; }
+
+  :root[data-intro-animated="true"] .intro .line {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  @keyframes line-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root[data-motion="on"] .intro .line {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+  }
+</style>

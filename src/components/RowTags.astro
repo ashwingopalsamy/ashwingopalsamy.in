@@ -1,0 +1,22 @@
+---
+import { isLinkedTag, tagHref } from "../lib/tags";
+
+interface Props {
+  tags: string[];
+  linked: Set<string>;
+}
+
+const { tags, linked } = Astro.props;
+---
+
+{tags.length > 0 && (
+  <span class="row-tags" aria-label="Tags">
+    {tags.map((tag, index) => (
+      isLinkedTag(tag, linked)
+        ? <a class:list={["row-tag", { "row-tag-secondary": index > 0, "row-tag-extra": index > 1 }]} href={tagHref(tag)}>#{tag}</a>
+        : <span class:list={["row-tag", { "row-tag-secondary": index > 0, "row-tag-extra": index > 1 }]}>#{tag}</span>
+    ))}
+    {tags.length > 1 && <span class="row-tag-more row-tag-more-mobile" aria-label={`${tags.length - 1} more tags`}>+{tags.length - 1}</span>}
+    {tags.length > 2 && <span class="row-tag-more row-tag-more-desktop" aria-label={`${tags.length - 2} more tags`}>+{tags.length - 2}</span>}
+  </span>
+)}

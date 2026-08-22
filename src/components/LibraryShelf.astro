@@ -1,0 +1,72 @@
+---
+import LibraryRows from "./LibraryRows.astro";
+import { libraryLabels, type LibraryShelf as Shelf } from "../lib/library-list";
+import Icon from "./Icon.astro";
+import SectionHeading from "./SectionHeading.astro";
+
+interface Props {
+  shelf: Shelf;
+  linkedTags: Set<string>;
+}
+
+const { shelf, linkedTags } = Astro.props;
+const id = `library-shelf-${shelf.kind}`;
+const label = libraryLabels[shelf.kind];
+const accents = {
+  books: "var(--acc-amber)",
+  notes: "var(--acc-violet)",
+  articles: "var(--acc-green)",
+  watch: "var(--acc-blue)",
+} as const;
+---
+
+<section class:list={["library-shelf", `is-${shelf.kind}`]} aria-labelledby={id}>
+  <SectionHeading id={id} title={label} count={shelf.total} accent={accents[shelf.kind]}>
+    <Fragment slot="action"><a class="library-show-all" href={`/library/?view=${shelf.kind}`} data-library-show-all data-library-view={shelf.kind} aria-label={`Show all ${label.toLowerCase()}`}>
+      <span>Show all</span><Icon name="chevron-right" size={15} />
+    </a></Fragment>
+  </SectionHeading>
+  <LibraryRows items={shelf.items} linkedTags={linkedTags} density="overview" empty={`No ${label.toLowerCase()} here yet.`} />
+</section>
+
+<style>
+  .library-shelf {
+    margin-top: 0;
+  }
+
+  .library-shelf + .library-shelf {
+    margin-top: clamp(2.75rem, 6vw, 3.5rem);
+  }
+
+  .library-show-all {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.2rem;
+    color: var(--faint);
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    text-decoration: none;
+    transition: color var(--t-color);
+  }
+
+  .library-show-all:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  .library-show-all :global(.ui-icon) {
+    transition: transform var(--dur-2) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .library-show-all:hover {
+      color: var(--ink);
+    }
+
+    .library-show-all:hover :global(.ui-icon) {
+      transform: translateX(1.5px);
+    }
+  }
+
+</style>

@@ -1,0 +1,54 @@
+---
+import LibraryRow from "./LibraryRow.astro";
+import type { LibraryCatalogItem } from "../lib/library-list";
+
+interface Props {
+  items: LibraryCatalogItem[];
+  linkedTags: Set<string>;
+  empty?: string;
+  density?: "overview" | "full";
+}
+
+const { items, linkedTags, empty = "Nothing here yet.", density = "full" } = Astro.props;
+---
+
+<ul class:list={["library-rows", `is-${density}`]}>
+  {items.length > 0
+    ? items.map((item) => <LibraryRow item={item} linkedTags={linkedTags} density={density} />)
+    : <li class="library-row-empty" aria-live="polite"><p>{empty}</p></li>}
+</ul>
+
+<style>
+  .library-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .library-rows:hover :global(.library-row) {
+      opacity: 0.45;
+      filter: blur(0.2px);
+      transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
+    }
+
+    .library-rows:hover :global(.library-row:hover),
+    .library-rows:hover :global(.library-row:focus-within) {
+      opacity: 1;
+      filter: none;
+    }
+  }
+
+  .library-row-empty {
+    display: grid;
+    min-block-size: 2.5rem;
+    place-items: center start;
+    padding: 0.75rem 0.85rem;
+    margin-inline: -0.85rem;
+    color: var(--faint);
+    font-size: var(--text-sm);
+  }
+</style>

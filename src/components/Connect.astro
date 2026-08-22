@@ -1,0 +1,836 @@
+---
+import LocationCard from "./LocationCard.astro";
+import Icon from "./Icon.astro";
+import { quotes } from "../data/home";
+
+/**
+ * Connect - the closing "meanwhile" section: a full-width Spotify band
+ * above a full-width map, then a bare quote. The contact block lives in
+ * its own Contact component right after the homepage intro.
+ * Spotify lazy-mounts with an 8s load timeout, then uses a static "Open in Spotify" card.
+ */
+
+const SPOTIFY_URL =
+  "https://open.spotify.com/track/7iy5huRZ9bNI3ce79DcdCD?si=840308c6390e4ea1";
+
+function quoteIndexOfTheDayServer() {
+  const now = new Date();
+  const seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+  return seed % quotes.length;
+}
+
+const pickIndex = quoteIndexOfTheDayServer();
+---
+
+<section class="connect" aria-label="Meanwhile" data-enter>
+  <div class="connect-grid">
+    <div class="spotify-wrap is-loading" data-spotify-url={SPOTIFY_URL}>
+      <div class="spotify-skeleton" aria-hidden="true">
+        <div class="sk-art"></div>
+        <div class="sk-lines">
+          <span class="sk-line l1"></span>
+          <span class="sk-line l2"></span>
+        </div>
+      </div>
+      <a
+        class="spotify-fallback"
+        href={SPOTIFY_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        hidden
+      >
+        <span class="spotify-fallback-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.52 17.23c-.24.36-.7.48-1.06.24-2.88-1.78-6.52-2.16-10.8-1.18-.42.1-.84-.16-.94-.56-.1-.42.16-.84.56-.94 4.7-1.08 8.7-.64 11.94 1.36.36.22.48.7.3 1.08zm1.44-3.24c-.28.44-.88.58-1.32.3-3.32-2.04-8.38-2.64-12.3-1.44-.5.14-1.04-.14-1.18-.64-.14-.5.14-1.04.64-1.18 4.46-1.36 10-0.7 13.8 1.64.44.26.58.86.36 1.32zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.3c-.6.18-1.24-.16-1.42-.76-.18-.6.16-1.24.76-1.42 4.2-1.28 11.16-1.02 15.56 1.62.54.32.72 1.02.4 1.56-.32.52-1.02.7-1.56.38z" />
+          </svg>
+        </span>
+        <span class="spotify-fallback-copy">
+          <span class="spotify-fallback-title">Open in Spotify</span>
+          <span class="spotify-fallback-sub">Embed didn’t load: listen on Spotify instead</span>
+        </span>
+        <Icon name="arrow-up-right" size={14} class="spotify-fallback-arrow" />
+      </a>
+    </div>
+    <LocationCard />
+  </div>
+
+  {
+    quotes.length > 0 && (
+      <div class="quote-block">
+        <div class="quote-controls chrome-surface">
+          <button
+            id="quote-copy"
+            type="button"
+            class="quote-btn quote-copy"
+            aria-label="Copy this quote"
+            title="Copy quote"
+          >
+            <Icon name="copy" size={14} class="ico-copy" />
+            <Icon name="check" size={14} strokeWidth={2.2} class="ico-check" />
+          </button>
+          {quotes.length > 1 && (
+            <button
+              id="quote-again"
+              type="button"
+              class="quote-btn quote-again"
+              aria-label="Show another quote"
+              title="Another quote (J)"
+            >
+              <Icon name="repeat" size={14} />
+            </button>
+          )}
+        </div>
+        <div id="quote-viewport">
+          {
+            quotes.map((quote, index) => {
+              const active = index === pickIndex;
+              return (
+                <blockquote
+                  class:list={["quote-card", { active }]}
+                  data-quote-index={index}
+                  aria-hidden={active ? "false" : "true"}
+                  inert={!active ? true : undefined}
+                >
+                  <p class="quote-text">{quote.text}</p>
+                  <p class="attribution">
+                    <span class="quote-author qa">{quote.author}</span>
+                    <span class="quote-source" hidden>{quote.source ?? ""}</span>
+                  </p>
+                </blockquote>
+              );
+            })
+          }
+        </div>
+      </div>
+    )
+  }
+</section>
+
+<style>
+  .connect-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 152px 240px;
+    align-items: stretch;
+    gap: var(--space-4);
+    margin-top: 0;
+  }
+
+  .spotify-wrap {
+    position: relative;
+    width: 100%;
+    height: 152px;
+    flex-shrink: 0;
+    border-radius: var(--r-5);
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--ink) 10%, transparent);
+    background: color-mix(in oklch, var(--ink) 4%, var(--canvas));
+  }
+
+  :global(.spotify-embed) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    filter: var(--media-monochrome-filter);
+    transition: opacity 280ms var(--ease);
+  }
+
+  .spotify-wrap.is-loading :global(.spotify-embed) {
+    opacity: 0;
+  }
+
+  .spotify-wrap.is-fallback :global(.spotify-embed),
+  .spotify-wrap.is-fallback .spotify-skeleton {
+    display: none;
+  }
+
+  .spotify-skeleton {
+    display: none;
+  }
+
+  .spotify-wrap.is-loading .spotify-skeleton {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: var(--r-5);
+    background: var(--canvas);
+  }
+
+  .sk-art {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .sk-lines {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sk-line {
+    border-radius: var(--r-pill);
+  }
+  .sk-line.l1 { height: 10px; width: 70%; }
+  .sk-line.l2 { height: 8px; width: 45%; }
+
+  .sk-art,
+  .sk-line {
+    position: relative;
+    overflow: hidden;
+    background: color-mix(in oklch, var(--ink) 6%, var(--canvas));
+  }
+
+  .sk-art::after,
+  .sk-line::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in oklch, var(--ink) 8%, transparent) 50%,
+      transparent 100%
+    );
+    will-change: transform;
+    animation: sk-shimmer 1.4s ease-in-out infinite;
+  }
+
+  @keyframes sk-shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .spotify-fallback {
+    display: none;
+    position: absolute;
+    inset: 0;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 1rem 1.1rem;
+    text-decoration: none;
+    color: var(--ink);
+    background: color-mix(in oklch, var(--ink) 4%, var(--canvas));
+  }
+
+  .spotify-wrap.is-fallback .spotify-fallback {
+    display: flex;
+  }
+
+  .spotify-fallback:hover,
+  .spotify-fallback:focus-visible {
+    text-decoration: none;
+    background: color-mix(in oklch, var(--ink) 7%, var(--canvas));
+  }
+
+  .spotify-fallback-mark {
+    display: inline-grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+    color: var(--ink);
+    background: color-mix(in oklch, var(--ink) 10%, var(--canvas));
+  }
+
+  .spotify-fallback-copy {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .spotify-fallback-title {
+    font-weight: var(--font-medium);
+    font-size: var(--text-sm);
+  }
+
+  .spotify-fallback-sub {
+    font-size: var(--text-xs);
+    color: var(--muted);
+    line-height: var(--leading-snug);
+  }
+
+  :global(.spotify-fallback-arrow) {
+    flex-shrink: 0;
+    color: var(--faint);
+    transition: transform var(--t-move), color var(--t-color);
+  }
+
+  .spotify-fallback:hover :global(.spotify-fallback-arrow),
+  .spotify-fallback:focus-visible :global(.spotify-fallback-arrow) {
+    color: var(--ink);
+    transform: translate(1.5px, -1.5px);
+  }
+
+  .connect-grid :global(.loc-card) {
+    min-height: 0;
+    height: 100%;
+  }
+
+  .quote-block {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    margin-top: var(--space-5);
+    perspective: 1000px;
+  }
+
+  #quote-viewport {
+    display: grid;
+    overflow: hidden;
+  }
+
+  .quote-card {
+    grid-area: 1 / 1;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform-origin: center top;
+    backface-visibility: hidden;
+  }
+
+  .quote-card.active {
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .quote-text {
+    font-family: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: var(--text-lg);
+    line-height: 1.55;
+    letter-spacing: -0.005em;
+    color: var(--ink);
+    transition: color var(--t-color);
+    text-wrap: pretty;
+  }
+
+  .attribution {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    font-size: 0.875rem;
+    color: var(--faint);
+    transition: color var(--t-color);
+    text-align: right;
+  }
+
+  .qa {
+    font-weight: 500;
+    font-size: var(--text-base);
+    color: var(--muted);
+    transition: color var(--t-color);
+  }
+
+  .quote-author::before {
+    display: inline-block;
+    width: 0.8rem;
+    height: 1px;
+    margin: 0 0.45rem 0.25em 0;
+    background: var(--rule-strong);
+    content: "";
+  }
+
+  .quote-source {
+    display: none;
+  }
+
+  .quote-controls {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-end;
+    gap: 0;
+    block-size: var(--chrome-size);
+    margin-bottom: 1rem;
+    padding: 0;
+    border-radius: var(--r-pill);
+  }
+
+  .quote-btn {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 var(--control-hit);
+    inline-size: var(--control-hit);
+    block-size: calc(var(--chrome-size) - 2px);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--faint);
+    cursor: pointer;
+    border-radius: 50%;
+    transition:
+      color var(--t-color),
+      transform var(--t-move);
+  }
+
+  .quote-btn::before {
+    content: "";
+    position: absolute;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: color-mix(in oklch, var(--ink) 7%, transparent);
+    opacity: 0;
+    transition: opacity var(--t-color);
+  }
+
+  .quote-btn > :global(.ui-icon) {
+    position: relative;
+    z-index: 1;
+  }
+
+
+  .quote-btn:hover,
+  .quote-btn:focus-visible {
+    color: var(--ink);
+  }
+
+  .quote-btn:hover::before,
+  .quote-btn:focus-visible::before {
+    opacity: 1;
+  }
+
+  .quote-btn:active {
+    transform: scale(0.96);
+    transition: transform 90ms var(--ease);
+  }
+
+  .quote-again :global(.ui-icon) {
+    transition: transform var(--t-move);
+  }
+
+  .quote-again.is-spinning :global(.ui-icon) {
+    animation: quote-spin var(--dur-4) linear;
+  }
+
+  @keyframes quote-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .quote-copy {
+    position: relative;
+  }
+
+  .quote-copy :global(.ico-check) {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    opacity: 0;
+    transform: scale(0.6);
+    transition:
+      opacity var(--t-color),
+      transform var(--t-move);
+  }
+
+  .quote-copy :global(.ico-copy) {
+    transition:
+      opacity var(--t-color),
+      transform var(--t-move);
+  }
+
+  .quote-copy.copied {
+    color: var(--ink);
+  }
+
+  .quote-copy.copied :global(.ico-copy) {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+
+  .quote-copy.copied :global(.ico-check) {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  @media (max-width: 38rem) {
+    .connect-grid {
+      gap: var(--space-5);
+    }
+    .spotify-wrap.is-loading .spotify-skeleton {
+      flex-direction: row;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 1rem 1.1rem;
+    }
+    .sk-art {
+      width: 56px;
+      height: 56px;
+    }
+    .sk-lines {
+      flex: 1;
+      align-items: flex-start;
+    }
+    .sk-line.l1 { width: 55%; }
+    .sk-line.l2 { width: 35%; }
+    .connect-grid :global(.loc-card) {
+      min-height: 240px;
+      height: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sk-art,
+    .sk-line {
+      animation: none;
+    }
+    .sk-art::after,
+    .sk-line::after {
+      animation: none;
+      display: none;
+    }
+    .quote-again.is-spinning :global(.ui-icon) {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import { pageSignal, onPageCleanup } from "../scripts/lifecycle";
+  import { prefersReducedData } from "../scripts/network";
+
+  const EMBED_SRC =
+    "https://open.spotify.com/embed/track/7iy5huRZ9bNI3ce79DcdCD?utm_source=generator&si=840308c6390e4ea1";
+  const LOAD_MS = 8000;
+
+  function showFallback(wrap: HTMLElement) {
+    wrap.classList.remove("is-loading");
+    wrap.classList.add("is-fallback");
+    wrap.dataset.spotifyInit = "fallback";
+    wrap.dataset.spotifyErrors ??= "0";
+    const fallback = wrap.querySelector<HTMLElement>(".spotify-fallback");
+    if (fallback) fallback.hidden = false;
+    wrap.querySelector("iframe")?.remove();
+  }
+
+  function mountSpotify(wrap: HTMLElement, signal: AbortSignal) {
+    if (wrap.dataset.spotifyInit === "true" || wrap.dataset.spotifyInit === "pending") return;
+    wrap.dataset.spotifyInit = "pending";
+    wrap.dataset.spotifyErrors = "0";
+    wrap.classList.add("is-loading");
+    wrap.classList.remove("is-fallback");
+
+    const iframe = document.createElement("iframe");
+    iframe.className = "spotify-embed";
+    iframe.title = "Spotify track embed";
+    iframe.src = EMBED_SRC;
+    iframe.loading = "lazy";
+    iframe.allow =
+      "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
+
+    let settled = false;
+    const finish = (ok: boolean) => {
+      if (settled || signal.aborted) return;
+      settled = true;
+      window.clearTimeout(timer);
+      if (ok) {
+        wrap.classList.remove("is-loading");
+        wrap.dataset.spotifyInit = "true";
+      } else {
+        showFallback(wrap);
+      }
+    };
+
+    const timer = window.setTimeout(() => finish(false), LOAD_MS);
+    iframe.addEventListener("load", () => finish(true), { once: true, signal });
+    iframe.addEventListener(
+      "error",
+      () => {
+        wrap.dataset.spotifyErrors = String(Number(wrap.dataset.spotifyErrors ?? 0) + 1);
+        finish(false);
+      },
+      { once: true, signal },
+    );
+
+    wrap.appendChild(iframe);
+    onPageCleanup(() => {
+      window.clearTimeout(timer);
+      iframe.remove();
+      delete wrap.dataset.spotifyInit;
+    });
+  }
+
+  function initSpotifyEmbed() {
+    const wraps = document.querySelectorAll<HTMLElement>(".spotify-wrap");
+    if (!wraps.length) return;
+    const signal = pageSignal();
+
+    if (prefersReducedData()) {
+      wraps.forEach(showFallback);
+      return;
+    }
+
+    if (!("IntersectionObserver" in window)) {
+      wraps.forEach((el) => mountSpotify(el, signal));
+      return;
+    }
+
+    const io = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          mountSpotify(entry.target as HTMLElement, signal);
+          obs.unobserve(entry.target);
+        });
+      },
+      { rootMargin: "150px 0px" },
+    );
+    wraps.forEach((el) => {
+      if (el.dataset.spotifyInit === "true" || el.dataset.spotifyInit === "fallback") return;
+      io.observe(el);
+    });
+    onPageCleanup(() => io.disconnect());
+  }
+
+  initSpotifyEmbed();
+  document.addEventListener("astro:page-load", initSpotifyEmbed);
+</script>
+
+<script>
+  import { quotes } from "../data/home";
+  import { playAccent } from "../scripts/sound";
+  import { getPresence } from "../scripts/presence";
+  import { showToast } from "../scripts/toast";
+  import { copyToClipboard } from "../scripts/clipboard";
+
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  interface QuoteData {
+    index: number;
+    text: string;
+    author: string;
+    source?: string;
+    night?: boolean;
+  }
+
+  function activeCard() {
+    return document.querySelector<HTMLElement>(".quote-card.active");
+  }
+
+  function swap(next: QuoteData) {
+    document.querySelectorAll<HTMLElement>(".quote-card").forEach((card) => {
+      const active = Number(card.dataset.quoteIndex) === next.index;
+      card.classList.toggle("active", active);
+      card.setAttribute("aria-hidden", active ? "false" : "true");
+      if (active) card.removeAttribute("inert");
+      else card.setAttribute("inert", "");
+    });
+  }
+
+  function nextQuote(): QuoteData | null {
+    const current = Number(activeCard()?.dataset.quoteIndex);
+    if (!Number.isFinite(current) || quotes.length < 2) return null;
+    const pool = quotes
+      .map((quote, index) => ({ ...quote, index }))
+      .filter((quote) => quote.index !== current);
+    if (pool.length === 0) return null;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function quoteOfTheDay(): QuoteData {
+    const now = new Date();
+    const seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+    const hour = getPresence(now).hour;
+    if (hour >= 2 && hour < 4) {
+      const night = quotes
+        .map((quote, index) => ({ ...quote, index }))
+        .filter((quote) => quote.night);
+      if (night.length > 0) return night[seed % night.length];
+    }
+    const index = seed % quotes.length;
+    return { ...quotes[index], index };
+  }
+
+  let flipping = false;
+  let keysBound = false;
+
+  function spinAgain() {
+    const btn = document.getElementById("quote-again");
+    if (!btn || reduce.matches) return;
+    btn.classList.remove("is-spinning");
+    void btn.offsetWidth;
+    btn.classList.add("is-spinning");
+    btn.addEventListener(
+      "animationend",
+      () => btn.classList.remove("is-spinning"),
+      { once: true }
+    );
+  }
+
+  async function rotate() {
+    const card = activeCard();
+
+    const next = nextQuote();
+    if (!next) return;
+    playAccent("flip");
+    spinAgain();
+
+    if (reduce.matches || !card || typeof card.animate !== "function") {
+      swap(next);
+      return;
+    }
+    if (flipping) return;
+    flipping = true;
+
+    const movementEase = "cubic-bezier(0.77, 0, 0.175, 1)";
+    const enterEase = "cubic-bezier(0.23, 1, 0.32, 1)";
+
+    let down: Animation | null = null;
+    let up: Animation | null = null;
+
+    try {
+      down = card.animate(
+        [
+          { transform: "rotateX(0deg)", opacity: 1 },
+          { transform: "rotateX(-90deg)", opacity: 0 },
+        ],
+        { duration: 180, easing: movementEase, fill: "forwards" }
+      );
+      await down.finished;
+
+      swap(next);
+      const nextCard = activeCard();
+
+      const textNodes = [
+        activeCard()?.querySelector<HTMLElement>(".quote-text"),
+        activeCard()?.querySelector<HTMLElement>(".quote-author"),
+      ].filter(Boolean) as HTMLElement[];
+      for (const n of textNodes) {
+        if (typeof n.animate === "function") {
+          n.animate(
+            [
+              { filter: "blur(4px)", opacity: 0.4 },
+              { filter: "blur(0)", opacity: 1 },
+            ],
+            { duration: 260, easing: "cubic-bezier(0,0,0.2,1)" }
+          );
+        }
+      }
+
+      up = nextCard?.animate(
+        [
+          { transform: "rotateX(90deg)", opacity: 0 },
+          { transform: "rotateX(0deg)", opacity: 1 },
+        ],
+        { duration: 220, easing: enterEase, fill: "forwards" }
+      ) ?? null;
+      if (up) await up.finished;
+    } catch {
+      swap(next);
+    } finally {
+      down?.cancel();
+      up?.cancel();
+      flipping = false;
+    }
+  }
+
+  function init() {
+    const block = document.querySelector<HTMLElement>(".quote-block");
+    if (!block) return;
+
+    if (quotes.length > 0) swap(quoteOfTheDay());
+
+    if (block.dataset.enhanced !== "true") {
+      block.dataset.enhanced = "true";
+
+      document.getElementById("quote-again")?.addEventListener("click", rotate);
+
+      document.getElementById("quote-copy")?.addEventListener("click", async () => {
+        const card = activeCard();
+        const t = card?.querySelector<HTMLElement>(".quote-text")?.textContent ?? "";
+        const a = card?.querySelector<HTMLElement>(".quote-author")?.textContent ?? "";
+        const s = card?.querySelector<HTMLElement>(".quote-source");
+        const source = (s?.textContent ?? "").trim();
+        const payload = [t, a, source ? `(${source})` : ""]
+          .filter(Boolean)
+          .join("\n")
+          .replace(/[ \t]+/g, " ")
+          .replace(/ ([.,!?])/g, "$1")
+          .trim();
+        const copied = await copyToClipboard(payload);
+        if (copied) {
+          playAccent("copy");
+          const btn = document.getElementById("quote-copy");
+          btn?.classList.add("copied");
+          showToast({ message: "Quote copied", duration: 2200 });
+          window.setTimeout(() => btn?.classList.remove("copied"), 1200);
+        } else {
+          showToast({ message: "Couldn’t copy quote", duration: 2600 });
+        }
+      });
+
+      if (!keysBound) {
+        keysBound = true;
+        document.addEventListener("keydown", (e) => {
+          if (e.key !== "j") return;
+          if (e.metaKey || e.ctrlKey || e.altKey) return;
+          const tag = (e.target as HTMLElement | null)?.tagName;
+          if (
+            tag === "INPUT" ||
+            tag === "TEXTAREA" ||
+            (e.target as HTMLElement)?.isContentEditable
+          )
+            return;
+          const live = document.querySelector(".quote-block");
+          if (!live) return;
+          const rect = live.getBoundingClientRect();
+          const inView = rect.top < window.innerHeight && rect.bottom > 0;
+          if (!inView) return;
+          e.preventDefault();
+          rotate();
+        });
+      }
+
+      const viewport = document.getElementById("quote-viewport");
+      if (viewport && !viewport.dataset.swipeEnhanced) {
+        viewport.dataset.swipeEnhanced = "true";
+        let sx = 0;
+        let sy = 0;
+        let tracking = false;
+        viewport.addEventListener("pointerdown", (e) => {
+          if (e.pointerType === "mouse") return;
+          sx = e.clientX;
+          sy = e.clientY;
+          tracking = true;
+        });
+        viewport.addEventListener("pointerup", (e) => {
+          if (!tracking) return;
+          tracking = false;
+          const dx = e.clientX - sx;
+          const dy = e.clientY - sy;
+          if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5) rotate();
+        });
+        viewport.addEventListener("pointercancel", () => {
+          tracking = false;
+        });
+      }
+    }
+  }
+
+  init();
+  document.addEventListener("astro:page-load", init);
+</script>

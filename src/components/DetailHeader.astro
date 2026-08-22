@@ -1,0 +1,171 @@
+---
+interface Props {
+  title: string;
+  lede?: string;
+}
+
+const { title, lede } = Astro.props;
+const hasMeta = Astro.slots.has("meta");
+const hasAction = Astro.slots.has("action");
+---
+
+<header class="detail-header" data-enter>
+  <h1 class="detail-title">{title}</h1>
+  {lede && <p class="detail-lede">{lede}</p>}
+  {(hasMeta || hasAction) && (
+    <div class="detail-meta-bar">
+      {hasMeta && <div class="detail-meta-left"><slot name="meta" /></div>}
+      {hasAction && <div class="detail-meta-actions"><slot name="action" /></div>}
+    </div>
+  )}
+</header>
+
+<style>
+  .detail-header {
+    display: grid;
+    max-inline-size: 100%;
+    gap: clamp(1rem, 2.5vw, 1.25rem);
+    margin-bottom: clamp(1.25rem, 3vw, 1.5rem);
+  }
+
+  .detail-title,
+  .detail-lede {
+    margin: 0;
+  }
+
+  .detail-title {
+    max-inline-size: 22ch;
+    color: var(--ink);
+    font-size: var(--type-detail-title-size);
+    font-weight: var(--type-detail-title-weight);
+    letter-spacing: var(--type-detail-title-tracking);
+    line-height: var(--type-detail-title-leading);
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+  }
+
+  .detail-lede {
+    max-inline-size: 64ch;
+    color: var(--muted);
+    font-size: var(--text-base);
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+
+  .detail-meta-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.25rem;
+    padding-top: 0.25rem;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  .detail-meta-left {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.85rem;
+    font-size: 0.8125rem;
+    color: var(--muted);
+    min-inline-size: 0;
+  }
+
+  .detail-meta-left :global(.detail-date),
+  .detail-meta-left :global(time) {
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .detail-meta-left :global(.detail-tag-list) {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.65rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .detail-meta-left :global(.detail-tag),
+  .detail-meta-left :global(.detail-tag-list li),
+  .detail-meta-left :global(.detail-tag-list span) {
+    display: inline-flex;
+    align-items: center;
+    color: var(--faint);
+    font-size: 0.75rem;
+  }
+
+  .detail-meta-actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    min-inline-size: 0;
+  }
+
+  .detail-meta-actions :global(a),
+  .detail-meta-actions :global(button) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 32px;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--r-pill);
+    background: var(--surface-row-rest);
+    border: 1px solid var(--chrome-surface-border);
+    box-shadow: var(--chrome-surface-shadow);
+    -webkit-backdrop-filter: blur(20px) saturate(170%);
+    backdrop-filter: blur(20px) saturate(170%);
+    color: var(--muted);
+    font-size: 0.8125rem;
+    font-weight: var(--font-medium);
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+      background-color var(--t-color),
+      border-color var(--t-color),
+      box-shadow var(--t-color),
+      color var(--t-color),
+      transform var(--dur-1) var(--ease-out);
+  }
+
+  .detail-meta-actions :global(a:hover),
+  .detail-meta-actions :global(a:focus-visible),
+  .detail-meta-actions :global(button:hover),
+  .detail-meta-actions :global(button:focus-visible) {
+    background: var(--surface-row-hover);
+    color: var(--ink);
+    border-color: var(--chrome-surface-border-active);
+  }
+
+  .detail-meta-actions :global(.ui-icon) {
+    display: block;
+    transition: transform var(--dur-1) var(--ease-out);
+  }
+
+  .detail-meta-actions :global(a:hover .ui-icon),
+  .detail-meta-actions :global(a:focus-visible .ui-icon) {
+    transform: translate(1px, -1px);
+  }
+
+  .detail-meta-actions :global(a:active),
+  .detail-meta-actions :global(button:active) {
+    background: var(--surface-row-press);
+    transform: scale(0.97);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .detail-meta-actions :global(a),
+    .detail-meta-actions :global(button),
+    .detail-meta-actions :global(.ui-icon) {
+      transform: none !important;
+      transition: none !important;
+    }
+  }
+</style>
