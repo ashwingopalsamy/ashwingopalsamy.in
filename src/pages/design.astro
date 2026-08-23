@@ -1,0 +1,2426 @@
+---
+import Icon from "../components/Icon.astro";
+import PageIntro from "../components/PageIntro.astro";
+import { site } from "../data/home";
+import Page from "../layouts/Page.astro";
+import { designDocument } from "../lib/design-document";
+import { ogPath } from "../lib/og-url";
+import { absUrl } from "../lib/urls";
+
+const neutralTokens = Object.entries(designDocument.frontmatter.colors).filter(([name]) =>
+  name.startsWith("neutral-"),
+);
+
+const semanticTokens = [
+  {
+    label: "Vermilion",
+    light: designDocument.frontmatter.colors["accent-light"]!,
+    dark: designDocument.frontmatter.colors["accent-dark"]!,
+    role: "reading progress, quote selection, presence dot",
+  },
+  {
+    label: "Green",
+    light: designDocument.frontmatter.colors["success-light"]!,
+    dark: designDocument.frontmatter.colors["success-dark"]!,
+    role: "available, success",
+  },
+  {
+    label: "Amber",
+    light: designDocument.frontmatter.colors["warning-light"]!,
+    dark: designDocument.frontmatter.colors["warning-dark"]!,
+    role: "warning, winding down",
+  },
+  {
+    label: "Blue",
+    light: designDocument.frontmatter.colors["information-light"]!,
+    dark: designDocument.frontmatter.colors["information-dark"]!,
+    role: "information",
+  },
+  {
+    label: "Violet",
+    light: designDocument.frontmatter.colors["important-light"]!,
+    dark: designDocument.frontmatter.colors["important-dark"]!,
+    role: "important",
+  },
+  {
+    label: "Red",
+    light: designDocument.frontmatter.colors["caution-light"]!,
+    dark: designDocument.frontmatter.colors["caution-dark"]!,
+    role: "caution, asleep",
+  },
+];
+
+const typeWeights = [
+  { weight: 400, label: "400", role: "body, reading" },
+  { weight: 450, label: "450", role: "active nav" },
+  { weight: 500, label: "500", role: "controls" },
+  { weight: 550, label: "550", role: "headings" },
+  { weight: 600, label: "600", role: "strong" },
+] as const;
+
+const motionDurations = [
+  { token: "--dur-1", value: "80ms", role: "press feedback" },
+  { token: "--dur-2", value: "150ms", role: "colour and opacity" },
+  { token: "--dur-3", value: "250ms", role: "spatial movement" },
+  { token: "--dur-4", value: "400ms", role: "draw or reveal" },
+  { token: "--dur-5", value: "500ms", role: "overlay and expand" },
+];
+
+const soundAccents = [
+  { name: "tap" as const, label: "Tap", desc: "440 → 350 Hz damped glide with organic variation · 36 ms" },
+  { name: "tick" as const, label: "Tick", desc: "600 Hz triangle micro-click · 28 ms" },
+  { name: "select" as const, label: "Select", desc: "415 Hz sine navigation tick · 22 ms" },
+  { name: "pop" as const, label: "Pop", desc: "440 → 659 Hz ascending bubble · 65 ms" },
+  { name: "dismiss" as const, label: "Dismiss", desc: "659 → 440 Hz descending micro-drop · 55 ms" },
+  { name: "tab" as const, label: "Tab", desc: "440 + 880 Hz dual-tone marimba · 55 ms" },
+  { name: "flip" as const, label: "Flip", desc: "440 + 659 Hz triangle latch · 75 ms" },
+  { name: "theme" as const, label: "Theme", desc: "523 + 784 + 1046 Hz radiant shimmer · 180 ms" },
+  { name: "toggle-on" as const, label: "Toggle on", desc: "587 → 880 Hz ascending fifth · 120 ms" },
+  { name: "toggle-off" as const, label: "Toggle off", desc: "880 → 587 Hz descending fifth · 120 ms" },
+  { name: "action" as const, label: "Action", desc: "523 + 784 Hz affirmative chord · 110 ms" },
+  { name: "copy" as const, label: "Copy", desc: "659 → 880 Hz warm harmonic confirmation · 120 ms" },
+  { name: "page" as const, label: "Page", desc: "392 + 523 Hz ambient dual pulse · 220 ms" },
+  { name: "chime" as const, label: "Chime", desc: "528 + 792 Hz gentle ambient chime · 450 ms" },
+];
+
+const chapters = [
+  ["colour", "Valyrian Steel and the one accent"],
+  ["type", "Three typefaces, one job each"],
+  ["layout", "One rail, every page"],
+  ["navigation", "The sliding pill and the back arrow"],
+  ["motion", "Five durations, two curves"],
+  ["sound", "A tiny Web Audio engine"],
+  ["interactions", "The details that compound"],
+  ["presence", "A live clock in the footer"],
+  ["easter-eggs", "The things you might not find"],
+] as const;
+
+const description = "A working account of the choices behind ashwingopalsamy.in.";
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "@id": `${absUrl("/design/")}#article`,
+  url: absUrl("/design/"),
+  name: "How I design this site",
+  headline: "How I design this site",
+  description,
+  author: { "@id": `${site.url}/#person` },
+  dateModified: designDocument.auditedAt,
+  version: designDocument.contractVersion,
+  image: ogPath("design"),
+  inLanguage: "en",
+};
+---
+
+<Page
+  title="How I design this site"
+  description={description}
+  ogImage={ogPath("design")}
+  ogImageAlt="How I design this site · Ashwin Gopalsamy"
+  jsonLd={jsonLd}
+  alternates={[{ href: absUrl("/design.md"), type: "text/markdown", title: "Design notes for ashwingopalsamy.in" }]}
+>
+  <article class="design-guide" data-design-guide data-enter>
+    <div class="reading-progress" aria-hidden="true"><div data-progress-bar></div></div>
+
+    <PageIntro
+      title="How I design this site"
+      lede="Every decision here was made at least twice: once quickly, and once after the first version felt wrong. This is the record of what I settled on and why. It is not a style guide. It is closer to a set of running notes from someone who keeps rebuilding the same site until it stops bothering him."
+      eyebrow="design"
+    />
+
+    <details class="chapter-nav">
+      <summary><span data-chapter-summary>Jump to a chapter</span><Icon name="chevron-down" size={15} /></summary>
+      <ol>
+        {chapters.map(([id, title], index) => (
+          <li>
+            <a href={`#${id}`} data-chapter-link={id}>
+              <span class="chapter-num">{String(index + 1).padStart(2, "0")}</span>
+              {title}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </details>
+
+    <section id="colour" class="design-chapter">
+      <h2>Valyrian Steel and the one accent</h2>
+      <p>Most of the site runs on nine shades of grey. Not because grey is safe, but because limiting colour to a single role gives it weight. The accent appears on the reading progress bar, the quote selection wash, the off-hours presence indicator, and meaningful active states. Those are the places that need to draw the eye without asking permission. Everywhere else, the grey does the work.</p>
+      <p>The nine greys are OKLCH at hue 240. Plain sRGB neutrals warm as they approach white, leaving an unintentional yellow cast on light surfaces. OKLCH at hue 240 stays perceptually neutral across the full ramp: the same temperature of light at every step. Light mode uses step 1 as canvas and step 9 as ink. Dark mode reverses them exactly, and the same hierarchy holds.</p>
+
+      <div class="tonal-rail" role="toolbar" aria-label="Neutral colour tokens">
+        {neutralTokens.map(([name, value], index) => (
+          <button
+            type="button"
+            class="tonal-swatch"
+            style={`--swatch: ${value}`}
+            data-swatch-index={index}
+            data-token={name}
+            data-value={value}
+            aria-pressed={index === 0 ? "true" : "false"}
+            aria-label={`Copy ${name}, ${value}`}
+          ></button>
+        ))}
+      </div>
+      <div class="tonal-detail" aria-live="polite" data-swatch-display>
+        <span data-swatch-token>{neutralTokens[0]?.[0]}</span>
+        <code data-swatch-value>{neutralTokens[0]?.[1]}</code>
+        <span class="tonal-action" aria-hidden="true">
+          <span class="tonal-copy"><Icon name="copy" size={14} /></span>
+          <span class="tonal-check"><Icon name="check" size={14} /></span>
+        </span>
+        <span data-swatch-status>Choose a swatch to copy its OKLCH value.</span>
+      </div>
+
+      <p class="naming-note">{designDocument.frontmatter.namingNote}</p>
+
+      <p>The accent is a single vermilion: <code class="inline-code">oklch(0.58 0.2 25)</code> in light mode, lifted one lightness step in dark. Five semantic tones live alongside it for callouts, presence states, and the command palette. Each semantic colour only appears in context: paired with copy, position, shape, or an icon. Colour is never the only signal.</p>
+
+      <div class="semantic-rail" role="list" aria-label="Semantic colour tokens">
+        {semanticTokens.map((tok) => (
+          <div class="semantic-swatch" role="listitem">
+            <div class="semantic-swatch-pair" aria-hidden="true">
+              <span class="semantic-swatch-light" style={`background: ${tok.light}`}></span>
+              <span class="semantic-swatch-dark" style={`background: ${tok.dark}`}></span>
+            </div>
+            <span class="semantic-swatch-label">{tok.label}</span>
+            <span class="semantic-swatch-role">{tok.role}</span>
+          </div>
+        ))}
+      </div>
+      <p class="semantic-caption">Each swatch shows the light-mode value on the left and the dark-mode value on the right. The hue stays constant; only the lightness shifts.</p>
+    </section>
+
+    <section id="type" class="design-chapter">
+      <h2>Three typefaces, one job each</h2>
+      <p><span class="col-k">Inter</span> carries navigation, prose, and UI. <span class="col-k">Newsreader Italic</span> gets one serif moment: the naming note for the grey scale, literary asides, and quote attribution. <span class="col-k">JetBrains Mono</span> is for code, tokens, hashes, timestamps, and measurements only. Each font stays inside its lane, which means each one can lean into what it does well.</p>
+      <p>Emphasis here comes from value, not weight. A word in <span class="col-k">ink</span> against a sentence in ghost does what italic or bold usually does, without adding typographic clutter. When weight does change, it changes in deliberate steps. Click through them below.</p>
+
+      <div class="weight-specimen" data-weight-specimen>
+        <div class="specimen-header">
+          <span class="specimen-label">Inter weight ramp</span>
+          <div class="weight-control" role="group" aria-label="Inter weight">
+            <span class="weight-selection" aria-hidden="true"></span>
+            {typeWeights.map((w, i) => (
+              <button type="button" data-weight={String(w.weight)} aria-pressed={i === 0 ? "true" : "false"}>
+                {w.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div class="weight-display" aria-live="polite">
+          <p class="weight-sample" data-weight-sample style="font-weight: 400">I work from home; on a countryside region wrapped in coconut groves, close enough to the Western Ghats that the weather has opinions.</p>
+          <div class="weight-meta">
+            <span class="weight-role" data-weight-role>400 - body, reading</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="font-specimen font-serif-specimen">
+        <p class="serif-sample">The exact values are in <a href="/design.md" class="serif-link">design.md</a>. This page is the part I rewrite when the site teaches me something.</p>
+        <span class="font-label">Newsreader Italic · 400 · 1.55 leading. One serif moment, used sparingly.</span>
+      </div>
+
+      <div class="font-specimen font-mono-specimen" data-mono-specimen>
+        <div class="specimen-header">
+          <span class="specimen-label">Baseline alignment</span>
+          <button type="button" class="specimen-pill-btn" data-mono-toggle aria-pressed="true">
+            <Icon name="arrow-up-down" size={13} />
+            <span data-mono-toggle-label>Optical shift on</span>
+          </button>
+        </div>
+        <div class="mono-stage">
+          <p class="mono-sample">
+            <span data-mono-shifted class="mono-shifted">oklch(0.58 0.2 25)</span>
+            <span class="mono-separator" aria-hidden="true"> vs </span>
+            <span class="mono-unshifted">oklch(0.58 0.2 25)</span>
+          </p>
+          <p class="mono-explain">Left shifts 1 px down to align optically with Inter. Right sits on the natural baseline. Without the correction, monospace sits slightly high and reads as floating.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="layout" class="design-chapter">
+      <h2>One rail, every page</h2>
+      <p>Header, content, and footer share one fixed rail: <code class="inline-code">clamp(680px, 52vw, 800px)</code> wide, with 20 px gutters on each side. At 800 px and around 64 characters per line, a paragraph sits at the comfortable top of the reading range. Wider feels like a newspaper column that requires head movement; narrower starts to feel cramped on a desktop screen.</p>
+      <p>The same rail for every route. No "wide" library view, no "narrow" notes layout. Consistency means the reader's eye always starts from the same place.</p>
+
+      <div class="rail-specimen" data-rail-specimen data-measure="home">
+        <div class="specimen-header">
+          <span class="specimen-label">Reading measure</span>
+          <div class="measure-control" role="group" aria-label="Reading measure">
+            <span class="measure-selection" aria-hidden="true"></span>
+            <button type="button" data-measure="narrow" aria-pressed="false">Narrow</button>
+            <button type="button" data-measure="home" aria-pressed="true">Rail</button>
+            <button type="button" data-measure="full" aria-pressed="false">Unconstrained</button>
+          </div>
+        </div>
+        <div class="rail-ruler" aria-hidden="true">
+          <span class="rail-ruler-line"></span>
+          <span class="rail-ruler-label mono" data-rail-label>64 ch (~800 px max) · Settled reading rail</span>
+        </div>
+        <div class="measure-stage" aria-live="polite">
+          <p class="measure-copy">A comfortable line length lets the eye glide effortlessly across ten to twelve words before sweeping back to the start of the next line. When a measure is too wide, the return sweep becomes a conscious search; when too narrow, the rhythm fractures into constant stops and starts. The 64-character rail keeps reading continuous and effortless.</p>
+          <p class="measure-aside">Typography is ergonomics for the eyes: wider is not better, and narrower is not tidier.</p>
+        </div>
+      </div>
+
+      <p>Below 608 px the layout shifts: the top navigation disappears and five fixed tabs appear above the safe area at the bottom. The body reserves space beneath the bar via <code class="inline-code">--mobile-chrome-clearance</code>, so the last line of any page is never hidden behind it. Section spacing is larger above a heading than below it, which gives the eye a clear signal that a new topic is starting.</p>
+    </section>
+
+    <section id="navigation" class="design-chapter">
+      <h2>The sliding pill and the back arrow</h2>
+      <p>The navigation indicator is one element that translates. Not two navs with active and inactive classes, not a JavaScript-measured offset: one <code class="inline-code">span</code> that slides with a <code class="inline-code">translate3d()</code> the GPU can composite without touching layout. Pressing a link changes a <code class="inline-code">data-active-index</code> attribute on the nav element. CSS rules drive the transform. Nothing repaints.</p>
+
+      <div class="nav-specimen" data-nav-specimen data-active-index="0">
+        <div class="specimen-header">
+          <span class="specimen-label">GPU translation</span>
+          <div class="nav-sample" role="group" aria-label="Navigation pill specimen">
+            <span class="nav-sample-pill" aria-hidden="true"></span>
+            {(["home", "work", "more"] as const).map((item, i) => (
+              <button type="button" data-nav-index={String(i)} aria-pressed={i === 0 ? "true" : "false"}>
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
+        <p class="specimen-note" data-nav-note>One element translates. The pill never jumps; it slides.</p>
+      </div>
+
+      <p>On desktop, three items: home, work, and more. On mobile, five tabs at the bottom: home, work, AI, more, and links. The extra two on mobile exist because those pages matter more to someone on a phone. The desktop glass surface uses <code class="inline-code">blur(20px) saturate(170%)</code>. The mobile tab bar is opaque: backdrop filters on an element that scrolls with the page are expensive, and the mobile bar is fixed.</p>
+      <p>The logo slot changes based on depth. On the homepage it shows the wordmark. On every other page it shows a back arrow and navigates to the logical parent. The two states share one element via a CSS grid stack. Transitioning between them is a crossfade through blur: same element, different state, one transition.</p>
+
+      <div class="logo-specimen" data-logo-specimen>
+        <div class="specimen-header">
+          <span class="specimen-label">Wordmark & back arrow crossfade</span>
+          <button type="button" data-logo-toggle class="specimen-pill-btn">
+            <Icon name="repeat" size={13} />
+            Toggle state
+          </button>
+        </div>
+        <div class="logo-demo-stage">
+          <div class="logo-demo-circle" data-logo-state="home" aria-hidden="true">
+            <span class="logo-demo-mark">ag.</span>
+            <span class="logo-demo-back-icon"><Icon name="arrow-left" size={16} /></span>
+          </div>
+          <div class="logo-demo-info">
+            <span class="specimen-note" data-logo-note>Homepage: shows the wordmark. Anywhere else: shows back arrow.</span>
+          </div>
+        </div>
+      </div>
+
+      <p>Pressing <kbd>⌘K</kbd> or <kbd>/</kbd> opens the command palette. On mobile, the <Icon name="command" size={14} /> button in the header does the same. The search manifest is fully embedded at build time, so every result is instant with no network round-trip.</p>
+    </section>
+
+    <section id="motion" class="design-chapter">
+      <h2>Five durations, two curves</h2>
+      <p>Every animation on the site draws from five durations. Each has a semantic meaning tied to how much attention the movement should ask for. 80 ms for press feedback - faster than the eye expects, which makes a control feel physically responsive. 150 ms for colour and opacity - long enough to be visible, short enough to feel instant. 250 ms for elements that move through space. 400 ms for reveals that need to draw in gradually. 500 ms for overlays that deserve a breath.</p>
+      <p>Click a card to see how that duration feels. The same dot, five different paces.</p>
+
+      <div class="duration-grid" role="list" aria-label="Motion duration specimens">
+        {motionDurations.map((d) => (
+          <div class="duration-card" role="listitem">
+            <button type="button" class="duration-trigger" data-duration={d.value} aria-label={`Play ${d.value} animation sample`}>
+              <span class="duration-dot" data-dot></span>
+            </button>
+            <div class="duration-info">
+              <code class="duration-token mono">{d.token}</code>
+              <span class="duration-value mono">{d.value}</span>
+              <span class="duration-role">{d.role}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <p>Route transitions use <span class="col-k">blur only</span>: never opacity, never position. Any opacity below 1 during the DOM swap causes a visible canvas flash, even for a single 16 ms frame. Blur keeps the element fully opaque while masking the content change. The outgoing page blurs in 80 ms; the incoming page clears in 250 ms. The header stays fixed throughout.</p>
+
+      <div class="route-specimen" data-route-specimen>
+        <div class="specimen-header">
+          <span class="specimen-label">Zero-flash route swap</span>
+          <button type="button" class="specimen-pill-btn" data-replay-route>
+            <Icon name="repeat" size={13} />
+            Replay handoff
+          </button>
+        </div>
+        <div class="route-mockup">
+          <div class="route-chrome" aria-hidden="true">
+            <span class="route-logo">ag.</span>
+            <div class="route-nav-mock">
+              <span>home</span>
+              <span>work</span>
+              <span>more</span>
+            </div>
+          </div>
+          <div class="route-stage" aria-live="polite">
+            <span class="route-page route-page-old" data-route-old>home</span>
+            <span class="route-page route-page-new" data-route-new>work</span>
+          </div>
+        </div>
+        <span class="specimen-note" data-route-status>The header stays fixed. The page beneath it settles in 250 ms.</span>
+      </div>
+
+      <p>With reduced motion enabled, all travel is removed. What remains: colour transitions, opacity on show and hide, and focus feedback. The experience is complete without animation.</p>
+    </section>
+
+    <section id="sound" class="design-chapter">
+      <h2>A tiny Web Audio engine</h2>
+      <p>The site has fourteen interaction sounds. None of them are audio files. Each one is a few lines of Web Audio API: create an oscillator, set a frequency, ramp the gain down to near zero. The complete engine is a single TypeScript module with no runtime dependency, gentle organic micro-pitch variation to prevent auditory fatigue, and a master gain of 0.09 - quiet enough that it reads as a texture rather than a notification.</p>
+      <p>Sound is on by default, controlled by the toggle in the footer, and persisted in <code class="inline-code">localStorage</code>. Open tabs stay in sync via the <code class="inline-code">storage</code> event. The <code class="inline-code">AudioContext</code> is only created from a real user gesture - before that, any call to <code class="inline-code">playAccent()</code> is a no-op.</p>
+
+      <div class="sound-section" data-sound-grid>
+        <p class="sound-muted-note" data-sound-muted-note aria-live="polite"></p>
+        <div class="sound-grid">
+          {soundAccents.map((accent) => (
+            <div class="sound-card surface-row">
+              <button type="button" class="sound-trigger" data-accent={accent.name} aria-label={`Play ${accent.label} sound`}>
+                <Icon name="play" size={12} />
+                <span class="sound-name">{accent.label}</span>
+              </button>
+              <span class="sound-desc">{accent.desc}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <p>Sound carries no meaning alone. Every accent is redundant with a visual change: the theme toggle shows the sun shift before any tone plays. Someone with sound off misses nothing. The mute confirm plays before the gate flips, so the last sound you hear when muting is the descending toggle-off chord.</p>
+    </section>
+
+    <section id="interactions" class="design-chapter">
+      <h2>The details that compound</h2>
+      <p>Individually, none of these are remarkable. Together, they account for most of the time I spend on this site.</p>
+
+      <h3>Arrow direction</h3>
+      <p>The shape on a link tells you what will happen before you leave the current page. This is the complete set.</p>
+
+      <ul class="arrow-grid">
+        <li class="arrow-row surface-row">
+          <a class="arrow-link arrow-link-fwd" href="/library/">
+            The library <Icon name="arrow-right" size={14} />
+          </a>
+          <span class="arrow-role">ArrowRight: forward navigation within site</span>
+        </li>
+        <li class="arrow-row surface-row">
+          <a class="arrow-link arrow-link-back" href="/">
+            Back home <Icon name="arrow-left" size={14} />
+          </a>
+          <span class="arrow-role">ArrowLeft: back or previous route</span>
+        </li>
+        <li class="arrow-row surface-row">
+          <a class="arrow-link arrow-link-ext" href={site.repoUrl} target="_blank" rel="noopener noreferrer">
+            Source <Icon name="arrow-up-right" size={14} />
+          </a>
+          <span class="arrow-role">ArrowUpRight: external only, opens new tab</span>
+        </li>
+        <li class="arrow-row surface-row is-disclosure">
+          <details class="design-disclosure">
+            <summary>More detail <Icon name="chevron-down" size={14} /></summary>
+            <p>ChevronDown: disclosure. Rotates 180 degrees when open. The same shape, a different orientation, which preserves visual memory.</p>
+          </details>
+          <span class="arrow-role">ChevronDown: in-place progressive disclosure</span>
+        </li>
+      </ul>
+
+      <h3>Focus</h3>
+      <p>A 2 px ink ring at 3 px offset, shown only for keyboard navigation via <code class="inline-code">:focus-visible</code>. Mouse clicks suppress it. Every interactive element has a visible focus state, and every touch target is at least 44 px tall.</p>
+
+      <div class="focus-specimen">
+        <div class="specimen-header">
+          <span class="specimen-label">Interactive focus strip</span>
+          <span class="mono token-badge">:focus-visible</span>
+        </div>
+        <div class="focus-strip">
+          <button type="button" class="focus-demo-btn">Action button</button>
+          <a href="#interactions" class="focus-demo-link">Navigation link <Icon name="arrow-right" size={13} /></a>
+          <button type="button" class="focus-demo-pill">Control pill</button>
+        </div>
+        <span class="specimen-note">Press <kbd>Tab</kbd> to cycle between controls. Mouse clicks suppress the ring via <code class="inline-code">:focus-visible</code>.</span>
+      </div>
+
+      <h3>Hover paragraphs</h3>
+      <p>The homepage intro and the colophon use a hover effect: hovering a paragraph brightens the whole block from ghost toward ink, and any <span class="col-k">keyword spans</span> within it become semibold. It rewards reading slowly. It is not applied globally - only in blocks where the density of information makes the interaction useful.</p>
+
+      <h3>The typographic stream</h3>
+      <p>List items across the site sit directly on the canvas without heavy boxes or clumsy dividing lines. Hovering one item softly spotlights it with a 3.5% ink highlight while its siblings gently soften, mirroring the homepage hero intro.</p>
+
+      <div class="surface-demo surface-stack" role="group" aria-label="Typographic stream specimen">
+        <button type="button" class="surface-demo-row is-interactive surface-row">Hover or press this row</button>
+        <button type="button" class="surface-demo-row is-interactive surface-row">And this one</button>
+        <div class="surface-demo-row is-interactive surface-row" aria-current="page">This one is current</div>
+      </div>
+
+      <h3>Selection</h3>
+      <p>Regular selection is ink on canvas. Quote text uses a vermilion wash instead, because the vermilion accent is the one colour already associated with something being active or present. The quote block gets its own <code class="inline-code">::selection</code> rule scoped to <code class="inline-code">.quote-text</code> and <code class="inline-code">.quote-author</code>.</p>
+    </section>
+
+    <section id="presence" class="design-chapter">
+      <h2>A live clock in the footer</h2>
+      <p>The footer shows the current time in Pollachi, Tamil Nadu (Asia/Kolkata, UTC+5:30). Clicking it reveals your own local time and zone for comparison. The dot to the left of the clock is the presence indicator: a small coloured circle that changes based on the current hour in IST.</p>
+      <p>Three states, driven by the hour. Available from 08:00 to 20:00. Winding down from 20:00 to midnight and from 06:00 to 08:00. Asleep from midnight to 06:00. Each state gets a different colour token and a label drawn at random from a small pool, so the tooltip text stays fresh across visits.</p>
+
+      <div class="presence-specimen" data-presence-specimen>
+        <div class="presence-states" aria-label="Presence states">
+          <div class="presence-state-row" data-presence-row="available">
+            <span class="presence-dot" style="background: var(--acc-green)"></span>
+            <div class="presence-state-info">
+              <span class="presence-state-label">Available</span>
+              <span class="presence-state-hours">08:00 to 20:00 IST</span>
+            </div>
+          </div>
+          <div class="presence-state-row" data-presence-row="winding-down">
+            <span class="presence-dot" style="background: var(--acc-amber)"></span>
+            <div class="presence-state-info">
+              <span class="presence-state-label">Winding down</span>
+              <span class="presence-state-hours">20:00 to midnight, 06:00 to 08:00 IST</span>
+            </div>
+          </div>
+          <div class="presence-state-row" data-presence-row="asleep">
+            <span class="presence-dot" style="background: var(--vermilion)"></span>
+            <div class="presence-state-info">
+              <span class="presence-state-label">Asleep</span>
+              <span class="presence-state-hours">Midnight to 06:00 IST</span>
+            </div>
+          </div>
+        </div>
+        <p class="presence-live" aria-live="polite" data-presence-live>Reading current state...</p>
+      </div>
+
+      <p>Every part of the page that shows presence subscribes to one <code class="inline-code">presence:change</code> custom event. The footer clock dispatches it once per second; the event only fires when the state actually changes, not every tick. The dot, the map pin tooltip, and the contact CTA line all read from the same source with no duplicated logic.</p>
+      <p>When I am asleep, a <code class="inline-code">data-accent="off-hours"</code> attribute is applied to the root element. This desaturates the vermilion accent slightly via a CSS override, making the whole site feel quieter. It is a small thing that is easy to miss.</p>
+    </section>
+
+    <section id="easter-eggs" class="design-chapter">
+      <h2>The things you might not find</h2>
+      <p>These are here because they should be, not because anyone asked. None of them affect the site's function.</p>
+
+      <h3>The console API</h3>
+      <p>On any page, open the browser console and type <code class="inline-code">ashwin.help()</code>. The object is read-only, frozen, and not enumerable on <code class="inline-code">window</code>.</p>
+
+      <div class="egg-block">
+        <code class="egg-line"><span class="egg-prompt">»</span> ashwin.help()</code>
+        <code class="egg-line"><span class="egg-prompt">»</span> ashwin.status()</code>
+        <code class="egg-line"><span class="egg-prompt">»</span> ashwin.source()</code>
+        <code class="egg-line"><span class="egg-prompt">»</span> ashwin.secrets()</code>
+      </div>
+
+      <p><code class="inline-code">ashwin.status()</code> returns the current route, build commit hash, active theme, reduced motion state, and the live initialisation state of the Spotify embed and the MapLibre map. It is useful for debugging integrations without opening React DevTools, because there is no React.</p>
+
+      <h3>The command palette</h3>
+      <p>Open it with <kbd>⌘K</kbd> or <kbd>/</kbd>, then try one of these.</p>
+
+      <div class="egg-block">
+        <code class="egg-line"><span class="egg-prompt">›</span> whoami</code>
+        <code class="egg-line"><span class="egg-prompt">›</span> vanakkam</code>
+        <code class="egg-line"><span class="egg-prompt">›</span> 42</code>
+        <code class="egg-line"><span class="egg-prompt">›</span> sudo hire ashwin</code>
+      </div>
+
+      <h3>The quote block</h3>
+      <p>The homepage quote cycles daily based on a seed derived from the current date. Pressing <kbd>J</kbd> shuffles it immediately. There are enough of them that you might land on one you did not expect.</p>
+
+      <h3>The clock</h3>
+      <p>The footer clock shows my time by default. Pressing it switches to your local time and zone. Pressing it again returns to mine. It is not labelled anywhere on the page. The vermilion dot next to it is the presence indicator, described in the chapter above.</p>
+    </section>
+
+    <footer class="design-endnote">
+      <p>The exact values live at <a class="inline-mono" href="/design.md" data-astro-prefetch="false">/design.md</a>. This page is the part I rewrite when the site teaches me something new about itself.</p>
+      <p>
+        <a href="/agent-readiness.md" data-astro-prefetch="false">Machine-readiness notes</a>
+        <span aria-hidden="true">·</span>
+        <a href="/colophon/">Colophon</a>
+        <span aria-hidden="true">·</span>
+        <a href="/DESIGN.md" data-astro-prefetch="false">Canonical source</a>
+      </p>
+    </footer>
+  </article>
+</Page>
+
+<script>
+  import { pageSignal } from "../scripts/lifecycle";
+  import { playAccent, isSoundEnabled, type Accent } from "../scripts/sound";
+  import { tickPresence } from "../scripts/presence";
+  import { showToast } from "../scripts/toast";
+  import { copyToClipboard } from "../scripts/clipboard";
+
+  function enhanceDesignGuide() {
+    const root = document.querySelector<HTMLElement>("[data-design-guide]");
+    if (!root || root.dataset.enhanced === "true") return;
+    root.dataset.enhanced = "true";
+    const signal = pageSignal();
+
+    const progress = root.querySelector<HTMLElement>("[data-progress-bar]");
+    let frame = 0;
+    const updateProgress = () => {
+      frame = 0;
+      if (!progress) return;
+      const start = root.offsetTop;
+      const distance = Math.max(1, root.offsetHeight - innerHeight);
+      progress.style.transform = `scaleX(${Math.min(1, Math.max(0, (scrollY - start) / distance))})`;
+    };
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (!frame) frame = requestAnimationFrame(updateProgress);
+      },
+      { signal, passive: true },
+    );
+    updateProgress();
+
+    const chapterSummary = root.querySelector<HTMLElement>("[data-chapter-summary]");
+    const chapterNodes = Array.from(root.querySelectorAll<HTMLElement>(".design-chapter[id]"));
+    if ("IntersectionObserver" in window) {
+      const obs = new IntersectionObserver(
+        (entries) => {
+          const curr = entries
+            .filter((e) => e.isIntersecting)
+            .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+          if (!curr) return;
+          const ch = curr.target as HTMLElement;
+          const title = ch.querySelector("h2")?.textContent?.trim();
+          if (chapterSummary && title) chapterSummary.textContent = title;
+          root.querySelectorAll<HTMLAnchorElement>("[data-chapter-link]").forEach((link) => {
+            if (link.dataset.chapterLink === ch.id) link.setAttribute("aria-current", "true");
+            else link.removeAttribute("aria-current");
+          });
+        },
+        { rootMargin: "-18% 0px -70%", threshold: 0 },
+      );
+      chapterNodes.forEach((ch) => obs.observe(ch));
+      signal.addEventListener("abort", () => obs.disconnect(), { once: true });
+    }
+
+    const swatches = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-swatch-index]"));
+    const swatchToken = root.querySelector<HTMLElement>("[data-swatch-token]");
+    const swatchValue = root.querySelector<HTMLElement>("[data-swatch-value]");
+    const swatchStatus = root.querySelector<HTMLElement>("[data-swatch-status]");
+    const swatchDisplay = root.querySelector<HTMLElement>("[data-swatch-display]");
+    let copiedTimer = 0;
+
+    const selectSwatch = async (index: number, shouldCopy: boolean) => {
+      const swatch = swatches[index];
+      if (!swatch) return;
+      swatches.forEach((s, i) => s.setAttribute("aria-pressed", String(i === index)));
+      if (swatchToken) swatchToken.textContent = swatch.dataset.token ?? "";
+      if (swatchValue) swatchValue.textContent = swatch.dataset.value ?? "";
+      if (!shouldCopy) {
+        if (isSoundEnabled()) playAccent("select");
+        if (swatchStatus) swatchStatus.textContent = "Press Enter or Space to copy.";
+        return;
+      }
+      const val = swatch.dataset.value ?? "";
+      const ok = await copyToClipboard(val);
+      if (ok) {
+        if (isSoundEnabled()) playAccent("copy");
+        showToast({
+          message: `Copied ${swatch.dataset.token}: ${val}`,
+          anchor: swatch,
+          duration: 1600,
+        });
+      }
+      if (swatchStatus) swatchStatus.textContent = ok ? "Copied." : "Clipboard blocked. Select the value directly.";
+      swatchDisplay?.toggleAttribute("data-copied", ok);
+      clearTimeout(copiedTimer);
+      if (ok) copiedTimer = window.setTimeout(() => swatchDisplay?.removeAttribute("data-copied"), 1600);
+    };
+
+    swatches.forEach((swatch, index) => {
+      swatch.addEventListener("click", () => void selectSwatch(index, true), { signal });
+      swatch.addEventListener(
+        "keydown",
+        (e) => {
+          if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+          e.preventDefault();
+          const next =
+            e.key === "ArrowRight"
+              ? (index + 1) % swatches.length
+              : (index - 1 + swatches.length) % swatches.length;
+          swatches[next]?.focus();
+          void selectSwatch(next, false);
+        },
+        { signal },
+      );
+    });
+
+    const weightSpecimen = root.querySelector<HTMLElement>("[data-weight-specimen]");
+    const weightSample = root.querySelector<HTMLElement>("[data-weight-sample]");
+    const weightRole = root.querySelector<HTMLElement>("[data-weight-role]");
+    const weightButtons = Array.from(
+      weightSpecimen?.querySelectorAll<HTMLButtonElement>("[data-weight]") ?? [],
+    );
+    const weightRoles = [
+      "400 - body, reading",
+      "450 - active navigation label",
+      "500 - controls and buttons",
+      "550 - section headings",
+      "600 - strong emphasis, rarely used",
+    ];
+    weightButtons.forEach((btn, i) => {
+      btn.addEventListener(
+        "click",
+        () => {
+          const w = btn.dataset.weight ?? "400";
+          weightButtons.forEach((b, bi) => b.setAttribute("aria-pressed", String(bi === i)));
+          if (weightSample) weightSample.style.fontWeight = w;
+          if (weightRole) weightRole.textContent = weightRoles[i] ?? "";
+          const sel = weightSpecimen?.querySelector<HTMLElement>(".weight-selection");
+          if (sel) sel.style.transform = `translateX(${i * 100}%)`;
+        },
+        { signal },
+      );
+    });
+
+    const monoToggle = root.querySelector<HTMLButtonElement>("[data-mono-toggle]");
+    const monoToggleLabel = monoToggle?.querySelector<HTMLElement>("[data-mono-toggle-label]");
+    const monoShifted = root.querySelector<HTMLElement>("[data-mono-shifted]");
+    let monoOn = true;
+    monoToggle?.addEventListener(
+      "click",
+      () => {
+        monoOn = !monoOn;
+        if (monoShifted) {
+          monoShifted.style.position = monoOn ? "relative" : "static";
+          monoShifted.style.top = monoOn ? "1px" : "0";
+        }
+        if (monoToggle) {
+          monoToggle.setAttribute("aria-pressed", String(monoOn));
+        }
+        if (monoToggleLabel) {
+          monoToggleLabel.textContent = monoOn ? "Optical shift on" : "Optical shift off";
+        }
+      },
+      { signal },
+    );
+
+    const railSpecimen = root.querySelector<HTMLElement>("[data-rail-specimen]");
+    const railLabel = root.querySelector<HTMLElement>("[data-rail-label]");
+    const measureButtons = Array.from(
+      railSpecimen?.querySelectorAll<HTMLButtonElement>("[data-measure]") ?? [],
+    );
+    const measureLabels: Record<string, string> = {
+      narrow: "35 ch (~360 px) · Cramped line breaks and fragmented rhythm",
+      home: "64 ch (~800 px max) · Settled reading rail with balanced eye sweep",
+      full: "100% (100+ ch) · Long lines cause eye fatigue on the return sweep",
+    };
+    const measureSel = railSpecimen?.querySelector<HTMLElement>(".measure-selection");
+    measureButtons.forEach((btn, i) => {
+      btn.addEventListener(
+        "click",
+        () => {
+          const m = btn.dataset.measure ?? "home";
+          if (railSpecimen) railSpecimen.dataset.measure = m;
+          measureButtons.forEach((b, bi) => b.setAttribute("aria-pressed", String(bi === i)));
+          if (measureSel) measureSel.style.transform = `translateX(${i * 100}%)`;
+          if (railLabel) railLabel.textContent = measureLabels[m] ?? "";
+        },
+        { signal },
+      );
+    });
+
+    const navSpecimen = root.querySelector<HTMLElement>("[data-nav-specimen]");
+    const navButtons = Array.from(
+      navSpecimen?.querySelectorAll<HTMLButtonElement>("[data-nav-index]") ?? [],
+    );
+    const navNote = root.querySelector<HTMLElement>("[data-nav-note]");
+    navButtons.forEach((btn, i) => {
+      btn.addEventListener(
+        "click",
+        () => {
+          if (navSpecimen) navSpecimen.dataset.activeIndex = String(i);
+          navButtons.forEach((b, bi) => b.setAttribute("aria-pressed", String(bi === i)));
+          if (navNote) navNote.textContent = "One element translates. The pill never jumps; it slides.";
+        },
+        { signal },
+      );
+    });
+
+    const logoCircle = root.querySelector<HTMLElement>("[data-logo-state]");
+    const logoToggle = root.querySelector<HTMLButtonElement>("[data-logo-toggle]");
+    const logoNote = root.querySelector<HTMLElement>("[data-logo-note]");
+    logoToggle?.addEventListener(
+      "click",
+      () => {
+        if (!logoCircle) return;
+        const isHome = logoCircle.dataset.logoState === "home";
+        logoCircle.dataset.logoState = isHome ? "back" : "home";
+        if (logoNote) {
+          logoNote.textContent = isHome
+            ? "Not on the homepage: shows the back arrow. Pressing it navigates to the logical parent."
+            : "Homepage: shows wordmark. Anywhere else: shows back arrow.";
+        }
+      },
+      { signal },
+    );
+
+    const durationTriggers = Array.from(
+      root.querySelectorAll<HTMLButtonElement>("[data-duration]"),
+    );
+    durationTriggers.forEach((btn) => {
+      btn.addEventListener(
+        "click",
+        () => {
+          const dur = btn.dataset.duration ?? "150ms";
+          const dot = btn.querySelector<HTMLElement>("[data-dot]");
+          if (!dot || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+          dot.style.transition = "none";
+          dot.style.transform = "scale(1)";
+          dot.style.background = "";
+          dot.getBoundingClientRect();
+          const ms = parseFloat(dur);
+          dot.style.transition = `transform ${dur} var(--ease-spring), background-color ${dur} ease`;
+          dot.style.transform = "scale(1.6)";
+          dot.style.background = "var(--vermilion)";
+          const resetTimer = window.setTimeout(() => {
+            dot.style.transform = "scale(1)";
+            dot.style.background = "";
+          }, ms + 80);
+          signal.addEventListener("abort", () => clearTimeout(resetTimer), { once: true });
+        },
+        { signal },
+      );
+    });
+
+    const routeOld = root.querySelector<HTMLElement>("[data-route-old]");
+    const routeNew = root.querySelector<HTMLElement>("[data-route-new]");
+    const routeStatus = root.querySelector<HTMLElement>("[data-route-status]");
+    const routeNames = ["home", "work", "more"];
+    let routeIndex = 0;
+    let routeAnimations: Animation[] = [];
+
+    root.querySelector<HTMLButtonElement>("[data-replay-route]")?.addEventListener(
+      "click",
+      () => {
+        if (!routeOld || !routeNew || !routeStatus) return;
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          routeIndex = (routeIndex + 1) % routeNames.length;
+          routeOld.textContent = routeNames[routeIndex]!;
+          routeNew.textContent = routeNames[routeIndex]!;
+          routeStatus.textContent = "Reduced motion is active. The page change is instant.";
+          return;
+        }
+        routeAnimations.forEach((a) => a.cancel());
+        const next = (routeIndex + 1) % routeNames.length;
+        routeOld.textContent = routeNames[routeIndex]!;
+        routeNew.textContent = routeNames[next]!;
+        const outgoing = routeOld.animate(
+          [
+            { opacity: 1, filter: "blur(0)", transform: "none" },
+            { opacity: 0.985, filter: "blur(0.5px)", transform: "translateY(-1px)" },
+          ],
+          { duration: 70, easing: "cubic-bezier(0.23, 1, 0.32, 1)", fill: "both" },
+        );
+        const incoming = routeNew.animate(
+          [
+            { opacity: 0.97, filter: "blur(1.25px)", transform: "translateY(2px)" },
+            { opacity: 1, filter: "blur(0)", transform: "none" },
+          ],
+          { duration: 140, easing: "cubic-bezier(0.23, 1, 0.32, 1)", fill: "both" },
+        );
+        routeAnimations = [outgoing, incoming];
+        routeIndex = next;
+        routeStatus.textContent = "Header stayed fixed. Page settled in 140 ms.";
+      },
+      { signal },
+    );
+
+    const mutedNote = root.querySelector<HTMLElement>("[data-sound-muted-note]");
+    const updateSoundNote = () => {
+      if (mutedNote) {
+        mutedNote.textContent = isSoundEnabled()
+          ? ""
+          : "Sound is muted. Toggle it in the footer to hear these accents.";
+      }
+    };
+    updateSoundNote();
+
+    root.querySelectorAll<HTMLButtonElement>("[data-accent]").forEach((btn) => {
+      btn.addEventListener(
+        "click",
+        () => {
+          const accent = btn.dataset.accent as Accent | undefined;
+          if (accent) playAccent(accent);
+          updateSoundNote();
+        },
+        { signal },
+      );
+    });
+
+    const presenceLive = root.querySelector<HTMLElement>("[data-presence-live]");
+    const presenceRows = Array.from(root.querySelectorAll<HTMLElement>("[data-presence-row]"));
+
+    const setPresence = () => {
+      const p = tickPresence();
+      presenceRows.forEach((el) => {
+        el.toggleAttribute("data-current", el.dataset.presenceRow === p.state);
+      });
+      if (presenceLive) {
+        presenceLive.textContent = `${p.label} It is currently around ${String(p.hour).padStart(2, "0")}:00 IST.`;
+      }
+    };
+    setPresence();
+    const presenceInterval = setInterval(setPresence, 15000);
+
+    signal.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(copiedTimer);
+        clearInterval(presenceInterval);
+        routeAnimations.forEach((a) => a.cancel());
+        cancelAnimationFrame(frame);
+        delete root.dataset.enhanced;
+      },
+      { once: true },
+    );
+  }
+
+  enhanceDesignGuide();
+  document.addEventListener("astro:page-load", enhanceDesignGuide);
+</script>
+
+<style>
+  .design-guide {
+    position: relative;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+  }
+
+  .reading-progress {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: var(--z-progress);
+    height: 2px;
+    pointer-events: none;
+  }
+
+  .reading-progress > div {
+    width: 100%;
+    height: 100%;
+    background: var(--vermilion);
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+
+  .chapter-nav {
+    margin: 1.5rem 0 2.5rem;
+    padding-block: 0.5rem;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .chapter-nav summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-block-size: 44px;
+    color: var(--muted);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    cursor: pointer;
+    list-style: none;
+    transition: color var(--t-color);
+  }
+
+  .chapter-nav summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .chapter-nav summary :global(.ui-icon) {
+    color: var(--faint);
+    transition: transform var(--dur-2) var(--ease-out), color var(--t-color);
+  }
+
+  .chapter-nav[open] summary :global(.ui-icon) {
+    transform: rotate(180deg);
+  }
+
+  .chapter-nav[open] summary {
+    margin-bottom: var(--space-2);
+  }
+
+  .chapter-nav summary:hover {
+    color: var(--ink);
+  }
+
+  .chapter-nav summary:hover :global(.ui-icon) {
+    color: var(--ink);
+  }
+
+  .chapter-nav summary:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: -2px;
+  }
+
+  .chapter-nav ol {
+    display: grid;
+    gap: 0;
+    margin: 0 0 var(--space-3);
+    padding: 0;
+    list-style: none;
+  }
+
+  .chapter-nav a {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-block-size: 32px;
+    color: var(--muted);
+    font-size: var(--text-sm);
+    text-decoration: none;
+    transition: color var(--t-color);
+  }
+
+  .chapter-nav a:hover,
+  .chapter-nav a:focus-visible {
+    color: var(--ink);
+  }
+
+  .chapter-nav a[aria-current] {
+    color: var(--ink);
+  }
+
+  .chapter-num {
+    color: var(--faint);
+    font-size: var(--text-xs);
+    font-variant-numeric: tabular-nums;
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    position: relative;
+    top: 1px;
+    transition: color var(--t-color);
+  }
+
+  .chapter-nav a[aria-current] .chapter-num {
+    color: var(--vermilion);
+  }
+
+  .design-chapter {
+    margin-top: 4.5rem;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .design-chapter:first-of-type {
+    margin-top: 2.5rem;
+  }
+
+  .design-chapter h2 {
+    max-inline-size: 100%;
+    margin: 0 0 1rem;
+    color: var(--ink);
+    font-size: var(--text-xl);
+    font-weight: var(--font-semibold);
+    line-height: var(--leading-tight);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  .design-chapter h3 {
+    margin: 2.5rem 0 0.75rem;
+    color: var(--ink);
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
+    letter-spacing: -0.01em;
+  }
+
+  .design-chapter > p {
+    max-inline-size: 100%;
+    color: var(--ghost);
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+    text-align: justify;
+    text-justify: inter-word;
+    text-wrap: pretty;
+    margin: 0 0 1.25rem;
+    transition: color var(--t-color);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .design-chapter > p:hover {
+      color: color-mix(in oklch, var(--ink) 80%, var(--muted));
+    }
+
+    .design-chapter > p:hover .col-k,
+    .design-chapter > p:hover a {
+      font-weight: var(--font-hover-lift);
+    }
+  }
+
+  .col-k {
+    color: var(--ink);
+    transition: color var(--t-color), font-weight var(--t-color);
+  }
+
+  .inline-code {
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: 0.86em;
+    position: relative;
+    top: 1px;
+    color: var(--ink);
+    background: color-mix(in oklch, var(--ink) 6%, transparent);
+    padding: 0.1em 0.45em;
+    border-radius: var(--r-2);
+    transition: background-color var(--t-color);
+  }
+
+  .inline-mono {
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: 0.88em;
+    position: relative;
+    top: 1px;
+    color: var(--ink);
+  }
+
+  kbd {
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: 0.82em;
+    position: relative;
+    top: 1px;
+    color: var(--ink);
+    background: color-mix(in oklch, var(--ink) 5%, transparent);
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--r-2);
+    padding: 0.1em 0.45em;
+    box-shadow: 0 1px 0 var(--rule-strong);
+    transition: background-color var(--t-color), border-color var(--t-color);
+  }
+
+  .specimen-note {
+    color: var(--faint);
+    font-size: var(--text-xs);
+    transition: color var(--t-color);
+  }
+
+  .text-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-block-size: 2.35rem;
+    padding: 0.45rem 1.1rem;
+    border: none;
+    border-radius: var(--r-pill);
+    background: color-mix(in oklch, var(--ink) 6%, transparent);
+    color: var(--muted);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color var(--t-color),
+      color var(--t-color),
+      transform var(--dur-1) var(--ease-out);
+  }
+
+  .text-btn:hover,
+  .text-btn:focus-visible {
+    background: var(--ink);
+    color: var(--canvas);
+    text-decoration: none;
+  }
+
+  .text-btn:active {
+    transform: scale(0.97);
+    transition: transform var(--dur-1) var(--ease);
+  }
+
+  .text-btn:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .naming-note {
+    max-inline-size: 100% !important;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--muted) !important;
+    font-family: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
+    font-size: var(--text-lg) !important;
+    font-style: italic;
+    line-height: 1.55 !important;
+    text-align: start !important;
+  }
+
+  .tonal-rail {
+    display: flex;
+    margin-top: 1.5rem;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    border-radius: var(--r-4);
+    scrollbar-width: none;
+  }
+
+  .tonal-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tonal-swatch {
+    flex: 1 0 44px;
+    scroll-snap-align: start;
+    min-block-size: 68px;
+    padding: 0;
+    border: 0;
+    border-right: 1px solid color-mix(in oklch, var(--ink) 8%, transparent);
+    background: var(--swatch);
+    cursor: pointer;
+    transition: box-shadow var(--t-color), background-color var(--t-color);
+  }
+
+  .tonal-swatch:last-child {
+    border-right: 0;
+  }
+
+  .tonal-swatch[aria-pressed="true"] {
+    position: relative;
+    z-index: 1;
+    box-shadow: inset 0 0 0 2px var(--vermilion);
+  }
+
+  .tonal-swatch:focus-visible {
+    position: relative;
+    z-index: 2;
+    outline: var(--focus-ring);
+    outline-offset: -3px;
+  }
+
+  .tonal-swatch:active {
+    box-shadow: inset 0 0 0 999px color-mix(in oklch, var(--ink) 12%, transparent);
+  }
+
+  .tonal-detail {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto minmax(12ch, auto);
+    gap: var(--space-2);
+    align-items: center;
+    min-block-size: 40px;
+    margin-top: var(--space-2);
+    color: var(--faint);
+    font-size: var(--text-xs);
+    transition: color var(--t-color);
+  }
+
+  .tonal-detail > span:first-child,
+  .tonal-detail code {
+    color: var(--ink);
+    transition: color var(--t-color);
+  }
+
+  .tonal-detail code {
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: var(--text-xs);
+    position: relative;
+    top: 1px;
+    overflow-wrap: anywhere;
+  }
+
+  .tonal-action {
+    position: relative;
+    display: grid;
+    width: 14px;
+    height: 14px;
+    place-items: center;
+    color: var(--ghost);
+  }
+
+  .tonal-action > span {
+    position: absolute;
+    display: grid;
+    transition: opacity var(--t-color), transform var(--dur-2) var(--ease-out);
+  }
+
+  .tonal-check {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  [data-swatch-display][data-copied] .tonal-copy {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  [data-swatch-display][data-copied] .tonal-check {
+    opacity: 1;
+    transform: none;
+    color: var(--acc-green);
+  }
+
+  .semantic-rail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: 1.5rem;
+  }
+
+  .semantic-swatch {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-inline-size: 72px;
+  }
+
+  .semantic-swatch-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    height: 42px;
+    border-radius: var(--r-3);
+    overflow: hidden;
+  }
+
+  .semantic-swatch-light,
+  .semantic-swatch-dark {
+    height: 100%;
+  }
+
+  .semantic-swatch-label {
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    color: var(--ink);
+    transition: color var(--t-color);
+  }
+
+  .semantic-swatch-role {
+    font-size: 0.65rem;
+    color: var(--faint);
+    line-height: 1.35;
+    transition: color var(--t-color);
+  }
+
+  .semantic-caption {
+    max-inline-size: 100% !important;
+    margin-top: var(--space-3) !important;
+    font-size: var(--text-xs) !important;
+    line-height: var(--leading-normal) !important;
+  }
+
+  .specimen-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .specimen-label {
+    color: var(--ink);
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .specimen-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-block-size: 30px;
+    padding: 0.2rem 0.8rem;
+    border: none;
+    border-radius: var(--r-pill);
+    background: color-mix(in oklch, var(--ink) 6%, transparent);
+    color: var(--muted);
+    font: inherit;
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+      background-color var(--t-color),
+      color var(--t-color),
+      transform var(--dur-1) var(--ease-out);
+  }
+
+  .specimen-pill-btn:hover,
+  .specimen-pill-btn:focus-visible {
+    background: var(--ink);
+    color: var(--canvas);
+  }
+
+  .specimen-pill-btn:active {
+    transform: scale(0.97);
+  }
+
+  .specimen-pill-btn:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .token-badge {
+    font-size: var(--text-xs);
+    color: var(--faint);
+    background: color-mix(in oklch, var(--ink) 4%, transparent);
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--r-pill);
+  }
+
+  .weight-specimen {
+    margin: 2.5rem 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .weight-control {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    min-inline-size: 19rem;
+    max-inline-size: 22rem;
+    padding: 0.2rem;
+    border-radius: var(--r-pill);
+    background: color-mix(in oklch, var(--ink) 4%, transparent);
+    transition: background-color var(--t-color);
+  }
+
+  .weight-selection {
+    position: absolute;
+    inset-block: 0.2rem;
+    left: 0.2rem;
+    width: calc((100% - 0.4rem) / 5);
+    border-radius: var(--r-pill);
+    background: var(--ink);
+    pointer-events: none;
+    transition: transform var(--dur-2) var(--ease-in-out);
+  }
+
+  .weight-control button {
+    position: relative;
+    z-index: 1;
+    min-block-size: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    cursor: pointer;
+    transition: color var(--t-color);
+  }
+
+  .weight-control button[aria-pressed="true"] {
+    color: var(--canvas);
+  }
+
+  .weight-control button:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: -2px;
+  }
+
+  .weight-display {
+    margin-top: 0;
+  }
+
+  .weight-sample {
+    max-inline-size: 100%;
+    margin: 0;
+    color: var(--ink);
+    font-size: var(--text-lg);
+    line-height: var(--leading-relaxed);
+    text-align: justify;
+    text-justify: inter-word;
+    text-wrap: pretty;
+    transition: color var(--t-color);
+  }
+
+  .weight-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: var(--space-2);
+    padding: 0;
+    border: none;
+  }
+
+  .weight-role {
+    color: var(--faint);
+    font-size: var(--text-xs);
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  }
+
+  .font-specimen {
+    margin: 2.5rem 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .font-label {
+    display: block;
+    margin-top: var(--space-2);
+    color: var(--faint);
+    font-size: var(--text-xs);
+    line-height: 1.5;
+    transition: color var(--t-color);
+  }
+
+  .serif-sample {
+    margin: 0;
+    color: var(--muted);
+    font-family: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
+    font-size: var(--text-lg);
+    font-style: italic;
+    line-height: 1.55;
+    max-inline-size: 100%;
+    transition: color var(--t-color);
+  }
+
+  .serif-link {
+    color: var(--ink);
+    text-decoration-color: color-mix(in oklch, currentColor, transparent 60%);
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: 0.85em;
+    font-style: normal;
+    position: relative;
+    top: 1px;
+  }
+
+  .mono-stage {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .mono-sample {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--text-lg);
+    line-height: 1.6;
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    transition: color var(--t-color);
+  }
+
+  .mono-shifted {
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: 0.9em;
+    position: relative;
+    top: 1px;
+    color: var(--ink);
+    background: color-mix(in oklch, var(--ink) 6%, transparent);
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--r-pill);
+  }
+
+  .mono-unshifted {
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: 0.9em;
+    color: var(--ghost);
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--r-pill);
+    background: color-mix(in oklch, var(--ink) 2%, transparent);
+  }
+
+  .mono-separator {
+    color: var(--faint);
+    font-size: var(--text-sm);
+  }
+
+  .mono-explain {
+    margin: var(--space-2) 0 0;
+    color: var(--muted);
+    font-size: var(--text-sm);
+    line-height: 1.55;
+    text-align: justify;
+    text-justify: inter-word;
+    text-wrap: pretty;
+    transition: color var(--t-color);
+  }
+
+  .rail-specimen {
+    margin: 2.5rem 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .measure-control {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    min-inline-size: 15rem;
+    max-inline-size: 18rem;
+    padding: 0.2rem;
+    border-radius: var(--r-pill);
+    background: color-mix(in oklch, var(--ink) 4%, transparent);
+    transition: background-color var(--t-color);
+  }
+
+  .measure-selection {
+    position: absolute;
+    inset-block: 0.2rem;
+    left: 0.2rem;
+    width: calc((100% - 0.4rem) / 3);
+    border-radius: var(--r-pill);
+    background: var(--ink);
+    pointer-events: none;
+    transition: transform var(--dur-2) var(--ease-in-out);
+  }
+
+  .measure-control button {
+    position: relative;
+    z-index: 1;
+    min-block-size: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    cursor: pointer;
+    transition: color var(--t-color);
+  }
+
+  .measure-control button[aria-pressed="true"] {
+    color: var(--canvas);
+  }
+
+  .measure-control button:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: -2px;
+  }
+
+  .rail-ruler {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin: var(--space-3) 0 var(--space-4);
+    color: var(--faint);
+    font-size: var(--text-xs);
+    max-inline-size: 64ch;
+    transition: max-inline-size var(--dur-3) var(--ease), color var(--t-color);
+  }
+
+  [data-rail-specimen][data-measure="narrow"] .rail-ruler {
+    max-inline-size: 35ch;
+  }
+
+  [data-rail-specimen][data-measure="full"] .rail-ruler {
+    max-inline-size: 100%;
+  }
+
+  .rail-ruler-line {
+    flex: 1;
+    height: 1px;
+    background: color-mix(in oklch, var(--ink) 8%, transparent);
+    transition: background-color var(--t-color);
+  }
+
+  .rail-ruler-label {
+    font-size: var(--text-xs);
+    color: var(--faint);
+    white-space: nowrap;
+    transition: color var(--t-color);
+  }
+
+  .measure-stage {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    max-inline-size: 64ch;
+    transition: max-inline-size var(--dur-3) var(--ease);
+  }
+
+  [data-rail-specimen][data-measure="narrow"] .measure-stage {
+    max-inline-size: 35ch;
+  }
+
+  [data-rail-specimen][data-measure="full"] .measure-stage {
+    max-inline-size: 100%;
+  }
+
+  .measure-copy {
+    margin: 0;
+    color: var(--ink);
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+    text-align: justify;
+    text-justify: inter-word;
+    text-wrap: pretty;
+    transition: color var(--t-color);
+  }
+
+  .measure-aside {
+    max-inline-size: 100%;
+    margin: 0;
+    color: var(--muted);
+    font-family: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
+    font-size: var(--text-lg);
+    font-style: italic;
+    line-height: 1.5;
+    transition: color var(--t-color);
+  }
+
+  .nav-specimen {
+    margin: 2.5rem 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .nav-sample {
+    --nav-slot: 5rem;
+    --nav-gap: 0.2rem;
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, var(--nav-slot));
+    gap: var(--nav-gap);
+    padding: 0.25rem;
+    max-inline-size: 17rem;
+    border-radius: var(--r-pill);
+    background: color-mix(in oklch, var(--ink) 4%, transparent);
+    transition: background-color var(--t-color);
+  }
+
+  .nav-sample-pill {
+    position: absolute;
+    inset-block: 0.25rem;
+    left: 0.25rem;
+    width: var(--nav-slot);
+    border-radius: var(--r-pill);
+    background: var(--ink);
+    pointer-events: none;
+    transition: transform var(--dur-3) var(--ease), background-color var(--t-color);
+  }
+
+  [data-nav-specimen][data-active-index="1"] .nav-sample-pill {
+    transform: translate3d(calc(100% + var(--nav-gap)), 0, 0);
+  }
+
+  [data-nav-specimen][data-active-index="2"] .nav-sample-pill {
+    transform: translate3d(calc(200% + var(--nav-gap) + var(--nav-gap)), 0, 0);
+  }
+
+  .nav-sample button {
+    position: relative;
+    z-index: 1;
+    min-block-size: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: color var(--t-color), transform var(--dur-1) var(--ease-out);
+  }
+
+  .nav-sample button[aria-pressed="true"] {
+    color: var(--canvas);
+  }
+
+  .nav-sample button:active {
+    transform: scale(0.97);
+    transition-duration: var(--dur-1);
+  }
+
+  .nav-sample button:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: -2px;
+  }
+
+  .logo-specimen {
+    margin: 2.5rem 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .logo-demo-stage {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: 0;
+  }
+
+  .logo-demo-circle {
+    position: relative;
+    display: grid;
+    grid-template-areas: "logo";
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    flex: 0 0 2.75rem;
+    border-radius: 50%;
+    overflow: hidden;
+    background: color-mix(in oklch, var(--ink) 6%, transparent);
+    transition: background-color var(--t-color);
+  }
+
+  .logo-demo-mark,
+  .logo-demo-back-icon {
+    grid-area: logo;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    transition: opacity var(--dur-2) var(--ease-out), filter var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out);
+  }
+
+  .logo-demo-mark {
+    font-size: var(--text-sm);
+    font-weight: var(--font-bold);
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+
+  .logo-demo-back-icon {
+    opacity: 0;
+    filter: blur(4px);
+    transform: scale(0.75);
+    color: var(--muted);
+  }
+
+  [data-logo-state="back"] .logo-demo-mark {
+    opacity: 0;
+    filter: blur(4px);
+    transform: scale(0.75);
+  }
+
+  [data-logo-state="back"] .logo-demo-back-icon {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+
+  .logo-demo-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .duration-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 2.5rem 0;
+  }
+
+  .duration-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--space-3);
+    padding: 0.5rem 0;
+    background: transparent;
+    border: none;
+    transition: transform var(--dur-2) var(--ease-out);
+  }
+
+  .duration-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: color-mix(in oklch, var(--ink) 6%, transparent);
+    color: var(--muted);
+    cursor: pointer;
+    flex: 0 0 44px;
+    transition: background-color var(--t-color), transform var(--dur-1) var(--ease-out);
+  }
+
+  .duration-trigger:hover {
+    background: color-mix(in oklch, var(--ink) 12%, transparent);
+    transform: scale(1.05);
+  }
+
+  .duration-trigger:active {
+    transform: scale(0.95);
+  }
+
+  .duration-trigger:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .duration-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--ghost);
+    transition: background-color var(--t-color);
+  }
+
+  .duration-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    width: 100%;
+  }
+
+  .duration-token {
+    font-size: var(--text-xs);
+    color: var(--ink);
+    font-weight: var(--font-medium);
+  }
+
+  .duration-value {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  .duration-role {
+    color: var(--faint);
+    font-size: 0.72rem;
+    line-height: 1.3;
+    margin-top: 2px;
+  }
+
+  .route-specimen {
+    margin: 2.5rem 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .route-mockup {
+    margin-bottom: var(--space-2);
+    border-radius: var(--r-3);
+    background: color-mix(in oklch, var(--ink) 3%, transparent);
+    overflow: hidden;
+  }
+
+  .route-chrome {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: color-mix(in oklch, var(--ink) 3%, transparent);
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  .route-logo {
+    color: var(--ink);
+    font-weight: var(--font-bold);
+  }
+
+  .route-nav-mock {
+    display: flex;
+    gap: var(--space-3);
+  }
+
+  .route-stage {
+    position: relative;
+    display: grid;
+    min-block-size: 4.5rem;
+    padding: 1rem 1.25rem;
+    place-items: center start;
+  }
+
+  .route-page {
+    grid-area: 1 / 1;
+    color: var(--ink);
+    font-size: var(--text-lg);
+    font-weight: var(--font-medium);
+    transition: color var(--t-color);
+  }
+
+  .route-page-new {
+    opacity: 0;
+  }
+
+  .sound-section {
+    margin: 2.5rem 0;
+    padding: 0;
+    border: none;
+  }
+
+  .sound-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .sound-card {
+    display: grid;
+    grid-template-columns: 8.5rem minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-3);
+    padding: 0.55rem 0.85rem;
+    margin-inline: -0.85rem;
+    border-radius: var(--r-3);
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .sound-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-block-size: 32px;
+    padding: 0 var(--space-3);
+    border: none;
+    border-radius: var(--r-pill);
+    background: color-mix(in oklch, var(--ink) 6%, transparent);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    cursor: pointer;
+    transition: background-color var(--t-color), color var(--t-color);
+  }
+
+  .sound-trigger:hover {
+    background: color-mix(in oklch, var(--ink) 12%, transparent);
+  }
+
+  .sound-trigger:active {
+    background: color-mix(in oklch, var(--ink) 16%, transparent);
+    transform: scale(0.97);
+  }
+
+  .sound-trigger:focus-visible {
+    outline: var(--focus-ring);
+  }
+
+  .sound-name {
+    font-size: var(--text-xs);
+  }
+
+  .sound-desc {
+    color: var(--muted);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+  }
+
+  .sound-muted-note {
+    min-height: 1.2em;
+    color: var(--faint);
+    font-size: var(--text-xs);
+    transition: color var(--t-color);
+  }
+
+  .arrow-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    list-style: none;
+    margin: 1rem 0 1.5rem;
+    padding: 0;
+    max-width: 100%;
+  }
+
+  .arrow-row {
+    display: grid;
+    grid-template-columns: 11rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.4rem 1.25rem;
+    padding: 0.65rem 0.85rem;
+    margin-inline: -0.85rem;
+    border-radius: var(--r-3);
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .arrow-row.is-disclosure {
+    align-items: baseline;
+  }
+
+  .arrow-link,
+  .design-disclosure summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-block-size: 2.15rem;
+    padding: 0.35rem 0.9rem;
+    border: none;
+    border-radius: var(--r-pill);
+    background: color-mix(in oklch, var(--ink) 6%, transparent);
+    color: var(--ink);
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color var(--t-color),
+      color var(--t-color),
+      transform var(--dur-1) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .arrow-link:hover,
+    .arrow-link:focus-visible,
+    .design-disclosure summary:hover,
+    .design-disclosure summary:focus-visible {
+      background: var(--ink);
+      color: var(--canvas);
+    }
+  }
+
+  .arrow-link:focus-visible,
+  .design-disclosure summary:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .arrow-role {
+    color: var(--muted);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+  }
+
+  .design-disclosure summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .design-disclosure[open] summary :global(.ui-icon) {
+    transform: rotate(180deg);
+  }
+
+  .design-disclosure p {
+    margin: var(--space-2) 0 0;
+    color: var(--muted);
+    font-size: var(--text-xs);
+    line-height: var(--leading-relaxed);
+  }
+
+  .focus-specimen {
+    margin: 2.5rem 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .focus-strip {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    padding: 0;
+    background: transparent;
+    border: none;
+  }
+
+  .focus-demo-btn,
+  .focus-demo-pill,
+  .focus-demo-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-block-size: 2.35rem;
+    padding: 0.45rem 1rem;
+    border: none;
+    border-radius: var(--r-pill);
+    background: color-mix(in oklch, var(--ink) 6%, transparent);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color var(--t-color),
+      color var(--t-color),
+      transform var(--dur-1) var(--ease-out);
+  }
+
+  .focus-demo-btn:active,
+  .focus-demo-pill:active,
+  .focus-demo-link:active {
+    transform: scale(0.97);
+  }
+
+  .focus-demo-btn:focus-visible,
+  .focus-demo-pill:focus-visible,
+  .focus-demo-link:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 3px;
+  }
+
+  .surface-demo {
+    margin: 1.5rem 0;
+  }
+
+  .surface-demo-row {
+    display: flex;
+    align-items: center;
+    min-block-size: 40px;
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    margin-inline: -0.85rem;
+    border: 0;
+    border-radius: var(--r-3);
+    background: transparent;
+    color: var(--ghost);
+    font: inherit;
+    font-size: var(--text-sm);
+    text-align: start;
+    cursor: pointer;
+    transition:
+      color var(--t-color),
+      background-color var(--t-color),
+      opacity var(--dur-2) var(--ease),
+      filter var(--dur-2) var(--ease),
+      transform var(--dur-1) var(--ease-out);
+  }
+
+  .surface-demo-row[aria-current="page"] {
+    color: var(--ink);
+    font-weight: var(--font-medium);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .surface-demo-row:hover,
+    .surface-demo-row:focus-visible {
+      color: var(--ink);
+      background: color-mix(in oklch, var(--ink) 3.5%, transparent);
+    }
+  }
+
+  .surface-demo-row:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: -2px;
+  }
+
+  .presence-specimen {
+    margin: 2.5rem 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .presence-states {
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  .presence-state-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 0.65rem 0.85rem;
+    margin-inline: -0.85rem;
+    border-radius: var(--r-3);
+    background: transparent;
+    border: none;
+    transition: background-color var(--t-color);
+  }
+
+  .presence-state-row[data-current] {
+    background: color-mix(in oklch, var(--ink) 5%, transparent);
+  }
+
+  .presence-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex: 0 0 8px;
+    transition: background-color var(--t-color);
+  }
+
+  .presence-state-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .presence-state-label {
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    transition: color var(--t-color);
+  }
+
+  .presence-state-row[data-current] .presence-state-label {
+    font-weight: var(--font-semibold);
+  }
+
+  .presence-state-hours {
+    color: var(--ink);
+    font-size: var(--text-xs);
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    position: relative;
+    top: 1px;
+    transition: color var(--t-color);
+  }
+
+  .presence-live {
+    margin-top: 0;
+    color: var(--muted);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    transition: color var(--t-color);
+  }
+
+  .egg-block {
+    display: grid;
+    gap: var(--space-1);
+    margin: 1.5rem 0;
+    padding: 0.85rem 1rem;
+    border-radius: var(--r-3);
+    background: color-mix(in oklch, var(--ink) 3%, transparent);
+    transition: background-color var(--t-color);
+  }
+
+  .egg-line {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: var(--text-sm);
+    color: var(--ink);
+    position: relative;
+    top: 1px;
+    transition: color var(--t-color);
+  }
+
+  .egg-prompt {
+    color: var(--faint);
+    user-select: none;
+    transition: color var(--t-color);
+  }
+
+  .design-endnote {
+    display: grid;
+    gap: var(--space-2);
+    max-inline-size: 100%;
+    margin-top: 4.5rem;
+    padding-top: 0;
+    border-top: none;
+    background: transparent;
+    color: var(--faint);
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    transition: color var(--t-color);
+  }
+
+  .design-endnote p {
+    margin: 0;
+  }
+
+  .design-endnote p:first-child {
+    color: var(--ink);
+  }
+
+  .design-endnote p:last-child {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  @media (max-width: 38rem) {
+    .tonal-rail {
+      margin-inline: calc(-1 * var(--mobile-gutter-start)) calc(-1 * var(--mobile-gutter-end));
+      padding-inline: var(--mobile-gutter-start) var(--mobile-gutter-end);
+      border-radius: 0;
+      scroll-snap-type: x proximity;
+      mask-image: linear-gradient(
+        to right,
+        transparent,
+        black var(--mobile-gutter-start),
+        black calc(100% - var(--mobile-gutter-end)),
+        transparent
+      );
+    }
+
+    .tonal-swatch {
+      flex-basis: 52px;
+    }
+
+    .tonal-detail {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    .tonal-detail > span:last-child {
+      grid-column: 1 / -1;
+      min-block-size: 1.2em;
+    }
+
+    .weight-control,
+    .measure-control {
+      min-inline-size: 100%;
+      max-inline-size: 100%;
+    }
+
+    .duration-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .sound-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .sound-card {
+      grid-template-columns: 1fr;
+      gap: 0.35rem;
+    }
+
+    .arrow-row {
+      grid-template-columns: 1fr;
+      gap: 0.35rem;
+      padding: 0.75rem 1rem;
+    }
+
+    .semantic-rail {
+      gap: var(--space-2);
+    }
+
+    .semantic-swatch {
+      min-inline-size: 64px;
+    }
+
+    .presence-state-row {
+      gap: var(--space-2);
+    }
+
+    .logo-demo-stage {
+      flex-wrap: wrap;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reading-progress {
+      display: none;
+    }
+
+    .chapter-nav summary :global(.ui-icon),
+    .measure-selection,
+    .weight-selection,
+    .nav-sample-pill,
+    .logo-demo-mark,
+    .logo-demo-back-icon {
+      transition: none !important;
+    }
+
+    .design-disclosure summary :global(.ui-icon) {
+      transform: none !important;
+    }
+  }
+</style>

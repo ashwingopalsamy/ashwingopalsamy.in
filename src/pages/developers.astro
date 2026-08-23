@@ -1,0 +1,1357 @@
+---
+import Page from "../layouts/Page.astro";
+import PageIntro from "../components/PageIntro.astro";
+import Icon from "../components/Icon.astro";
+import { ogPath } from "../lib/og-url";
+
+const ogImage = ogPath("developers");
+
+const sdks = [
+  {
+    id: "typescript",
+    name: "TypeScript",
+    ecosystem: "npm · TypeScript",
+    package: "@ashwingopalsamy/sdk",
+    install: "npm install @ashwingopalsamy/sdk",
+    rawCode: `import { AshwinGopalsamyClient } from "@ashwingopalsamy/sdk";
+
+const client = new AshwinGopalsamyClient();
+const profile = await client.getProfile();
+const results = await client.searchSite("rate limiters", 5);`,
+    highlightedCode: `<span class="tok-kw">import</span> <span class="tok-punct">&#123;</span> <span class="tok-type">AshwinGopalsamyClient</span> <span class="tok-punct">&#125;</span> <span class="tok-kw">from</span> <span class="tok-str">"@ashwingopalsamy/sdk"</span><span class="tok-punct">;</span>
+
+<span class="tok-kw">const</span> <span class="tok-text">client</span> <span class="tok-op">=</span> <span class="tok-kw">new</span> <span class="tok-type">AshwinGopalsamyClient</span><span class="tok-punct">()</span><span class="tok-punct">;</span>
+<span class="tok-kw">const</span> <span class="tok-text">profile</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-text">client</span><span class="tok-punct">.</span><span class="tok-func">getProfile</span><span class="tok-punct">()</span><span class="tok-punct">;</span>
+<span class="tok-kw">const</span> <span class="tok-text">results</span> <span class="tok-op">=</span> <span class="tok-kw">await</span> <span class="tok-text">client</span><span class="tok-punct">.</span><span class="tok-func">searchSite</span><span class="tok-punct">(</span><span class="tok-str">"rate limiters"</span><span class="tok-punct">,</span> <span class="tok-const">5</span><span class="tok-punct">)</span><span class="tok-punct">;</span>`,
+  },
+  {
+    id: "python",
+    name: "Python",
+    ecosystem: "PyPI · Python",
+    package: "ashwingopalsamy",
+    install: "pip install ashwingopalsamy",
+    rawCode: `from ashwingopalsamy import Client
+
+client = Client()
+profile = client.get_profile()
+results = client.search_site("rate limiters", limit=5)`,
+    highlightedCode: `<span class="tok-kw">from</span> <span class="tok-text">ashwingopalsamy</span> <span class="tok-kw">import</span> <span class="tok-type">Client</span>
+
+<span class="tok-text">client</span> <span class="tok-op">=</span> <span class="tok-type">Client</span><span class="tok-punct">()</span>
+<span class="tok-text">profile</span> <span class="tok-op">=</span> <span class="tok-text">client</span><span class="tok-punct">.</span><span class="tok-func">get_profile</span><span class="tok-punct">()</span>
+<span class="tok-text">results</span> <span class="tok-op">=</span> <span class="tok-text">client</span><span class="tok-punct">.</span><span class="tok-func">search_site</span><span class="tok-punct">(</span><span class="tok-str">"rate limiters"</span><span class="tok-punct">,</span> <span class="tok-text">limit</span><span class="tok-op">=</span><span class="tok-const">5</span><span class="tok-punct">)</span>`,
+  },
+  {
+    id: "go",
+    name: "Go",
+    ecosystem: "Go Modules · Go",
+    package: "github.com/ashwingopalsamy/ashwingopalsamy.in/packages/go",
+    install: "go get github.com/ashwingopalsamy/ashwingopalsamy.in/packages/go",
+    rawCode: `import (
+    "context"
+    ashwingopalsamy "github.com/ashwingopalsamy/ashwingopalsamy.in/packages/go"
+)
+
+client := ashwingopalsamy.NewClient()
+profile, err := client.GetProfile(ctx)
+results, err := client.SearchSite(ctx, "rate limiters", 5)`,
+    highlightedCode: `<span class="tok-kw">import</span> <span class="tok-punct">(</span>
+    <span class="tok-str">"context"</span>
+    <span class="tok-text">ashwingopalsamy</span> <span class="tok-str">"github.com/ashwingopalsamy/ashwingopalsamy.in/packages/go"</span>
+<span class="tok-punct">)</span>
+
+<span class="tok-text">client</span> <span class="tok-op">:=</span> <span class="tok-text">ashwingopalsamy</span><span class="tok-punct">.</span><span class="tok-func">NewClient</span><span class="tok-punct">()</span>
+<span class="tok-text">profile</span><span class="tok-punct">,</span> <span class="tok-text">err</span> <span class="tok-op">:=</span> <span class="tok-text">client</span><span class="tok-punct">.</span><span class="tok-func">GetProfile</span><span class="tok-punct">(</span><span class="tok-text">ctx</span><span class="tok-punct">)</span>
+<span class="tok-text">results</span><span class="tok-punct">,</span> <span class="tok-text">err</span> <span class="tok-op">:=</span> <span class="tok-text">client</span><span class="tok-punct">.</span><span class="tok-func">SearchSite</span><span class="tok-punct">(</span><span class="tok-text">ctx</span><span class="tok-punct">,</span> <span class="tok-str">"rate limiters"</span><span class="tok-punct">,</span> <span class="tok-const">5</span><span class="tok-punct">)</span>`,
+  },
+  {
+    id: "ruby",
+    name: "Ruby",
+    ecosystem: "RubyGems · Ruby",
+    package: "ashwingopalsamy",
+    install: "gem install ashwingopalsamy",
+    rawCode: `require "ashwingopalsamy"
+
+client = AshwinGopalsamy::Client.new
+profile = client.get_profile
+results = client.search_site("rate limiters", limit: 5)`,
+    highlightedCode: `<span class="tok-kw">require</span> <span class="tok-str">"ashwingopalsamy"</span>
+
+<span class="tok-text">client</span> <span class="tok-op">=</span> <span class="tok-type">AshwinGopalsamy</span><span class="tok-punct">::</span><span class="tok-type">Client</span><span class="tok-punct">.</span><span class="tok-func">new</span>
+<span class="tok-text">profile</span> <span class="tok-op">=</span> <span class="tok-text">client</span><span class="tok-punct">.</span><span class="tok-func">get_profile</span>
+<span class="tok-text">results</span> <span class="tok-op">=</span> <span class="tok-text">client</span><span class="tok-punct">.</span><span class="tok-func">search_site</span><span class="tok-punct">(</span><span class="tok-str">"rate limiters"</span><span class="tok-punct">,</span> <span class="tok-text">limit:</span> <span class="tok-const">5</span><span class="tok-punct">)</span>`,
+  },
+];
+
+const cliTools = [
+  {
+    runtime: "NPX / Node.js",
+    command: "npx ashwingopalsamy <command>",
+    description: "Zero-install Node CLI for profile inspection, global search, and note retrieval.",
+    rawSnippet: `npx ashwingopalsamy profile
+npx ashwingopalsamy search "rate limiters"
+npx ashwingopalsamy note designing-rate-limiters-for-payment-systems`,
+    highlightedSnippet: `<span class="tok-kw">npx</span> <span class="tok-func">ashwingopalsamy</span> <span class="tok-type">profile</span>
+<span class="tok-kw">npx</span> <span class="tok-func">ashwingopalsamy</span> <span class="tok-type">search</span> <span class="tok-str">"rate limiters"</span>
+<span class="tok-kw">npx</span> <span class="tok-func">ashwingopalsamy</span> <span class="tok-type">note</span> <span class="tok-str">designing-rate-limiters-for-payment-systems</span>`,
+  },
+  {
+    runtime: "Curl / POSIX Shell",
+    command: "curl -sSL https://ashwingopalsamy.in/cli.sh | sh -s -- <command>",
+    description: "Lightweight POSIX shell runner for Unix environments without Node installed.",
+    rawSnippet: `curl -sSL https://ashwingopalsamy.in/cli.sh | sh -s -- profile
+curl -sSL https://ashwingopalsamy.in/cli.sh | sh -s -- search "ISO 8583"`,
+    highlightedSnippet: `<span class="tok-kw">curl</span> <span class="tok-const">-sSL</span> <span class="tok-str">https://ashwingopalsamy.in/cli.sh</span> <span class="tok-op">|</span> <span class="tok-kw">sh</span> <span class="tok-const">-s</span> <span class="tok-const">--</span> <span class="tok-type">profile</span>
+<span class="tok-kw">curl</span> <span class="tok-const">-sSL</span> <span class="tok-str">https://ashwingopalsamy.in/cli.sh</span> <span class="tok-op">|</span> <span class="tok-kw">sh</span> <span class="tok-const">-s</span> <span class="tok-const">--</span> <span class="tok-type">search</span> <span class="tok-str">"ISO 8583"</span>`,
+  },
+];
+
+const endpoints = [
+  {
+    method: "GET",
+    path: "/api/v1/profile",
+    description: "Authoritative career summary, current role, location, and verified profile facts.",
+    example: "curl -s https://ashwingopalsamy.in/api/v1/profile",
+  },
+  {
+    method: "GET",
+    path: "/api/v1/search?query={q}&limit={n}",
+    description: "Search technical notes, craft projects, and reading list entries.",
+    example: "curl -s 'https://ashwingopalsamy.in/api/v1/search?query=rate+limiters&limit=3'",
+  },
+  {
+    method: "GET",
+    path: "/api/v1/content?kind={kind}&limit={n}",
+    description: "List public entries by kind (note, craft, book, watch, or all).",
+    example: "curl -s 'https://ashwingopalsamy.in/api/v1/content?kind=note&limit=5'",
+  },
+  {
+    method: "GET",
+    path: "/api/v1/notes/{slug}",
+    description: "Retrieve raw Markdown content and metadata for a published note.",
+    example: "curl -s https://ashwingopalsamy.in/api/v1/notes/designing-rate-limiters-for-payment-systems",
+  },
+  {
+    method: "GET",
+    path: "/api/v1/status",
+    description: "API operational status, versioning policy, and capability catalog.",
+    example: "curl -s https://ashwingopalsamy.in/api/v1/status",
+  },
+];
+
+const protocols = [
+  {
+    name: "Model Context Protocol (MCP)",
+    path: "/mcp",
+    spec: "Streamable HTTP · JSON-RPC 2.0",
+    description: "Production MCP endpoint offering native tool execution (search_site, get_profile, list_content, get_note_markdown), resources, and prompt templates for autonomous AI agents.",
+    testCommand: "npx -y @modelcontextprotocol/inspector https://ashwingopalsamy.in/mcp",
+    highlightedTest: `<span class="tok-kw">npx</span> <span class="tok-const">-y</span> <span class="tok-func">@modelcontextprotocol/inspector</span> <span class="tok-str">https://ashwingopalsamy.in/mcp</span>`,
+  },
+  {
+    name: "Agent-to-Agent (A2A)",
+    path: "/a2a",
+    spec: "JSON-RPC 2.0 Task Routing",
+    description: "Direct agent message exchange protocol for task delegation, profile extraction, and capability handoff.",
+    testCommand: `curl -s -X POST https://ashwingopalsamy.in/a2a -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"message/send","params":{"message":{"parts":[{"kind":"text","text":"profile"}]}}}'`,
+    highlightedTest: `<span class="tok-kw">curl</span> <span class="tok-const">-s -X POST</span> <span class="tok-str">https://ashwingopalsamy.in/a2a</span> <span class="tok-const">-H</span> <span class="tok-str">'Content-Type: application/json'</span> <span class="tok-const">-d</span> <span class="tok-str">'{"jsonrpc":"2.0","id":1,"method":"message/send","params":{"message":{"parts":[{"kind":"text","text":"profile"}]}}}'</span>`,
+  },
+  {
+    name: "OpenAPI Specification",
+    path: "/openapi.json",
+    spec: "OpenAPI 3.1.0",
+    description: "Complete machine-readable REST API schema defining strongly typed parameters, request contracts, and response schemas.",
+    testCommand: "curl -s https://ashwingopalsamy.in/openapi.json",
+    highlightedTest: `<span class="tok-kw">curl</span> <span class="tok-const">-s</span> <span class="tok-str">https://ashwingopalsamy.in/openapi.json</span>`,
+  },
+  {
+    name: "Web Bot Auth Directory (RFC 9421)",
+    path: "/.well-known/http-message-signatures-directory",
+    spec: "RFC 9421 · Ed25519 JWK",
+    description: "Cryptographic public signature keys directory for verifying authentic bot identities and mitigating spoofing.",
+    testCommand: "curl -s https://ashwingopalsamy.in/.well-known/http-message-signatures-directory",
+    highlightedTest: `<span class="tok-kw">curl</span> <span class="tok-const">-s</span> <span class="tok-str">https://ashwingopalsamy.in/.well-known/http-message-signatures-directory</span>`,
+  },
+];
+
+const rateLimitHeaders = [
+  { header: "RateLimit-Limit", tag: "120", desc: "Maximum requests permitted per sliding window (120 per minute)." },
+  { header: "RateLimit-Remaining", tag: "0..120", desc: "Remaining request budget available in the active window." },
+  { header: "RateLimit-Reset", tag: "60s", desc: "Seconds remaining until current window quota fully resets." },
+  { header: "RateLimit-Policy", tag: "120;w=60", desc: "Standard IETF quota policy descriptor (120 req / 60s window)." },
+  { header: "X-RateLimit-*", tag: "Legacy", desc: "Compatibility headers provided for legacy HTTP clients and proxies." },
+  { header: "API-Version", tag: "2026-08-22", desc: "Contract release timestamp defining endpoint behavior." },
+];
+
+const permissions = [
+  { scope: "site.read", tag: "Read-Only", desc: "Unrestricted read access to public profiles, craft projects, and technical notes." },
+  { scope: "profile.read", tag: "Read-Only", desc: "Access verified identity facts, career history, and current employment metadata." },
+  { scope: "content.search", tag: "Read-Only", desc: "Execute semantic and keyword queries across technical notes and library entries." },
+  { scope: "notes.read", tag: "Read-Only", desc: "Retrieve raw Markdown source and frontmatter for published technical notes." },
+];
+
+const discoveryGroups = [
+  {
+    title: "Developer APIs & Specifications",
+    items: [
+      { path: "/openapi.json", desc: "OpenAPI 3.1.0 complete REST API specification." },
+      { path: "/developers.md", desc: "Developer integration guide in plain Markdown format." },
+      { path: "/auth.md", desc: "Agent authentication, token discovery, and security schemes." },
+      { path: "/.well-known/oauth-protected-resource", desc: "OAuth 2.0 protected resource metadata discovery." },
+    ],
+  },
+  {
+    title: "AI & Agent Discovery",
+    items: [
+      { path: "/mcp", desc: "Model Context Protocol endpoint (Streamable HTTP · JSON-RPC 2.0)." },
+      { path: "/mcp/catalog.json", desc: "Catalog of registered MCP tools, resources, and prompt templates." },
+      { path: "/.well-known/mcp/server-card.json", desc: "MCP Server Card metadata for automatic client configuration." },
+      { path: "/a2a", desc: "Agent-to-Agent communication endpoint for task delegation." },
+      { path: "/.well-known/agents.md", desc: "System prompt instructions and capabilities for autonomous agents." },
+      { path: "/.well-known/ai-catalog.json", desc: "Agent Resource Directory (ARD) index of accessible surfaces." },
+    ],
+  },
+  {
+    title: "LLM Context & Machine Catalogs",
+    items: [
+      { path: "/llms.txt", desc: "Concise profile and content summary for language models." },
+      { path: "/llms-full.txt", desc: "Complete context bundle covering all technical notes and craft history." },
+      { path: "/knowledge.json", desc: "JSON-LD graph dump of all verified biographical and career facts." },
+      { path: "/cli.sh", desc: "Official zero-dependency POSIX shell command-line interface." },
+      { path: "/.well-known/http-message-signatures-directory", desc: "RFC 9421 HTTP Message Signatures Ed25519 public key directory." },
+    ],
+  },
+];
+
+const rawErrorPayload = `{
+  "type": "https://ashwingopalsamy.in/developers#errors",
+  "title": "Resource Not Found",
+  "status": 404,
+  "detail": "Note slug 'non-existent' was not found in published index.",
+  "code": "note_not_found",
+  "resolution_hint": "Check /api/v1/content?kind=note for a complete list of valid note slugs."
+}`;
+
+const highlightedErrorPayload = `<span class="tok-punct">&#123;</span>
+  <span class="tok-func">"type"</span><span class="tok-punct">:</span> <span class="tok-str">"https://ashwingopalsamy.in/developers#errors"</span><span class="tok-punct">,</span>
+  <span class="tok-func">"title"</span><span class="tok-punct">:</span> <span class="tok-str">"Resource Not Found"</span><span class="tok-punct">,</span>
+  <span class="tok-func">"status"</span><span class="tok-punct">:</span> <span class="tok-const">404</span><span class="tok-punct">,</span>
+  <span class="tok-func">"detail"</span><span class="tok-punct">:</span> <span class="tok-str">"Note slug 'non-existent' was not found in published index."</span><span class="tok-punct">,</span>
+  <span class="tok-func">"code"</span><span class="tok-punct">:</span> <span class="tok-str">"note_not_found"</span><span class="tok-punct">,</span>
+  <span class="tok-func">"resolution_hint"</span><span class="tok-punct">:</span> <span class="tok-str">"Check /api/v1/content?kind=note for a complete list of valid note slugs."</span>
+<span class="tok-punct">&#125;</span>`;
+
+const developersJsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebAPI",
+    name: "Ashwin Gopalsamy Developer API & SDKs",
+    description: "Official developer API, OpenAPI 3.1.0 specification, Model Context Protocol (MCP) server, and multi-language SDKs for Ashwin Gopalsamy's site.",
+    url: "https://ashwingopalsamy.in/developers",
+    documentation: "https://ashwingopalsamy.in/developers",
+    provider: {
+      "@type": "Person",
+      "@id": "https://ashwingopalsamy.in/#person",
+      name: "Ashwin Gopalsamy",
+    },
+    termsOfService: "https://ashwingopalsamy.in/privacy",
+  },
+];
+---
+
+<Page
+  title="Ashwin Gopalsamy · Developer Resources, API Documentation & SDKs"
+  description="Official developer API, OpenAPI 3.1.0 specification, Model Context Protocol server, multi-language SDKs (npm, PyPI, Go, RubyGems), and CLI tool for Ashwin Gopalsamy's site."
+  ogImage={ogImage}
+  ogImageAlt="Ashwin Gopalsamy · Developer Resources, API Documentation and SDKs"
+  jsonLd={developersJsonLd}
+>
+  <PageIntro
+    title="developers"
+    lede="APIs, OpenAPI 3.1.0 specification, Model Context Protocol server, and client SDKs for engineers and AI agents."
+  />
+
+  <div class="dev-layout" data-enter>
+    <!-- Open Sandbox Introduction -->
+    <section class="dev-editorial" aria-label="Open Access & Sandbox">
+      <p class="editorial-p editorial-lede">
+        All read-only REST and agent interfaces operate without keys, credentials, or rate penalties. Live endpoints serve deterministic data with sub-second latency.
+      </p>
+
+      <div class="quick-cta-row">
+        <a class="dev-cta dev-cta-primary" href="/openapi.json" target="_blank" rel="noopener noreferrer">
+          OpenAPI 3.1.0 Spec
+        </a>
+        <a class="dev-cta dev-cta-secondary" href="/ai/">
+          AI briefing
+        </a>
+        <a class="dev-cta dev-cta-secondary" href="/design/">
+          Design Details
+        </a>
+      </div>
+    </section>
+
+    <!-- Official Multi-Language SDKs -->
+    <section class="dev-section" aria-label="Official Multi-Language SDKs">
+      <div class="section-heading-split">
+        <h2 class="section-heading">Official SDKs</h2>
+        <span class="section-aux-tag">Generated from OpenAPI 3.1.0</span>
+      </div>
+
+      <div class="sdk-stream" data-sdk-widget>
+        <div class="sdk-tab-rail" role="tablist" aria-label="SDK Languages">
+          <div class="sdk-nav-pills">
+            {
+              sdks.map((sdk, idx) => (
+                <button
+                  type="button"
+                  role="tab"
+                  class={`sdk-nav-btn ${idx === 0 ? "is-active" : ""}`}
+                  id={`tab-${sdk.id}`}
+                  aria-selected={idx === 0 ? "true" : "false"}
+                  aria-controls={`panel-${sdk.id}`}
+                  data-tab-target={sdk.id}
+                >
+                  {sdk.name}
+                </button>
+              ))
+            }
+          </div>
+          <span class="sdk-header-label" id="sdk-package-label">{sdks[0].ecosystem}</span>
+        </div>
+
+        {
+          sdks.map((sdk, idx) => (
+            <div
+              id={`panel-${sdk.id}`}
+              role="tabpanel"
+              aria-labelledby={`tab-${sdk.id}`}
+              class={`sdk-body-panel ${idx === 0 ? "is-active" : ""}`}
+              data-panel={sdk.id}
+              data-ecosystem={sdk.ecosystem}
+            >
+              <div class="install-bar">
+                <span class="prompt-glyph" aria-hidden="true">$</span>
+                <code class="install-text mono">{sdk.install}</code>
+                <button
+                  type="button"
+                  class="action-btn"
+                  data-copy={sdk.install}
+                  aria-label={`Copy ${sdk.name} install command`}
+                  title="Copy install command"
+                >
+                  <Icon name="copy" size={13} strokeWidth={1.8} />
+                </button>
+              </div>
+
+              <div class="code-view">
+                <pre><code class="mono" set:html={sdk.highlightedCode} /></pre>
+                <button
+                  type="button"
+                  class="action-btn code-copy-anchor"
+                  data-copy={sdk.rawCode}
+                  aria-label={`Copy ${sdk.name} code example`}
+                  title="Copy code"
+                >
+                  <Icon name="copy" size={13} strokeWidth={1.8} />
+                </button>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- Official CLI Tool -->
+    <section class="dev-section" aria-label="Official CLI Tool">
+      <h2 class="section-heading">CLI Tool</h2>
+      <p class="editorial-p p-grey">
+        Inspect profile facts, technical notes, and search index directly from your terminal:
+      </p>
+
+      <div class="cli-stream">
+        {
+          cliTools.map((cli) => (
+            <div class="cli-block">
+              <div class="cli-header-row">
+                <span class="cli-badge mono">{cli.runtime}</span>
+                <span class="cli-desc p-grey">{cli.description}</span>
+              </div>
+              <div class="code-view">
+                <pre><code class="mono" set:html={cli.highlightedSnippet} /></pre>
+                <button
+                  type="button"
+                  class="action-btn code-copy-anchor"
+                  data-copy={cli.rawSnippet}
+                  aria-label={`Copy ${cli.runtime} commands`}
+                  title="Copy commands"
+                >
+                  <Icon name="copy" size={13} strokeWidth={1.8} />
+                </button>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- REST v1 Endpoints -->
+    <section class="dev-section" aria-label="REST v1 Endpoints">
+      <div class="section-heading-split">
+        <h2 class="section-heading">REST v1 Endpoints</h2>
+        <span class="section-aux-tag">Base: <code>https://ashwingopalsamy.in/api/v1</code></span>
+      </div>
+
+      <div class="endpoint-stream surface-stream">
+        {
+          endpoints.map((ep) => (
+            <article class="endpoint-row surface-row">
+              <div class="endpoint-main">
+                <div class="endpoint-badge-path">
+                  <span class="http-badge">{ep.method}</span>
+                  <span class="endpoint-route mono">{ep.path}</span>
+                </div>
+                <p class="endpoint-summary p-grey">{ep.description}</p>
+              </div>
+              <button
+                type="button"
+                class="action-btn"
+                data-copy={ep.example}
+                aria-label={`Copy curl command for ${ep.path}`}
+                title="Copy curl command"
+              >
+                <Icon name="copy" size={13} strokeWidth={1.8} />
+              </button>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- Protocol Interfaces -->
+    <section class="dev-section" aria-label="Protocol Interfaces">
+      <h2 class="section-heading">Protocol Interfaces</h2>
+      <div class="proto-stream surface-stream">
+        {
+          protocols.map((proto) => (
+            <article class="proto-row surface-row">
+              <div class="proto-header">
+                <div class="proto-title-group">
+                  <h3 class="proto-title">{proto.name}</h3>
+                  <a class="proto-path mono link" href={proto.path}>{proto.path}</a>
+                </div>
+                <span class="spec-tag mono">{proto.spec}</span>
+              </div>
+              <p class="proto-desc p-grey">{proto.description}</p>
+              <div class="cmd-bar">
+                <code class="cmd-code mono" set:html={proto.highlightedTest} />
+                <button
+                  type="button"
+                  class="action-btn"
+                  data-copy={proto.testCommand}
+                  aria-label={`Copy command for ${proto.name}`}
+                  title="Copy command"
+                >
+                  <Icon name="copy" size={13} strokeWidth={1.8} />
+                </button>
+              </div>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- Headers & Rate Limiting -->
+    <section class="dev-section" aria-label="Headers & Rate Limiting">
+      <h2 class="section-heading">Headers & Rate Limits</h2>
+      <p class="editorial-p p-grey">
+        Standard IETF RateLimit headers are returned on all endpoints (120 req/min sliding window):
+      </p>
+      <div class="spec-stream surface-stream">
+        {
+          rateLimitHeaders.map((item) => (
+            <div class="spec-row-item surface-row">
+              <div class="spec-label-group">
+                <span class="spec-name mono">{item.header}</span>
+                <span class="spec-value-tag mono">{item.tag}</span>
+              </div>
+              <span class="spec-desc p-grey">{item.desc}</span>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- API Versioning & Errors -->
+    <section class="dev-section" id="errors" aria-label="Versioning & Error Model">
+      <h2 class="section-heading">Versioning & Errors (RFC 9457)</h2>
+      <p class="editorial-p p-grey">
+        Explicit path versioning (<code>/api/v1</code>) paired with RFC 9457 Problem Details for typed error responses:
+      </p>
+      <div class="code-view">
+        <pre><code class="mono" set:html={highlightedErrorPayload} /></pre>
+        <button
+          type="button"
+          class="action-btn code-copy-anchor"
+          data-copy={rawErrorPayload}
+          aria-label="Copy error JSON example"
+          title="Copy JSON"
+        >
+          <Icon name="copy" size={13} strokeWidth={1.8} />
+        </button>
+      </div>
+    </section>
+
+    <!-- Scoped Permissions -->
+    <section class="dev-section" aria-label="Scoped Permissions">
+      <h2 class="section-heading">Permissions</h2>
+      <div class="spec-stream surface-stream">
+        {
+          permissions.map((item) => (
+            <div class="spec-row-item surface-row">
+              <div class="spec-label-group">
+                <span class="spec-name mono">{item.scope}</span>
+                <span class="spec-value-tag mono">{item.tag}</span>
+              </div>
+              <span class="spec-desc p-grey">{item.desc}</span>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- Machine Discovery Index -->
+    <section class="dev-section" aria-label="Machine Discovery Index">
+      <h2 class="section-heading">Discovery Index</h2>
+      <div class="discovery-groups">
+        {
+          discoveryGroups.map((group) => (
+            <div class="discovery-group-block">
+              <h3 class="discovery-group-title">{group.title}</h3>
+              <ul class="discovery-list surface-stream">
+                {
+                  group.items.map((item) => (
+                    <li class="discovery-item surface-row">
+                      <a class="discovery-link" href={item.path} data-astro-prefetch="false">
+                        <span class="discovery-path mono">{item.path}</span>
+                        <span class="discovery-desc p-grey">{item.desc}</span>
+                      </a>
+                    </li>
+                  ))
+                }
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+  </div>
+</Page>
+
+<script>
+  import { showToast } from "../scripts/toast";
+  import { playAccent, isSoundEnabled } from "../scripts/sound";
+  import { pageSignal } from "../scripts/lifecycle";
+  import { copyToClipboard } from "../scripts/clipboard";
+
+  function initDeveloperPage() {
+    const signal = pageSignal();
+
+    // 1. SDK Tab Switcher
+    const widget = document.querySelector<HTMLElement>("[data-sdk-widget]");
+    if (widget) {
+      const tabs = widget.querySelectorAll<HTMLButtonElement>(".sdk-nav-btn");
+      const panels = widget.querySelectorAll<HTMLElement>(".sdk-body-panel");
+      const packageLabel = widget.querySelector<HTMLElement>("#sdk-package-label");
+
+      tabs.forEach((tab) => {
+        tab.addEventListener(
+          "click",
+          () => {
+            if (tab.getAttribute("aria-selected") === "true") return;
+            const targetId = tab.dataset.tabTarget;
+            if (!targetId) return;
+
+            tabs.forEach((t) => {
+              const active = t === tab;
+              t.classList.toggle("is-active", active);
+              t.setAttribute("aria-selected", active ? "true" : "false");
+            });
+
+            panels.forEach((p) => {
+              const active = p.dataset.panel === targetId;
+              p.classList.toggle("is-active", active);
+              if (active && packageLabel && p.dataset.ecosystem) {
+                packageLabel.textContent = p.dataset.ecosystem;
+              }
+            });
+
+            if (isSoundEnabled()) playAccent("tab");
+          },
+          { signal },
+        );
+      });
+    }
+
+    // 2. Clipboard copy buttons with tactile feedback
+    const copyButtons = document.querySelectorAll<HTMLButtonElement>(".action-btn");
+    copyButtons.forEach((btn) => {
+      btn.addEventListener(
+        "click",
+        async () => {
+          const text = btn.dataset.copy;
+          if (!text) return;
+
+          const success = await copyToClipboard(text);
+          if (success) {
+            btn.classList.add("is-done");
+            if (isSoundEnabled()) playAccent("copy");
+            showToast({
+              message: "Copied to clipboard",
+              anchor: btn,
+              duration: 1600,
+            });
+            window.setTimeout(() => {
+              btn.classList.remove("is-done");
+            }, 1400);
+          } else {
+            showToast({
+              message: "Copy failed",
+              anchor: btn,
+              duration: 2200,
+            });
+          }
+        },
+        { signal },
+      );
+    });
+  }
+
+  if (typeof document !== "undefined") {
+    initDeveloperPage();
+    document.addEventListener("astro:page-load", initDeveloperPage);
+  }
+</script>
+
+<style>
+  /* ------------------------------------------------------------------ */
+  /*  Geometry & Flow (Full-width rail, spacious whitespace rhythm)     */
+  /* ------------------------------------------------------------------ */
+  .dev-layout {
+    inline-size: 100%;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    box-sizing: border-box;
+  }
+
+  .dev-editorial {
+    margin-top: 0;
+  }
+
+  .dev-section {
+    margin-top: 3.75rem;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .dev-section:first-of-type {
+    margin-top: 2.25rem;
+  }
+
+  .dev-section:last-of-type {
+    margin-bottom: var(--space-8);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Editorial Typography                                              */
+  /* ------------------------------------------------------------------ */
+  .editorial-p {
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+    text-align: justify;
+    text-justify: inter-word;
+    text-wrap: pretty;
+    margin: 0 0 1.25rem;
+  }
+
+  .editorial-lede {
+    color: var(--ink);
+    font-size: clamp(1.05rem, 1.02rem + 0.2vw, 1.18rem);
+    line-height: var(--leading-relaxed);
+    letter-spacing: -0.01em;
+    text-align: justify;
+    text-justify: inter-word;
+    text-wrap: pretty;
+    margin: 0 0 1.25rem;
+  }
+
+  .section-heading {
+    margin: 0 0 0.75rem;
+    color: var(--ink);
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    letter-spacing: -0.02em;
+    line-height: var(--leading-tight);
+  }
+
+  .section-heading-split {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: 0.75rem;
+  }
+
+  .section-heading-split .section-heading {
+    margin: 0;
+  }
+
+  .section-aux-tag {
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  .p-grey {
+    color: var(--ghost);
+    transition: color var(--t-color);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .editorial-p:hover,
+    .dev-section:hover .editorial-p.p-grey,
+    .endpoint-row:hover .endpoint-summary,
+    .proto-row:hover .proto-desc,
+    .spec-row-item:hover .spec-desc {
+      color: color-mix(in oklch, var(--ink) 85%, var(--muted));
+    }
+  }
+
+  .link {
+    color: var(--ink);
+    font-weight: var(--font-normal);
+    text-decoration-color: color-mix(in oklch, currentColor, transparent 70%);
+    text-underline-offset: 2px;
+    transition: text-decoration-color var(--t-color);
+  }
+
+  .link:hover,
+  .link:focus-visible {
+    text-decoration-color: currentColor;
+  }
+
+  code,
+  .mono {
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: 0.88em;
+  }
+
+  p code,
+  span code {
+    background: color-mix(in oklch, var(--ink) 6%, transparent);
+    padding: 0.12em 0.45em;
+    border-radius: var(--r-2);
+    color: var(--ink);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Quick Action Row                                                  */
+  /* ------------------------------------------------------------------ */
+  .quick-cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    margin: 1.5rem 0 1.25rem;
+  }
+
+  .dev-cta {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.6rem;
+    padding: 0.55rem 1.15rem;
+    border-radius: var(--r-pill);
+    font-weight: 500;
+    font-size: 0.9375rem;
+    text-decoration: none;
+    overflow: hidden;
+    transition:
+      transform var(--dur-2) var(--ease-out),
+      background-color var(--t-color),
+      color var(--t-color);
+  }
+
+  .dev-cta:hover,
+  .dev-cta:focus-visible {
+    text-decoration: none;
+  }
+
+  .dev-cta:active {
+    transform: scale(0.97);
+    transition: transform var(--dur-1) var(--ease);
+  }
+
+  .dev-cta-primary {
+    background: var(--ink);
+    color: var(--canvas);
+  }
+
+  .dev-cta-secondary {
+    background: color-mix(in oklch, var(--ink) 5%, transparent);
+    color: var(--ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .dev-cta-primary:hover {
+      background: color-mix(in oklch, var(--ink) 85%, var(--canvas));
+    }
+    .dev-cta-secondary:hover {
+      background: color-mix(in oklch, var(--ink) 10%, transparent);
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Fluid Code Canvas & SDK Tab Rail                                  */
+  /* ------------------------------------------------------------------ */
+  .sdk-stream {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .sdk-tab-rail {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: 0.25rem 0;
+  }
+
+  .sdk-nav-pills {
+    display: flex;
+    gap: var(--space-1);
+  }
+
+  .sdk-nav-btn {
+    padding: 0.35rem 0.8rem;
+    border: 0;
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    cursor: pointer;
+    transition:
+      background-color var(--t-color),
+      color var(--t-color),
+      transform var(--dur-1) var(--ease-out);
+  }
+
+  .sdk-nav-btn:hover {
+    color: var(--ink);
+    background: color-mix(in oklch, var(--ink) 5%, transparent);
+  }
+
+  .sdk-nav-btn.is-active {
+    background: var(--ink);
+    color: var(--canvas);
+    font-weight: var(--font-semibold);
+  }
+
+  .sdk-nav-btn:active {
+    transform: scale(0.97);
+  }
+
+  .sdk-header-label {
+    font-size: var(--text-xs);
+    color: var(--faint);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sdk-body-panel {
+    display: none;
+  }
+
+  .sdk-body-panel.is-active {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .install-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0.65rem 1rem;
+    border-radius: var(--r-3);
+    background: color-mix(in oklch, var(--ink) 4%, transparent);
+    min-inline-size: 0;
+  }
+
+  .prompt-glyph {
+    color: var(--ghost);
+    font-family: "JetBrains Mono", monospace;
+    font-size: var(--text-xs);
+    font-weight: var(--font-bold);
+    user-select: none;
+  }
+
+  .install-text {
+    flex: 1;
+    min-inline-size: 0;
+    color: var(--ink);
+    font-size: var(--text-sm);
+    white-space: pre-wrap;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Code View (Seamless Recessed Canvas)                              */
+  /* ------------------------------------------------------------------ */
+  .code-view {
+    position: relative;
+    border-radius: var(--r-3);
+    background: color-mix(in oklch, var(--ink) 3%, transparent);
+    overflow: hidden;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+  }
+
+  .code-view pre {
+    margin: 0;
+    padding: 1.15rem 1.25rem;
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: 0.84rem;
+    line-height: 1.68;
+    tab-size: 4;
+    color: var(--ink);
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+  }
+
+  .code-copy-anchor {
+    position: absolute;
+    top: 0.6rem;
+    inset-inline-end: 0.6rem;
+    opacity: 0;
+    transition: opacity var(--t-color);
+  }
+
+  .code-view:hover .code-copy-anchor,
+  .code-view:focus-within .code-copy-anchor {
+    opacity: 1;
+  }
+
+  @media (pointer: coarse) {
+    .code-copy-anchor {
+      opacity: 0.85;
+    }
+  }
+
+  .action-btn {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.85rem;
+    height: 1.85rem;
+    padding: 0;
+    border: none;
+    border-radius: var(--r-pill);
+    background: color-mix(in oklch, var(--ink) 6%, transparent);
+    color: var(--ghost);
+    cursor: pointer;
+    transition:
+      color var(--t-color),
+      background-color var(--t-color),
+      transform var(--dur-1) var(--ease-out);
+  }
+
+  .action-btn:hover {
+    color: var(--ink);
+    background: color-mix(in oklch, var(--ink) 12%, transparent);
+  }
+
+  .action-btn:active {
+    transform: scale(0.94);
+  }
+
+  .action-btn.is-done {
+    color: var(--acc-green);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  CLI Stream                                                        */
+  /* ------------------------------------------------------------------ */
+  .cli-stream {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    margin-top: 1rem;
+  }
+
+  .cli-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-inline-size: 0;
+  }
+
+  .cli-header-row {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .cli-badge {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    color: var(--ink);
+  }
+
+  .cli-desc {
+    font-size: var(--text-sm);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Endpoints Stream                                                  */
+  /* ------------------------------------------------------------------ */
+  .endpoint-stream {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    margin-top: 0.75rem;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  .endpoint-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: 0.65rem 0.85rem;
+    margin-inline: -0.85rem;
+    border-radius: var(--r-3);
+    min-inline-size: 0;
+  }
+
+  .endpoint-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-inline-size: 0;
+  }
+
+  .endpoint-badge-path {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .http-badge {
+    font-size: 0.625rem;
+    font-weight: var(--font-bold);
+    color: var(--canvas);
+    background: var(--ink);
+    padding: 0.12em 0.52em;
+    border-radius: var(--r-pill);
+    letter-spacing: 0.04em;
+    font-family: inherit;
+    line-height: 1.4;
+  }
+
+  .endpoint-route {
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--ink);
+    word-break: break-all;
+    overflow-wrap: anywhere;
+  }
+
+  .endpoint-summary {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--ghost);
+    line-height: var(--leading-normal);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Protocol Stream                                                   */
+  /* ------------------------------------------------------------------ */
+  .proto-stream {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-top: 0.75rem;
+    min-inline-size: 0;
+  }
+
+  .proto-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: 0.85rem 1rem;
+    margin-inline: -1rem;
+    border-radius: var(--r-3);
+    min-inline-size: 0;
+  }
+
+  .proto-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .proto-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .proto-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 580;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+  }
+
+  .proto-path {
+    font-size: var(--text-xs);
+    color: var(--muted);
+  }
+
+  .spec-tag {
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    color: var(--faint);
+    background: color-mix(in oklch, var(--ink) 4%, transparent);
+    padding: 0.2em 0.6em;
+    border-radius: var(--r-pill);
+    white-space: nowrap;
+  }
+
+  .proto-desc {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--muted);
+    line-height: var(--leading-relaxed);
+    text-wrap: pretty;
+  }
+
+  .cmd-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: 0.55rem 0.85rem;
+    border-radius: var(--r-3);
+    background: color-mix(in oklch, var(--ink) 3%, transparent);
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    box-sizing: border-box;
+    margin-top: var(--space-1);
+  }
+
+  .cmd-code {
+    flex: 1;
+    min-inline-size: 0;
+    font-size: var(--text-xs);
+    color: var(--ink);
+    white-space: pre-wrap;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Specification Stream                                              */
+  /* ------------------------------------------------------------------ */
+  .spec-stream {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin-top: 0.75rem;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  .spec-row-item {
+    display: grid;
+    grid-template-columns: 16rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: 0.5rem 1.5rem;
+    padding: 0.65rem 0.85rem;
+    margin-inline: -0.85rem;
+    border-radius: var(--r-3);
+    min-inline-size: 0;
+  }
+
+  .spec-label-group {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .spec-name {
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+  }
+
+  .spec-value-tag {
+    font-size: 0.6875rem;
+    color: var(--faint);
+    background: color-mix(in oklch, var(--ink) 4%, transparent);
+    padding: 0.1em 0.45em;
+    border-radius: var(--r-pill);
+  }
+
+  .spec-desc {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--muted);
+    line-height: var(--leading-normal);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Discovery Groups & Clean Catalog Layout                           */
+  /* ------------------------------------------------------------------ */
+  .discovery-groups {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    margin-top: 1rem;
+    min-inline-size: 0;
+  }
+
+  .discovery-group-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .discovery-group-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 580;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+  }
+
+  .discovery-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    min-inline-size: 0;
+  }
+
+  .discovery-item {
+    margin: 0;
+    min-inline-size: 0;
+  }
+
+  .discovery-link {
+    display: grid;
+    grid-template-columns: 16rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: 0.4rem 1.5rem;
+    padding: 0.65rem 0.85rem;
+    margin-inline: -0.85rem;
+    border-radius: var(--r-3);
+    background: transparent;
+    color: inherit;
+    text-decoration: none;
+    transition:
+      background-color var(--t-color),
+      transform var(--dur-1) var(--ease-out);
+  }
+
+  .discovery-path {
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    overflow-wrap: anywhere;
+  }
+
+  .discovery-desc {
+    font-size: var(--text-xs);
+    color: var(--ghost);
+    line-height: var(--leading-normal);
+    transition: color var(--t-color);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Mobile Responsive Rules                                           */
+  /* ------------------------------------------------------------------ */
+  @media (max-width: 38rem) {
+    .editorial-p,
+    .proto-desc {
+      text-align: justify;
+      text-justify: inter-word;
+      hyphens: none;
+      -webkit-hyphens: none;
+      text-wrap: pretty;
+    }
+
+    .spec-row-item,
+    .discovery-link {
+      grid-template-columns: 1fr;
+      gap: 0.25rem;
+      border-radius: var(--r-4);
+      padding: 0.75rem 1rem;
+    }
+
+    .endpoint-row {
+      align-items: flex-start;
+      gap: var(--space-2);
+      border-radius: var(--r-4);
+      padding: 0.75rem 1rem;
+    }
+
+    .proto-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-2);
+    }
+
+    .sdk-tab-rail {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-2);
+    }
+
+    .sdk-header-label {
+      max-inline-size: 100%;
+    }
+
+    .quick-cta-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+
+    .dev-cta {
+      justify-content: center;
+      width: 100%;
+    }
+  }
+</style>
