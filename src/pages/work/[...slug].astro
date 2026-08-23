@@ -1,0 +1,63 @@
+---
+import { getCollection, render } from "astro:content";
+import Page from "../../layouts/Page.astro";
+import { craftJsonLd } from "../../lib/jsonld";
+import { ogPath } from "../../lib/og-url";
+import { absUrl, slashPath } from "../../lib/urls";
+import Icon from "../../components/Icon.astro";
+import DetailHeader from "../../components/DetailHeader.astro";
+import "../../styles/prose.css";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("craft");
+  return entries.map((entry) => ({ params: { slug: entry.data.slug }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { title, date, description, tech, github, note } = entry.data;
+const url = slashPath(`/work/${entry.data.slug}`);
+---
+
+<Page
+  title={title}
+  description={description}
+  ogImage={ogPath(`work/${entry.data.slug}`)}
+  ogImageAlt={title}
+  jsonLd={craftJsonLd(entry, url)}
+  alternateFeeds={[
+    { href: absUrl("/library/feed.xml"), title: "Library RSS", type: "application/rss+xml" },
+    { href: absUrl("/library/feed.json"), title: "Library JSON Feed", type: "application/feed+json" },
+  ]}
+>
+  <article>
+    <DetailHeader title={title} lede={description || note}>
+      <Fragment slot="meta">
+        <time datetime={new Date(date).toISOString()}>{new Date(date).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" })}</time>
+        {tech.length > 0 && (
+          <ul class="detail-tag-list">
+            {tech.map((t) => <li><span class="detail-tag">#{t}</span></li>)}
+          </ul>
+        )}
+      </Fragment>
+      {github && (
+        <Fragment slot="action">
+          <a href={github} target="_blank" rel="noopener noreferrer">
+            <span>View on GitHub</span>
+            <Icon name="arrow-up-right" size={13} />
+          </a>
+        </Fragment>
+      )}
+    </DetailHeader>
+
+    <div class="prose detail-body" data-enter>
+      <Content />
+    </div>
+  </article>
+</Page>
+
+<style>
+  .detail-body {
+    max-width: 62ch;
+  }
+</style>

@@ -1,0 +1,51 @@
+---
+import { getCollection } from "astro:content";
+import Note from "../../layouts/Note.astro";
+
+/** Drafts never ship to production, but still build in dev for previewing. */
+export async function getStaticPaths() {
+  const isProd = import.meta.env.PROD;
+  const all = await getCollection("notes");
+  const entries = all.filter((e) => !isProd || !e.data.draft);
+  // chronological - used for prev/next. Sort ascending so index math is legible.
+  const sorted = [...entries].sort((a, b) => a.data.date.getTime() - b.data.date.getTime());
+  return sorted.map((entry, i) => ({
+    params: { slug: entry.id },
+    props: {
+      entry,
+      prev: sorted[i - 1]
+        ? { id: sorted[i - 1].id, title: sorted[i - 1].data.title, date: sorted[i - 1].data.date }
+        : null,
+      next: sorted[i + 1]
+        ? { id: sorted[i + 1].id, title: sorted[i + 1].data.title, date: sorted[i + 1].data.date }
+        : null,
+    },
+  }));
+}
+
+const { entry, prev, next } = Astro.props;
+const isProd = import.meta.env.PROD;
+
+/** Up to three related notes: shared tags score, tie-break by recency. */
+async function relatedNotes(): Promise<{ id: string; title: string }[]> {
+  const all = (await getCollection("notes")).filter(
+    (e) => !isProd || !e.data.draft,
+  );
+  const mine = entry.data.tags ?? [];
+  if (mine.length === 0) return [];
+  const scored = all
+    .filter((e) => e.id !== entry.id)
+    .map((e) => {
+      const theirs = e.data.tags ?? [];
+      const overlap = theirs.filter((t) => mine.includes(t)).length;
+      return { e, overlap, date: e.data.date.getTime() };
+    })
+    .filter((x) => x.overlap > 0)
+    .sort((a, b) => b.overlap - a.overlap || b.date - a.date)
+    .slice(0, 3);
+  return scored.map((x) => ({ id: x.e.id, title: x.e.data.title }));
+}
+const related = await relatedNotes();
+---
+
+<Note entry={entry} prev={prev} next={next} related={related} />
