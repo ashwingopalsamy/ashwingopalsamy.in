@@ -1,0 +1,423 @@
+---
+import { getCollection } from "astro:content";
+import LibraryRows from "../components/LibraryRows.astro";
+import LibraryShelf from "../components/LibraryShelf.astro";
+import PageIntro from "../components/PageIntro.astro";
+import Page from "../layouts/Page.astro";
+import { articleHostname, articleSource, bookHref, noteHref, watchHref } from "../lib/library";
+import {
+  filterLibraryCatalogItems,
+  isLibraryView,
+  libraryLabels,
+  libraryShelves,
+  normalizeLibraryCatalogItem,
+  sortLibraryCatalogItems,
+  type LibraryCatalogItem,
+} from "../lib/library-list";
+import { libraryCollectionPageJsonLd } from "../lib/jsonld";
+import { ogPath } from "../lib/og-url";
+import { linkedTagSet } from "../lib/tags";
+import { absUrl } from "../lib/urls";
+
+const [allBooks, allWatch, allNotes, allArticles] = await Promise.all([
+  getCollection("books"), getCollection("watch"), getCollection("notes"), getCollection("articles"),
+]);
+const isProd = import.meta.env.PROD;
+const notes = isProd ? allNotes.filter((entry) => !entry.data.draft) : allNotes;
+const byDateDesc = <T extends { data: { date: Date } }>(items: T[]) =>
+  [...items].sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
+
+const sortedBooks = byDateDesc(allBooks);
+const sortedWatch = byDateDesc(allWatch);
+const sortedNotes = byDateDesc(notes);
+const sortedArticles = byDateDesc(allArticles);
+const catalogItems: LibraryCatalogItem[] = sortLibraryCatalogItems([
+  ...sortedBooks.map((entry) => normalizeLibraryCatalogItem({
+    kind: "books", title: entry.data.title, date: entry.data.date, author: entry.data.author,
+    status: entry.data.status, rating: entry.data.rating, href: bookHref(entry) ?? null, tags: entry.data.tags,
+  })),
+  ...sortedWatch.map((entry) => normalizeLibraryCatalogItem({
+    kind: "watch", title: entry.data.title, date: entry.data.date, platform: entry.data.platform,
+    status: entry.data.status, rating: entry.data.rating, href: watchHref(entry) ?? null, tags: entry.data.tags,
+  })),
+  ...sortedNotes.map((entry) => normalizeLibraryCatalogItem({
+    kind: "notes", title: entry.data.title, date: entry.data.date, description: entry.data.description,
+    href: noteHref(entry), tags: entry.data.tags,
+  })),
+  ...sortedArticles.map((entry) => normalizeLibraryCatalogItem({
+    kind: "articles", title: entry.data.title, date: entry.data.date, source: articleSource(entry),
+    hostname: articleHostname(entry.data.url), href: entry.data.url, tags: entry.data.tags,
+  })),
+]);
+const shelves = libraryShelves(catalogItems);
+const itemsByKind = Object.fromEntries(
+  shelves.map((shelf) => [shelf.kind, filterLibraryCatalogItems(catalogItems, shelf.kind)]),
+) as Record<LibraryCatalogItem["kind"], LibraryCatalogItem[]>;
+const overviewCount = shelves.reduce((total, shelf) => total + shelf.items.length, 0);
+const requestedView = Astro.url.searchParams.get("view");
+const initialView = isLibraryView(requestedView) ? requestedView : "all";
+const tabs = [
+  { id: "all", label: "All", count: overviewCount },
+  ...shelves.map((shelf) => ({ id: shelf.kind, label: libraryLabels[shelf.kind], count: shelf.total })),
+] as const;
+const linkedTags = await linkedTagSet();
+const collectionPage = libraryCollectionPageJsonLd([
+  ...sortedBooks.map((entry) => ({ url: bookHref(entry) ? absUrl(bookHref(entry)!) : absUrl("/library/"), name: entry.data.title })),
+  ...sortedWatch.map((entry) => ({ url: watchHref(entry) ? absUrl(watchHref(entry)!) : absUrl("/library/"), name: entry.data.title })),
+  ...sortedNotes.map((entry) => ({ url: absUrl(noteHref(entry)), name: entry.data.title })),
+  ...sortedArticles.map((entry) => ({ url: entry.data.url, name: entry.data.title })),
+]);
+---
+
+<Page
+  title="Library"
+  description="Writings, books, bookmarks, and things watched that Ashwin Gopalsamy keeps returning to."
+  bodyClass="library"
+  ogImage={ogPath("library")}
+  ogImageAlt="Library · Ashwin Gopalsamy"
+  jsonLd={collectionPage}
+  alternateFeeds={[
+    { href: absUrl("/library/feed.xml"), title: "Library RSS", type: "application/rss+xml" },
+    { href: absUrl("/library/feed.json"), title: "Library JSON Feed", type: "application/feed+json" },
+  ]}
+>
+  <PageIntro title="library" lede="Things I keep close, ordered by when they arrived." />
+  <div class="library-tabs" data-library role="radiogroup" aria-label="Library sections">
+    {tabs.map((tab) => (
+      <input
+        class="library-view-input"
+        type="radio"
+        name="library-view"
+        id={`library-view-${tab.id}`}
+        value={tab.id}
+        checked={tab.id === initialView}
+        aria-controls={`library-panel-${tab.id}`}
+      />
+    ))}
+    <script is:inline>
+      {`(() => {
+        const view = new URLSearchParams(location.search).get("view");
+        if (!["notes", "books", "articles", "watch"].includes(view ?? "")) return;
+        document.getElementById("library-view-" + view)?.setAttribute("checked", "");
+        const input = document.getElementById("library-view-" + view);
+        if (input) input.checked = true;
+      })();`}
+    </script>
+    <div class="library-selector">
+      <span class="library-selection" aria-hidden="true"></span>
+      {tabs.map((tab) => (
+        <label for={`library-view-${tab.id}`} class="library-tab">
+          <span class="library-tab-label">{tab.label}</span>{" "}
+          <span class="library-tab-count">{tab.count}</span>
+        </label>
+      ))}
+    </div>
+
+    <div class="library-panels">
+      <section id="library-panel-all" class="library-panel" aria-label="Library overview">
+        {shelves.map((shelf) => <LibraryShelf shelf={shelf} linkedTags={linkedTags} />)}
+      </section>
+      <section id="library-panel-notes" class="library-panel" aria-label="Writings" tabindex="-1"><h2 class="visually-hidden">Writings</h2><LibraryRows items={itemsByKind.notes} linkedTags={linkedTags} empty="No writings published yet." /></section>
+      <section id="library-panel-books" class="library-panel" aria-label="Books" tabindex="-1"><h2 class="visually-hidden">Books</h2><LibraryRows items={itemsByKind.books} linkedTags={linkedTags} empty="No books here yet." /></section>
+      <section id="library-panel-articles" class="library-panel" aria-label="Bookmarks" tabindex="-1"><h2 class="visually-hidden">Bookmarks</h2><LibraryRows items={itemsByKind.articles} linkedTags={linkedTags} empty="No bookmarks here yet." /></section>
+      <section id="library-panel-watch" class="library-panel" aria-label="Watched" tabindex="-1"><h2 class="visually-hidden">Watched</h2><LibraryRows items={itemsByKind.watch} linkedTags={linkedTags} empty="Nothing watched here yet." /></section>
+    </div>
+  </div>
+</Page>
+
+<script>
+  import { isLibraryView } from "../lib/library-list";
+  import { pageSignal } from "../scripts/lifecycle";
+  import { playAccent } from "../scripts/sound";
+
+  function enhanceLibrary() {
+    const root = document.querySelector<HTMLElement>("[data-library]");
+    if (!root || root.dataset.enhanced === "true") return;
+    root.dataset.enhanced = "true";
+    const signal = pageSignal();
+    const inputs = Array.from(root.querySelectorAll<HTMLInputElement>(".library-view-input"));
+    const selector = root.querySelector<HTMLElement>(".library-selector");
+    const indicator = root.querySelector<HTMLElement>(".library-selection");
+    const panels = new Map(inputs.map((input) => [input.value, document.getElementById(`library-panel-${input.value}`)]));
+    let resizeFrame = 0;
+
+    const selectedView = () => inputs.find((input) => input.checked)?.value ?? "all";
+    const setPanels = (view: string) => {
+      panels.forEach((panel, id) => panel?.toggleAttribute("hidden", id !== view));
+    };
+    const moveIndicator = (view: string, center = false) => {
+      if (!selector || !indicator) return;
+      const input = inputs.find((item) => item.value === view);
+      const label = input ? selector.querySelector<HTMLLabelElement>(`label[for="${input.id}"]`) : null;
+      if (!label) return;
+      const offsetLeft = label.offsetLeft;
+      const offsetTop = label.offsetTop;
+      const width = label.offsetWidth;
+      const height = label.offsetHeight;
+      indicator.style.transform = `translate3d(${offsetLeft}px, ${offsetTop}px, 0)`;
+      indicator.style.width = `${width}px`;
+      indicator.style.height = `${height}px`;
+      indicator.style.opacity = "1";
+      root.dataset.indicatorReady = "true";
+      const selectorBox = selector.getBoundingClientRect();
+      const labelBox = label.getBoundingClientRect();
+      if (center && (labelBox.left < selectorBox.left || labelBox.right > selectorBox.right)) {
+        label.scrollIntoView({ block: "nearest", inline: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      }
+    };
+    const replaceView = (view: string) => {
+      const url = new URL(location.href);
+      if (view === "all") url.searchParams.delete("view");
+      else url.searchParams.set("view", view);
+      history.replaceState(history.state, "", `${url.pathname}${url.search}${url.hash}`);
+    };
+    const select = (view: string, updateUrl: boolean, center = false, focusPanel = false) => {
+      const input = inputs.find((item) => item.value === view);
+      if (!input) return;
+      input.checked = true;
+      setPanels(view);
+      moveIndicator(view, center);
+      if (updateUrl) replaceView(view);
+      if (focusPanel) requestAnimationFrame(() => panels.get(view)?.focus({ preventScroll: true }));
+    };
+    const syncLocation = () => {
+      const requested = new URL(location.href).searchParams.get("view");
+      const view = isLibraryView(requested) ? requested : "all";
+      if (requested && !isLibraryView(requested)) replaceView("all");
+      select(view, false, false);
+    };
+
+    inputs.forEach((input) => input.addEventListener("change", () => {
+      playAccent("tab");
+      select(input.value, true, true);
+    }, { signal }));
+    root.querySelectorAll<HTMLAnchorElement>("[data-library-show-all]").forEach((link) => link.addEventListener("click", (event) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const view = link.dataset.libraryView;
+      if (!view || !isLibraryView(view)) return;
+      event.preventDefault();
+      playAccent("tab");
+      select(view, true, true, true);
+    }, { signal }));
+    window.addEventListener("popstate", syncLocation, { signal });
+    const queueMeasure = () => {
+      cancelAnimationFrame(resizeFrame);
+      resizeFrame = requestAnimationFrame(() => moveIndicator(selectedView()));
+    };
+    const observer = selector ? new ResizeObserver(queueMeasure) : null;
+    if (selector) observer?.observe(selector);
+    signal.addEventListener("abort", () => {
+      cancelAnimationFrame(resizeFrame);
+      observer?.disconnect();
+      delete root.dataset.enhanced;
+    }, { once: true });
+    syncLocation();
+  }
+
+  enhanceLibrary();
+  document.addEventListener("astro:page-load", enhanceLibrary);
+</script>
+
+<style>
+  .library-tabs {
+    position: relative;
+  }
+
+  .library-view-input {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .library-selector {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    max-inline-size: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-block: 2px;
+  }
+
+  .library-selector::-webkit-scrollbar {
+    display: none;
+  }
+
+  .library-selection {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: var(--r-pill);
+    background: var(--ink);
+    box-shadow: var(--shadow-1);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity var(--t-color),
+      background-color var(--t-color);
+  }
+
+  [data-library][data-indicator-ready="true"] .library-selection {
+    transition:
+      transform var(--dur-3) var(--ease),
+      width var(--dur-3) var(--ease),
+      height var(--dur-3) var(--ease),
+      opacity var(--t-color),
+      background-color var(--t-color);
+  }
+
+  .library-tab {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.45rem;
+    min-block-size: 2.35rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--r-pill);
+    color: var(--faint);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    cursor: pointer;
+    text-decoration: none;
+    user-select: none;
+    transition: color var(--t-color), background-color var(--t-color), transform var(--dur-1) var(--ease-out);
+  }
+
+  .library-tab-label {
+    display: inline-block;
+    line-height: 1;
+  }
+
+  .library-tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 1.25rem;
+    height: 1.15rem;
+    padding-inline: 0.35rem;
+    border-radius: var(--r-pill);
+    background: color-mix(in oklch, var(--ink) 6%, transparent);
+    color: var(--ghost);
+    font-size: 0.6875rem;
+    font-weight: var(--font-medium);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    transition: background-color var(--t-color), color var(--t-color);
+  }
+
+  .library-tab:active {
+    transform: scale(0.97);
+    transition-duration: var(--dur-1);
+  }
+
+  #library-view-all:checked ~ .library-selector label[for="library-view-all"],
+  #library-view-books:checked ~ .library-selector label[for="library-view-books"],
+  #library-view-watch:checked ~ .library-selector label[for="library-view-watch"],
+  #library-view-notes:checked ~ .library-selector label[for="library-view-notes"],
+  #library-view-articles:checked ~ .library-selector label[for="library-view-articles"] {
+    color: var(--canvas);
+  }
+
+  #library-view-all:checked ~ .library-selector label[for="library-view-all"] .library-tab-count,
+  #library-view-books:checked ~ .library-selector label[for="library-view-books"] .library-tab-count,
+  #library-view-watch:checked ~ .library-selector label[for="library-view-watch"] .library-tab-count,
+  #library-view-notes:checked ~ .library-selector label[for="library-view-notes"] .library-tab-count,
+  #library-view-articles:checked ~ .library-selector label[for="library-view-articles"] .library-tab-count {
+    background: color-mix(in oklch, var(--canvas) 20%, transparent);
+    color: var(--canvas);
+  }
+
+  [data-library]:not([data-enhanced="true"]) #library-view-all:checked ~ .library-selector label[for="library-view-all"],
+  [data-library]:not([data-enhanced="true"]) #library-view-books:checked ~ .library-selector label[for="library-view-books"],
+  [data-library]:not([data-enhanced="true"]) #library-view-watch:checked ~ .library-selector label[for="library-view-watch"],
+  [data-library]:not([data-enhanced="true"]) #library-view-notes:checked ~ .library-selector label[for="library-view-notes"],
+  [data-library]:not([data-enhanced="true"]) #library-view-articles:checked ~ .library-selector label[for="library-view-articles"] {
+    background: var(--ink);
+    color: var(--canvas);
+  }
+
+  #library-view-all:focus-visible ~ .library-selector label[for="library-view-all"],
+  #library-view-books:focus-visible ~ .library-selector label[for="library-view-books"],
+  #library-view-watch:focus-visible ~ .library-selector label[for="library-view-watch"],
+  #library-view-notes:focus-visible ~ .library-selector label[for="library-view-notes"],
+  #library-view-articles:focus-visible ~ .library-selector label[for="library-view-articles"] {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .library-tab:hover {
+      color: var(--ink);
+      background-color: color-mix(in oklch, var(--ink) 4%, transparent);
+    }
+
+    .library-tab:hover .library-tab-count {
+      color: var(--muted);
+      background-color: color-mix(in oklch, var(--ink) 9%, transparent);
+    }
+
+    #library-view-all:checked ~ .library-selector label[for="library-view-all"]:hover,
+    #library-view-books:checked ~ .library-selector label[for="library-view-books"]:hover,
+    #library-view-watch:checked ~ .library-selector label[for="library-view-watch"]:hover,
+    #library-view-notes:checked ~ .library-selector label[for="library-view-notes"]:hover,
+    #library-view-articles:checked ~ .library-selector label[for="library-view-articles"]:hover {
+      background-color: transparent;
+      color: var(--canvas);
+    }
+
+    #library-view-all:checked ~ .library-selector label[for="library-view-all"]:hover .library-tab-count,
+    #library-view-books:checked ~ .library-selector label[for="library-view-books"]:hover .library-tab-count,
+    #library-view-watch:checked ~ .library-selector label[for="library-view-watch"]:hover .library-tab-count,
+    #library-view-notes:checked ~ .library-selector label[for="library-view-notes"]:hover .library-tab-count,
+    #library-view-articles:checked ~ .library-selector label[for="library-view-articles"]:hover .library-tab-count {
+      background: color-mix(in oklch, var(--canvas) 20%, transparent);
+      color: var(--canvas);
+    }
+  }
+
+  .library-panels {
+    margin-top: clamp(2rem, 4vw, 2.75rem);
+  }
+
+  .library-panel {
+    display: none;
+    margin-top: 0;
+  }
+
+  #library-view-all:checked ~ .library-panels #library-panel-all,
+  #library-view-books:checked ~ .library-panels #library-panel-books,
+  #library-view-watch:checked ~ .library-panels #library-panel-watch,
+  #library-view-notes:checked ~ .library-panels #library-panel-notes,
+  #library-view-articles:checked ~ .library-panels #library-panel-articles {
+    display: block;
+  }
+
+  @media (max-width: 38rem) {
+    .library-selector {
+      margin-inline: calc(-1 * var(--mobile-gutter-start)) calc(-1 * var(--mobile-gutter-end));
+      padding-inline: var(--mobile-gutter-start) var(--mobile-gutter-end);
+      scroll-padding-inline: var(--mobile-gutter-start) var(--mobile-gutter-end);
+      scroll-snap-type: x proximity;
+      overscroll-behavior-inline: contain;
+      mask-image: linear-gradient(to right, transparent, black var(--mobile-gutter-start), black calc(100% - var(--mobile-gutter-end)), transparent);
+    }
+
+    .library-tab {
+      scroll-snap-align: center;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .library-selection,
+    [data-library][data-indicator-ready="true"] .library-selection {
+      transition: opacity var(--t-color), background-color var(--t-color) !important;
+    }
+  }
+</style>

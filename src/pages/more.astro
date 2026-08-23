@@ -1,0 +1,327 @@
+---
+import Page from "../layouts/Page.astro";
+import { ogPath } from "../lib/og-url";
+import { moreDestinations } from "../data/more";
+import Icon from "../components/Icon.astro";
+import StatusPill from "../components/StatusPill.astro";
+import PageIntro from "../components/PageIntro.astro";
+---
+
+<Page title="More" description="Beyond the homepage: library, photos, cafes, people, and other corners Ashwin Gopalsamy keeps tending."
+  ogImage={ogPath("more")}
+  ogImageAlt="More · Ashwin Gopalsamy"
+>
+  <PageIntro title="more" lede="The parts of this site that do not fit neatly anywhere else." />
+  <div class="bento" data-enter-batch>
+    {moreDestinations.map((destination) => (
+      <a
+        class:list={["tile", destination.className, destination.status === "coming-soon" && "is-coming"]}
+        data-enter
+        data-status={destination.status}
+        style="--accent: var(--ink)"
+        href={destination.href}
+        data-astro-prefetch="viewport"
+      >
+        <div class="tile-head">
+          <div class="tile-title-row">
+            <span class="tile-name">{destination.title}</span>
+            {destination.status === "coming-soon" && <StatusPill label="Coming soon" />}
+          </div>
+          <span class="tile-desc">{destination.description}</span>
+        </div>
+        <span class="arrow" aria-hidden="true"><Icon name="arrow-right" size={16} /></span>
+        <div class="tile-art">
+          {destination.id === "library" ? (
+            <div class="spines" aria-hidden="true">
+              <span class="spine" style="width:70%"></span>
+              <span class="spine" style="width:95%"></span>
+              <span class="spine" style="width:55%"></span>
+              <span class="spine" style="width:82%"></span>
+              <span class="spine" style="width:65%"></span>
+            </div>
+          ) : destination.id === "photos" ? (
+            <div class="frames" aria-hidden="true">
+              <span class="frame" style="left:0;top:6px;--rotation-start:-6deg;--rotation-end:-9deg"></span>
+              <span class="frame" style="left:30px;top:0;--rotation-start:3deg;--rotation-end:6deg"></span>
+              <span class="frame" style="left:60px;top:8px;--rotation-start:-2deg;--rotation-end:1deg"></span>
+            </div>
+          ) : destination.id === "ai" ? (
+            <div class="code-glyph" aria-hidden="true"><span class="brace">&#123;</span><span class="caret"></span><span class="brace">&#125;</span></div>
+          ) : destination.id === "cafe" ? (
+            <svg class="cup-svg" width="40" height="42" viewBox="0 0 40 42" aria-hidden="true">
+              <path class="steam" d="M15,13 C15,10 18,10 18,7 C18,4 15,4 15,1"></path>
+              <path class="steam s2" d="M23,13 C23,10 26,10 26,7 C26,4 23,4 23,1"></path>
+              <path class="cup" d="M8,17 h21 v9 a8,8 0 0 1 -8,8 h-5 a8,8 0 0 1 -8,-8 z"></path>
+              <path class="cup" d="M29,19 h3.5 a4,4 0 0 1 0,8 h-3.5"></path>
+              <path class="cup" d="M7,39 h25"></path>
+            </svg>
+          ) : destination.id === "people" ? (
+            <div class="avatars" aria-hidden="true"><span class="avatar large"></span><span class="avatar small"></span><span class="avatar medium"></span></div>
+          ) : (
+            <div class="placeholder-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+          )}
+        </div>
+      </a>
+    ))}
+  </div>
+</Page>
+
+<style>
+  .bento {
+    position: relative;
+    z-index: var(--z-base);
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 1.5rem 0 3rem;
+  }
+
+  /* Bento tile: Pure White canvas card, zero grey tint */
+  .tile {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: 128px;
+    padding: 1.15rem 1.25rem;
+    border-radius: var(--r-4);
+    text-decoration: none;
+    z-index: var(--z-base);
+    color: inherit;
+    background: var(--canvas);
+    border: 1px solid var(--rule);
+    box-shadow: none;
+    transition:
+      transform var(--dur-2) var(--ease-out),
+      border-color var(--t-color),
+      box-shadow var(--dur-2) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    a.tile:hover {
+      transform: translateY(-2px);
+      text-decoration: none;
+      border-color: var(--rule-strong);
+      box-shadow: var(--shadow-1);
+    }
+
+    a.tile:hover .tile-desc {
+      color: var(--muted);
+    }
+
+    a.tile:hover .arrow {
+      opacity: 1;
+      color: var(--ink);
+      transform: translateX(3px);
+    }
+  }
+
+  a.tile:active {
+    transform: translateY(0) scale(0.99);
+    border-color: var(--rule-strong);
+    transition-duration: var(--dur-1);
+  }
+
+  .tile:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* bento shape - library tall, photos + people wide */
+  .t-library { grid-column: 1; grid-row: 1 / span 2; }
+  .t-photos { grid-column: 2 / span 2; grid-row: 1; }
+  .t-ai { grid-column: 2; grid-row: 2; }
+  .t-cafe { grid-column: 3; grid-row: 2; }
+  .t-someday { grid-column: 1; grid-row: 3; }
+  .t-people { grid-column: 2 / span 2; grid-row: 3; }
+
+  .tile-head {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-inline-size: 0;
+    padding-inline-end: 1.75rem;
+  }
+
+  .tile-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.45rem;
+    min-inline-size: 0;
+  }
+
+  .tile-name {
+    font-weight: 580;
+    font-size: 1rem;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .tile-desc {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    font-size: var(--text-xs);
+    color: var(--ghost);
+    line-height: var(--leading-normal);
+    overflow-wrap: anywhere;
+    transition: color var(--t-color);
+  }
+
+  .tile-art {
+    display: flex;
+    align-items: flex-end;
+    min-height: 42px;
+  }
+
+  .arrow {
+    position: absolute;
+    top: 1.15rem;
+    right: 1.15rem;
+    color: var(--ghost);
+    opacity: 0.65;
+    transform: none;
+    transition:
+      opacity var(--t-color),
+      color var(--t-color),
+      transform var(--dur-2) var(--ease-out);
+  }
+
+  .is-coming .tile-art {
+    opacity: 0.62;
+  }
+
+  .placeholder-mark {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .placeholder-mark span {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--faint);
+  }
+
+  .spines { display: flex; flex-direction: column; gap: 5px; width: 100%; }
+  .spine {
+    height: 9px;
+    border-radius: var(--r-pill);
+    background: var(--accent);
+    opacity: 0.85;
+    transform-origin: left;
+  }
+
+  .frames { position: relative; width: 100%; height: 54px; }
+  .frame {
+    position: absolute;
+    width: 40px;
+    height: 50px;
+    border: 2px solid var(--accent);
+    border-radius: var(--r-pill);
+    background: color-mix(in oklch, var(--accent) 8%, transparent);
+    transform: rotate(var(--rotation-start));
+  }
+
+  .code-glyph {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .caret {
+    width: 8px;
+    height: 1.15rem;
+    border-radius: var(--r-pill);
+    background: var(--accent);
+  }
+
+  .cup-svg { overflow: visible; }
+  .cup,
+  .steam {
+    fill: none;
+    stroke: var(--accent);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .cup { stroke-width: 2; }
+  .steam { stroke-width: 1.6; opacity: 0.7; }
+
+  .avatars { display: flex; align-items: flex-end; }
+  .avatar { border: 2px solid var(--accent); border-radius: 50%; background: var(--canvas); margin-left: -7px; }
+  .avatar:first-child { margin-left: 0; }
+  .avatar.large { width: 28px; height: 28px; }
+  .avatar.medium { width: 24px; height: 24px; }
+  .avatar.small { width: 21px; height: 21px; }
+
+  .spine { animation: spine-bob 3.6s ease-in-out infinite; }
+  .spine:nth-child(2) { animation-delay: -0.5s; }
+  .spine:nth-child(3) { animation-delay: -1s; }
+  .spine:nth-child(4) { animation-delay: -1.5s; }
+  .spine:nth-child(5) { animation-delay: -2s; }
+  @keyframes spine-bob { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(3px); } }
+
+  .frame { animation: frame-drift 4.2s ease-in-out infinite; }
+  .frame:nth-child(2) { animation-delay: -1.4s; }
+  .frame:nth-child(3) { animation-delay: -2.8s; }
+  @keyframes frame-drift { 0%, 100% { transform: rotate(var(--rotation-start)); } 50% { transform: rotate(var(--rotation-end)); } }
+
+  .caret { animation: blink 1.1s steps(1) infinite; }
+  @keyframes blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+
+  .steam { animation: rise 3s ease-in-out infinite; }
+  .steam.s2 { animation-delay: -1.2s; }
+  @keyframes rise { 0% { stroke-dashoffset: 18; opacity: 0; } 30% { opacity: 0.9; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+
+  .placeholder-mark span { animation: breathe 2.2s ease-in-out infinite; }
+  .placeholder-mark span:nth-child(2) { animation-delay: -0.3s; }
+  .placeholder-mark span:nth-child(3) { animation-delay: -0.6s; }
+  @keyframes breathe { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+  .avatar { animation: avatar-bob 3.2s ease-in-out infinite; }
+  .avatar:nth-child(2) { animation-delay: -1.1s; }
+  .avatar:nth-child(3) { animation-delay: -2.2s; }
+  @keyframes avatar-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+
+  /* mobile - 2 columns, spans reset */
+  @media (max-width: 34rem) {
+    .bento { grid-template-columns: 1fr 1fr; }
+    .t-library, .t-photos, .t-ai, .t-cafe, .t-someday, .t-people {
+      grid-column: auto;
+      grid-row: auto;
+    }
+    .t-library, .t-people { grid-column: span 2; }
+    .tile { min-height: 124px; padding: 15px; }
+    .tile-desc {
+      text-align: justify;
+      text-justify: inter-word;
+      hyphens: none;
+      -webkit-hyphens: none;
+      text-wrap: pretty;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    a.tile:hover,
+    a.tile:active {
+      transform: none;
+    }
+    .spine,
+    .frame,
+    .caret,
+    .steam,
+    .placeholder-mark span,
+    .avatar {
+      animation: none;
+    }
+  }
+</style>

@@ -1,0 +1,130 @@
+---
+import Page from "../../../layouts/Page.astro";
+import { collectionPageJsonLd } from "../../../lib/jsonld";
+import { getTagBuckets, tagHref, tagPageDescription, type TagBucket } from "../../../lib/tags";
+import { ogPath } from "../../../lib/og-url";
+import { absUrl } from "../../../lib/urls";
+import PageIntro from "../../../components/PageIntro.astro";
+
+const buckets: TagBucket[] = await getTagBuckets();
+const description =
+  "Topics with enough notes and library entries to browse: Go, payments, distributed systems, and related engineering tags.";
+
+const jsonLd = collectionPageJsonLd({
+  url: "/library/tags",
+  name: "Library tags",
+  description,
+  items: buckets.map((b) => ({
+    url: tagHref(b.tag),
+    name: `#${b.tag}`,
+  })),
+});
+---
+
+<Page
+  title="Tags"
+  description={description}
+  ogImage={ogPath("library/tags")}
+  ogImageAlt="Library tags · Ashwin Gopalsamy"
+  jsonLd={jsonLd}
+  alternateFeeds={[
+    { href: absUrl("/library/feed.xml"), title: "Library RSS", type: "application/rss+xml" },
+    { href: absUrl("/library/feed.json"), title: "Library JSON Feed", type: "application/feed+json" },
+  ]}
+>
+  <PageIntro title="tags" lede="Topics that appear often enough to browse across the library." />
+
+  <ul class="tag-list" data-enter>
+    {buckets.map((b) => (
+      <li class="tag-row">
+        <a class="tag-link" href={tagHref(b.tag)}>
+          <span class="tag-name">#{b.tag}</span>
+          <span class="tag-count mono">{b.count}</span>
+        </a>
+        <p class="tag-desc">{tagPageDescription(b.tag, b.count)}</p>
+      </li>
+    ))}
+  </ul>
+</Page>
+
+<style>
+  .tag-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: 100%;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .tag-list:hover .tag-row {
+      opacity: 0.45;
+      filter: blur(0.2px);
+      transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
+    }
+    .tag-list:hover .tag-row:hover,
+    .tag-list:hover .tag-row:focus-within {
+      opacity: 1;
+      filter: none;
+    }
+  }
+
+  .tag-row {
+    padding: 0.75rem 0.85rem;
+    margin-inline: -0.85rem;
+    border-radius: var(--r-3);
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    transition:
+      background-color var(--t-color),
+      opacity var(--dur-2) var(--ease),
+      filter var(--dur-2) var(--ease),
+      transform var(--dur-1) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .tag-row:hover,
+    .tag-row:focus-within {
+      background: color-mix(in oklch, var(--ink) 3.5%, transparent);
+    }
+    .tag-row:hover .tag-desc,
+    .tag-row:focus-within .tag-desc {
+      color: var(--muted);
+    }
+  }
+
+  .tag-link {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    text-decoration: none;
+    color: var(--ink);
+  }
+
+  .tag-name {
+    font-weight: var(--font-medium);
+    font-size: var(--text-sm);
+  }
+
+  .tag-count {
+    font-size: var(--text-xs);
+    color: var(--faint);
+  }
+
+  .tag-desc {
+    margin: 0.25rem 0 0;
+    font-size: var(--text-xs);
+    color: var(--ghost);
+    line-height: var(--leading-normal);
+    max-width: 52ch;
+    transition: color var(--t-color);
+  }
+
+  .mono {
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  }
+</style>

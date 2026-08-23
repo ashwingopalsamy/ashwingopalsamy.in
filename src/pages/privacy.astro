@@ -1,0 +1,163 @@
+---
+import Page from "../layouts/Page.astro";
+import PageIntro from "../components/PageIntro.astro";
+import { ogPath } from "../lib/og-url";
+
+const ogImage = ogPath("privacy");
+---
+
+<Page
+  title="Privacy Policy"
+  description="Privacy policy and data governance practices for ashwingopalsamy.in."
+  ogImage={ogImage}
+  ogImageAlt="Privacy Policy · Ashwin Gopalsamy"
+>
+  <PageIntro
+    title="privacy policy"
+    lede="Clear, transparent data practices: zero tracking, no cookies, and minimal edge processing."
+  />
+
+  <div class="page-prose" data-enter>
+    <section class="privacy-section">
+      <h2 class="privacy-h">Overview and Philosophy</h2>
+      <p class="privacy-p">
+        This personal website is designed to be a quiet, static, and privacy-respecting space on the web.
+        I believe the web should function without surveillance, invasive telemetry, or monetization of visitor attention.
+      </p>
+    </section>
+
+    <section class="privacy-section">
+      <h2 class="privacy-h">Zero Tracking and No Cookies</h2>
+      <p class="privacy-p">
+        This website does not set any tracking cookies, local storage tracking identifiers, or third-party marketing beacons.
+        There are no advertising networks, behavioral tracking scripts, or cross-site tracking mechanisms present.
+      </p>
+      <p class="privacy-p">
+        Preferences such as dark mode or sound toggle are stored locally in your browser storage (localStorage)
+        and are never transmitted to any server.
+      </p>
+    </section>
+
+    <section class="privacy-section">
+      <h2 class="privacy-h">Edge Infrastructure and First-Party Observability</h2>
+      <p class="privacy-p">
+        The website is hosted on Cloudflare Pages. Requests are processed at edge points of presence
+        to deliver content, enforce security headers, and prevent denial-of-service attacks.
+      </p>
+      <p class="privacy-p">
+        We utilize Cloudflare Web Analytics and first-party edge telemetry (Cloudflare Analytics Engine) to monitor operational health,
+        request performance, status codes, deployment stability, AI crawler patterns, and aggregate feature usage (such as search frequency,
+        command palette open mode, resume downloads, and client-side error signatures).
+      </p>
+      <p class="privacy-p">
+        This operational telemetry is privacy-preserving: it does not use cookies, does not collect personal identifiers,
+        does not log IP addresses or raw search text, does not record keystrokes or cursor coordinates, and data points are retained
+        in Cloudflare Analytics Engine for a rolling 3-month operational window.
+      </p>
+    </section>
+
+    <section class="privacy-section">
+      <h2 class="privacy-h">AI Agents and Machine Interfaces</h2>
+      <p class="privacy-p">
+        AI systems, automated scrapers, and agents accessing machine-readable surfaces (such as <a href="/llms.txt">/llms.txt</a>,
+        <a href="/mcp">/mcp</a>, <a href="/a2a">/a2a</a>, and <a href="/openapi.json">/openapi.json</a>)
+        operate strictly in read-only discovery mode. No personal agent credentials or user interaction logs are stored.
+      </p>
+      <p class="privacy-p">
+        Our content usage policies are published via standard machine headers (<span class="mono">Content-Signal: ai-train=yes, search=yes, ai-input=yes</span>)
+        and declared in <a href="/ai.txt">/ai.txt</a> and <a href="/robots.txt">/robots.txt</a>.
+      </p>
+    </section>
+
+    <section class="privacy-section">
+      <h2 class="privacy-h">Contact Inquiries</h2>
+      <p class="privacy-p">
+        If you contact me by email, your email address and message contents are used solely for direct communication
+        between us and are never shared, sold, or used for automated marketing.
+      </p>
+    </section>
+
+    <section class="privacy-section">
+      <h2 class="privacy-h">Contact Information</h2>
+      <p class="privacy-p">
+        For any privacy questions or data requests, contact me at
+        <a class="mono" href="mailto:hello@ashwingopalsamy.in">hello@ashwingopalsamy.in</a>.
+      </p>
+    </section>
+  </div>
+</Page>
+
+<style>
+  .privacy-section {
+    margin-bottom: 2rem;
+  }
+
+  .privacy-h {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 2rem 0 0.75rem;
+  }
+
+  .privacy-p {
+    max-width: 62ch;
+    margin-bottom: 1.1rem;
+    color: var(--ghost);
+    line-height: var(--leading-relaxed);
+    transition: color var(--t-color);
+  }
+
+  .privacy-p a {
+    color: var(--ink);
+    text-decoration: none;
+    display: inline;
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in oklch, currentColor 55%, transparent) 5%,
+      color-mix(in oklch, currentColor 55%, transparent) 95%,
+      transparent 100%
+    );
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 0.75px;
+    padding-bottom: 2px;
+    transition:
+      color var(--t-color),
+      font-weight var(--t-color),
+      background-size 320ms var(--ease-out);
+  }
+
+  .privacy-p a:hover,
+  .privacy-p a:focus-visible {
+    font-weight: var(--font-hover-lift);
+    background-size: 100% 0.75px;
+  }
+
+  .mono {
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: 0.9em;
+    color: var(--ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .privacy-p:hover {
+      color: color-mix(in oklch, var(--ink) 80%, var(--muted));
+    }
+
+    .privacy-p:hover a {
+      font-weight: var(--font-hover-lift);
+      background-size: 100% 0.75px;
+    }
+  }
+
+  @media (max-width: 38rem) {
+    .privacy-p {
+      text-align: justify;
+      text-justify: inter-word;
+      hyphens: none;
+      -webkit-hyphens: none;
+      text-wrap: pretty;
+    }
+  }
+</style>

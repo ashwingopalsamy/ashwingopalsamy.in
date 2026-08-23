@@ -1,0 +1,192 @@
+---
+import Page from "../layouts/Page.astro";
+import { ogPath } from "../lib/og-url";
+import { profileLinks } from "../data/profile-links";
+import { profileIconPaths } from "../lib/profile-icons";
+import Icon from "../components/Icon.astro";
+import PageIntro from "../components/PageIntro.astro";
+
+/**
+ * /links - every way to find me, in one place. Platform name leads as the
+ * primary label; the handle trails quiet and muted. Whole row is the link.
+ * Brand marks come from simple-icons; LinkedIn (absent there) reuses the
+ * site's own mark, and Email uses a neutral envelope.
+ */
+
+---
+
+<Page title="Links" description="Every way to find Ashwin Gopalsamy (GitHub, LinkedIn, X, email, and the rest) in one place."
+  ogImage={ogPath("links")}
+  ogImageAlt="Links · Ashwin Gopalsamy"
+>
+  <PageIntro title="links" lede="Every way to find me, in one place." />
+
+  <ul class="links-grid" data-enter-batch>
+    {
+      profileLinks.map((l) => (
+        <li class="link-item" data-enter>
+          <a
+            class="link-row"
+            href={l.href}
+            target={l.mail ? undefined : "_blank"}
+            rel={l.mail ? undefined : "me noopener noreferrer"}
+          >
+            <svg class="link-icon" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="currentColor">
+              <path d={profileIconPaths[l.id]} />
+            </svg>
+            <span class="link-platform">{l.platform}</span>
+            <span class="link-handle">{l.handle}</span>
+            {!l.mail && (
+              <span class="link-arrow" aria-hidden="true"><Icon name="arrow-up-right" size={14} /></span>
+            )}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</Page>
+
+<style>
+  .links-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.25rem 1.5rem;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .links-grid:hover .link-item {
+      opacity: 0.45;
+      filter: blur(0.2px);
+      transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
+    }
+    .links-grid:hover .link-item:hover,
+    .links-grid:hover .link-item:focus-within {
+      opacity: 1;
+      filter: none;
+    }
+  }
+
+  @media (max-width: 32rem) {
+    .links-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .link-item {
+    min-width: 0;
+    transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
+  }
+
+  .link-row {
+    display: grid;
+    grid-template-columns: 1.25rem auto minmax(0, 1fr) 1.25rem;
+    min-height: 48px;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: 0.65rem 0.85rem;
+    margin-inline: -0.85rem;
+    border-radius: var(--r-3);
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: inherit;
+    text-decoration: none;
+    transition:
+      background-color var(--t-color),
+      transform var(--dur-1) var(--ease-out);
+  }
+
+  .link-row:active {
+    background: color-mix(in oklch, var(--ink) 6.5%, transparent);
+    transform: scale(0.995);
+  }
+
+  .link-icon {
+    flex-shrink: 0;
+    color: var(--ghost);
+    transition: color var(--t-color);
+  }
+
+  .link-platform {
+    font-weight: var(--font-medium);
+    font-size: var(--text-sm);
+    color: var(--ink);
+    transition: color var(--t-color);
+  }
+
+  .link-handle {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: var(--text-xs);
+    color: var(--ghost);
+    transition: color var(--t-color);
+  }
+
+  .link-arrow {
+    justify-self: end;
+    color: var(--ghost);
+    opacity: 0.6;
+    transform: none;
+    transition:
+      opacity var(--t-color),
+      transform var(--dur-2) var(--ease-out),
+      color var(--t-color);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .link-row:hover,
+    .link-row:focus-visible {
+      background: color-mix(in oklch, var(--ink) 3.5%, transparent);
+    }
+
+    .link-row:hover .link-icon,
+    .link-row:focus-visible .link-icon {
+      color: var(--ink);
+    }
+
+    .link-row:hover .link-handle,
+    .link-row:focus-visible .link-handle {
+      color: var(--muted);
+    }
+
+    .link-row:hover .link-arrow,
+    .link-row:focus-visible .link-arrow {
+      opacity: 1;
+      color: var(--ink);
+      transform: translate(2px, -2px);
+    }
+  }
+
+  .link-row:focus-visible .link-platform {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+
+  @media (max-width: 38rem) {
+    .link-row {
+      grid-template-columns: 1.25rem minmax(0, 1fr) 1.25rem;
+      gap: 0.25rem 0.7rem;
+      border-radius: var(--r-4);
+      padding: 0.75rem 1rem;
+    }
+
+    .link-platform,
+    .link-handle {
+      grid-column: 2;
+    }
+
+    .link-handle {
+      grid-row: 2;
+    }
+
+    .link-icon,
+    .link-arrow {
+      grid-row: 1 / span 2;
+    }
+  }
+</style>

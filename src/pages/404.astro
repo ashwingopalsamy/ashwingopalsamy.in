@@ -1,0 +1,168 @@
+---
+import Page from "../layouts/Page.astro";
+import Icon from "../components/Icon.astro";
+
+/**
+ * 404 - the hidden room. Warm two-tone voice, search-palette hint, and
+ * popular links so even the wrong turn feels on-brand.
+ */
+const popular = [
+  { href: "/", label: "Home" },
+  { href: "/library/", label: "Library" },
+  { href: "/work/", label: "Work" },
+  { href: "/developers/", label: "Developers" },
+  { href: "/ai/", label: "AI" },
+  { href: "/sitemap.md", label: "Sitemap (MD)" },
+  { href: "/llms.txt", label: "llms.txt" },
+  { href: "/links/", label: "Links" },
+];
+---
+
+<Page title="Not found" robots="noindex,follow" bodyClass="notfound-page" pagefind={false}>
+  <section class="notfound" data-enter>
+    <div class="nf-mark" aria-hidden="true">
+      <span class="nf-404">404</span>
+    </div>
+    <h1 class="visually-hidden">Page Not Found</h1>
+    <p class="nf-lede">This page took a wrong turn.</p>
+    <p class="nf-muted">
+      Nothing lives at this address. Try the <a class="nf-link" href="/">home page</a>,
+      explore the <a class="nf-link" href="/sitemap.md">Markdown sitemap</a>, check <a class="nf-link" href="/llms.txt">llms.txt</a> or <a class="nf-link" href="/developers/">developer documentation</a>, or press
+      <kbd class="nf-kbd">⌘</kbd><kbd class="nf-kbd">K</kbd>
+      <span class="nf-kbd-alt">(<kbd class="nf-kbd">Ctrl</kbd><kbd class="nf-kbd">K</kbd>)</span>
+      to search once the palette lands.
+    </p>
+
+    <h2 class="visually-hidden">Recovery destinations</h2>
+    <ul class="nf-popular" role="list">
+      {popular.map((item) => (
+        <li>
+          <a class="nf-popular-link" href={item.href}>
+            {item.label}
+            <Icon name="chevron-right" size={13} />
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</Page>
+
+<style>
+  .notfound {
+    max-width: 100%;
+    margin-top: 1.25rem;
+  }
+
+  .nf-mark {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1.25rem;
+  }
+
+  .nf-404 {
+    font-family: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
+    font-style: italic;
+    font-size: var(--text-display);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1;
+  }
+
+  .nf-lede {
+    font-size: var(--text-lg);
+    line-height: 1.45;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    margin: 0 0 1.25rem;
+  }
+
+  .nf-muted {
+    color: var(--muted);
+    line-height: 1.8;
+    margin: 0 0 1.25rem;
+    transition: color var(--t-color);
+  }
+
+  .nf-link {
+    color: var(--ink);
+    text-decoration: none;
+    transition: color var(--t-color);
+  }
+
+  .nf-link:hover,
+  .nf-link:focus-visible {
+    color: var(--vermilion);
+  }
+
+  .nf-kbd {
+    display: inline-block;
+    min-width: 1.35em;
+    padding: 0.12em 0.5em;
+    margin-inline: 0.08em;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--r-pill);
+    background: color-mix(in oklch, var(--ink) 4%, var(--canvas));
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: 0.78em;
+    line-height: 1.4;
+    color: var(--ink);
+    text-align: center;
+    box-shadow: inset 0 -1px 0 color-mix(in oklch, var(--ink) 8%, transparent);
+  }
+
+  .nf-kbd-alt {
+    color: var(--faint);
+    font-size: 0.92em;
+  }
+
+  .nf-popular {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nf-popular-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: var(--r-pill);
+    background: var(--chrome-surface-bg);
+    border: 1px solid var(--chrome-surface-border);
+    box-shadow: var(--chrome-surface-shadow);
+    -webkit-backdrop-filter: blur(20px) saturate(170%);
+    backdrop-filter: blur(20px) saturate(170%);
+    color: var(--muted);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    text-decoration: none;
+    transition:
+      color var(--t-color),
+      background-color var(--t-color),
+      border-color var(--t-color),
+      transform var(--t-move);
+  }
+
+  .nf-popular-link svg {
+    color: var(--faint);
+    transition: transform var(--t-move), color var(--t-color);
+  }
+
+  .nf-popular-link:hover,
+  .nf-popular-link:focus-visible {
+    color: var(--ink);
+    background: var(--surface-row-hover);
+    border-color: color-mix(in oklch, var(--ink) 18%, transparent);
+    text-decoration: none;
+  }
+
+  .nf-popular-link:hover svg,
+  .nf-popular-link:focus-visible svg {
+    color: var(--ink);
+    transform: translateX(2px);
+  }
+</style>

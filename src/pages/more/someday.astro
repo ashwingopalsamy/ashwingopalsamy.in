@@ -1,0 +1,18 @@
+---
+import ComingSoon from "../../components/ComingSoon.astro";
+import Page from "../../layouts/Page.astro";
+import { ogPath } from "../../lib/og-url";
+
+const description = "I keep rereading this list while deciding what genuinely belongs here. It will appear when it feels useful rather than aspirational.";
+---
+
+<Page
+  title="Someday"
+  description={`${description} Coming soon.`}
+  ogImage={ogPath("more/someday")}
+  ogImageAlt="Someday · Ashwin Gopalsamy"
+  pagefind={false}
+  robots="noindex,follow"
+>
+  <ComingSoon title="Someday" description={description} />
+</Page>

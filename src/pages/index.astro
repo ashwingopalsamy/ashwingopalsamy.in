@@ -1,0 +1,35 @@
+---
+import Page from "../layouts/Page.astro";
+import Intro from "../components/Intro.astro";
+import Contact from "../components/Contact.astro";
+import Connect from "../components/Connect.astro";
+import { site } from "../data/home";
+import { webSiteJsonLd } from "../lib/jsonld";
+import { absUrl } from "../lib/urls";
+
+const profilePage = {
+  "@context": "https://schema.org",
+  "@type": "ProfilePage",
+  "@id": `${site.url}/#profilepage`,
+  url: site.url,
+  name: site.title,
+  mainEntity: { "@id": `${site.url}/#person` },
+};
+
+const alternateFeeds = [
+  { href: absUrl("/library/feed.xml"), title: "Library RSS", type: "application/rss+xml" },
+  { href: absUrl("/library/feed.json"), title: "Library JSON Feed", type: "application/feed+json" },
+];
+---
+
+<Page bodyClass="home" jsonLd={[profilePage, webSiteJsonLd()]} alternateFeeds={alternateFeeds}>
+  <h1 class="visually-hidden">{site.name} · Staff Software Engineer, Payments Infrastructure</h1>
+  <Intro />
+  <a id="palette-home-hint" class="palette-home-hint palette-trigger" href="/library/">
+    Press <kbd>/</kbd> or <kbd>⌘K</kbd> for search and commands
+  </a>
+  <hr class="page-rule" data-enter />
+  <Contact />
+  <hr class="page-rule" data-enter />
+  <Connect />
+</Page>

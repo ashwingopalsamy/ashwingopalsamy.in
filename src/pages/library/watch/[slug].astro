@@ -1,0 +1,49 @@
+---
+import { getCollection, render } from "astro:content";
+import Page from "../../../layouts/Page.astro";
+import { watchJsonLd } from "../../../lib/jsonld";
+import { slashPath } from "../../../lib/urls";
+import DetailHeader from "../../../components/DetailHeader.astro";
+import StatusPill from "../../../components/StatusPill.astro";
+import "../../../styles/prose.css";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("watch", (e) => (e.body ?? "").trim().length > 0);
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const url = slashPath(`/library/watch/${entry.id}`);
+const description = entry.data.take ?? `${entry.data.title} · ${entry.data.platform}`;
+const ratingLabel =
+  entry.data.rating === "up"
+    ? "Recommended"
+    : entry.data.rating === "down"
+      ? "Not for me"
+      : entry.data.rating === "mixed"
+        ? "Mixed"
+        : null;
+const dateLabel = entry.data.date.toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
+---
+
+<Page title={entry.data.title} description={description} jsonLd={watchJsonLd(entry, url)}>
+  <article>
+    <DetailHeader title={entry.data.title} lede={entry.data.take}>
+      <Fragment slot="meta">
+        <span>{entry.data.platform}</span>
+        <time datetime={entry.data.date.toISOString()}>{dateLabel}</time>
+        {entry.data.status !== "finished" && <StatusPill label={entry.data.status} />}
+        {ratingLabel && <span>{ratingLabel}</span>}
+        {entry.data.tags && entry.data.tags.length > 0 && (
+          <ul class="detail-tag-list">
+            {entry.data.tags.map((tag) => <li><span class="detail-tag">#{tag}</span></li>)}
+          </ul>
+        )}
+      </Fragment>
+    </DetailHeader>
+    <div class="prose" data-enter>
+      <Content />
+    </div>
+  </article>
+</Page>

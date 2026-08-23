@@ -1,0 +1,48 @@
+---
+import { getCollection } from "astro:content";
+import Page from "../layouts/Page.astro";
+import ContentList from "../components/ContentList.astro";
+import PageIntro from "../components/PageIntro.astro";
+import type { CraftItem } from "../data/home";
+import { collectionPageJsonLd } from "../lib/jsonld";
+import { ogPath } from "../lib/og-url";
+import { absUrl, slashPath } from "../lib/urls";
+
+const entries = (await getCollection("craft")).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+
+const items: CraftItem[] = entries.map((e) => ({
+  name: e.data.title,
+  sentence: e.data.note ?? e.data.description,
+  href: slashPath(`/work/${e.data.slug}`),
+}));
+
+const description =
+  "Selected tools and side projects by Ashwin Gopalsamy: small, finished things built with care.";
+
+const jsonLd = collectionPageJsonLd({
+  url: "/work",
+  name: "Work",
+  description,
+  items: entries.map((e) => ({
+    url: slashPath(`/work/${e.data.slug}`),
+    name: e.data.title,
+  })),
+});
+---
+
+<Page
+  title="Work"
+  description={description}
+  ogImage={ogPath("work")}
+  ogImageAlt="Work · Ashwin Gopalsamy"
+  jsonLd={jsonLd}
+  alternateFeeds={[
+    { href: absUrl("/library/feed.xml"), title: "Library RSS", type: "application/rss+xml" },
+    { href: absUrl("/library/feed.json"), title: "Library JSON Feed", type: "application/feed+json" },
+  ]}
+>
+  <PageIntro title="work" lede="Tools and side projects I have taken far enough to keep." />
+  <ContentList id="work" items={items} variant="craft" />
+</Page>

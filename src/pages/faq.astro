@@ -1,0 +1,95 @@
+---
+import Page from "../layouts/Page.astro";
+import { faqEntries, faqPageJsonLd } from "../data/faq";
+import PageIntro from "../components/PageIntro.astro";
+---
+
+<Page
+  title="FAQ"
+  description="Frequently asked questions about Ashwin Gopalsamy, his engineering work, this site, and its read-only agent interfaces."
+  jsonLd={faqPageJsonLd()}
+>
+  <PageIntro title="faq" lede="The questions that come up often enough to keep an answer here." />
+  <div class="faq-layout" data-enter>
+    <section class="faq-stream surface-stream" aria-label="Frequently asked questions">
+      {
+        faqEntries.map((entry) => (
+          <article class="faq-row surface-row">
+            <h2 class="faq-q">{entry.question}</h2>
+            <p class="faq-a">{entry.answer}</p>
+          </article>
+        ))
+      }
+    </section>
+  </div>
+</Page>
+
+<style>
+  .faq-layout {
+    inline-size: 100%;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+  }
+
+  .faq-stream {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 0;
+  }
+
+  .faq-row {
+    padding: 1rem 1.15rem;
+    margin-inline: -1.15rem;
+    border-radius: var(--r-3);
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    transition:
+      background-color var(--t-color),
+      opacity var(--dur-2) var(--ease),
+      filter var(--dur-2) var(--ease);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .faq-row:hover {
+      background: color-mix(in oklch, var(--ink) 3.5%, transparent);
+    }
+
+    .faq-row:hover .faq-a {
+      color: color-mix(in oklch, var(--ink) 85%, var(--muted));
+    }
+  }
+
+  .faq-q {
+    margin: 0 0 0.35rem;
+    color: var(--ink);
+    font-size: var(--text-md);
+    font-weight: var(--font-semibold);
+    letter-spacing: -0.015em;
+    line-height: var(--leading-snug);
+  }
+
+  .faq-a {
+    margin: 0;
+    color: var(--ghost);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    text-wrap: pretty;
+    transition: color var(--t-color);
+  }
+
+  @media (max-width: 38rem) {
+    .faq-row {
+      padding: 0.85rem 1rem;
+      margin-inline: -1rem;
+    }
+
+    .faq-a {
+      text-align: justify;
+      text-justify: inter-word;
+      hyphens: none;
+      -webkit-hyphens: none;
+    }
+  }
+</style>

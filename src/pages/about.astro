@@ -1,0 +1,136 @@
+---
+import Page from "../layouts/Page.astro";
+import PageIntro from "../components/PageIntro.astro";
+import { ogPath } from "../lib/og-url";
+
+const ogImage = ogPath("about");
+---
+
+<Page
+  title="About"
+  description="Biographical background, technical focus, and professional history of Ashwin Gopalsamy."
+  ogImage={ogImage}
+  ogImageAlt="About · Ashwin Gopalsamy"
+>
+  <PageIntro
+    title="about"
+    lede="Software engineer focused on sub-second payment authorization and distributed systems."
+  />
+
+  <div class="page-prose" data-enter>
+    <section class="about-section">
+      <h2 class="about-h">Engineering and Infrastructure</h2>
+      <p class="about-p">
+        I am a <span class="about-k">Staff Software Engineer at Pismo, a Visa company</span>,
+        working on distributed payment authorization systems. My work focuses on the ingress
+        layer that parses, validates, and routes ISO 8583 messages from global card networks
+        under strict PCI-DSS constraints and sub-second latency budgets.
+      </p>
+      <p class="about-p">
+        My primary language is <span class="about-k">Go</span>. Before Pismo, I spent three years
+        at <span class="about-k">Solaris SE</span> building core-banking microservices,
+        interest-bearing financial products, transaction processing engines, and card network
+        integrations. Earlier in my career, I spent time at Hexaware Technologies and Microsoft.
+      </p>
+    </section>
+
+    <section class="about-section">
+      <h2 class="about-h">Education and Research</h2>
+      <p class="about-p">
+        Starting this fall, I am pursuing a <span class="about-k">Master of Science in Artificial Intelligence at UT Austin</span>,
+        studying machine learning foundations alongside my engineering work. I completed my undergraduate degree in Information Technology
+        at <span class="about-k">Anna University</span>. My research interests
+        center on agent architectures, structured representation fidelity, and verifiable protocol systems.
+      </p>
+    </section>
+
+    <section class="about-section">
+      <h2 class="about-h">Location and Craft</h2>
+      <p class="about-p">
+        I work remotely from <span class="about-k">Pollachi, Tamil Nadu</span>, surrounded by
+        coconut groves near the foothills of the Western Ghats.
+      </p>
+      <p class="about-p">
+        Outside software engineering, I spend time exploring automotive machinery, anthropology,
+        regional history, photography, and reading. You can explore my technical writings in the
+        <a href="/library/">Library</a>, inspect software projects in <a href="/work/">Work</a>,
+        or read my machine-readable interfaces at <a href="/ai/">/ai</a> and <a href="/developers/">/developers</a>.
+      </p>
+    </section>
+  </div>
+</Page>
+
+<style>
+  .about-section {
+    margin-bottom: 2rem;
+  }
+
+  .about-h {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 2rem 0 0.75rem;
+  }
+
+  .about-p {
+    max-width: 100%;
+    margin-bottom: 1.1rem;
+    color: var(--ghost);
+    line-height: var(--leading-relaxed);
+    transition: color var(--t-color);
+  }
+
+  .about-p a {
+    color: var(--ink);
+    text-decoration: none;
+    display: inline;
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in oklch, currentColor 55%, transparent) 5%,
+      color-mix(in oklch, currentColor 55%, transparent) 95%,
+      transparent 100%
+    );
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 0.75px;
+    padding-bottom: 2px;
+    transition:
+      color var(--t-color),
+      font-weight var(--t-color),
+      background-size 320ms var(--ease-out);
+  }
+
+  .about-p a:hover,
+  .about-p a:focus-visible {
+    font-weight: var(--font-hover-lift);
+    background-size: 100% 0.75px;
+  }
+
+  .about-k {
+    color: var(--ink);
+    transition: font-weight var(--t-color);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .about-p:hover {
+      color: color-mix(in oklch, var(--ink) 80%, var(--muted));
+    }
+
+    .about-p:hover .about-k,
+    .about-p:hover a {
+      font-weight: var(--font-hover-lift);
+      background-size: 100% 0.75px;
+    }
+  }
+
+  @media (max-width: 38rem) {
+    .about-p {
+      text-align: justify;
+      text-justify: inter-word;
+      hyphens: none;
+      -webkit-hyphens: none;
+      text-wrap: pretty;
+    }
+  }
+</style>

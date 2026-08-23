@@ -1,0 +1,203 @@
+---
+import Page from "../layouts/Page.astro";
+import PageIntro from "../components/PageIntro.astro";
+import Icon from "../components/Icon.astro";
+import { CANONICAL_KNOWLEDGE } from "../data/canonical-knowledge";
+import { ogPath } from "../lib/og-url";
+
+const ogImage = ogPath("contact");
+---
+
+<Page
+  title="Contact"
+  description="Direct contact channels, calendar booking, response commitments, and security disclosure for Ashwin Gopalsamy."
+  ogImage={ogImage}
+  ogImageAlt="Contact · Ashwin Gopalsamy"
+>
+  <PageIntro
+    title="contact"
+    lede="Direct channels to reach Ashwin Gopalsamy for engineering conversations, collaborations, or questions."
+  />
+
+  <div class="page-prose" data-enter>
+    <section class="contact-section">
+      <h2 class="contact-h">Email and Messaging</h2>
+      <p class="contact-p">
+        The best way to reach me directly is by email at
+        <a class="contact-link mono" href={CANONICAL_KNOWLEDGE.canonicalLinks.email}>
+          {CANONICAL_KNOWLEDGE.email}
+        </a>.
+        I read every email and typically reply within 24 to 48 hours for engineering inquiries,
+        technical discussions, and professional correspondence.
+      </p>
+    </section>
+
+    <section class="contact-section">
+      <h2 class="contact-h">Calendar and Meetings</h2>
+      <p class="contact-p">
+        If you want to talk about payment infrastructure, card network protocols, AI agent systems,
+        or collaborative projects, you can book a flexible conversation slot directly via
+        <a class="contact-link" href={CANONICAL_KNOWLEDGE.canonicalLinks.cal} target="_blank" rel="noopener noreferrer">
+          Cal.com scheduling
+        </a>.
+      </p>
+    </section>
+
+    <section class="contact-section">
+      <h2 class="contact-h">Verified Profiles</h2>
+      <ul class="contact-list">
+        <li>
+          <a class="contact-link" href={CANONICAL_KNOWLEDGE.canonicalLinks.github} target="_blank" rel="noopener noreferrer">
+            GitHub <Icon name="arrow-up-right" size={13} />
+          </a>: open-source projects, tooling, and code repositories.
+        </li>
+        <li>
+          <a class="contact-link" href={CANONICAL_KNOWLEDGE.canonicalLinks.linkedin} target="_blank" rel="noopener noreferrer">
+            LinkedIn <Icon name="arrow-up-right" size={13} />
+          </a>: career history and professional network.
+        </li>
+        <li>
+          <a class="contact-link" href={CANONICAL_KNOWLEDGE.canonicalLinks.x} target="_blank" rel="noopener noreferrer">
+            X (@ashwin2125) <Icon name="arrow-up-right" size={13} />
+          </a>: engineering notes and short updates.
+        </li>
+        <li>
+          <a class="contact-link" href={CANONICAL_KNOWLEDGE.canonicalLinks.scholar} target="_blank" rel="noopener noreferrer">
+            Google Scholar <Icon name="arrow-up-right" size={13} />
+          </a>: academic citations and research publications.
+        </li>
+      </ul>
+    </section>
+
+    <section class="contact-section">
+      <h2 class="contact-h">Location and Time Zone</h2>
+      <p class="contact-p">
+        I am based in <span class="contact-k">Pollachi, Tamil Nadu</span> operating in the
+        <span class="contact-k">IST (UTC+05:30)</span> timezone.
+        For international discussions, I accommodate flexible scheduling across European and US time zones.
+      </p>
+    </section>
+
+    <section class="contact-section">
+      <h2 class="contact-h">Security and Vulnerability Disclosure</h2>
+      <p class="contact-p">
+        To report security vulnerabilities or technical issues regarding this website and its endpoints,
+        refer to our RFC 9116 security disclosure guidelines at
+        <a class="contact-link mono" href="/.well-known/security.txt">/.well-known/security.txt</a>.
+      </p>
+    </section>
+  </div>
+</Page>
+
+<style>
+  .contact-section {
+    margin-bottom: 2rem;
+  }
+
+  .contact-h {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 2rem 0 0.75rem;
+  }
+
+  .contact-p {
+    max-width: 100%;
+    margin-bottom: 1.1rem;
+    color: var(--ghost);
+    line-height: var(--leading-relaxed);
+    transition: color var(--t-color);
+  }
+
+  .contact-link {
+    color: var(--ink);
+    text-decoration: none;
+    display: inline;
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in oklch, currentColor 55%, transparent) 5%,
+      color-mix(in oklch, currentColor 55%, transparent) 95%,
+      transparent 100%
+    );
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 0.75px;
+    padding-bottom: 2px;
+    transition:
+      color var(--t-color),
+      font-weight var(--t-color),
+      background-size 320ms var(--ease-out);
+  }
+
+  .contact-link:hover,
+  .contact-link:focus-visible {
+    font-weight: var(--font-hover-lift);
+    background-size: 100% 0.75px;
+  }
+
+  .contact-link svg {
+    display: inline-block;
+    vertical-align: middle;
+    color: var(--faint);
+  }
+
+  .contact-k {
+    color: var(--ink);
+    transition: font-weight var(--t-color);
+  }
+
+  .contact-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    color: var(--muted);
+    max-width: 100%;
+  }
+
+  .contact-list li {
+    padding-left: 1.1rem;
+    position: relative;
+  }
+
+  .contact-list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.65em;
+    width: 4px;
+    height: 4px;
+    background: var(--ghost);
+    transform: rotate(45deg);
+  }
+
+  .mono {
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: 0.9em;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .contact-p:hover {
+      color: color-mix(in oklch, var(--ink) 80%, var(--muted));
+    }
+
+    .contact-p:hover .contact-k,
+    .contact-p:hover .contact-link {
+      font-weight: var(--font-hover-lift);
+      background-size: 100% 0.75px;
+    }
+  }
+
+  @media (max-width: 38rem) {
+    .contact-p {
+      text-align: justify;
+      text-justify: inter-word;
+      hyphens: none;
+      -webkit-hyphens: none;
+      text-wrap: pretty;
+    }
+  }
+</style>

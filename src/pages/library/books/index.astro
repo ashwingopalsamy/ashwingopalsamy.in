@@ -1,0 +1,23 @@
+---
+import { site } from "../../../data/home";
+
+const target = "/library/";
+const absolute = `${site.url}/library/`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="refresh" content={`0; url=${target}`} />
+    <link rel="canonical" href={absolute} />
+    <meta name="robots" content="noindex" />
+    <title>Redirecting to {target}</title>
+    <script is:inline>
+      location.replace("/library/");
+    </script>
+  </head>
+  <body data-pagefind-ignore>
+    <p>This page has moved to <a href={target}>{target}</a>.</p>
+  </body>
+</html>
