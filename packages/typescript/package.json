@@ -1,0 +1,33 @@
+{
+  "name": "@ashwingopalsamy/sdk",
+  "version": "1.0.0",
+  "description": "Official TypeScript/JavaScript SDK for Ashwin Gopalsamy's developer API, profile, and search index",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [
+    "ashwingopalsamy",
+    "sdk",
+    "api-client",
+    "developer-resources",
+    "mcp",
+    "agent-readiness"
+  ],
+  "author": "Ashwin Gopalsamy <hello@ashwingopalsamy.in>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ashwingopalsamy/ashwingopalsamy.in"
+  },
+  "homepage": "https://ashwingopalsamy.in/developers"
+}

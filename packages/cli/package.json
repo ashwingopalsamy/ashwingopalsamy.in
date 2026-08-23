@@ -1,0 +1,29 @@
+{
+  "name": "ashwingopalsamy",
+  "version": "1.0.0",
+  "description": "Official CLI for Ashwin Gopalsamy's profile, technical notes, and search index",
+  "type": "module",
+  "bin": {
+    "ashwingopalsamy": "./bin/ashwingopalsamy.js"
+  },
+  "files": [
+    "bin/ashwingopalsamy.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "ashwingopalsamy",
+    "cli",
+    "developer-tools",
+    "agent-readiness",
+    "mcp",
+    "payments"
+  ],
+  "author": "Ashwin Gopalsamy <hello@ashwingopalsamy.in>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ashwingopalsamy/ashwingopalsamy.in"
+  },
+  "homepage": "https://ashwingopalsamy.in/developers"
+}
