@@ -1,0 +1,9 @@
+DNS for AI Discovery (DNS-AID) records for ashwingopalsamy.in:
+_index._agents.ashwingopalsamy.in. -> https://ashwingopalsamy.in/.well-known/api-catalog (alpn=h2, port=443, key65400=/.well-known/api-catalog)
+_mcp._agents.ashwingopalsamy.in. -> https://ashwingopalsamy.in/mcp (alpn=mcp,h2, port=443, key65400=/mcp)
+_a2a._agents.ashwingopalsamy.in. -> https://ashwingopalsamy.in/a2a (alpn=a2a,h2, port=443, key65400=/a2a)
+TXT fallback: _index._agents.ashwingopalsamy.in. v=dnsaid1 endpoint=https://ashwingopalsamy.in/.well-known/api-catalog
+TXT ARD catalog: _catalog._agents.ashwingopalsamy.in. url=https://ashwingopalsamy.in/.well-known/ai-catalog.json
+key65400 is a private numeric experimental endpoint-path mapping.
+DNSSEC must be enabled in Cloudflare and its DS record published at the registrar.
+Verify SVCB answers with https://cloudflare-dns.com/dns-query and https://dns.google/resolve and require AD=true.

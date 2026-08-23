@@ -1,0 +1,8 @@
+{
+  "resource": "https://ashwingopalsamy.in",
+  "authorization_servers": ["https://ashwingopalsamy.in"],
+  "scopes_supported": ["site.read", "profile.read", "content.search", "notes.read"],
+  "bearer_methods_supported": ["header"],
+  "resource_documentation": "https://ashwingopalsamy.in/auth.md",
+  "service_status": "discovery-only"
+}

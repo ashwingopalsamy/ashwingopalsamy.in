@@ -1,0 +1,75 @@
+{
+  "issuer": "https://ashwingopalsamy.in",
+  "authorization_endpoint": "https://ashwingopalsamy.in/oauth/authorize",
+  "token_endpoint": "https://ashwingopalsamy.in/oauth/token",
+  "jwks_uri": "https://ashwingopalsamy.in/.well-known/jwks.json",
+  "grant_types_supported": ["authorization_code"],
+  "response_types_supported": ["code"],
+  "scopes_supported": ["site.read", "profile.read", "content.search", "notes.read"],
+  "token_endpoint_auth_methods_supported": ["none"],
+  "service_status": "discovery-only",
+  "agent_auth": {
+    "skill": "https://ashwingopalsamy.in/auth.md",
+    "register_uri": "https://ashwingopalsamy.in/agent/auth",
+    "claim_uri": "https://ashwingopalsamy.in/agent/auth/claim",
+    "revocation_uri": "https://ashwingopalsamy.in/agent/auth/revoke",
+    "status": "unavailable",
+    "identity_types_supported": ["identity_assertion", "anonymous"],
+    "identity_assertion": {
+      "assertion_types_supported": [
+        "urn:ietf:params:oauth:token-type:id-jag",
+        "verified_email"
+      ],
+      "credential_types_supported": ["id-jag", "verified_email"],
+      "claim_uri": "https://ashwingopalsamy.in/auth.md#identity-assertion"
+    },
+    "anonymous": {
+      "credential_types_supported": ["anonymous"],
+      "claim_uri": "https://ashwingopalsamy.in/auth.md#anonymous"
+    },
+    "registration_methods_supported": ["oauth-authorization-code"],
+    "registration_methods": [
+      {
+        "id": "oauth-authorization-code",
+        "type": "oauth-authorization-code",
+        "endpoint": "https://ashwingopalsamy.in/agent/auth",
+        "status": "unavailable",
+        "credential_types_supported": ["access_token"],
+        "authorization_endpoint": "https://ashwingopalsamy.in/oauth/authorize",
+        "token_endpoint": "https://ashwingopalsamy.in/oauth/token",
+        "description": "Published for discovery only. It does not create accounts or issue credentials."
+      }
+    ],
+    "flows": [
+      {
+        "name": "id-jag",
+        "status": "unavailable",
+        "identity_types_supported": ["identity_assertion"],
+        "identity_assertion": {
+          "assertion_types_supported": ["urn:ietf:params:oauth:token-type:id-jag"],
+          "credential_types_supported": ["id-jag"],
+          "claim_uri": "https://ashwingopalsamy.in/auth.md#id-jag"
+        }
+      },
+      {
+        "name": "verified-email",
+        "status": "unavailable",
+        "identity_types_supported": ["identity_assertion"],
+        "identity_assertion": {
+          "assertion_types_supported": ["verified_email"],
+          "credential_types_supported": ["verified_email"],
+          "claim_uri": "https://ashwingopalsamy.in/auth.md#verified-email"
+        }
+      },
+      {
+        "name": "anonymous",
+        "status": "unavailable",
+        "identity_types_supported": ["anonymous"],
+        "anonymous": {
+          "credential_types_supported": ["anonymous"],
+          "claim_uri": "https://ashwingopalsamy.in/auth.md#anonymous"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,43 @@
+# ai.txt - AI usage declaration for ashwingopalsamy.in
+# Format: https://github.com/ai-txt/ai-txt
+#
+# Alignment with robots.txt: CCBot and Bytespider are blocked from crawl
+# (and therefore from training corpora that depend on that crawl). Other
+# agents may train and infer unless named below.
+
+User-agent: *
+
+# Training: AI companies may use this content to train models
+Allow-training: /
+
+# Inference: AI agents and search may cite this content in real-time answers
+Allow-inference: /
+
+# Attribution required when content is cited or referenced
+Attribution: required
+Attribution-contact: hello@ashwingopalsamy.in
+
+# License
+License: CC BY 4.0
+
+# Site context
+Site-type: personal-site-with-technical-writing
+Primary-language: en
+Author: Ashwin Gopalsamy
+Topics: distributed-systems, go, payment-infrastructure, iso-8583, pci-dss, fintech
+AI-context: https://ashwingopalsamy.in/ai
+Developers: https://ashwingopalsamy.in/developers
+OpenAPI: https://ashwingopalsamy.in/openapi.json
+Design-context: https://ashwingopalsamy.in/design.md
+
+# ---- Scoped training blocks (mirrors robots.txt) ----
+# Not a wildcard Allow-training contradiction: these User-agent groups
+# override the * rules for the named crawlers only.
+
+User-agent: CCBot
+Disallow-training: /
+Disallow-inference: /
+
+User-agent: Bytespider
+Disallow-training: /
+Disallow-inference: /

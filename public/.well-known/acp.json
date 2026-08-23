@@ -1,0 +1,14 @@
+{
+  "protocol": {
+    "name": "acp",
+    "version": "2026-04-17",
+    "status": "discovery-only",
+    "description": "Scanner compatibility convention; no operational ACP checkout is offered."
+  },
+  "api_base_url": "https://ashwingopalsamy.in/api",
+  "transports": ["https"],
+  "capabilities": {
+    "services": ["discovery-status"]
+  },
+  "status": "compatibility-convention"
+}

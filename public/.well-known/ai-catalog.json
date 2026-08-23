@@ -1,0 +1,90 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "Ashwin Gopalsamy",
+    "identifier": "did:web:ashwingopalsamy.in"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:ashwingopalsamy.in:mcp:server-card",
+      "displayName": "Ashwin Gopalsamy MCP Server",
+      "type": "application/mcp-server-card+json",
+      "url": "https://ashwingopalsamy.in/.well-known/mcp/server-card.json",
+      "representativeQueries": [
+        "search technical notes and essays by Ashwin Gopalsamy",
+        "fetch Ashwin Gopalsamy profile via MCP",
+        "list available discovery tools on ashwingopalsamy.in"
+      ]
+    },
+    {
+      "identifier": "urn:air:ashwingopalsamy.in:a2a:agent-card",
+      "displayName": "Ashwin Gopalsamy A2A Agent",
+      "type": "application/json",
+      "url": "https://ashwingopalsamy.in/.well-known/agent-card.json",
+      "representativeQueries": [
+        "interact with Ashwin Gopalsamy via A2A agent protocol",
+        "query site profile and search content using JSON-RPC"
+      ]
+    },
+    {
+      "identifier": "urn:air:ashwingopalsamy.in:skill:ashwin-profile",
+      "displayName": "Ashwin Profile Agent Skill",
+      "type": "text/markdown",
+      "url": "https://ashwingopalsamy.in/.well-known/agent-skills/ashwin-profile/SKILL.md",
+      "representativeQueries": [
+        "instructions for agents interacting with Ashwin Gopalsamy's site",
+        "authoritative profile briefing and facts for Ashwin Gopalsamy"
+      ]
+    },
+    {
+      "identifier": "urn:air:ashwingopalsamy.in:api:openapi",
+      "displayName": "OpenAPI Compatibility Schema",
+      "type": "application/vnd.oai.openapi+json",
+      "url": "https://ashwingopalsamy.in/openapi.json",
+      "representativeQueries": [
+        "OpenAPI specification for ashwingopalsamy.in",
+        "explore API endpoints and compatibility metadata for ashwingopalsamy.in"
+      ]
+    },
+    {
+      "identifier": "urn:air:ashwingopalsamy.in:data:ai-summary",
+      "displayName": "AI Profile Summary",
+      "type": "application/json",
+      "url": "https://ashwingopalsamy.in/api/ai-summary.json",
+      "representativeQueries": [
+        "who is Ashwin Gopalsamy and what does he build",
+        "machine-readable profile summary for Ashwin Gopalsamy"
+      ]
+    },
+    {
+      "identifier": "urn:air:ashwingopalsamy.in:data:palette-manifest",
+      "displayName": "Site Content Manifest",
+      "type": "application/json",
+      "url": "https://ashwingopalsamy.in/api/palette.json",
+      "representativeQueries": [
+        "search index of published articles notes and craft projects",
+        "list all public content URLs and metadata"
+      ]
+    },
+    {
+      "identifier": "urn:air:ashwingopalsamy.in:auth:http-signatures-directory",
+      "displayName": "Web Bot Auth Directory (RFC 9421)",
+      "type": "application/http-message-signatures-directory+json",
+      "url": "https://ashwingopalsamy.in/.well-known/http-message-signatures-directory",
+      "representativeQueries": [
+        "verify bot HTTP message signatures for Ashwin Gopalsamy's site",
+        "fetch Ed25519 JWK public keys for RFC 9421 bot authentication"
+      ]
+    },
+    {
+      "identifier": "urn:air:ashwingopalsamy.in:portal:developers",
+      "displayName": "Ashwin Gopalsamy Developer Resources & SDKs",
+      "type": "text/html",
+      "url": "https://ashwingopalsamy.in/developers",
+      "representativeQueries": [
+        "official SDK packages for Ashwin Gopalsamy in npm Python Go Ruby",
+        "API documentation and developer resources for ashwingopalsamy"
+      ]
+    }
+  ]
+}

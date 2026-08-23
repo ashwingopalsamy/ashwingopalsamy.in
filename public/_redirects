@@ -1,0 +1,235 @@
+# System and vanity redirects
+/feed.xml                 /library/feed.xml                  301
+/security.txt             /.well-known/security.txt         301
+/DESIGN.md   /design.md                   301
+/Resume_AshwinGopalsamy.pdf /resume.pdf                      301
+/ashwin-gopalsamy         /                                  301
+/ashwin-gopalsamy/        /                                  301
+/about                    /about/                            301
+/contact                  /contact/                          301
+/privacy                  /privacy/                          301
+/developers               /developers/                       301
+/docs                     /developers/                       301
+/docs/                    /developers/                       301
+/api/docs                 /developers/                       301
+/api/docs/                /developers/                       301
+/mcp;                     /mcp                               301
+
+# Core section and view redirects
+/blog                     /library/?view=notes               301
+/blog/                    /library/?view=notes               301
+/library/books            /library/?view=books               301
+/library/books/           /library/?view=books               301
+/library/watch            /library/?view=watch               301
+/library/watch/           /library/?view=watch               301
+/library/articles         /library/?view=articles            301
+/library/articles/        /library/?view=articles            301
+/library/notes            /library/?view=notes               301
+/library/notes/           /library/?view=notes               301
+/more/ai                  /ai/                               301
+/more/ai/                 /ai/                               301
+/more/library             /library/                          301
+/more/library/            /library/                          301
+/more/photos              /more/photos/                      301
+/more/cafe                /more/cafe/                        301
+/more/people              /more/people/                      301
+/more/someday             /more/someday/                     301
+/more                     /more/                             301
+/library/tags             /library/tags/                     301
+/work                     /work/                             301
+/craft                    /work/                             301
+/craft/                   /work/                             301
+/library                  /library/                          301
+/links                    /links/                            301
+/colophon                 /colophon/                         301
+/design                   /design/                           301
+/ai                       /ai/                               301
+/faq                      /faq/                              301
+
+# Legacy project/craft index and item redirects
+/projects                 /work/                             301
+/projects/                /work/                             301
+/projects/ats-latex-resume       /work/ats-latex-resume/     301
+/projects/ats-latex-resume/      /work/ats-latex-resume/     301
+/projects/budai                  /work/budai/                301
+/projects/budai/                 /work/budai/                301
+/projects/claude-code-launcher   /work/claude-code-launcher/ 301
+/projects/claude-code-launcher/  /work/claude-code-launcher/ 301
+/projects/claude-code-theme      /work/claude-code-theme/    301
+/projects/claude-code-theme/     /work/claude-code-theme/    301
+/projects/go-1-27-interactive-tour /work/go-1-27-interactive-tour/ 301
+/projects/go-1-27-interactive-tour/ /work/go-1-27-interactive-tour/ 301
+/projects/itms                   /work/itms/                 301
+/projects/itms/                  /work/itms/                 301
+/projects/mkks-organics          /work/mkks-organics/        301
+/projects/mkks-organics/         /work/mkks-organics/        301
+/projects/pismozones             /work/pismozones/           301
+/projects/pismozones/            /work/pismozones/           301
+/projects/repo-rate-visualizer   /work/repo-rate-visualizer/ 301
+/projects/repo-rate-visualizer/  /work/repo-rate-visualizer/ 301
+/projects/uuidcheck              /work/uuidcheck/            301
+/projects/uuidcheck/             /work/uuidcheck/            301
+/projects/uuidv8                 /work/uuidv8/               301
+/projects/uuidv8/                /work/uuidv8/               301
+
+# Legacy writing tags
+/writing/tags/iso8583            /library/tags/payments/     301
+/writing/tags/iso8583/           /library/tags/payments/     301
+/writing/tags/distributed-systems /library/tags/distributed-systems/ 301
+/writing/tags/distributed-systems/ /library/tags/distributed-systems/ 301
+/writing/tags                    /library/tags/              301
+/writing/tags/                   /library/tags/              301
+
+# Legacy writing index & notes index
+/writing                         /library/?view=notes        301
+/writing/                        /library/?view=notes        301
+/writing/notes                   /library/?view=notes        301
+/writing/notes/                  /library/?view=notes        301
+
+# Legacy specific note paths (with differing slugs)
+/writing/floating-point-tolerance-testing-in-go       /blog/go-floating-point-tolerance-testing/       301
+/writing/floating-point-tolerance-testing-in-go/      /blog/go-floating-point-tolerance-testing/       301
+/writing/notes/floating-point-tolerance-testing-in-go /blog/go-floating-point-tolerance-testing/       301
+/writing/notes/floating-point-tolerance-testing-in-go/ /blog/go-floating-point-tolerance-testing/      301
+
+/writing/review-your-own-pr-first                     /blog/review-your-own-pr-first/                  301
+/writing/review-your-own-pr-first/                    /blog/review-your-own-pr-first/                  301
+/writing/notes/review-your-own-pr-first               /blog/review-your-own-pr-first/                  301
+/writing/notes/review-your-own-pr-first/              /blog/review-your-own-pr-first/                  301
+
+/writing/consistent-hashing-in-distributed-caches     /blog/consistent-hashing-distributed-caches/     301
+/writing/consistent-hashing-in-distributed-caches/    /blog/consistent-hashing-distributed-caches/     301
+/writing/consistent-hashing-distributed-caches        /blog/consistent-hashing-distributed-caches/     301
+/writing/consistent-hashing-distributed-caches/       /blog/consistent-hashing-distributed-caches/     301
+/writing/notes/consistent-hashing-in-distributed-caches /blog/consistent-hashing-distributed-caches/   301
+/writing/notes/consistent-hashing-in-distributed-caches/ /blog/consistent-hashing-distributed-caches/  301
+/writing/notes/consistent-hashing-distributed-caches  /blog/consistent-hashing-distributed-caches/    301
+/writing/notes/consistent-hashing-distributed-caches/ /blog/consistent-hashing-distributed-caches/    301
+
+/writing/go-was-never-bad                             /blog/go-was-never-bad/                          301
+/writing/go-was-never-bad/                            /blog/go-was-never-bad/                          301
+/writing/notes/go-was-never-bad                       /blog/go-was-never-bad/                          301
+/writing/notes/go-was-never-bad/                      /blog/go-was-never-bad/                          301
+
+/writing/go-pointers-and-memory-management            /blog/go-pointers-and-memory-management/         301
+/writing/go-pointers-and-memory-management/           /blog/go-pointers-and-memory-management/         301
+/writing/notes/go-pointers-and-memory-management      /blog/go-pointers-and-memory-management/         301
+/writing/notes/go-pointers-and-memory-management/     /blog/go-pointers-and-memory-management/         301
+
+/writing/understanding-iso-8583-bitmap-parsing        /blog/understanding-iso8583-bitmaps/             301
+/writing/understanding-iso-8583-bitmap-parsing/       /blog/understanding-iso8583-bitmaps/             301
+/writing/understanding-iso8583-bitmaps                /blog/understanding-iso8583-bitmaps/             301
+/writing/understanding-iso8583-bitmaps/               /blog/understanding-iso8583-bitmaps/             301
+/writing/notes/understanding-iso-8583-bitmap-parsing  /blog/understanding-iso8583-bitmaps/             301
+/writing/notes/understanding-iso-8583-bitmap-parsing/ /blog/understanding-iso8583-bitmaps/            301
+/writing/notes/understanding-iso8583-bitmaps          /blog/understanding-iso8583-bitmaps/             301
+/writing/notes/understanding-iso8583-bitmaps/         /blog/understanding-iso8583-bitmaps/             301
+
+/writing/notes/go-error-wrapping-patterns             /blog/go-error-wrapping/                         301
+/writing/notes/go-error-wrapping-patterns/            /blog/go-error-wrapping/                         301
+/writing/go-error-wrapping-patterns                   /blog/go-error-wrapping/                         301
+/writing/go-error-wrapping-patterns/                  /blog/go-error-wrapping/                         301
+/writing/go-error-wrapping                            /blog/go-error-wrapping/                         301
+/writing/go-error-wrapping/                           /blog/go-error-wrapping/                         301
+/writing/notes/go-error-wrapping                      /blog/go-error-wrapping/                         301
+/writing/notes/go-error-wrapping/                     /blog/go-error-wrapping/                         301
+
+/writing/how-goroutine-stacks-grow-and-shrink         /blog/go-goroutine-stack-growth/                 301
+/writing/how-goroutine-stacks-grow-and-shrink/        /blog/go-goroutine-stack-growth/                 301
+/writing/go-goroutine-stack-growth                    /blog/go-goroutine-stack-growth/                 301
+/writing/go-goroutine-stack-growth/                   /blog/go-goroutine-stack-growth/                 301
+/writing/notes/how-goroutine-stacks-grow-and-shrink   /blog/go-goroutine-stack-growth/                 301
+/writing/notes/how-goroutine-stacks-grow-and-shrink/  /blog/go-goroutine-stack-growth/                 301
+/writing/notes/go-goroutine-stack-growth              /blog/go-goroutine-stack-growth/                 301
+/writing/notes/go-goroutine-stack-growth/             /blog/go-goroutine-stack-growth/                 301
+
+/writing/notes/runes-bytes-and-graphemes-in-go        /blog/runes-bytes-and-graphemes-in-go/           301
+/writing/notes/runes-bytes-and-graphemes-in-go/       /blog/runes-bytes-and-graphemes-in-go/           301
+/writing/runes-bytes-and-graphemes-in-go              /blog/runes-bytes-and-graphemes-in-go/           301
+/writing/runes-bytes-and-graphemes-in-go/             /blog/runes-bytes-and-graphemes-in-go/           301
+
+/writing/go-scheduler-yield-points-and-infinite-loops /blog/go-scheduler-infinite-loops/              301
+/writing/go-scheduler-yield-points-and-infinite-loops/ /blog/go-scheduler-infinite-loops/             301
+/writing/go-scheduler-infinite-loops                  /blog/go-scheduler-infinite-loops/              301
+/writing/go-scheduler-infinite-loops/                 /blog/go-scheduler-infinite-loops/              301
+/writing/notes/go-scheduler-yield-points-and-infinite-loops /blog/go-scheduler-infinite-loops/       301
+/writing/notes/go-scheduler-yield-points-and-infinite-loops/ /blog/go-scheduler-infinite-loops/      301
+/writing/notes/go-scheduler-infinite-loops            /blog/go-scheduler-infinite-loops/              301
+/writing/notes/go-scheduler-infinite-loops/           /blog/go-scheduler-infinite-loops/              301
+
+/writing/why-uuids-matter-for-idempotency             /blog/uuids-for-idempotency/                     301
+/writing/why-uuids-matter-for-idempotency/            /blog/uuids-for-idempotency/                     301
+/writing/uuids-for-idempotency                        /blog/uuids-for-idempotency/                     301
+/writing/uuids-for-idempotency/                       /blog/uuids-for-idempotency/                     301
+/writing/notes/why-uuids-matter-for-idempotency       /blog/uuids-for-idempotency/                     301
+/writing/notes/why-uuids-matter-for-idempotency/      /blog/uuids-for-idempotency/                     301
+/writing/notes/uuids-for-idempotency                  /blog/uuids-for-idempotency/                     301
+/writing/notes/uuids-for-idempotency/                 /blog/uuids-for-idempotency/                     301
+
+/writing/what-happens-before-main-in-go               /blog/go-program-entry-point/                    301
+/writing/what-happens-before-main-in-go/              /blog/go-program-entry-point/                    301
+/writing/go-program-entry-point                       /blog/go-program-entry-point/                    301
+/writing/go-program-entry-point/                      /blog/go-program-entry-point/                    301
+/writing/notes/what-happens-before-main-in-go         /blog/go-program-entry-point/                    301
+/writing/notes/what-happens-before-main-in-go/        /blog/go-program-entry-point/                    301
+/writing/notes/go-program-entry-point                 /blog/go-program-entry-point/                    301
+/writing/notes/go-program-entry-point/                /blog/go-program-entry-point/                    301
+
+/writing/notes/go-maps-iteration-order                /blog/go-maps-iteration-order/                   301
+/writing/notes/go-maps-iteration-order/               /blog/go-maps-iteration-order/                   301
+/writing/go-maps-iteration-order                      /blog/go-maps-iteration-order/                   301
+/writing/go-maps-iteration-order/                     /blog/go-maps-iteration-order/                   301
+
+/writing/git-practices-for-production-codebases       /blog/git-practices-for-production-codebases/    301
+/writing/git-practices-for-production-codebases/      /blog/git-practices-for-production-codebases/    301
+/writing/notes/git-practices-for-production-codebases /blog/git-practices-for-production-codebases/   301
+/writing/notes/git-practices-for-production-codebases/ /blog/git-practices-for-production-codebases/  301
+
+/writing/designing-rate-limiters-for-payment-systems  /blog/designing-rate-limiters-for-payment-systems/ 301
+/writing/designing-rate-limiters-for-payment-systems/ /blog/designing-rate-limiters-for-payment-systems/ 301
+/writing/notes/designing-rate-limiters-for-payment-systems /blog/designing-rate-limiters-for-payment-systems/ 301
+/writing/notes/designing-rate-limiters-for-payment-systems/ /blog/designing-rate-limiters-for-payment-systems/ 301
+
+/writing/go-constants-beyond-basics                   /blog/go-constants-beyond-basics/                301
+/writing/go-constants-beyond-basics/                  /blog/go-constants-beyond-basics/                301
+/writing/notes/go-constants-beyond-basics             /blog/go-constants-beyond-basics/                301
+/writing/notes/go-constants-beyond-basics/            /blog/go-constants-beyond-basics/                301
+
+/writing/go-generics-comparable-constraint            /blog/go-generics-comparable-constraint/         301
+/writing/go-generics-comparable-constraint/           /blog/go-generics-comparable-constraint/         301
+/writing/the-comparable-constraint-in-go-generics     /blog/go-generics-comparable-constraint/         301
+/writing/the-comparable-constraint-in-go-generics/    /blog/go-generics-comparable-constraint/         301
+/writing/notes/go-generics-comparable-constraint      /blog/go-generics-comparable-constraint/         301
+/writing/notes/go-generics-comparable-constraint/     /blog/go-generics-comparable-constraint/         301
+
+/writing/go-utf8-identifier-limitation                /blog/go-utf8-identifier-limitation/             301
+/writing/go-utf8-identifier-limitation/               /blog/go-utf8-identifier-limitation/             301
+/writing/notes/go-utf8-identifier-limitation          /blog/go-utf8-identifier-limitation/             301
+/writing/notes/go-utf8-identifier-limitation/         /blog/go-utf8-identifier-limitation/             301
+
+/writing/litellm-supply-chain-attack                  /blog/litellm-supply-chain-attack/               301
+/writing/litellm-supply-chain-attack/                 /blog/litellm-supply-chain-attack/               301
+/writing/anatomy-of-a-supply-chain-attack-litellm-on-pypi /blog/litellm-supply-chain-attack/           301
+/writing/anatomy-of-a-supply-chain-attack-litellm-on-pypi/ /blog/litellm-supply-chain-attack/          301
+/writing/notes/litellm-supply-chain-attack            /blog/litellm-supply-chain-attack/               301
+/writing/notes/litellm-supply-chain-attack/           /blog/litellm-supply-chain-attack/               301
+
+/writing/slog-structured-logging                      /blog/slog-structured-logging/                   301
+/writing/slog-structured-logging/                     /blog/slog-structured-logging/                   301
+/writing/why-slog-over-zerolog                        /blog/slog-structured-logging/                   301
+/writing/why-slog-over-zerolog/                       /blog/slog-structured-logging/                   301
+/writing/notes/slog-structured-logging                /blog/slog-structured-logging/                   301
+/writing/notes/slog-structured-logging/               /blog/slog-structured-logging/                   301
+
+/writing/go-1-27-interactive-tour                     /blog/go-1-27-interactive-tour/                  301
+/writing/go-1-27-interactive-tour/                    /blog/go-1-27-interactive-tour/                  301
+/writing/notes/go-1-27-interactive-tour               /blog/go-1-27-interactive-tour/                  301
+/writing/notes/go-1-27-interactive-tour/              /blog/go-1-27-interactive-tour/                  301
+
+# Fallback wildcards for legacy and moved sections (placed at the end so exact paths above remain static rules)
+/library/notes/*                                      /blog/:splat                                     301
+/craft/*                                              /work/:splat                                     301
+/projects/*                                           /work/:splat                                     301
+/writing/tags/*                                       /library/tags/:splat                             301
+/writing/notes/*                                      /blog/:splat                                     301
+/writing/*                                            /blog/:splat                                     301

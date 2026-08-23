@@ -1,0 +1,10 @@
+{
+  "issuer": "https://ashwingopalsamy.in",
+  "authorization_endpoint": "https://ashwingopalsamy.in/oauth/authorize",
+  "token_endpoint": "https://ashwingopalsamy.in/oauth/token",
+  "jwks_uri": "https://ashwingopalsamy.in/.well-known/jwks.json",
+  "grant_types_supported": ["authorization_code"],
+  "response_types_supported": ["code"],
+  "scopes_supported": ["site.read"],
+  "service_status": "discovery-only"
+}

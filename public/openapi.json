@@ -1,0 +1,601 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Ashwin Gopalsamy Developer API",
+    "version": "1.0.0",
+    "description": "Authoritative public API and discovery metadata for Ashwin Gopalsamy's personal website, payments engineering notes, Model Context Protocol server, CLI tool, and developer resources.",
+    "contact": {
+      "name": "Ashwin Gopalsamy",
+      "email": "hello@ashwingopalsamy.in",
+      "url": "https://ashwingopalsamy.in/contact"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://ashwingopalsamy.in/LICENSE"
+    },
+    "x-versioning-policy": {
+      "strategy": "url-path-and-header",
+      "current_version": "v1",
+      "api_version_header": "API-Version",
+      "deprecation_policy": "Deprecation announced minimum 6 months prior to retirement with Sunset header (RFC 8594) and Deprecation header (RFC 9594), documented at /developers.",
+      "sunset_header": "Sunset",
+      "deprecation_header": "Deprecation",
+      "policy_url": "https://ashwingopalsamy.in/developers#versioning"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://ashwingopalsamy.in",
+      "description": "Production and sandbox environment (free open access)"
+    }
+  ],
+  "x-service-info": {
+    "categories": ["agent-discovery", "read-only-profile", "developer-resources"],
+    "status": "operational"
+  },
+  "security": [
+    { "OAuth2": ["site.read"] },
+    { "ApiKeyAuth": [] },
+    {}
+  ],
+  "paths": {
+    "/api/v1/profile": {
+      "get": {
+        "operationId": "getProfileV1",
+        "summary": "Get authoritative profile summary",
+        "description": "Returns Ashwin Gopalsamy's verified career history, current role at Pismo (a Visa company), location, and domain expertise.",
+        "responses": {
+          "200": {
+            "description": "Authoritative profile summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileSummary"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method Not Allowed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/search": {
+      "get": {
+        "operationId": "searchSiteV1",
+        "summary": "Search public site manifest",
+        "description": "Searches published technical notes, craft projects, and reading list entries by keyword or phrase.",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "description": "Search phrase or topic keyword",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of items to return (1-50)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results matching query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResults"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameter supplied",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method Not Allowed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/content": {
+      "get": {
+        "operationId": "listContentV1",
+        "summary": "List public content items",
+        "description": "Returns items from the public site content catalog filtered by kind.",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "description": "Content kind filter",
+            "schema": {
+              "type": "string",
+              "enum": ["all", "note", "craft", "book", "watch", "article"],
+              "default": "all"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of items to return (1-50)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of catalog items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameter",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method Not Allowed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notes/{slug}": {
+      "get": {
+        "operationId": "getNoteMarkdownV1",
+        "summary": "Get note Markdown by slug",
+        "description": "Returns the raw Markdown body and metadata for a published technical note.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "description": "Published note slug identifier",
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]*$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note raw Markdown body and slug",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteMarkdown"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid slug format",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Note not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method Not Allowed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/status": {
+      "get": {
+        "operationId": "getStatusV1",
+        "summary": "Get API operational status",
+        "description": "Returns operational status, rate limit policy, versioning details, and protocol links.",
+        "responses": {
+          "200": {
+            "description": "API status and capability metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiStatus"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method Not Allowed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api": {
+      "get": {
+        "operationId": "getCompatibilityEnvelope",
+        "summary": "Compatibility response",
+        "description": "This route returns an HTTP 402 compatibility response with a zero-value testnet schema challenge. It has no controlled recipient, facilitator, verification, or settlement.",
+        "x-payment-info": {
+          "intent": "charge",
+          "method": "disabled",
+          "amount": "0",
+          "currency": "USD",
+          "description": "Payment discovery is compatibility-only. The advertised amount is zero and no payment is accepted."
+        },
+        "responses": {
+          "402": {
+            "description": "Zero-value payment compatibility response; signatures are rejected and no settlement occurs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompatibilityEnvelope"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method Not Allowed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "OAuth2": {
+        "type": "oauth2",
+        "description": "OAuth 2.0 authorization code flow for agent access",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://ashwingopalsamy.in/oauth/authorize",
+            "tokenUrl": "https://ashwingopalsamy.in/oauth/token",
+            "scopes": {
+              "site.read": "Read-only access to Ashwin Gopalsamy's public profile and library content",
+              "profile.read": "Read authoritative profile facts and career history",
+              "content.search": "Search technical notes, books, and craft articles",
+              "notes.read": "Retrieve raw markdown for published notes"
+            }
+          }
+        }
+      },
+      "ApiKeyAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Optional bearer token for authenticated agent sessions (all endpoints allow unauthenticated read-only access by default)"
+      }
+    },
+    "schemas": {
+      "ProblemDetails": {
+        "type": "object",
+        "description": "RFC 9457 Problem Details error model for machine error handling",
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri",
+            "description": "A URI reference identifying the problem type"
+          },
+          "title": {
+            "type": "string",
+            "description": "A short, human-readable summary of the problem"
+          },
+          "status": {
+            "type": "integer",
+            "description": "The HTTP status code"
+          },
+          "detail": {
+            "type": "string",
+            "description": "A human-readable explanation specific to this occurrence"
+          },
+          "code": {
+            "type": "string",
+            "description": "Machine-readable error code"
+          },
+          "resolution_hint": {
+            "type": "string",
+            "description": "Actionable instructions for an agent to recover from this error"
+          },
+          "instance": {
+            "type": "string",
+            "format": "uri",
+            "description": "A URI reference identifying the specific occurrence"
+          }
+        },
+        "required": ["type", "title", "status", "detail", "code", "resolution_hint"]
+      },
+      "ProfileSummary": {
+        "type": "object",
+        "description": "Authoritative machine-readable career profile",
+        "properties": {
+          "name": { "type": "string", "example": "Ashwin Gopalsamy" },
+          "role": { "type": "string", "example": "Staff Software Engineer" },
+          "employer": { "type": "string", "example": "Pismo, a Visa company" },
+          "location": { "type": "string", "example": "Pollachi, Tamil Nadu" },
+          "primaryLanguage": { "type": "string", "example": "Go" },
+          "summary": { "type": "string" },
+          "knowsAbout": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "links": {
+            "type": "object",
+            "properties": {
+              "home": { "type": "string", "format": "uri" },
+              "ai": { "type": "string", "format": "uri" },
+              "design": { "type": "string", "format": "uri" }
+            },
+            "required": ["home", "ai", "design"]
+          }
+        },
+        "required": ["name", "role", "employer", "location", "primaryLanguage", "summary"]
+      },
+      "PaletteItem": {
+        "type": "object",
+        "description": "Item in public site content index",
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "type": "string" },
+          "title": { "type": "string" },
+          "href": { "type": "string" },
+          "description": { "type": "string" },
+          "keywords": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["id", "kind", "title", "href"]
+      },
+      "SearchResults": {
+        "type": "object",
+        "description": "Search response wrapper",
+        "properties": {
+          "query": { "type": "string" },
+          "total": { "type": "integer" },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaletteItem"
+            }
+          }
+        },
+        "required": ["query", "total", "results"]
+      },
+      "ContentList": {
+        "type": "object",
+        "description": "Content listing response wrapper",
+        "properties": {
+          "kind": { "type": "string" },
+          "count": { "type": "integer" },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaletteItem"
+            }
+          }
+        },
+        "required": ["kind", "count", "items"]
+      },
+      "NoteMarkdown": {
+        "type": "object",
+        "description": "Raw note markdown content",
+        "properties": {
+          "slug": { "type": "string" },
+          "markdown": { "type": "string" }
+        },
+        "required": ["slug", "markdown"]
+      },
+      "ApiStatus": {
+        "type": "object",
+        "description": "API operational status information",
+        "properties": {
+          "service": { "type": "string", "example": "ashwingopalsamy.in-api" },
+          "version": { "type": "string", "example": "v1" },
+          "apiVersion": { "type": "string", "example": "2026-08-22" },
+          "status": { "type": "string", "example": "operational" },
+          "mode": { "type": "string", "example": "read-only-discovery" },
+          "rateLimit": {
+            "type": "object",
+            "description": "Rate limiting quotas and policies",
+            "properties": {
+              "limit": { "type": "integer", "example": 120 },
+              "windowSeconds": { "type": "integer", "example": 60 },
+              "policy": { "type": "string", "example": "120;w=60" }
+            },
+            "required": ["limit", "windowSeconds", "policy"]
+          },
+          "versioning": {
+            "type": "object",
+            "description": "API versioning and deprecation schedule",
+            "properties": {
+              "strategy": { "type": "string", "example": "url-path" },
+              "current": { "type": "string", "example": "v1" },
+              "deprecationPolicy": { "type": "string" },
+              "sunsetHeader": { "type": "string", "example": "Sunset" },
+              "deprecationHeader": { "type": "string", "example": "Deprecation" }
+            },
+            "required": ["strategy", "current", "deprecationPolicy"]
+          },
+          "capabilities": {
+            "type": "object",
+            "description": "Supported protocol and data capabilities",
+            "properties": {
+              "profile": { "type": "boolean", "example": true },
+              "search": { "type": "boolean", "example": true },
+              "contentListing": { "type": "boolean", "example": true },
+              "noteMarkdown": { "type": "boolean", "example": true },
+              "mcp": { "type": "boolean", "example": true },
+              "a2a": { "type": "boolean", "example": true }
+            },
+            "required": ["profile", "search", "contentListing", "noteMarkdown", "mcp", "a2a"]
+          },
+          "links": {
+            "type": "object",
+            "description": "Standard protocol and documentation links",
+            "properties": {
+              "openapi": { "type": "string", "format": "uri" },
+              "developers": { "type": "string", "format": "uri" },
+              "mcp": { "type": "string", "format": "uri" },
+              "a2a": { "type": "string", "format": "uri" },
+              "llms": { "type": "string", "format": "uri" }
+            },
+            "required": ["openapi", "developers", "mcp", "a2a", "llms"]
+          }
+        },
+        "required": ["service", "version", "apiVersion", "status", "mode", "rateLimit", "versioning", "capabilities", "links"]
+      },
+      "CompatibilityEnvelope": {
+        "type": "object",
+        "description": "Zero-value x402 payment compatibility discovery envelope",
+        "properties": {
+          "error": { "type": "string", "example": "payment_required" },
+          "code": { "type": "string", "example": "payment_required" },
+          "status": { "type": "string", "example": "discovery-only" },
+          "message": { "type": "string" },
+          "resolution_hint": { "type": "string" }
+        },
+        "required": ["error", "code", "status", "message", "resolution_hint"]
+      }
+    }
+  }
+}

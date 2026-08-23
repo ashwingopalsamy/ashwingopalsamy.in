@@ -1,0 +1,31 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schemas/server-card.json",
+  "name": "ashwingopalsamy.in",
+  "version": "1.0.0",
+  "serverInfo": {
+    "name": "ashwingopalsamy.in",
+    "version": "1.0.0"
+  },
+  "protocolVersion": "2026-07-28",
+  "description": "Read-only discovery tools for Ashwin Gopalsamy's site.",
+  "transports": [
+    {
+      "type": "streamable-http",
+      "endpoint": "https://ashwingopalsamy.in/mcp"
+    }
+  ],
+  "transport": {
+    "type": "streamable-http",
+    "endpoint": "https://ashwingopalsamy.in/mcp"
+  },
+  "endpoint": "https://ashwingopalsamy.in/mcp",
+  "discovery": {
+    "catalog": "https://ashwingopalsamy.in/mcp/catalog.json",
+    "status": "https://ashwingopalsamy.in/mcp/status.json"
+  },
+  "capabilities": {
+    "tools": {},
+    "resources": {},
+    "prompts": {}
+  }
+}

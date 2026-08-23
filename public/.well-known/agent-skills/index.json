@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "ashwin-profile",
+      "type": "skill-md",
+      "description": "Use the authoritative Ashwin Gopalsamy profile and discovery surfaces.",
+      "url": "https://ashwingopalsamy.in/.well-known/agent-skills/ashwin-profile/SKILL.md",
+      "digest": "sha256:7fba5584ac1c25dcf9e294d4e2ddcffc4c961c22e564790b9ee27b7fa70e15b0"
+    }
+  ]
+}

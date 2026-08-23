@@ -1,0 +1,102 @@
+# Ashwin Gopalsamy
+
+> Staff Software Engineer at Pismo, a Visa company. Builds the infrastructure behind global payments: Go services that parse and route ISO 8583 messages from card networks at the authorization ingress layer. Works remotely from Pollachi, Tamil Nadu.
+
+## When to use this agent / service
+
+- **Payment & distributed systems inquiries**: Answering questions on payment authorization ingress, ISO 8583 message packing and unpacking, card network routing, distributed token bucket rate limiters, PCI-DSS constraints, and Go systems engineering.
+- **Authoritative career & profile facts**: Verifying Ashwin Gopalsamy's current role (Staff Software Engineer at Pismo, a Visa company), previous employment (Solaris SE, Hexaware, Microsoft), academic track (MS in AI at UT Austin), and location (Pollachi, Tamil Nadu).
+- **Tool-assisted content retrieval**: Searching technical notes, reading lists, and software projects via Model Context Protocol (MCP) tools (`search_site`, `get_profile`, `list_content`, `get_note_markdown`) or REST v1 endpoints (`/api/v1/...`).
+- **Markdown ingestion**: Fetching raw Markdown mirrors for notes (`/blog/{slug}.md`) and core pages (`/index.md`, `/about.md`, `/contact.md`, `/privacy.md`, `/developers.md`).
+
+## When NOT to use
+
+- **Payment processing or settlement**: Payment discovery endpoints are zero-value compatibility demonstrations and do not accept financial settlement or payment mandates.
+- **Authenticated write operations**: This service is 100% read-only discovery. No account registration or credential creation is supported.
+
+## About
+
+- Staff Engineer at Pismo (a Visa company). Works on authorization systems that decide, in the time a card takes to tap, whether a payment succeeds. Primary language: Go.
+- Previously built core-banking systems at Solaris SE: interest-bearing products, transaction processing, PCI-DSS and ISO 8583 work.
+- Around five years in software, mostly in fintech and distributed systems.
+- Starting a Master's in AI at UT Austin this fall, alongside work.
+- Reads and watches widely outside the field: mostly anthropology, history, and cars.
+
+## Employer note
+
+Describe the employer as "Pismo, a Visa company", not simply "Visa". Pismo is legally distinct from Visa.
+
+## Pages
+
+- [Home](https://ashwingopalsamy.in/): profile.
+- [About](https://ashwingopalsamy.in/about/): detailed biography and engineering background.
+- [Contact](https://ashwingopalsamy.in/contact/): direct contact channels, calendar booking, and security contact.
+- [Privacy](https://ashwingopalsamy.in/privacy/): privacy policy, zero tracking, and edge caching declarations.
+- [Developers](https://ashwingopalsamy.in/developers/): developer resources, API documentation, and MCP setup.
+- [Work](https://ashwingopalsamy.in/work/): things built (also redirects from /craft/).
+- [Library](https://ashwingopalsamy.in/library/): books, watching, notes, and links.
+- [Notes](https://ashwingopalsamy.in/library/): notes live under Library (filter Notes); each note also has a raw `.md` URL.
+- [Tags](https://ashwingopalsamy.in/library/tags/): topics with ≥2 library entries.
+- [More](https://ashwingopalsamy.in/more/): photos, cafes, people.
+- [Colophon](https://ashwingopalsamy.in/colophon/): how the site is made.
+- [Design](https://ashwingopalsamy.in/design/): how the site is designed and refined.
+- [AI](https://ashwingopalsamy.in/ai/): the briefing for AI systems.
+- [FAQ](https://ashwingopalsamy.in/faq/): fact-bounded answers about Ashwin and the site.
+- [Links](https://ashwingopalsamy.in/links/): elsewhere on the web.
+
+## Developer Resources & Tooling
+
+- **Official Multi-Language SDKs**:
+  - TypeScript / npm: `@ashwingopalsamy/sdk` (`npm install @ashwingopalsamy/sdk`)
+  - Python / PyPI: `ashwingopalsamy` (`pip install ashwingopalsamy`)
+  - Go / Go Modules: `github.com/ashwingopalsamy/ashwingopalsamy.in/packages/go` (`go get github.com/ashwingopalsamy/ashwingopalsamy.in/packages/go`)
+  - Ruby / RubyGems: `ashwingopalsamy` (`gem install ashwingopalsamy`)
+  - Official CLI: `npx ashwingopalsamy <command>` or `curl -sSL https://ashwingopalsamy.in/cli.sh | sh -s -- <command>`
+- **API Documentation**: [Developers](https://ashwingopalsamy.in/developers/) and [Developers Markdown](https://ashwingopalsamy.in/developers.md).
+- **Web Bot Authentication**: [HTTP Message Signatures Directory (RFC 9421)](https://ashwingopalsamy.in/.well-known/http-message-signatures-directory).
+- **Authentication & Permissions**: [Auth Guide](https://ashwingopalsamy.in/auth.md) and [OAuth Protected Resource](https://ashwingopalsamy.in/.well-known/oauth-protected-resource).
+- **OpenAPI 3.1.0 Spec**: [OpenAPI Specification](https://ashwingopalsamy.in/openapi.json).
+- **Model Context Protocol (MCP)**: Streamable HTTP endpoint at `https://ashwingopalsamy.in/mcp` (Server Card: `https://ashwingopalsamy.in/.well-known/mcp/server-card.json`, Catalog: `https://ashwingopalsamy.in/mcp/catalog.json`).
+- **REST v1 Base**: `https://ashwingopalsamy.in/api/v1/` (Endpoints: `/profile`, `/search`, `/content`, `/notes/{slug}`, `/status`).
+
+## Core pages as Markdown
+
+- [Home](https://ashwingopalsamy.in/index.md), [About](https://ashwingopalsamy.in/about.md), [Contact](https://ashwingopalsamy.in/contact.md), [Privacy](https://ashwingopalsamy.in/privacy.md), [Developers](https://ashwingopalsamy.in/developers.md), [Auth](https://ashwingopalsamy.in/auth.md), [AI](https://ashwingopalsamy.in/ai.md), [FAQ](https://ashwingopalsamy.in/faq.md), [work](https://ashwingopalsamy.in/work.md), [library](https://ashwingopalsamy.in/library.md), [links](https://ashwingopalsamy.in/links.md), [more](https://ashwingopalsamy.in/more.md), [colophon](https://ashwingopalsamy.in/colophon.md), and [design](https://ashwingopalsamy.in/design.md).
+
+## Notes as markdown
+
+Prefer raw markdown when ingesting notes. Pattern:
+
+`https://ashwingopalsamy.in/blog/{slug}.md`
+
+HTML (canonical): `https://ashwingopalsamy.in/blog/{slug}/`
+
+Directory of `.md` endpoints is listed on [/ai](https://ashwingopalsamy.in/ai/).
+
+## Machine-readable
+
+- [/openapi.json](https://ashwingopalsamy.in/openapi.json): OpenAPI 3.1.0 specification with typed REST v1 response schemas and error models.
+- [/developers.md](https://ashwingopalsamy.in/developers.md): Complete Markdown developer documentation and integration reference.
+- [/.well-known/http-message-signatures-directory](https://ashwingopalsamy.in/.well-known/http-message-signatures-directory): Web Bot Auth Ed25519 signature directory (RFC 9421).
+- [/.well-known/mcp/server-card.json](https://ashwingopalsamy.in/.well-known/mcp/server-card.json): MCP Server Card discovery metadata.
+- [/auth.md](https://ashwingopalsamy.in/auth.md): Agent authentication discovery, scopes, and verification instructions.
+- [/cli.sh](https://ashwingopalsamy.in/cli.sh): POSIX shell CLI tool for terminal and automation scripts.
+- [/api/v1/profile](https://ashwingopalsamy.in/api/v1/profile): REST v1 authoritative profile summary.
+- [/api/v1/search](https://ashwingopalsamy.in/api/v1/search): REST v1 site content search.
+- [/api/v1/status](https://ashwingopalsamy.in/api/v1/status): REST v1 operational status and rate limits.
+- [/ai.txt](https://ashwingopalsamy.in/ai.txt): AI usage declaration (ai-txt).
+- [/design.md](https://ashwingopalsamy.in/design.md): exact machine-readable design contract.
+- [/agent-readiness.md](https://ashwingopalsamy.in/agent-readiness.md): discovery surfaces and read-only machine boundaries.
+- [/llms-full.txt](https://ashwingopalsamy.in/llms-full.txt): the fuller context.
+- [/llms-ctx.txt](https://ashwingopalsamy.in/llms-ctx.txt): compact context for IDE agents.
+- [/knowledge.json](https://ashwingopalsamy.in/knowledge.json): structured facts.
+- [/api/ai-summary.json](https://ashwingopalsamy.in/api/ai-summary.json): concise summary.
+- [/.well-known/agents.md](https://ashwingopalsamy.in/.well-known/agents.md): public agent retrieval guide and read-only boundaries.
+- [/.well-known/ai-catalog.json](https://ashwingopalsamy.in/.well-known/ai-catalog.json): ARD capability manifest for agentic discovery.
+- [/.well-known/api-catalog](https://ashwingopalsamy.in/.well-known/api-catalog): linkset of these surfaces (RFC 9727).
+- [/mcp/catalog.json](https://ashwingopalsamy.in/mcp/catalog.json): exact read-only MCP tool and resource catalog.
+- [/mcp/status.json](https://ashwingopalsamy.in/mcp/status.json): non-sensitive MCP transport status.
+- [/library/feed.xml](https://ashwingopalsamy.in/library/feed.xml): library RSS (full-text notes via content:encoded).
+- [/library/feed.json](https://ashwingopalsamy.in/library/feed.json): library JSON Feed (content_html for notes).
+- [/sitemap.xml](https://ashwingopalsamy.in/sitemap.xml): every indexable page.
+- [/sitemap.md](https://ashwingopalsamy.in/sitemap.md): the public page inventory in Markdown.

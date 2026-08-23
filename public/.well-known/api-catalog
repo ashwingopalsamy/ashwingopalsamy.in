@@ -1,0 +1,175 @@
+{
+    "linkset": [
+        {
+            "anchor": "https://ashwingopalsamy.in/",
+            "service-desc": [
+                {
+                    "href": "https://ashwingopalsamy.in/api/ai-summary.json",
+                    "type": "application/json",
+                    "title": "One-object machine-readable summary"
+                }
+            ],
+            "service-doc": [
+                {
+                    "href": "https://ashwingopalsamy.in/ai/",
+                    "type": "text/html",
+                    "title": "Human-readable authoritative briefing for AI systems"
+                }
+            ],
+            "describedby": [
+                {
+                    "href": "https://ashwingopalsamy.in/knowledge.json",
+                    "type": "application/ld+json",
+                    "title": "Structured facts (schema.org Person)"
+                }
+            ],
+            "item": [
+                {
+                    "href": "https://ashwingopalsamy.in/design/",
+                    "type": "text/html",
+                    "title": "Design notes for ashwingopalsamy.in"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/design.md",
+                    "type": "text/markdown",
+                    "title": "Exact machine-readable DESIGN.md source"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/llms.txt",
+                    "type": "text/markdown",
+                    "title": "Concise LLM context (llmstxt.org)"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/llms-full.txt",
+                    "type": "text/markdown",
+                    "title": "Fuller LLM briefing"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/ai.txt",
+                    "type": "text/plain",
+                    "title": "AI usage and attribution declaration"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/sitemap.xml",
+                    "type": "application/xml",
+                    "title": "Sitemap of public pages"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/sitemap.md",
+                    "type": "text/markdown",
+                    "title": "Sitemap of public pages in Markdown"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/faq/",
+                    "type": "text/html",
+                    "title": "Fact-bounded frequently asked questions"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/.well-known/agents.md",
+                    "type": "text/markdown",
+                    "title": "Public agent retrieval guide and read-only boundaries"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/library/feed.xml",
+                    "type": "application/rss+xml",
+                    "title": "Library feed (RSS 2.0)"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/library/feed.json",
+                    "type": "application/feed+json",
+                    "title": "Library feed (JSON Feed 1.1)"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/.well-known/ai-catalog.json",
+                    "type": "application/json",
+                    "title": "Agentic Resource Discovery (ARD) capability manifest"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/.well-known/mcp/server-card.json",
+                    "type": "application/json",
+                    "title": "MCP Server Card"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/.well-known/mcp.json",
+                    "type": "application/json",
+                    "title": "MCP discovery compatibility manifest"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/mcp/catalog.json",
+                    "type": "application/json",
+                    "title": "Read-only MCP tools, resources, prompts, schemas, and annotations"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/mcp/status.json",
+                    "type": "application/json",
+                    "title": "Non-sensitive MCP transport and read-only status"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/.well-known/agent-card.json",
+                    "type": "application/json",
+                    "title": "A2A Agent Card"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/.well-known/agent-skills/index.json",
+                    "type": "application/json",
+                    "title": "Agent Skills discovery index"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/openapi.json",
+                    "type": "application/vnd.oai.openapi+json",
+                    "title": "MPP discovery metadata, discovery-only"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/.well-known/ucp",
+                    "type": "application/json",
+                    "title": "UCP compatibility metadata, discovery-only"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/.well-known/acp.json",
+                    "type": "application/json",
+                    "title": "ACP compatibility metadata, discovery-only"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/.well-known/oauth-authorization-server",
+                    "type": "application/json",
+                    "title": "OAuth Authorization Server Metadata, discovery-only"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/.well-known/oauth-protected-resource",
+                    "type": "application/json",
+                    "title": "OAuth Protected Resource Metadata, discovery-only"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/.well-known/openid-configuration",
+                    "type": "application/json",
+                    "title": "OpenID Connect Metadata, discovery-only"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/.well-known/jwks.json",
+                    "type": "application/json",
+                    "title": "Empty JSON Web Key Set for discovery compatibility"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/auth.md",
+                    "type": "text/markdown",
+                    "title": "Auth.md registration discovery, unavailable"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/developers",
+                    "type": "text/html",
+                    "title": "Developer Resources, SDKs, and API Documentation"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/.well-known/http-message-signatures-directory",
+                    "type": "application/http-message-signatures-directory+json",
+                    "title": "Web Bot Auth Ed25519 signature directory (RFC 9421)"
+                },
+                {
+                    "href": "https://ashwingopalsamy.in/.well-known/dns-aid",
+                    "type": "text/plain",
+                    "title": "DNS-AID record and DNSSEC publication notes"
+                }
+            ]
+        }
+    ]
+}

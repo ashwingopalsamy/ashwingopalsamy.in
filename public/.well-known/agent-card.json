@@ -1,0 +1,51 @@
+{
+  "name": "ashwingopalsamy.in",
+  "description": "Read-only agent discovery and site profile services.",
+  "version": "1.0.0",
+  "protocolVersion": "0.3.0",
+  "url": "https://ashwingopalsamy.in/a2a",
+  "defaultInputModes": ["text/plain", "application/json"],
+  "defaultOutputModes": ["text/plain", "application/json"],
+  "supportedInterfaces": [
+    {
+      "url": "https://ashwingopalsamy.in/a2a",
+      "transport": "JSONRPC"
+    }
+  ],
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "extensions": [
+      {
+        "uri": "https://github.com/google-agentic-commerce/ap2/tree/v0.1.0",
+        "description": "Discovery marker only. Payment mandates are rejected.",
+        "required": false,
+        "params": {
+          "roles": ["merchant"]
+        }
+      }
+    ]
+  },
+  "ap2": {
+    "supported": false,
+    "status": "discovery-only",
+    "mandates": "unsupported"
+  },
+  "skills": [
+    {
+      "id": "site-profile",
+      "name": "Site profile",
+      "description": "Return the authoritative public profile summary."
+    },
+    {
+      "id": "site-search",
+      "name": "Site search",
+      "description": "Search the public site content manifest."
+    },
+    {
+      "id": "ap2-support-status",
+      "name": "AP2 support status",
+      "description": "Explain that AP2 is discovery-only and mandates are unsupported."
+    }
+  ]
+}

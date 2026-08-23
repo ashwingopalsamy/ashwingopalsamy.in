@@ -1,0 +1,15 @@
+Map assets bundled for the Pollachi location card
+
+Source: OpenFreeMap Bright style and sprite atlas
+Retrieved: 2026-08-09
+Style: https://tiles.openfreemap.org/styles/bright
+Sprites: https://tiles.openfreemap.org/sprites/ofm_f384/ofm
+Upstream sprite version: ofm_f384
+
+Attribution: OpenFreeMap © OpenMapTiles Data from OpenStreetMap
+OpenFreeMap project: https://openfreemap.org/
+OpenMapTiles: https://openmaptiles.org/
+OpenStreetMap: https://www.openstreetmap.org/copyright
+
+Licenses: OpenFreeMap (MIT), OpenMapTiles (BSD + CC-BY), OpenStreetMap data (ODbL 1.0)
+License references: https://openfreemap.org/ · https://openmaptiles.org/ · https://www.openstreetmap.org/copyright

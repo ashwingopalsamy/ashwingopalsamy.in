@@ -1,0 +1,5 @@
+/* TEAM */
+Ashwin Gopalsamy · https://ashwingopalsamy.in
+
+/* SITE */
+Hand-built with Astro and vanilla JS. See /colophon.
