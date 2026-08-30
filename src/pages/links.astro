@@ -1,17 +1,22 @@
 ---
 import Page from "../layouts/Page.astro";
 import { ogPath } from "../lib/og-url";
-import { profileLinks } from "../data/profile-links";
+import { profileLinks, profileLinkSections } from "../data/profile-links";
 import { profileIconPaths } from "../lib/profile-icons";
 import Icon from "../components/Icon.astro";
 import PageIntro from "../components/PageIntro.astro";
+import SectionHeading from "../components/SectionHeading.astro";
 
 /**
  * /links - every way to find me, in one place. Platform name leads as the
  * primary label; the handle trails quiet and muted. Whole row is the link.
- * Brand marks come from simple-icons; LinkedIn (absent there) reuses the
- * site's own mark, and Email uses a neutral envelope.
+ * Grouped into domain-based sections with SectionHeading.
  */
+
+const sections = profileLinkSections.map((sec) => ({
+  ...sec,
+  links: profileLinks.filter((l) => l.category === sec.id),
+}));
 
 ---
 
@@ -21,32 +26,52 @@ import PageIntro from "../components/PageIntro.astro";
 >
   <PageIntro title="links" lede="Every way to find me, in one place." />
 
-  <ul class="links-grid" data-enter-batch>
+  <div class="links-sections" data-enter-batch>
     {
-      profileLinks.map((l) => (
-        <li class="link-item" data-enter>
-          <a
-            class="link-row"
-            href={l.href}
-            target={l.mail ? undefined : "_blank"}
-            rel={l.mail ? undefined : "me noopener noreferrer"}
-          >
-            <svg class="link-icon" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="currentColor">
-              <path d={profileIconPaths[l.id]} />
-            </svg>
-            <span class="link-platform">{l.platform}</span>
-            <span class="link-handle">{l.handle}</span>
-            {!l.mail && (
-              <span class="link-arrow" aria-hidden="true"><Icon name="arrow-up-right" size={14} /></span>
-            )}
-          </a>
-        </li>
+      sections.map((section) => (
+        <section class="links-group" data-enter>
+          <SectionHeading title={section.title} count={section.links.length} />
+          <ul class="links-grid">
+            {
+              section.links.map((l) => (
+                <li class="link-item">
+                  <a
+                    class="link-row"
+                    href={l.href}
+                    target={l.mail ? undefined : "_blank"}
+                    rel={l.mail ? undefined : "me noopener noreferrer"}
+                  >
+                    <svg class="link-icon" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="currentColor">
+                      <path d={profileIconPaths[l.id]} />
+                    </svg>
+                    <span class="link-platform">{l.platform}</span>
+                    <span class="link-handle">{l.handle}</span>
+                    {!l.mail && (
+                      <span class="link-arrow" aria-hidden="true"><Icon name="arrow-up-right" size={14} /></span>
+                    )}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
       ))
     }
-  </ul>
+  </div>
 </Page>
 
 <style>
+  .links-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 2.25rem;
+  }
+
+  .links-group {
+    display: flex;
+    flex-direction: column;
+  }
+
   .links-grid {
     list-style: none;
     margin: 0;

@@ -61,7 +61,13 @@ export function personJsonLd() {
       CANONICAL_KNOWLEDGE.canonicalLinks.github,
       CANONICAL_KNOWLEDGE.canonicalLinks.linkedin,
       CANONICAL_KNOWLEDGE.canonicalLinks.x,
-    ],
+      CANONICAL_KNOWLEDGE.canonicalLinks.scholar,
+      CANONICAL_KNOWLEDGE.canonicalLinks.researchgate,
+      CANONICAL_KNOWLEDGE.canonicalLinks.figma,
+      CANONICAL_KNOWLEDGE.canonicalLinks.dribbble,
+      CANONICAL_KNOWLEDGE.canonicalLinks.arena,
+      CANONICAL_KNOWLEDGE.canonicalLinks.cosmos,
+    ].filter(Boolean) as string[],
   };
 }
 

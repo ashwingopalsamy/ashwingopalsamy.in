@@ -63,6 +63,11 @@ export interface CanonicalIdentity {
     cal: string;
     resume: string;
     scholar: string;
+    researchgate?: string;
+    dribbble?: string;
+    figma?: string;
+    arena?: string;
+    cosmos?: string;
   };
 }
 
@@ -164,5 +169,10 @@ export const CANONICAL_KNOWLEDGE: CanonicalIdentity = {
     cal: "https://cal.com/ashwingopalsamy/flexible-slot?user=ashwingopalsamy",
     resume: "https://ashwingopalsamy.in/resume.pdf",
     scholar: "https://scholar.google.com/citations?user=i1AHxuIAAAAJ&hl=en",
+    researchgate: "https://www.researchgate.net/profile/Ashwin-Gopalsamy/",
+    dribbble: "https://dribbble.com/ashwingopalsamy/",
+    figma: "https://www.figma.com/@ashwingopalsamy",
+    arena: "https://www.are.na/ashwin-gopalsamy/channels",
+    cosmos: "https://www.cosmos.so/ashwingopalsamy/collections",
   },
 };
