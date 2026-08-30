@@ -20,7 +20,7 @@
   --ghost: var(--color-6);
   --rule: var(--color-3);
   --rule-strong: var(--color-4);
-  --vermilion: oklch(0.58 0.2 25);
+  --vermilion: var(--acc-red);
 
   --acc-amber: oklch(0.76 0.16 65);
   --acc-blue: oklch(0.58 0.19 255);
@@ -30,7 +30,7 @@
   --map-beacon: var(--ghost);
 
   /* theme-dependent surfaces - components consume these; no dual media blocks */
-  --nav-glass-bg: color-mix(in oklch, var(--ink) 4%, transparent);
+  --nav-glass-bg: color-mix(in oklch, var(--canvas) 80%, transparent);
   --nav-glass-border: color-mix(in oklch, var(--ink) 10%, transparent);
   --nav-glass-shadow:
     inset 0 1px 0 color-mix(in oklch, var(--color-1) 35%, transparent),
@@ -38,7 +38,17 @@
   --chrome-surface-bg: var(--nav-glass-bg);
   --chrome-surface-border: var(--nav-glass-border);
   --chrome-surface-shadow: var(--nav-glass-shadow);
-  --code-bg: var(--chrome-surface-bg);
+
+  /* The same surface, pre-composited against the canvas.
+     backdrop-filter only earns its cost when something non-uniform sits
+     behind the element. In the reading column nothing does — the page is
+     a flat --canvas — so blurring it there produced identical pixels for
+     the price of a full-surface blur on every scroll frame. Anything in
+     document flow uses this; only the fixed chrome, the palette, the map
+     pill and floating tooltips keep a real backdrop-filter. */
+  --surface-inline-bg: color-mix(in oklch, var(--ink) 4%, var(--canvas));
+
+  --code-bg: var(--surface-inline-bg);
   --code-border: var(--chrome-surface-border);
   --code-shadow: var(--chrome-surface-shadow);
   --shiki-fg: var(--color-9);
@@ -48,8 +58,8 @@
   --code-str: #16a34a;
   --code-const: #ea580c;
   --code-comment: #8e8e93;
-  --cta-secondary-bg: color-mix(in oklch, var(--ink) 4%, transparent);
-  --cta-secondary-border: color-mix(in oklch, var(--ink) 12%, transparent);
+  --cta-secondary-bg: var(--chrome-surface-bg);
+  --cta-secondary-border: var(--chrome-surface-border);
   --loc-map-filter: grayscale(1) contrast(1.02);
   --loc-map-opacity: 0.92;
   --media-monochrome-filter: grayscale(1);
@@ -72,7 +82,7 @@
   --font-bold: 600;
   --font-hover-lift: 550;
   --font-hover-bold: 680;
-  --mono-optical-shift: 1px;
+  /* --mono-optical-shift and the other optical corrections: geometry.css */
 
   --leading-tight: 1.3;
   --leading-snug: 1.4;
@@ -94,15 +104,9 @@
   --type-section-tracking: -0.01em;
 
   /* ------------------------------------------------------------------ */
-  /*  radius / elevation / z                                             */
+  /*  elevation / z                                                      */
+  /*  (the radius scale and its nesting rule live in geometry.css)       */
   /* ------------------------------------------------------------------ */
-  --r-1: 2px;
-  --r-2: 4px;
-  --r-3: 7px;
-  --r-4: 10px;
-  --r-5: 16px;
-  --r-pill: 999px;
-
   --shadow-1: 0 6px 18px color-mix(in oklch, var(--ink) 12%, transparent);
   --shadow-2: 0 8px 30px color-mix(in oklch, var(--ink) 22%, transparent);
   --shadow-3: 0 20px 60px color-mix(in oklch, var(--ink) 22%, transparent);
@@ -117,7 +121,14 @@
   --surface-row-disabled: color-mix(in oklch, var(--ink) 1.5%, transparent);
   --surface-raised: color-mix(in oklch, var(--ink) 4%, var(--canvas));
   --surface-row-radius: var(--r-3);
-  --surface-row-gap: 0.15rem;
+  --surface-row-gap: calc(var(--step) / 2);
+
+  /* Row choreography: hovering a list recedes its siblings so the one
+     under the cursor is the only thing in focus. Seven lists across the
+     site implement this; these two values are the only place the depth
+     of the effect is decided, so they cannot drift apart per page. */
+  --dim-opacity: 0.45;
+  --dim-blur: 0.2px;
 
   --z-base: 0;
   --z-veil: 5;
@@ -131,59 +142,37 @@
   --focus-offset: 3px;
 
   /* ------------------------------------------------------------------ */
-  /*  motion                                                             */
+  /*  motion lives in motion.css; geometry lives in geometry.css.        */
+  /*  What remains here is layout that is specific to this site's shell. */
   /* ------------------------------------------------------------------ */
-  --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-in-out: ease-in-out;
-  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
-  --ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1);
-  --dur-1: 80ms;
-  --dur-2: 150ms;
-  --dur-3: 250ms;
-  --dur-4: 400ms;
-  --dur-5: 500ms;
-  --dur-route-out: 80ms;
-  --dur-route-in: 250ms;
-  --t-move: var(--dur-3) var(--ease);
-  --t-color: var(--dur-2) ease;
-  --t-draw: var(--dur-4) var(--ease-out);
-
-  /* ------------------------------------------------------------------ */
-  /*  geometry                                                           */
-  /* ------------------------------------------------------------------ */
-  --rail-max: clamp(680px, 52vw, 800px);
-  --rail-gutter: 20px;
   --measure-hero: 64ch;
   --measure-prose: 50rem;
-  --chrome-size: 2.9rem;
-  --control-hit: 2.75rem;
+
+  /* chrome geometry, on the lattice: 48px = 12 steps, and comfortably
+     over the 44px touch minimum */
+  --chrome-size: calc(var(--step) * 12);
+  --control-hit: calc(var(--step) * 11);
+
   --col: var(--rail-max);
   --gutter: var(--rail-gutter);
   --mobile-gutter-start: max(var(--rail-gutter), env(safe-area-inset-left, 0px));
   --mobile-gutter-end: max(var(--rail-gutter), env(safe-area-inset-right, 0px));
-  --mobile-chrome-clearance: calc(5.75rem + env(safe-area-inset-bottom, 0px));
-  --space-lead: 1rem;
-  --space-frame: var(--space-8);
-  --space-content-lead: 2.25rem;
-  --space-rule: 4.25rem;
-  --space-section: 4.5rem;
-  --space-footer: var(--space-9);
-  --header-zone: 6.5rem;
+  --mobile-chrome-clearance: calc((var(--step) * 25) + env(safe-area-inset-bottom, 0px));
 
-  --scrollbar-size: 11px;
+  /* Editorial spacing resolves through --rhythm, not through pixels, so
+     every gap between blocks of text is a whole number of body line
+     boxes. That is the ruling the pages are actually built on. */
+  --space-lead: var(--step-4);
+  --space-frame: var(--step-8);
+  --space-content-lead: calc(var(--rhythm) * 1.25);
+  --space-rule: calc(var(--rhythm) * 2.5);
+  --space-section: calc(var(--rhythm) * 2.75);
+  --space-footer: calc(var(--rhythm) * 3.5);
+  --header-zone: calc(var(--step) * 26);
+
+  --scrollbar-size: var(--step-3);
   --scrollbar-thumb: color-mix(in oklch, var(--ink) 14%, transparent);
   --scrollbar-thumb-hover: color-mix(in oklch, var(--ink) 32%, transparent);
-
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-7: 48px;
-  --space-8: 64px;
-  --space-9: 96px;
 
   color-scheme: light;
 }
@@ -198,7 +187,7 @@
   --ghost: var(--color-5);
   --rule: var(--color-7);
   --rule-strong: var(--color-6);
-  --vermilion: oklch(0.68 0.19 25);
+  --vermilion: var(--acc-red);
 
   --acc-amber: oklch(0.78 0.15 65);
   --acc-blue: oklch(0.66 0.18 255);
@@ -207,7 +196,7 @@
   --acc-green: oklch(0.72 0.15 155);
   --map-beacon: var(--ghost);
 
-  --nav-glass-bg: color-mix(in oklch, var(--color-1) 7%, transparent);
+  --nav-glass-bg: color-mix(in oklch, var(--canvas) 80%, transparent);
   --nav-glass-border: color-mix(in oklch, var(--color-1) 13%, transparent);
   --nav-glass-shadow:
     inset 0 1px 0 color-mix(in oklch, var(--color-1) 12%, transparent),
@@ -215,9 +204,15 @@
   --chrome-surface-bg: var(--nav-glass-bg);
   --chrome-surface-border: var(--nav-glass-border);
   --chrome-surface-shadow: var(--nav-glass-shadow);
-  --code-bg: var(--chrome-surface-bg);
+  --surface-inline-bg: color-mix(in oklch, var(--color-1) 7%, var(--canvas));
+  --code-bg: var(--surface-inline-bg);
   --code-border: var(--chrome-surface-border);
   --code-shadow: var(--chrome-surface-shadow);
+  --shadow-1: 0 6px 18px color-mix(in oklch, oklch(0 0 0) 40%, transparent);
+  --shadow-2: 0 8px 30px color-mix(in oklch, oklch(0 0 0) 55%, transparent);
+  --shadow-3: 0 20px 60px color-mix(in oklch, oklch(0 0 0) 65%, transparent);
+  --shadow-inset: inset 0 1px 0 color-mix(in oklch, var(--color-1) 12%, transparent);
+
   --surface-row-rest: transparent;
   --surface-row-border: transparent;
   --surface-row-shadow: none;
@@ -232,8 +227,8 @@
   --code-str: #4ade80;
   --code-const: #fb923c;
   --code-comment: #71717a;
-  --cta-secondary-bg: color-mix(in oklch, var(--color-1) 6%, transparent);
-  --cta-secondary-border: color-mix(in oklch, var(--color-1) 14%, transparent);
+  --cta-secondary-bg: var(--chrome-surface-bg);
+  --cta-secondary-border: var(--chrome-surface-border);
   --loc-map-filter: grayscale(1) invert(1) brightness(1.45) contrast(0.9);
   --loc-map-opacity: 0.94;
   --media-monochrome-filter: grayscale(1);
@@ -243,7 +238,7 @@
 }
 
 :root[data-accent="off-hours"] {
-  --vermilion: oklch(0.62 0.03 25);
+  --acc-red: oklch(0.62 0.03 25);
 }
 
 /* no-JS: data-theme is never set - follow the OS. Token mirror only;
@@ -258,7 +253,7 @@
     --ghost: var(--color-5);
     --rule: var(--color-7);
     --rule-strong: var(--color-6);
-    --vermilion: oklch(0.68 0.19 25);
+    --vermilion: var(--acc-red);
 
     --acc-amber: oklch(0.78 0.15 65);
     --acc-blue: oklch(0.66 0.18 255);
@@ -267,7 +262,7 @@
     --acc-green: oklch(0.72 0.15 155);
     --map-beacon: var(--ghost);
 
-    --nav-glass-bg: color-mix(in oklch, var(--color-1) 7%, transparent);
+    --nav-glass-bg: color-mix(in oklch, var(--canvas) 80%, transparent);
     --nav-glass-border: color-mix(in oklch, var(--color-1) 13%, transparent);
     --nav-glass-shadow:
       inset 0 1px 0 color-mix(in oklch, var(--color-1) 12%, transparent),
@@ -275,9 +270,15 @@
     --chrome-surface-bg: var(--nav-glass-bg);
     --chrome-surface-border: var(--nav-glass-border);
     --chrome-surface-shadow: var(--nav-glass-shadow);
-    --code-bg: var(--chrome-surface-bg);
+    --surface-inline-bg: color-mix(in oklch, var(--color-1) 7%, var(--canvas));
+    --code-bg: var(--surface-inline-bg);
     --code-border: var(--chrome-surface-border);
     --code-shadow: var(--chrome-surface-shadow);
+
+    --shadow-1: 0 6px 18px color-mix(in oklch, oklch(0 0 0) 40%, transparent);
+    --shadow-2: 0 8px 30px color-mix(in oklch, oklch(0 0 0) 55%, transparent);
+    --shadow-3: 0 20px 60px color-mix(in oklch, oklch(0 0 0) 65%, transparent);
+    --shadow-inset: inset 0 1px 0 color-mix(in oklch, var(--color-1) 12%, transparent);
     --surface-row-rest: transparent;
     --surface-row-border: transparent;
     --surface-row-shadow: none;
@@ -292,8 +293,8 @@
     --code-str: #4ade80;
     --code-const: #fb923c;
     --code-comment: #71717a;
-    --cta-secondary-bg: color-mix(in oklch, var(--color-1) 6%, transparent);
-    --cta-secondary-border: color-mix(in oklch, var(--color-1) 14%, transparent);
+    --cta-secondary-bg: var(--chrome-surface-bg);
+    --cta-secondary-border: var(--chrome-surface-border);
     --loc-map-filter: grayscale(1) invert(1) brightness(1.45) contrast(0.9);
     --loc-map-opacity: 0.94;
     --media-monochrome-filter: grayscale(1);
@@ -498,7 +499,7 @@ body {
 
 .quote-text::selection,
 .quote-author::selection {
-  background: color-mix(in oklch, var(--vermilion) 88%, var(--ink));
+  background: var(--ink);
   color: var(--canvas);
 }
 
@@ -506,9 +507,27 @@ body {
   outline: none;
 }
 
+/* The ring lands rather than appears: it starts wide and closes onto the
+   control. outline-offset is one of the few outline properties that
+   animates, and it is enough to give keyboard focus a direction of
+   travel — which is exactly what a keyboard user needs, since they have
+   no cursor to tell them where focus came from. */
 :focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
+  animation: focus-land var(--dur-nudge) var(--ease-spring-snap);
+}
+
+@keyframes focus-land {
+  from {
+    outline-offset: calc(var(--focus-offset) + 5px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :focus-visible {
+    animation: none;
+  }
 }
 
 :disabled,
@@ -520,6 +539,68 @@ body {
 a[aria-disabled="true"],
 button[aria-disabled="true"] {
   pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ */
+/*  single-line interactive buttons & controls pill overlay hover     */
+/* ------------------------------------------------------------------ */
+
+:where(
+  button:not(.surface-row):not(.surface-item):not(.note-toc-btn),
+  .btn,
+  .btn-pill,
+  .cta-secondary,
+  .dev-cta:not(.cta-primary),
+  .chip,
+  .chip-all,
+  .dev-chip,
+  .design-link,
+  .text-btn,
+  .mono-toggle,
+  .focus-demo-btn,
+  .footer-link,
+  .quiet-btn,
+  .note-copy-link,
+  .detail-meta-actions a,
+  .detail-meta-actions button,
+  .quote-btn,
+  .action-btn,
+  .sdk-nav-btn
+) {
+  border-radius: var(--r-pill);
+  transition:
+    color var(--t-color),
+    background-color var(--t-color),
+    border-color var(--t-color),
+    box-shadow var(--t-color),
+    transform var(--dur-press) var(--ease-snap);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :where(
+    button:not(.surface-row):not(.surface-item):not(.note-toc-btn):not(.cta-primary):not(.is-active):not([aria-pressed="true"]),
+    .btn:not(.btn-primary):not(.is-active),
+    .btn-pill:not(.is-active),
+    .cta-secondary,
+    .dev-cta:not(.cta-primary):not(.is-active),
+    .dev-chip:not(.is-active),
+    .design-link,
+    .text-btn,
+    .mono-toggle,
+    .focus-demo-btn,
+    .footer-link,
+    .quiet-btn,
+    .note-copy-link,
+    .detail-meta-actions a,
+    .detail-meta-actions button,
+    .quote-btn,
+    .action-btn,
+    .sdk-nav-btn:not(.is-active)
+  ):hover {
+    background-color: color-mix(in oklch, var(--ink) 4.5%, transparent);
+    color: var(--ink);
+    text-decoration: none;
+  }
 }
 
 @supports (text-box-trim: trim-both) {
@@ -570,7 +651,8 @@ button[aria-disabled="true"] {
 
 @media (prefers-reduced-transparency: reduce) {
   .chrome-surface,
-  .surface-row {
+  .surface-row,
+  .site-nav-bottom {
     background: var(--canvas);
     border-color: var(--rule-strong);
     -webkit-backdrop-filter: none;
@@ -713,10 +795,10 @@ button[aria-disabled="true"] {
     transform: translateY(-50%);
     padding: 0.32rem 0.8rem;
     border-radius: var(--r-pill);
-    background: color-mix(in oklch, var(--canvas) 94%, var(--ink) 6%);
+    background: var(--chrome-surface-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--rule);
+    border: 1px solid var(--chrome-surface-border);
     color: var(--ink);
     font-size: 0.75rem;
     font-weight: var(--font-medium);
@@ -729,8 +811,8 @@ button[aria-disabled="true"] {
   }
 
   :root[data-theme="dark"] .note-toc-tooltip {
-    background: color-mix(in oklch, var(--canvas) 88%, var(--ink) 12%);
-    border-color: color-mix(in oklch, var(--rule) 80%, transparent);
+    background: var(--chrome-surface-bg);
+    border-color: var(--chrome-surface-border);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.25);
   }
 
@@ -839,24 +921,27 @@ main {
   }
 }
 
+/* The route blur now lives on the view-transition snapshot layers
+   (motion.css), not on this element. What remains here is the no-View-
+   Transitions fallback: same gesture, opacity only, because without a
+   snapshot to blur there is no cheap way to blur live text. */
 [data-route-content] {
-  filter: none;
-  transition: filter var(--dur-route-in) var(--ease);
+  --route-fallback-dir: 1;
 }
 
-[data-route-content][data-navigation-phase="preparing"] {
-  filter: blur(0);
-  transition: none;
-}
+@supports not (view-transition-name: none) {
+  [data-route-content][data-navigation-phase="entering"] {
+    opacity: 0;
+    transform: translate3d(0, calc(var(--route-fallback-dir) * var(--travel-step)), 0);
+  }
 
-[data-route-content][data-navigation-phase="entering"] {
-  filter: blur(4px);
-  transition: none;
-  will-change: filter;
-}
-
-[data-route-content][data-navigation-phase="idle"] {
-  filter: none;
+  [data-route-content][data-navigation-phase="idle"] {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--dur-route-in) var(--ease-enter),
+      transform var(--dur-route-in) var(--ease-enter);
+  }
 }
 
 .column-body > *,
@@ -881,8 +966,8 @@ main > *,
   .surface-stream:hover .surface-row,
   .surface-stack:hover .surface-item,
   .surface-stream:hover .surface-item {
-    opacity: 0.45;
-    filter: blur(0.2px);
+    opacity: var(--dim-opacity);
+    filter: blur(var(--dim-blur));
     transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
   }
 
@@ -964,10 +1049,6 @@ section {
   transition: background-color var(--t-color);
 }
 
-body:not(:has(.column-body.home)) .site-footer {
-  border-top: 0;
-}
-
 .page-rule + section {
   margin-top: 0;
 }
@@ -1042,13 +1123,15 @@ a {
 }
 
 :root[data-motion="on"] [data-enter].initial-enter {
-  --reveal-step: 38ms;
+  /* was 38ms. A stagger reads as choreography up to roughly 30ms a step
+     and as queuing beyond it. */
+  --reveal-step: 26ms;
 }
 
 :root[data-motion="on"] [data-enter].initial-enter.revealing {
   animation-name: enter;
-  animation-duration: var(--dur-4);
-  animation-timing-function: var(--ease-out);
+  animation-duration: var(--dur-enter);
+  animation-timing-function: var(--ease-enter);
   animation-fill-mode: both;
   animation-delay: calc(var(--reveal-order, 0) * var(--reveal-step));
   will-change: opacity, transform;
@@ -1057,7 +1140,7 @@ a {
 @keyframes enter {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translate3d(0, var(--travel-rise), 0);
   }
   to {
     opacity: 1;
@@ -1072,7 +1155,7 @@ a {
 @keyframes enter-soon {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translate3d(0, calc(var(--travel-rise) * 1.4), 0);
   }
   to {
     opacity: 0.6;
@@ -1097,22 +1180,10 @@ a {
   }
 }
 
-::view-transition {
-  pointer-events: none !important;
-}
-
-::view-transition-old(root),
-::view-transition-new(root),
-::view-transition-group(root),
-::view-transition-image-pair(root) {
-  pointer-events: none !important;
-  animation: none;
-  mix-blend-mode: normal;
-}
-
 @media (prefers-reduced-motion: reduce) {
   [data-route-content] {
     filter: none !important;
+    transform: none !important;
     transition: none !important;
   }
 }

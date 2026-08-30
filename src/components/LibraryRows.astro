@@ -30,8 +30,8 @@ const { items, linkedTags, empty = "Nothing here yet.", density = "full" } = Ast
 
   @media (hover: hover) and (pointer: fine) {
     .library-rows:hover :global(.library-row) {
-      opacity: 0.45;
-      filter: blur(0.2px);
+      opacity: var(--dim-opacity);
+      filter: blur(var(--dim-blur));
       transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
     }
 

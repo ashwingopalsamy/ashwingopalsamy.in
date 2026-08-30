@@ -48,26 +48,26 @@ const hourFormatter = new Intl.DateTimeFormat("en-GB", {
 const TOKENS: Record<PresenceState, string> = {
   available: "var(--acc-green)",
   "winding-down": "var(--acc-amber)",
-  asleep: "var(--vermilion)",
+  asleep: "var(--acc-red)",
 };
 
 const LABELS: Record<PresenceState, string[]> = {
   available: [
-    "Around right now.",
-    "Awake and around in Pollachi.",
-    "At my desk in Pollachi.",
-    "Online and reachable.",
+    "Pollachi · Around right now",
+    "Pollachi · At my desk",
+    "Pollachi · Online & reachable",
+    "Pollachi · Active",
   ],
   "winding-down": [
-    "Winding down in Pollachi.",
-    "Late evening in Pollachi.",
-    "Wrapping up for the day.",
-    "Evening here, slowing down.",
+    "Pollachi · Winding down",
+    "Pollachi · Late evening",
+    "Pollachi · Wrapping up",
+    "Pollachi · Off-hours",
   ],
   asleep: [
-    "Asleep in Pollachi. I'll see it in the morning.",
-    "Offline for the night in Pollachi.",
-    "Asleep in Pollachi. Morning me will reply.",
+    "Pollachi · Asleep for the night",
+    "Pollachi · Offline until morning",
+    "Pollachi · Resting",
   ],
 };
 

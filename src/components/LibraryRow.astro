@@ -157,6 +157,19 @@ const label = isExternal ? `Open ${item.title}, external site` : `Open ${item.ti
     font-variant-numeric: tabular-nums;
   }
 
+  .library-row.is-linked .library-row-shell::before {
+    content: "";
+    position: absolute;
+    inset-block: var(--step-2);
+    inset-inline-start: 0;
+    width: 2px;
+    border-radius: var(--r-pill);
+    background: var(--ink);
+    transform: scaleY(0);
+    transform-origin: center;
+    transition: transform var(--dur-shift) var(--ease-spring-snap);
+  }
+
   .library-row-direction {
     display: inline-flex;
     align-items: center;
@@ -165,7 +178,9 @@ const label = isExternal ? `Open ${item.title}, external site` : `Open ${item.ti
     width: 14px;
     height: 14px;
     flex-shrink: 0;
-    transition: color var(--t-color), transform var(--dur-2) var(--ease-out);
+    transition:
+      color var(--dur-tint) linear,
+      transform var(--dur-shift) var(--ease-spring-pop);
   }
 
   .library-row-direction.is-empty {
@@ -177,6 +192,11 @@ const label = isExternal ? `Open ${item.title}, external site` : `Open ${item.ti
     .library-row.is-linked:hover .library-row-shell,
     .library-row.is-linked:focus-within .library-row-shell {
       background: var(--surface-row-hover);
+    }
+
+    .library-row.is-linked:hover .library-row-shell::before,
+    .library-row.is-linked:focus-within .library-row-shell::before {
+      transform: scaleY(1);
     }
 
     .library-row.is-linked:hover .library-row-meta,
@@ -191,7 +211,7 @@ const label = isExternal ? `Open ${item.title}, external site` : `Open ${item.ti
 
     .library-row.is-linked:hover .library-row-direction:not(.is-external),
     .library-row.is-linked:focus-within .library-row-direction:not(.is-external) {
-      transform: translateX(3px);
+      transform: translate3d(var(--travel-nudge), 0, 0);
     }
 
     .library-row.is-linked:hover .library-row-direction.is-external,
@@ -202,7 +222,7 @@ const label = isExternal ? `Open ${item.title}, external site` : `Open ${item.ti
 
   .library-row.is-linked:active .library-row-shell {
     background: var(--surface-row-press);
-    transform: scale(0.995);
+    transform: scale(var(--press-scale-inline));
   }
 
   @media (max-width: 38rem) {

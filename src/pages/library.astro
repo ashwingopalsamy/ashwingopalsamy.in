@@ -262,11 +262,16 @@ const collectionPage = libraryCollectionPageJsonLd([
       background-color var(--t-color);
   }
 
+  /* Same spring as the header's nav pill, deliberately: these are the
+     site's two segmented selectors and they should feel like one control
+     wearing two hats. The spring's 2.3% overshoot on width is what gives
+     this indicator the same momentum the nav pill gets from its stretch
+     keyframe, without needing a second mechanism. */
   [data-library][data-indicator-ready="true"] .library-selection {
     transition:
-      transform var(--dur-3) var(--ease),
-      width var(--dur-3) var(--ease),
-      height var(--dur-3) var(--ease),
+      transform var(--dur-shift) var(--ease-spring-snap),
+      width var(--dur-shift) var(--ease-spring-snap),
+      height var(--dur-shift) var(--ease-spring-snap),
       opacity var(--t-color),
       background-color var(--t-color);
   }

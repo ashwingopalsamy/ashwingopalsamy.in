@@ -123,8 +123,8 @@ const fmt = (d: Date) =>
   }
   @media (hover: hover) and (pointer: fine) {
     .note-list:hover .note-link {
-      opacity: 0.45;
-      filter: blur(0.2px);
+      opacity: var(--dim-opacity);
+      filter: blur(var(--dim-blur));
       transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
     }
     .note-list:hover .note-link:hover,

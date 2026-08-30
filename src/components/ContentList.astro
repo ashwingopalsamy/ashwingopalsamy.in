@@ -117,8 +117,8 @@ function formatDate(iso: string): string {
 
   @media (hover: hover) and (pointer: fine) {
     .rows:hover .row {
-      opacity: 0.45;
-      filter: blur(0.2px);
+      opacity: var(--dim-opacity);
+      filter: blur(var(--dim-blur));
       transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
     }
 
@@ -138,9 +138,12 @@ function formatDate(iso: string): string {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto auto;
     align-items: baseline;
-    gap: var(--space-4);
-    padding: 0.85rem 0.95rem;
-    margin-inline: -0.95rem;
+    gap: var(--step-4);
+    /* on the lattice: 12px block, 16px inline, pulled back by the same
+       16px so the text stays flush with the rail while the hover surface
+       overhangs it */
+    padding: var(--step-3) var(--step-4);
+    margin-inline: calc(var(--step-4) * -1);
     border-radius: var(--r-3);
     background: var(--surface-row-rest);
     border: none;
@@ -149,7 +152,7 @@ function formatDate(iso: string): string {
     color: inherit;
     transition:
       background-color var(--t-color),
-      transform var(--dur-1) var(--ease-out);
+      transform var(--dur-press) var(--ease-snap);
   }
 
   .row-main {
@@ -200,9 +203,13 @@ function formatDate(iso: string): string {
     flex-shrink: 0;
     align-self: center;
     color: var(--ghost);
+    /* The arrow leads and the surface follows. Giving the two different
+       curves and durations is the whole difference between a row that
+       highlights and a row that responds: the chevron springs out ahead
+       of the background settling in behind it. */
     transition:
-      transform var(--t-move),
-      color var(--t-color);
+      transform var(--dur-shift) var(--ease-spring-pop),
+      color var(--dur-tint) linear;
   }
 
   .sample-tag {
@@ -228,13 +235,39 @@ function formatDate(iso: string): string {
     .row-link:hover .row-arrow,
     .row-link:focus-visible .row-arrow {
       color: var(--ink);
-      transform: translateX(3px);
+      transform: translate3d(var(--travel-nudge), 0, 0);
     }
+
+    /* A hairline strikes in at the leading edge, growing from its centre.
+       It lives in the negative margin the row already overhangs by, so it
+       reads as the rail itself marking the row rather than as decoration
+       added to it. Transform only — no layout, no paint beyond 2px. */
+    .row-link:hover::before,
+    .row-link:focus-visible::before {
+      transform: scaleY(1);
+    }
+  }
+
+  .row-link::before {
+    content: "";
+    position: absolute;
+    inset-block: var(--step-2);
+    inset-inline-start: 0;
+    width: 2px;
+    border-radius: var(--r-pill);
+    background: var(--ink);
+    transform: scaleY(0);
+    transform-origin: center;
+    transition: transform var(--dur-shift) var(--ease-spring-snap);
+  }
+
+  .row-link {
+    position: relative;
   }
 
   .row-link:active {
     background: var(--surface-row-press);
-    transform: scale(0.995);
+    transform: scale(var(--press-scale-inline));
   }
 
   .row-link:focus-visible {

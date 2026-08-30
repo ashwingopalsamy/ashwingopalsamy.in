@@ -19,6 +19,7 @@
 import { showToast } from "./toast";
 import { playAccent, isSoundEnabled } from "./sound";
 import { pageSignal, onPageCleanup } from "./lifecycle";
+import { onScrollFrame } from "./scroll-scheduler";
 import { copyToClipboard } from "./clipboard";
 import { mermaidFallbacks, STEEL_9 } from "../lib/theme";
 import { iconMarkup } from "../lib/ui-icons";
@@ -287,13 +288,9 @@ function initFootnotePreviews() {
     { signal },
   );
 
-  window.addEventListener(
-    "scroll",
-    () => {
-      if (openFor && card && !card.hidden) position(openFor);
-    },
-    { passive: true, signal },
-  );
+  onScrollFrame(() => {
+    if (openFor && card && !card.hidden) position(openFor);
+  }, signal);
 }
 
 /* ------------------------------------------------------------------ */
@@ -305,25 +302,18 @@ function initProgress() {
   const bar = document.querySelector<HTMLElement>(".note-progress-bar");
   if (!article || !bar) return;
 
-  let ticking = false;
-  const update = () => {
-    ticking = false;
+  /* Scroll-driven animations run this off the compositor (see Note.astro).
+     When they are available there is nothing for the main thread to do,
+     and binding a handler anyway would fight the CSS animation for
+     control of the same transform. */
+  if (CSS.supports("animation-timeline", "view()")) return;
+
+  onScrollFrame(({ viewport }) => {
     const rect = article.getBoundingClientRect();
-    const total = rect.height - window.innerHeight;
+    const total = rect.height - viewport;
     const scrolled = Math.min(Math.max(-rect.top, 0), Math.max(total, 1));
-    const ratio = total > 0 ? scrolled / total : 0;
-    bar.style.transform = `scaleX(${ratio})`;
-  };
-  const onScroll = () => {
-    if (!ticking) {
-      ticking = true;
-      requestAnimationFrame(update);
-    }
-  };
-  update();
-  const signal = pageSignal();
-  window.addEventListener("scroll", onScroll, { passive: true, signal });
-  window.addEventListener("resize", onScroll, { passive: true, signal });
+    bar.style.transform = `scaleX(${total > 0 ? scrolled / total : 0})`;
+  });
 }
 
 /* ------------------------------------------------------------------ */

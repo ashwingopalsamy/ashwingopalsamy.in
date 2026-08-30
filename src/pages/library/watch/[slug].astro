@@ -32,13 +32,27 @@ const dateLabel = entry.data.date.toLocaleDateString("en-GB", { year: "numeric",
     <DetailHeader title={entry.data.title} lede={entry.data.take}>
       <Fragment slot="meta">
         <span>{entry.data.platform}</span>
+        <span class="detail-sep" aria-hidden="true">·</span>
         <time datetime={entry.data.date.toISOString()}>{dateLabel}</time>
-        {entry.data.status !== "finished" && <StatusPill label={entry.data.status} />}
-        {ratingLabel && <span>{ratingLabel}</span>}
+        {entry.data.status !== "finished" && (
+          <>
+            <span class="detail-sep" aria-hidden="true">·</span>
+            <StatusPill label={entry.data.status} />
+          </>
+        )}
+        {ratingLabel && (
+          <>
+            <span class="detail-sep" aria-hidden="true">·</span>
+            <span>{ratingLabel}</span>
+          </>
+        )}
         {entry.data.tags && entry.data.tags.length > 0 && (
-          <ul class="detail-tag-list">
-            {entry.data.tags.map((tag) => <li><span class="detail-tag">#{tag}</span></li>)}
-          </ul>
+          <>
+            <span class="detail-sep" aria-hidden="true">·</span>
+            <ul class="detail-tag-list">
+              {entry.data.tags.map((tag) => <li><span class="detail-tag">#{tag}</span></li>)}
+            </ul>
+          </>
         )}
       </Fragment>
     </DetailHeader>

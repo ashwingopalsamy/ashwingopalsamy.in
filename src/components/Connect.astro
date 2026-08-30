@@ -394,12 +394,6 @@ const pickIndex = quoteIndexOfTheDayServer();
     transition: opacity var(--t-color);
   }
 
-  .quote-btn > :global(.ui-icon) {
-    position: relative;
-    z-index: 1;
-  }
-
-
   .quote-btn:hover,
   .quote-btn:focus-visible {
     color: var(--ink);
@@ -410,9 +404,22 @@ const pickIndex = quoteIndexOfTheDayServer();
     opacity: 1;
   }
 
+  @media (hover: hover) and (pointer: fine) {
+    .quote-btn:hover > :global(.ui-icon),
+    .quote-btn:focus-visible > :global(.ui-icon) {
+      transform: scale(1.1);
+    }
+  }
+
   .quote-btn:active {
-    transform: scale(0.96);
+    transform: scale(0.94);
     transition: transform 90ms var(--ease);
+  }
+
+  .quote-btn > :global(.ui-icon) {
+    position: relative;
+    z-index: 1;
+    transition: transform var(--dur-2) var(--ease-out);
   }
 
   .quote-again :global(.ui-icon) {

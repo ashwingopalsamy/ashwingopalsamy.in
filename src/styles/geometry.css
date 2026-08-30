@@ -1,0 +1,202 @@
+/* ==================================================================
+   geometry — the invisible grid.
+
+   Every measurement in the site resolves back to something in this
+   file. The point is not that a visitor can see the grid; it's that
+   they can feel that nothing was placed by eye.
+
+   Four systems:
+
+     step    a 4px spacing lattice. All gaps, padding and margins are
+             integer multiples. Nothing is 0.85rem "because it looked
+             right".
+
+     rhythm  vertical spacing between blocks of text, expressed as a
+             multiple of the body line box rather than as pixels, so
+             the rhythm survives fluid type instead of drifting out of
+             phase with it at the clamp boundaries.
+
+     radius  a nesting rule, not a list. An inner corner is the outer
+             corner minus the padding between them, which is the only
+             way concentric rounded boxes look concentric.
+
+     hairline a real hairline on displays that can draw one. A 1px rule
+             on a 2x display is a 2-device-pixel slab; the whole site's
+             fine-line character depends on this being right.
+   ================================================================== */
+
+:root {
+  /* ---------------------------------------------------------------- */
+  /*  step — the 4px lattice                                          */
+  /* ---------------------------------------------------------------- */
+  --step: 4px;
+
+  --step-1: calc(var(--step) * 1);   /*  4px  hairline gaps, icon insets */
+  --step-2: calc(var(--step) * 2);   /*  8px  intra-component */
+  --step-3: calc(var(--step) * 3);   /* 12px  control padding */
+  --step-4: calc(var(--step) * 4);   /* 16px  component padding */
+  --step-5: calc(var(--step) * 6);   /* 24px  between components */
+  --step-6: calc(var(--step) * 8);   /* 32px  between groups */
+  --step-7: calc(var(--step) * 12);  /* 48px  between blocks */
+  --step-8: calc(var(--step) * 16);  /* 64px  between sections */
+  --step-9: calc(var(--step) * 24);  /* 96px  between regions */
+
+  /* the existing --space-* names map onto the same lattice so nothing
+     has to be renamed to inherit the grid */
+  --space-1: var(--step-1);
+  --space-2: var(--step-2);
+  --space-3: var(--step-3);
+  --space-4: var(--step-4);
+  --space-5: var(--step-5);
+  --space-6: var(--step-6);
+  --space-7: var(--step-7);
+  --space-8: var(--step-8);
+  --space-9: var(--step-9);
+
+  /* ---------------------------------------------------------------- */
+  /*  rhythm — vertical spacing in line boxes                         */
+  /* ---------------------------------------------------------------- */
+
+  /* one body line box. Everything editorial spaces in multiples of it,
+     which is why paragraphs, headings and rules all sit on the same
+     invisible ruling even though the type is fluid. */
+  --rhythm: calc(1rem * var(--leading-normal, 1.68));
+
+  --rhythm-half: calc(var(--rhythm) * 0.5);
+  --rhythm-1: var(--rhythm);
+  --rhythm-2: calc(var(--rhythm) * 2);
+  --rhythm-3: calc(var(--rhythm) * 3);
+  --rhythm-4: calc(var(--rhythm) * 4);
+
+  /* ---------------------------------------------------------------- */
+  /*  radius — concentric by construction                             */
+  /* ---------------------------------------------------------------- */
+  --r-1: 2px;
+  --r-2: 4px;
+  --r-3: 8px;    /* was 7px — off-lattice, and it showed against 8px gaps */
+  --r-4: 12px;   /* was 10px */
+  --r-5: 16px;
+  --r-6: 20px;
+  --r-pill: 999px;
+
+  /* Nesting: an inner corner is the outer corner less the gap between
+     the two edges. Set --r-outer and --r-gap on a container and read
+     --r-inner on the child. Clamped so it never inverts. */
+  --r-outer: var(--r-4);
+  --r-gap: var(--step-1);
+  --r-inner: max(var(--r-1), calc(var(--r-outer) - var(--r-gap)));
+
+  /* ---------------------------------------------------------------- */
+  /*  hairline                                                        */
+  /* ---------------------------------------------------------------- */
+  --hairline: 1px;
+
+  /* ---------------------------------------------------------------- */
+  /*  optical corrections                                             */
+  /*  Named, so they read as deliberate corrections rather than as     */
+  /*  magic numbers someone nudged until it looked level.              */
+  /* ---------------------------------------------------------------- */
+
+  /* monospace sits high against Inter's x-height */
+  --mono-optical-shift: 1px;
+
+  /* an icon's drawn mass is smaller than its box; pull it back toward
+     the text it labels */
+  --optical-icon-inset: 1px;
+
+  /* pill labels are centred on the box, but read low because caps have
+     no descender. Lift by a hair. */
+  --optical-pill-lift: 0.5px;
+
+  /* ---------------------------------------------------------------- */
+  /*  the rail                                                        */
+  /* ---------------------------------------------------------------- */
+  --rail-max: clamp(680px, 52vw, 800px);
+  --rail-gutter: calc(var(--step) * 5); /* 20px */
+
+  /* Twelve columns inside the rail. Component widths that need to
+     agree with each other across pages resolve through these rather
+     than through percentages invented per page. */
+  --rail-cols: 12;
+  --rail-gap: var(--step-5);
+  /* Measured across the content box, not the rail box: the gutters are
+     outside the columns, so subtract them before dividing or every
+     column lands a gutter-and-a-bit off. */
+  --rail-content: calc(var(--rail-max) - (var(--rail-gutter) * 2));
+  --rail-col: calc(
+    (var(--rail-content) - (var(--rail-gap) * (var(--rail-cols) - 1))) / var(--rail-cols)
+  );
+}
+
+/* True hairlines where the display can draw one. Below 2dppx a 0.5px
+   border rounds to 1px in some engines and to 0 in others, so this is
+   gated rather than applied everywhere. */
+@media (min-resolution: 2dppx) {
+  :root {
+    --hairline: 0.5px;
+  }
+}
+
+/* ------------------------------------------------------------------
+   grid overlay — hold G to see the lattice the page was built on.
+   Costs nothing when off: the element does not exist until the key is
+   held (see scripts/grid-overlay.ts) and it is never shipped to
+   print, reduced-transparency or screen readers.
+   ------------------------------------------------------------------ */
+
+.grid-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-overlay) + 30);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-tint) linear;
+}
+
+.grid-overlay.is-on {
+  opacity: 1;
+}
+
+.grid-overlay::before {
+  /* the 4px lattice, every 4th line emphasised */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--vermilion) 7%, transparent) 0 var(--hairline),
+      transparent var(--hairline) var(--step)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in oklch, var(--vermilion) 20%, transparent) 0 var(--hairline),
+      transparent var(--hairline) var(--rhythm)
+    );
+}
+
+.grid-overlay::after {
+  /* the rail and its twelve columns */
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline: 0;
+  width: 100%;
+  max-inline-size: var(--rail-max);
+  margin-inline: auto;
+  padding-inline: var(--rail-gutter);
+  box-sizing: border-box;
+  background-clip: content-box;
+  background-image: repeating-linear-gradient(
+    to right,
+    color-mix(in oklch, var(--acc-blue) 6%, transparent) 0 var(--rail-col),
+    transparent var(--rail-col) calc(var(--rail-col) + var(--rail-gap))
+  );
+  border-inline: var(--hairline) solid color-mix(in oklch, var(--acc-blue) 30%, transparent);
+}
+
+@media print {
+  .grid-overlay {
+    display: none;
+  }
+}

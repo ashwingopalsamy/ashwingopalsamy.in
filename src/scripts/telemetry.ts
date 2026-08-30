@@ -1,3 +1,5 @@
+import { onScrollFrame, type ScrollFrame } from "./scroll-scheduler";
+
 export interface ClientTelemetryEvent {
   type: string;
   name?: string;
@@ -206,20 +208,20 @@ export function trackClientError(error: unknown, source = "window"): void {
   });
 }
 
-function updateScrollDepth(): void {
-  if (typeof window === "undefined" || typeof document === "undefined") return;
-  const docHeight = Math.max(
-    document.body.scrollHeight,
-    document.documentElement.scrollHeight,
-    document.body.offsetHeight,
-    document.documentElement.offsetHeight,
-    1,
+/**
+ * Scroll depth, from numbers the scheduler has already measured.
+ *
+ * This used to run on every scroll event with no throttling and read five
+ * layout properties each time, forcing a synchronous layout mid-scroll for
+ * a metric that is only ever reported in 25% buckets.
+ */
+function updateScrollDepth(frame: ScrollFrame): void {
+  const percent = Math.min(
+    100,
+    Math.round(((frame.y + frame.viewport) / frame.docHeight) * 100),
   );
-  const viewHeight = window.innerHeight;
-  const scrollY = window.scrollY || window.pageYOffset;
-  const currentPercent = Math.min(100, Math.round(((scrollY + viewHeight) / docHeight) * 100));
-  if (currentPercent > maxScrollPercent) {
-    maxScrollPercent = currentPercent;
+  if (percent > maxScrollPercent) {
+    maxScrollPercent = percent;
   }
 }
 
@@ -274,7 +276,9 @@ export function initTelemetry(): void {
     flushPageDwell();
   });
 
-  window.addEventListener("scroll", updateScrollDepth, { passive: true });
+  // null signal: telemetry outlives client-side navigations, so it must
+  // not be torn down by the per-page cleanup registry.
+  onScrollFrame(updateScrollDepth, null);
 
   document.addEventListener("astro:before-swap", () => {
     flushPageDwell();

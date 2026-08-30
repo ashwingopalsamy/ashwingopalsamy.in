@@ -2,7 +2,11 @@
 import { ClientRouter } from "astro:transitions";
 import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 import "../styles/fonts.css";
+// geometry first (global.css consumes --step-*/--r-*), motion last so its
+// retuned duration and easing tokens win over the legacy values.
+import "../styles/geometry.css";
 import "../styles/global.css";
+import "../styles/motion.css";
 import { site } from "../data/home";
 import { buildMeta } from "../lib/build";
 import { organizationJsonLd, personJsonLd } from "../lib/jsonld";
@@ -249,15 +253,27 @@ const documentTitle = isHome
     </div>
 
     <script>
-      import { initConsole } from "../scripts/console";
-      import { initTelemetry } from "../scripts/telemetry";
-      import "../scripts/webmcp";
-      import { playAccent } from "../scripts/sound";
       import { onPageCleanup } from "../scripts/lifecycle";
       import "../scripts/navigation-shell";
       import "../scripts/floating-toc";
-      initConsole();
-      initTelemetry();
+      import "../scripts/grid-overlay";
+
+      /* Nothing below affects the first interaction: the devtools console
+         art, the telemetry queue and the WebMCP bridge are all observers.
+         Keeping them in the critical entry chunk meant the browser parsed
+         and ran them before the page could respond to anything. They now
+         load once the main thread is actually free. */
+      const whenIdle: (fn: () => void) => unknown =
+        typeof window.requestIdleCallback === "function"
+          ? (fn) => window.requestIdleCallback(fn, { timeout: 2000 })
+          : (fn) => setTimeout(fn, 200);
+
+      whenIdle(() => {
+        void import("../scripts/console").then((m) => m.initConsole());
+        void import("../scripts/telemetry").then((m) => m.initTelemetry());
+        void import("../scripts/webmcp");
+      });
+
       declare global {
         interface Window {
           __siteInitialRevealComplete?: boolean;
@@ -281,7 +297,8 @@ const documentTitle = isHome
         }
         window.__siteInitialRevealComplete = true;
         const motionOn = document.documentElement.dataset.motion === "on";
-        const REVEAL_ORDER_CAP = isHomePage ? 6 : 1;
+        // Cap the stagger so a long list never turns into a queue.
+        const REVEAL_ORDER_CAP = isHomePage ? 5 : 2;
 
         if (!motionOn || !("IntersectionObserver" in window)) {
           items.forEach((el) => el.classList.add("entered"));
@@ -289,24 +306,25 @@ const documentTitle = isHome
         }
 
         // Read phase FIRST (before mutating styles/classes to prevent forced reflow)
+        //
+        // Every page now uses the viewport test. Non-home pages used to
+        // treat only the first element as above the fold and hand the rest
+        // to the observer, so content that was already on screen at first
+        // paint still started at opacity 0 and waited for an observer
+        // callback plus its stagger before appearing. On a page like /more,
+        // where the whole grid is visible immediately, that is the entire
+        // page arriving late for no reason.
         const viewportCutoff = window.innerHeight * 0.92;
         const aboveFold: HTMLElement[] = [];
         const toObserve: HTMLElement[] = [];
 
-        if (isHomePage) {
-          items.forEach((el) => {
-            if (el.getBoundingClientRect().top < viewportCutoff) {
-              aboveFold.push(el);
-            } else {
-              toObserve.push(el);
-            }
-          });
-        } else {
-          items.forEach((el, index) => {
-            if (index === 0) aboveFold.push(el);
-            else toObserve.push(el);
-          });
-        }
+        items.forEach((el) => {
+          if (el.getBoundingClientRect().top < viewportCutoff) {
+            aboveFold.push(el);
+          } else {
+            toObserve.push(el);
+          }
+        });
 
         // Above-fold content renders immediately with 0 render delay
         aboveFold.forEach((el) => el.classList.add("entered"));
@@ -373,7 +391,9 @@ const documentTitle = isHome
       document.addEventListener("keydown", (e) => {
         if (chord(e)) {
           document.documentElement.dataset.accent = "off-hours";
-          playAccent("pop");
+          // The Web Audio engine is pulled in on the gesture that needs
+          // it, not on every page load.
+          void import("../scripts/sound").then((m) => m.playAccent("pop"));
         }
       });
       document.addEventListener("keyup", () => {

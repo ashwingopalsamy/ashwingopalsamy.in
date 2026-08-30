@@ -126,25 +126,25 @@
   transition: font-weight var(--t-color);
 }
 .prose em { font-style: italic; }
-.prose :is(strong, em) a { color: inherit; }
-
 .prose a {
   color: inherit;
   text-decoration-line: underline;
   text-decoration-thickness: 0.5px;
-  text-decoration-color: color-mix(in oklch, currentColor 18%, transparent);
-  text-underline-offset: 4px;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
   text-decoration-skip-ink: auto;
   transition:
     text-decoration-color var(--t-color),
     color var(--t-color);
 }
-.prose a:hover,
-.prose a:focus-visible {
-  text-decoration-color: color-mix(in oklch, currentColor 55%, transparent);
-}
 
 @media (hover: hover) and (pointer: fine) {
+  .prose a:hover,
+  .prose a:focus-visible {
+    color: var(--ink);
+    text-decoration-color: currentColor;
+  }
+
   .prose :is(p, li, blockquote):hover strong,
   .prose strong:hover {
     font-weight: var(--font-hover-bold);
@@ -190,10 +190,8 @@
   margin: 1.5rem 0;
   border: 1px solid var(--chrome-surface-border);
   border-radius: var(--r-4);
-  background: var(--chrome-surface-bg);
+  background: var(--surface-inline-bg);
   box-shadow: var(--chrome-surface-shadow);
-  -webkit-backdrop-filter: blur(20px) saturate(170%);
-  backdrop-filter: blur(20px) saturate(170%);
   overflow: hidden;
   max-inline-size: 100%;
   min-inline-size: 0;
@@ -446,10 +444,8 @@
   border: 1px solid var(--chrome-surface-border);
   border-inline-start: 3px solid var(--cx);
   border-radius: var(--r-4);
-  background: var(--chrome-surface-bg);
+  background: var(--surface-inline-bg);
   box-shadow: var(--chrome-surface-shadow);
-  -webkit-backdrop-filter: blur(20px) saturate(170%);
-  backdrop-filter: blur(20px) saturate(170%);
   color: var(--ink);
   font-style: normal;
   transition: border-color var(--t-color), background-color var(--t-color), box-shadow var(--t-color);
@@ -557,10 +553,8 @@
   margin: 1.75rem 0;
   border: 1px solid var(--chrome-surface-border);
   border-radius: var(--r-4);
-  background: var(--chrome-surface-bg);
+  background: var(--surface-inline-bg);
   box-shadow: var(--chrome-surface-shadow);
-  -webkit-backdrop-filter: blur(20px) saturate(170%);
-  backdrop-filter: blur(20px) saturate(170%);
   overflow: hidden;
   max-inline-size: 100%;
   min-inline-size: 0;

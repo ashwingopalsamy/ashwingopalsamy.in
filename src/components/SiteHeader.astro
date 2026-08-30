@@ -90,11 +90,33 @@ const backTarget = resolveBackTarget(path);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-4);
+    gap: var(--step-4);
     min-inline-size: 0;
     max-inline-size: 100%;
-    padding-top: 2.75rem;
+    padding-top: calc(var(--step) * 11);
     pointer-events: none;
+  }
+
+  /* Each glass surface is lifted out of the root snapshot individually so
+     the route blur never touches persistent chrome.
+     
+     The name must go on the frosted element itself, never on a wrapper
+     around it. view-transition-name makes an element a backdrop root, and
+     a backdrop root cuts its DESCENDANTS off from the page behind them —
+     so naming .site-header left every pill inside it sampling nothing and
+     rendering as plain transparency. An element's own backdrop-filter
+     resolves against its ancestor backdrop root, so naming the leaf is
+     safe. */
+  .logo-control {
+    view-transition-name: chrome-logo;
+  }
+
+  .site-nav {
+    view-transition-name: chrome-nav;
+  }
+
+  .header-palette-trigger {
+    view-transition-name: chrome-action;
   }
 
   .logo-control,
@@ -196,55 +218,67 @@ const backTarget = resolveBackTarget(path);
   }
 
   .site-nav {
-    --nav-slot: 4.35rem;
-    --nav-gap: 0.2rem;
+    --nav-slot: calc(var(--step) * 18);
+    --nav-gap: var(--step-1);
     position: relative;
     display: grid;
     grid-template-columns: repeat(3, var(--nav-slot));
     gap: var(--nav-gap);
     block-size: var(--chrome-size);
     box-sizing: border-box;
-    padding: 0.25rem;
+    padding: var(--step-1);
     margin-inline-start: auto;
     min-inline-size: 0;
     max-inline-size: 100%;
     font-size: 0.9375rem;
   }
 
+  /* Slot offsets are a variable rather than a transform per index, so the
+     pill's position and its travel squash are separate properties and can
+     run on separate timelines without fighting each other. */
+  .site-nav,
+  .site-nav-bottom {
+    --pill-x: 0px;
+  }
+
+  .site-nav[data-active-index="1"],
+  .site-nav-bottom[data-active-index="1"] {
+    --pill-x: calc(100% + (var(--nav-gap) * 1));
+  }
+
+  .site-nav[data-active-index="2"],
+  .site-nav-bottom[data-active-index="2"] {
+    --pill-x: calc(200% + (var(--nav-gap) * 2));
+  }
+
+  .site-nav-bottom[data-active-index="3"] {
+    --pill-x: calc(300% + (var(--nav-gap) * 3));
+  }
+
+  .site-nav-bottom[data-active-index="4"] {
+    --pill-x: calc(400% + (var(--nav-gap) * 4));
+  }
+
   .nav-selection {
     position: absolute;
-    inset-block: 0.25rem;
-    inset-inline-start: 0.25rem;
+    inset-block: var(--step-1);
+    inset-inline-start: var(--step-1);
     width: var(--nav-slot);
     border-radius: var(--r-pill);
     background: var(--ink);
     box-shadow: var(--shadow-1);
     pointer-events: none;
-    transform: translate3d(0, 0, 0);
-    transition: transform var(--dur-3) var(--ease), background-color var(--t-color), opacity var(--t-color);
+    transform: translate3d(var(--pill-x), 0, 0);
+    transform-origin: center;
+    transition:
+      transform var(--dur-shift) var(--ease-spring-snap),
+      background-color var(--t-color),
+      opacity var(--t-color);
   }
 
   .site-nav[data-no-active] .nav-selection,
   .site-nav-bottom[data-no-active] .nav-selection {
     opacity: 0;
-  }
-
-  .site-nav[data-active-index="1"] .nav-selection,
-  .site-nav-bottom[data-active-index="1"] .nav-selection {
-    transform: translate3d(calc(100% + var(--nav-gap)), 0, 0);
-  }
-
-  .site-nav[data-active-index="2"] .nav-selection,
-  .site-nav-bottom[data-active-index="2"] .nav-selection {
-    transform: translate3d(calc(200% + var(--nav-gap) + var(--nav-gap)), 0, 0);
-  }
-
-  .site-nav-bottom[data-active-index="3"] .nav-selection {
-    transform: translate3d(calc(300% + var(--nav-gap) + var(--nav-gap) + var(--nav-gap)), 0, 0);
-  }
-
-  .site-nav-bottom[data-active-index="4"] .nav-selection {
-    transform: translate3d(calc(400% + var(--nav-gap) + var(--nav-gap) + var(--nav-gap) + var(--nav-gap)), 0, 0);
   }
 
   .site-nav .quiet-link {
@@ -257,7 +291,11 @@ const backTarget = resolveBackTarget(path);
     padding-inline: var(--space-2);
     border-radius: var(--r-pill);
     text-decoration: none;
-    transition: color var(--t-color), opacity var(--t-color), transform var(--dur-1) var(--ease-out);
+    transition:
+      color var(--t-color),
+      background-color var(--t-color),
+      opacity var(--t-color),
+      transform var(--dur-press) var(--ease-snap);
   }
 
   .site-nav .quiet-link.active {
@@ -291,8 +329,9 @@ const backTarget = resolveBackTarget(path);
   .header-palette-trigger:active,
   .site-nav a:active,
   .site-nav-bottom a:active {
-    transform: scale(0.97);
-    transition-duration: var(--dur-1);
+    transform: scale(var(--press-scale));
+    transition-duration: var(--dur-press);
+    transition-timing-function: var(--ease-snap);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -314,12 +353,13 @@ const backTarget = resolveBackTarget(path);
     .site-nav .quiet-link:not(.active):hover,
     .site-nav .quiet-link:not(.active):focus-visible {
       color: var(--ink);
+      background: color-mix(in oklch, var(--ink) 4.5%, transparent);
     }
   }
 
   @media (max-width: 38rem) {
     .site-header {
-      padding-top: calc(1.25rem + env(safe-area-inset-top, 0px));
+      padding-top: calc((var(--step) * 5) + env(safe-area-inset-top, 0px));
       pointer-events: auto;
     }
 
@@ -332,9 +372,9 @@ const backTarget = resolveBackTarget(path);
     }
 
     .site-header .chrome-surface {
-      background: color-mix(in oklch, var(--canvas) 94%, var(--ink));
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
+      background: var(--chrome-surface-bg);
+      -webkit-backdrop-filter: blur(20px) saturate(170%);
+      backdrop-filter: blur(20px) saturate(170%);
     }
 
     .header-palette-trigger {
@@ -342,11 +382,13 @@ const backTarget = resolveBackTarget(path);
     }
 
     .site-nav-bottom {
-      --nav-gap: 0.125rem;
-      --nav-slot: calc((100% - 1rem) / 5);
+      /* 4 gaps of 2px + 2 x 4px padding = 16px, which is what the slot
+         width subtracts. Keep the three in step if any of them changes. */
+      --nav-gap: calc(var(--step) / 2);
+      --nav-slot: calc((100% - var(--step-4)) / 5);
       position: fixed;
       right: var(--mobile-gutter-end);
-      bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+      bottom: calc((var(--step) * 5) + env(safe-area-inset-bottom, 0px));
       left: var(--mobile-gutter-start);
       z-index: var(--z-sticky);
       display: grid;
@@ -354,15 +396,18 @@ const backTarget = resolveBackTarget(path);
       max-inline-size: 100%;
       grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: var(--nav-gap);
-      padding: 0.25rem;
-      border: 1px solid var(--chrome-surface-border);
+      padding: var(--step-1);
+      border: var(--hairline) solid var(--chrome-surface-border);
       border-radius: var(--r-pill);
-      background: color-mix(in oklch, var(--canvas) 94%, var(--ink));
+      background: var(--chrome-surface-bg);
       box-shadow: var(--shadow-2), var(--shadow-inset);
+      -webkit-backdrop-filter: blur(20px) saturate(170%);
+      backdrop-filter: blur(20px) saturate(170%);
+      view-transition-name: chrome-bottom;
     }
 
     .site-nav-bottom .nav-selection {
-      inset-block: 0.25rem;
+      inset-block: var(--step-1);
       width: var(--nav-slot);
     }
 
@@ -373,34 +418,41 @@ const backTarget = resolveBackTarget(path);
       min-width: 0;
       max-width: 100%;
       min-inline-size: 0;
-      min-height: 44px;
-      grid-template-columns: 0.9rem auto;
+      min-height: var(--control-hit);
+      grid-template-columns: var(--step-4) auto;
       align-items: center;
       justify-content: center;
-      gap: 0.35rem;
+      gap: calc(var(--step) * 1.5);
       padding-inline: 0;
       border-radius: var(--r-pill);
       color: var(--muted);
       font-size: 0.75rem;
       font-weight: var(--font-medium);
       text-decoration: none;
-      transition: color var(--t-color), transform var(--dur-1) var(--ease-out);
+      transition: color var(--t-color), transform var(--dur-press) var(--ease-snap);
     }
 
     .site-nav-bottom .tab.active {
       color: var(--canvas);
     }
 
+    /* The icon does not just appear on selection: it springs in from
+       slightly small while the label holds position, so the tab reads as
+       gaining an icon rather than swapping contents. */
     .tab-icon {
       display: grid;
-      width: 0.9rem;
+      width: var(--step-4);
       place-items: center;
       opacity: 0;
-      transition: opacity var(--dur-2) var(--ease-out);
+      scale: 0.6;
+      transition:
+        opacity var(--dur-tint) linear,
+        scale var(--dur-shift) var(--ease-spring-pop);
     }
 
     .tab.active .tab-icon {
       opacity: 1;
+      scale: 1;
     }
 
     .tab-label {
@@ -411,6 +463,11 @@ const backTarget = resolveBackTarget(path);
   @media (prefers-reduced-motion: reduce) {
     .nav-selection {
       transition: opacity var(--t-color), background-color var(--t-color);
+    }
+
+    .tab-icon {
+      scale: 1;
+      transition: opacity var(--t-color);
     }
 
     .logo-control,

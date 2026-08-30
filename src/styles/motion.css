@@ -1,0 +1,282 @@
+/* ==================================================================
+   motion — the site's movement system.
+
+   Rules this file exists to enforce:
+
+   1. Only transform, opacity and colour are animated on live DOM.
+      Blur is still used everywhere it was used before, but it now runs
+      against snapshot layers (::view-transition-*) or against a layer
+      whose radius is constant and whose opacity is what moves. A blur
+      whose radius changes on live content re-rasterises the subtree
+      every frame; a blur whose radius is fixed is rasterised once and
+      then alpha-composited for free.
+
+   2. Arrival and departure are not the same gesture. Things leave
+      faster than they arrive, and on a different curve. Uniform
+      durations are the single biggest reason interfaces read as cheap.
+
+   3. Duration scales with how much actually changes. A colour swap is
+      110ms, a 3px nudge is 150ms, a panel is 260ms. Nothing is 250ms
+      "because that's the token".
+
+   4. Springs are real springs. --ease-spring-* are damped harmonic
+      oscillators sampled into linear(), not a bezier pretending.
+   ================================================================== */
+
+:root {
+  /* ---------------------------------------------------------------- */
+  /*  curves                                                          */
+  /* ---------------------------------------------------------------- */
+
+  /* Arrival: almost all of the distance is covered in the first third,
+     then it settles. This is what makes a move feel answered instantly
+     even when it takes 200ms. */
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Departure: starts slow, accelerates away. Leaving should feel like
+     the element was pushed, not eased. */
+  --ease-exit: cubic-bezier(0.55, 0, 1, 0.45);
+
+  /* Travel: symmetric, for things moving from one committed position to
+     another (the nav pill, the library tab indicator). */
+  --ease-travel: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Decisive: the "no argument" curve for state that flips. */
+  --ease-snap: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Damped springs, sampled at 20 stops. Comments record the physics so
+     these can be regenerated rather than guessed at.
+     see: mass 1, position curve of a damped harmonic oscillator */
+
+  /* stiffness 900, damping 46 → ~247ms, 2.3% overshoot */
+  --ease-spring-snap: linear(
+    0, 0.0565, 0.1858, 0.3432, 0.5003, 0.6409, 0.7577, 0.849, 0.9164,
+    0.9632, 0.9936, 1.0114, 1.0204, 1.0234, 1.0227, 1.0199, 1.0163,
+    1.0126, 1.0092, 1.0063, 1
+  );
+
+  /* stiffness 700, damping 46 → ~189ms, critically damped, no overshoot */
+  --ease-spring-soft: linear(
+    0, 0.027, 0.0936, 0.1824, 0.2812, 0.3814, 0.4774, 0.566, 0.6452,
+    0.7144, 0.7736, 0.8233, 0.8645, 0.8979, 0.9247, 0.9459, 0.9623,
+    0.9749, 0.9842, 0.9911, 1
+  );
+
+  /* stiffness 900, damping 34 → ~313ms, 11.5% overshoot */
+  --ease-spring-pop: linear(
+    0, 0.0911, 0.2968, 0.5354, 0.7535, 0.9229, 1.0354, 1.0956, 1.115,
+    1.1072, 1.0846, 1.0572, 1.0315, 1.0111, 0.9973, 0.9896, 0.9868,
+    0.9874, 0.9898, 0.993, 1
+  );
+
+  /* names the rest of the codebase already speaks */
+  --ease: var(--ease-enter);
+  --ease-out: var(--ease-enter);
+  --ease-in-out: var(--ease-travel);
+  --ease-drawer: var(--ease-enter);
+  --ease-spring: var(--ease-spring-pop);
+
+  /* ---------------------------------------------------------------- */
+  /*  durations — named for the size of the change, not a step index   */
+  /* ---------------------------------------------------------------- */
+
+  --dur-press: 70ms;      /* finger down / up. Must beat perception. */
+  --dur-tint: 110ms;      /* colour only, nothing moves */
+  --dur-nudge: 150ms;     /* movement under ~8px */
+  --dur-shift: 200ms;     /* component-scale movement */
+  --dur-enter: 240ms;     /* something arriving that wasn't there */
+  --dur-exit: 120ms;      /* always faster than the matching enter */
+  --dur-overlay: 280ms;   /* full-surface overlays */
+
+  /* route handoff — the two halves overlap, so the felt duration is
+     the longer of the pair, not the sum */
+  --dur-route-out: 90ms;
+  --dur-route-in: 200ms;
+
+  /* legacy scale, retuned rather than removed so existing components
+     inherit the new rhythm without being touched one by one */
+  --dur-1: var(--dur-press);
+  --dur-2: var(--dur-tint);
+  --dur-3: var(--dur-shift);
+  --dur-4: var(--dur-enter);
+  --dur-5: var(--dur-overlay);
+
+  --t-move: var(--dur-nudge) var(--ease-enter);
+  --t-color: var(--dur-tint) linear;
+  --t-draw: var(--dur-enter) var(--ease-enter);
+  --t-press: transform var(--dur-press) var(--ease-snap);
+
+  /* ---------------------------------------------------------------- */
+  /*  travel — how far anything is allowed to move                    */
+  /*  Tied to the geometry grid so movement lands on the same rhythm  */
+  /*  as the layout. Nothing travels an arbitrary number of pixels.   */
+  /* ---------------------------------------------------------------- */
+
+  --travel-hair: 2px;   /* icon nudge */
+  --travel-nudge: 3px;  /* arrow on hover */
+  --travel-step: 6px;   /* panel entry */
+  --travel-rise: 10px;  /* section reveal */
+
+  /* press physics — one scale for the whole site so every control
+     answers with the same weight */
+  --press-scale: 0.978;
+  --press-scale-inline: 0.99; /* wide targets need less, or they wobble */
+}
+
+/* ------------------------------------------------------------------
+   route choreography
+
+   The old implementation blurred the live <main> from 4px to 0 over
+   250ms after the swap, which meant: the outgoing page vanished with no
+   handoff, the incoming text was unreadable for a quarter second, and
+   the blur radius changed every frame on live, un-promoted DOM.
+
+   Here the same blur runs on ::view-transition-old/new — flat textures
+   the compositor already holds — so it is a shader pass, not a
+   re-raster. The two halves overlap, and the blur is confined to the
+   page: the chrome is excluded from the root snapshot and holds still
+   (see the block below).
+   ------------------------------------------------------------------ */
+
+/* The pseudo tree must never eat clicks. */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  pointer-events: none;
+}
+
+@keyframes route-out {
+  from {
+    opacity: 1;
+    filter: blur(0);
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    opacity: 0;
+    filter: blur(3px);
+    transform: translate3d(0, calc(var(--route-dir, 1) * -4px), 0);
+  }
+}
+
+@keyframes route-in {
+  from {
+    opacity: 0;
+    filter: blur(5px);
+    transform: translate3d(0, calc(var(--route-dir, 1) * 8px), 0);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Back navigation reverses the axis, so the site has a sense of
+   direction rather than one generic transition in both directions. */
+:root[data-astro-transition="back"] {
+  --route-dir: -1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: route-out var(--dur-route-out) var(--ease-exit) both;
+  }
+
+  ::view-transition-new(root) {
+    animation: route-in var(--dur-route-in) var(--ease-enter) both;
+    /* start fractionally before the outgoing layer is gone so the two
+       overlap instead of handing off through an empty frame */
+    animation-delay: 40ms;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Chrome holds absolutely still.
+
+   The blur belongs to the page, not to the furniture. Each frosted
+   surface is lifted out of the root snapshot by name so the route blur
+   cannot touch it, and then given no animation of any kind: the old
+   snapshot is dropped outright and the new one is painted as-is. The
+   result is that the header, its pills and the selection indicator are
+   pixel-stable across a navigation while the content behind them
+   resolves.
+
+   Note the names sit on the frosted elements themselves, never on a
+   wrapper around them. view-transition-name makes an element a backdrop
+   root, and a backdrop root severs its DESCENDANTS from the page behind
+   them — naming the header renders every pill inside it as flat
+   transparency. Keep these on the leaves.
+
+   These rules are outside the reduced-motion query on purpose: holding
+   still is correct in both cases.
+   ------------------------------------------------------------------ */
+
+::view-transition-group(chrome-logo),
+::view-transition-group(chrome-nav),
+::view-transition-group(chrome-action),
+::view-transition-group(chrome-bottom) {
+  animation: none;
+}
+
+/* Dropping the outgoing copy rather than cross-fading it: two stacked
+   translucent glass snapshots double the tint and ghost the old pill
+   through the new one. */
+::view-transition-old(chrome-logo),
+::view-transition-old(chrome-nav),
+::view-transition-old(chrome-action),
+::view-transition-old(chrome-bottom) {
+  display: none;
+}
+
+::view-transition-new(chrome-logo),
+::view-transition-new(chrome-nav),
+::view-transition-new(chrome-action),
+::view-transition-new(chrome-bottom) {
+  animation: none;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+
+  ::view-transition-group(*) {
+    animation-duration: 1ms;
+  }
+}
+
+/* ------------------------------------------------------------------
+   shared motion primitives
+   ------------------------------------------------------------------ */
+
+/* Every pressable control in the site answers with the same weight.
+   Applied via class so the physics live in one place. */
+.pressable {
+  transition: var(--t-press);
+}
+
+.pressable:active {
+  transform: scale(var(--press-scale));
+  /* release is a spring, press is instant — that asymmetry is what
+     makes a control feel physical rather than animated */
+  transition-duration: var(--dur-press);
+}
+
+.pressable-inline:active {
+  transform: scale(var(--press-scale-inline));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pressable,
+  .pressable:active,
+  .pressable-inline:active {
+    transform: none;
+    transition: none;
+  }
+}

@@ -123,9 +123,11 @@ function handleBeforePreparation(event: Event) {
 
 function handleBeforeSwap(event: Event) {
   const navigation = event as TransitionBeforeSwapEvent;
-  try {
-    navigation.viewTransition.skipTransition();
-  } catch {}
+  // The transition is deliberately NOT skipped. The browser has already
+  // captured both documents by this point; skipping threw that capture
+  // away and the effect had to be re-created by blurring live DOM. The
+  // route blur now runs on the snapshot layers instead (motion.css),
+  // which is the same look for a fraction of the cost.
   setPhase("entering", navigation.newDocument);
   try {
     if (

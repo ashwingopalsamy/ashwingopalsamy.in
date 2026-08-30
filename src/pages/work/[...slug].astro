@@ -35,16 +35,18 @@ const url = slashPath(`/work/${entry.data.slug}`);
       <Fragment slot="meta">
         <time datetime={new Date(date).toISOString()}>{new Date(date).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" })}</time>
         {tech.length > 0 && (
-          <ul class="detail-tag-list">
-            {tech.map((t) => <li><span class="detail-tag">#{t}</span></li>)}
-          </ul>
+          <>
+            <span class="detail-sep" aria-hidden="true">·</span>
+            <ul class="detail-tag-list">
+              {tech.map((t) => <li><span class="detail-tag">#{t}</span></li>)}
+            </ul>
+          </>
         )}
       </Fragment>
       {github && (
         <Fragment slot="action">
-          <a href={github} target="_blank" rel="noopener noreferrer">
-            <span>View on GitHub</span>
-            <Icon name="arrow-up-right" size={13} />
+          <a href={github} target="_blank" rel="noopener noreferrer" aria-label="View on GitHub" title="View on GitHub">
+            <Icon name="arrow-up-right" size={14} />
           </a>
         </Fragment>
       )}

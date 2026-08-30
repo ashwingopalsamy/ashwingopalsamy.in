@@ -7,7 +7,16 @@
  */
 
 import { pageSignal } from "./lifecycle";
-import { isSoundEnabled, playAccent } from "./sound";
+import { onScrollFrame } from "./scroll-scheduler";
+
+/* The Web Audio engine is ~2.3KB of module that only matters the moment
+   someone actually operates the rail. Loading it eagerly here put it in
+   the critical entry chunk of every page on the site, including pages
+   that have no table of contents at all. */
+async function tick(): Promise<void> {
+  const { isSoundEnabled, playAccent } = await import("./sound");
+  if (isSoundEnabled()) playAccent("tick");
+}
 
 interface HeadingItem {
   id: string;
@@ -174,7 +183,7 @@ export function initUniversalFloatingToc() {
     btn.addEventListener(
       "click",
       () => {
-        if (isSoundEnabled()) playAccent("tick");
+        void tick();
         scrollToTarget(id);
       },
       { signal },
@@ -201,44 +210,61 @@ export function initUniversalFloatingToc() {
     { signal },
   );
 
-  let ticking = false;
-  const updateSpy = () => {
-    const scrollY = window.scrollY;
-    const scrollHeight = document.documentElement.scrollHeight;
-    const clientHeight = window.innerHeight;
+  /* Scroll-spy.
+   *
+   * This used to call getBoundingClientRect on every heading on every
+   * animation frame of every scroll — an O(headings) forced layout at
+   * 60Hz to answer a question that changes a handful of times per page.
+   *
+   * An IntersectionObserver answers the same question from the compositor
+   * with no main-thread layout at all. The rootMargin collapses the
+   * viewport to a thin band 240px from the top, so a heading "crosses"
+   * exactly where the old rect test fired.
+   */
+  const ACTIVATION_LINE = 240;
+  const crossed = new Set<string>();
 
-    if (scrollY < 120) {
+  const resolveActive = () => {
+    // Walk in document order; the last heading above the line wins.
+    let activeIdx = 0;
+    for (let i = 0; i < buttons.length; i++) {
+      if (crossed.has(buttons[i].id)) activeIdx = i;
+    }
+    return buttons[activeIdx].id;
+  };
+
+  const spy = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        const id = (entry.target as HTMLElement).id;
+        // Above the activation line == the element's top has passed it.
+        if (entry.boundingClientRect.top <= ACTIVATION_LINE) crossed.add(id);
+        else crossed.delete(id);
+      }
+      setActive(resolveActive());
+    },
+    { rootMargin: `-${ACTIVATION_LINE}px 0px 0px 0px`, threshold: 0 },
+  );
+
+  buttons.forEach(({ el }) => spy.observe(el));
+  signal.addEventListener("abort", () => spy.disconnect(), { once: true });
+
+  /* Two edge cases the observer alone gets wrong: resting at the very top
+     (first heading should read active even before it crosses) and at the
+     very bottom (the last heading may never reach the line on a short
+     final section). Both are cheap because the scheduler has already
+     measured the page. */
+  onScrollFrame(({ y, viewport, docHeight }) => {
+    if (y < 120) {
       setActive(headings[0].id);
       return;
     }
-
-    if (scrollHeight - (scrollY + clientHeight) < 60) {
+    if (docHeight - (y + viewport) < 60) {
       setActive(headings[headings.length - 1].id);
       return;
     }
-
-    let activeIdx = 0;
-    for (let i = 0; i < buttons.length; i++) {
-      const rect = buttons[i].el.getBoundingClientRect();
-      if (rect.top <= 240) {
-        activeIdx = i;
-      }
-    }
-    setActive(buttons[activeIdx].id);
-  };
-
-  const onScroll = () => {
-    if (!ticking) {
-      window.requestAnimationFrame(() => {
-        updateSpy();
-        ticking = false;
-      });
-      ticking = true;
-    }
-  };
-
-  window.addEventListener("scroll", onScroll, { passive: true, signal });
-  updateSpy();
+    setActive(resolveActive());
+  }, signal);
 
   document.addEventListener(
     "keydown",
@@ -265,14 +291,14 @@ export function initUniversalFloatingToc() {
         const nextIdx = Math.min(buttons.length - 1, currentIdx + 1);
         if (nextIdx !== currentIdx) {
           e.preventDefault();
-          if (isSoundEnabled()) playAccent("tick");
+          void tick();
           scrollToTarget(buttons[nextIdx].id);
         }
       } else if (e.key === "k") {
         const prevIdx = Math.max(0, currentIdx - 1);
         if (prevIdx !== currentIdx) {
           e.preventDefault();
-          if (isSoundEnabled()) playAccent("tick");
+          void tick();
           scrollToTarget(buttons[prevIdx].id);
         }
       }

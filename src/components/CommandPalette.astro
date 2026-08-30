@@ -187,27 +187,43 @@ import Icon from "./Icon.astro";
     pointer-events: none;
   }
 
-  /* the backdrop owns its own blur/tint transition. Fading the whole
+  /* The backdrop owns its own blur/tint transition. Fading the whole
      palette via opacity would make it a backdrop root: the blur below
-     would sample nothing until opacity reached 1 and then pop in. */
+     would sample nothing until opacity reached 1 and then pop in.
+
+     The blur radius no longer animates. Interpolating a backdrop blur
+     from 0px to 4px re-runs a full-viewport gaussian at a new kernel
+     size on every frame of the open. Holding the radius constant and
+     moving the layer's alpha instead is the same gesture: the backdrop
+     is rasterised once and then alpha-composited, which the compositor
+     does for free. */
   .palette-backdrop {
     position: absolute;
     inset: 0;
     background: transparent;
-    -webkit-backdrop-filter: blur(0px) saturate(110%);
-    backdrop-filter: blur(0px) saturate(110%);
-    transition:
-      background-color 150ms var(--ease),
-      backdrop-filter 150ms var(--ease),
-      -webkit-backdrop-filter 150ms var(--ease);
+    transition: background-color var(--dur-tint) var(--ease-exit);
+  }
+  .palette-backdrop::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    -webkit-backdrop-filter: blur(4px) saturate(110%);
+    backdrop-filter: blur(4px) saturate(110%);
+    opacity: 0;
+    transition: opacity var(--dur-tint) var(--ease-exit);
   }
   .palette.is-open .palette-backdrop {
     background: color-mix(in oklch, var(--ink) 23%, transparent);
-    -webkit-backdrop-filter: blur(4px) saturate(110%);
-    backdrop-filter: blur(4px) saturate(110%);
-    transition-duration: 250ms;
+    transition-duration: var(--dur-overlay);
+    transition-timing-function: var(--ease-enter);
   }
-  .palette.is-instant .palette-backdrop {
+  .palette.is-open .palette-backdrop::after {
+    opacity: 1;
+    transition-duration: var(--dur-overlay);
+    transition-timing-function: var(--ease-enter);
+  }
+  .palette.is-instant .palette-backdrop,
+  .palette.is-instant .palette-backdrop::after {
     transition: none;
   }
 
@@ -227,23 +243,27 @@ import Icon from "./Icon.astro";
     box-shadow: var(--shadow-3);
     overflow: hidden;
     opacity: 0;
-    transform: translateY(8px) scale(0.985);
+    transform: translateY(var(--travel-step)) scale(0.985);
     transform-origin: top center;
     filter: blur(2px);
-    will-change: opacity, transform, filter;
     transition:
-      opacity 150ms var(--ease),
-      transform 150ms var(--ease),
-      filter 150ms var(--ease);
+      opacity var(--dur-exit) var(--ease-exit),
+      transform var(--dur-exit) var(--ease-exit),
+      filter var(--dur-exit) var(--ease-exit);
   }
+  /* The panel's own blur is kept — it is what makes the palette read as
+     resolving rather than appearing — but it now clears in a third of
+     the time. It was previously legible-blurred for 250ms, which is
+     long enough to register as the interface being slow rather than as
+     an effect. Transform and opacity carry the rest of the distance. */
   .palette.is-open .palette-panel {
     opacity: 1;
     transform: none;
     filter: blur(0);
     transition:
-      opacity 250ms var(--ease),
-      transform 250ms var(--ease),
-      filter 250ms var(--ease);
+      opacity var(--dur-shift) var(--ease-enter),
+      transform var(--dur-overlay) var(--ease-spring-snap),
+      filter var(--dur-tint) var(--ease-enter);
   }
   .palette.is-instant .palette-panel {
     transition: none;
@@ -599,9 +619,10 @@ import Icon from "./Icon.astro";
     flex: 0 0 auto;
     min-height: 1.15rem;
     padding: 0.12rem 0.55rem;
-    border: 1px solid var(--rule);
+    border: 1px solid var(--chrome-surface-border);
     border-radius: var(--r-pill);
-    background: color-mix(in oklch, var(--ink) 4%, transparent);
+    background: var(--canvas);
+    box-shadow: var(--chrome-surface-shadow);
     color: var(--muted);
     font-size: 0.62rem;
     font-weight: 600;
@@ -668,7 +689,7 @@ import Icon from "./Icon.astro";
     font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
     font-size: 0.68rem;
     color: var(--faint);
-    border: 1px solid var(--rule);
+    border: 1px solid var(--chrome-surface-border);
     border-radius: var(--r-pill);
     padding: 0.1rem 0.45rem;
     transition:
@@ -747,7 +768,7 @@ import Icon from "./Icon.astro";
   .palette-footer kbd {
     font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
     font-size: 0.68rem;
-    border: 1px solid var(--rule-strong);
+    border: 1px solid var(--chrome-surface-border);
     border-radius: var(--r-pill);
     padding: 0.08rem 0.45rem;
     color: var(--muted);
@@ -772,7 +793,7 @@ import Icon from "./Icon.astro";
   .palette-home-hint kbd {
     font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
     font-size: 0.78em;
-    border: 1px solid var(--rule-strong);
+    border: 1px solid var(--chrome-surface-border);
     border-radius: var(--r-pill);
     padding: 0.12em 0.5em;
     color: var(--muted);
@@ -804,7 +825,7 @@ import Icon from "./Icon.astro";
     }
     to {
       opacity: 1;
-      transform: none;
+      transform: translateY(0);
     }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -927,8 +948,10 @@ import Icon from "./Icon.astro";
       padding: 0 0.375rem 0 0.85rem;
       border: 1px solid var(--chrome-surface-border);
       border-radius: var(--r-pill);
-      background: color-mix(in oklch, var(--canvas) 94%, var(--ink));
+      background: var(--chrome-surface-bg);
       box-shadow: var(--shadow-2), var(--shadow-inset);
+      -webkit-backdrop-filter: blur(20px) saturate(170%);
+      backdrop-filter: blur(20px) saturate(170%);
       box-sizing: border-box;
       overflow: hidden;
       transition:

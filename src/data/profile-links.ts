@@ -1,4 +1,4 @@
-export type ProfileCategory = "engineering" | "design" | "research" | "curation" | "direct";
+export type ProfileCategory = "engineering" | "design" | "research" | "contact";
 
 export interface ProfileLink {
   id: string;
@@ -15,27 +15,19 @@ export interface ProfileSectionDef {
 }
 
 export const profileLinkSections: ProfileSectionDef[] = [
-  { id: "engineering", title: "Engineering & Network" },
+  { id: "engineering", title: "Engineering & Social" },
   { id: "design", title: "Design & Craft" },
   { id: "research", title: "Research & Publications" },
-  { id: "curation", title: "Curation & Spaces" },
-  { id: "direct", title: "Direct & Booking" },
+  { id: "contact", title: "Contact and more" },
 ];
 
 export const profileLinks: ProfileLink[] = [
-  // Engineering & Network
+  // Engineering & Social
   {
     id: "github",
     platform: "GitHub",
     handle: "ashwingopalsamy",
     href: "https://github.com/ashwingopalsamy",
-    category: "engineering",
-  },
-  {
-    id: "linkedin",
-    platform: "LinkedIn",
-    handle: "in/ashwingopalsamy",
-    href: "https://www.linkedin.com/in/ashwingopalsamy",
     category: "engineering",
   },
   {
@@ -53,10 +45,10 @@ export const profileLinks: ProfileLink[] = [
     category: "engineering",
   },
   {
-    id: "standard-resume",
-    platform: "Standard Resume",
-    handle: "Resume",
-    href: "https://standardresume.co/r/ashwingopalsamy",
+    id: "youtube",
+    platform: "YouTube",
+    handle: "@ashwxng",
+    href: "https://www.youtube.com/@ashwxng",
     category: "engineering",
   },
 
@@ -73,6 +65,20 @@ export const profileLinks: ProfileLink[] = [
     platform: "Dribbble",
     handle: "ashwingopalsamy",
     href: "https://dribbble.com/ashwingopalsamy/",
+    category: "design",
+  },
+  {
+    id: "arena",
+    platform: "Are.na",
+    handle: "ashwin-gopalsamy",
+    href: "https://www.are.na/ashwin-gopalsamy/channels",
+    category: "design",
+  },
+  {
+    id: "cosmos",
+    platform: "Cosmos",
+    handle: "ashwingopalsamy",
+    href: "https://www.cosmos.so/ashwingopalsamy/collections",
     category: "design",
   },
 
@@ -105,45 +111,36 @@ export const profileLinks: ProfileLink[] = [
     href: "https://dev.to/ashwingopalsamy",
     category: "research",
   },
-  {
-    id: "youtube",
-    platform: "YouTube",
-    handle: "@ashwxng",
-    href: "https://www.youtube.com/@ashwxng",
-    category: "research",
-  },
 
-  // Curation & Spaces
+  // Contact and more
   {
-    id: "arena",
-    platform: "Are.na",
-    handle: "ashwin-gopalsamy",
-    href: "https://www.are.na/ashwin-gopalsamy/channels",
-    category: "curation",
+    id: "linkedin",
+    platform: "LinkedIn",
+    handle: "in/ashwingopalsamy",
+    href: "https://www.linkedin.com/in/ashwingopalsamy",
+    category: "contact",
   },
-  {
-    id: "cosmos",
-    platform: "Cosmos",
-    handle: "ashwingopalsamy",
-    href: "https://www.cosmos.so/ashwingopalsamy/collections",
-    category: "curation",
-  },
-
-  // Direct & Booking
   {
     id: "cal",
     platform: "Cal.com",
     handle: "book a call",
     href: "https://cal.com/ashwingopalsamy/flexible-slot?user=ashwingopalsamy",
-    category: "direct",
+    category: "contact",
   },
   {
     id: "email",
     platform: "Email",
     handle: "hello@ashwingopalsamy.in",
     href: "mailto:hello@ashwingopalsamy.in",
-    category: "direct",
+    category: "contact",
     mail: true,
+  },
+  {
+    id: "standard-resume",
+    platform: "Standard Resume",
+    handle: "Resume",
+    href: "https://standardresume.co/r/ashwingopalsamy",
+    category: "contact",
   },
 ];
 

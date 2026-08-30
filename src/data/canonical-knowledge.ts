@@ -130,7 +130,7 @@ export const CANONICAL_KNOWLEDGE: CanonicalIdentity = {
     {
       degree: "MS in Artificial Intelligence",
       institution: "UT Austin",
-      timeline: "Starting fall 2026, alongside work",
+      timeline: "2026 - present, alongside work",
     },
     {
       degree: "B.Tech in Information Technology",

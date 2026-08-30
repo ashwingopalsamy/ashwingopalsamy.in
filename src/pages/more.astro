@@ -84,25 +84,34 @@ import PageIntro from "../components/PageIntro.astro";
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 0.75rem;
-    min-height: 128px;
-    padding: 1.15rem 1.25rem;
-    border-radius: var(--r-4);
+    /* on the lattice: 12px gap, 128px tall (32 steps), 20/20 padding.
+       The 1.15rem/1.25rem asymmetry it replaced was invisible as a
+       difference and visible as a lack of one. */
+    gap: var(--step-3);
+    min-height: calc(var(--step) * 32);
+    padding: var(--step-5);
+    /* concentric: the tile's own corner, less the padding, is what any
+       inner surface should use */
+    --r-outer: var(--r-4);
+    --r-gap: var(--step-5);
+    border-radius: var(--r-outer);
     text-decoration: none;
     z-index: var(--z-base);
     color: inherit;
     background: var(--canvas);
-    border: 1px solid var(--rule);
+    border: var(--hairline) solid var(--rule);
     box-shadow: none;
     transition:
-      transform var(--dur-2) var(--ease-out),
+      transform var(--dur-shift) var(--ease-spring-snap),
       border-color var(--t-color),
-      box-shadow var(--dur-2) var(--ease-out);
+      box-shadow var(--dur-shift) var(--ease-enter);
   }
 
   @media (hover: hover) and (pointer: fine) {
     a.tile:hover {
-      transform: translateY(-2px);
+      /* the lift springs, the shadow does not — a shadow that overshoots
+         reads as a wobble rather than as height */
+      transform: translate3d(0, calc(var(--travel-hair) * -1), 0);
       text-decoration: none;
       border-color: var(--rule-strong);
       box-shadow: var(--shadow-1);
@@ -115,14 +124,15 @@ import PageIntro from "../components/PageIntro.astro";
     a.tile:hover .arrow {
       opacity: 1;
       color: var(--ink);
-      transform: translateX(3px);
+      transform: translate3d(var(--travel-nudge), 0, 0);
     }
   }
 
   a.tile:active {
-    transform: translateY(0) scale(0.99);
+    transform: translate3d(0, 0, 0) scale(var(--press-scale-inline));
     border-color: var(--rule-strong);
-    transition-duration: var(--dur-1);
+    transition-duration: var(--dur-press);
+    transition-timing-function: var(--ease-snap);
   }
 
   .tile:focus-visible {

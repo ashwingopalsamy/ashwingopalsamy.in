@@ -7,8 +7,7 @@
  *     (date · reading time · tags, "Updated" stamp, lede)
  *   - an auto table of contents (render()'s `headings`), with scroll-spy
  *   - the `.prose` body, scrolled into by the balcony's reading-progress hairline
- *   - after the article: prev/next navigation, related-by-tag notes, an
- *     "edit this page" link to the source on GitHub
+ *   - after the article: prev/next navigation, related-by-tag notes
  *   - JSON-LD: enriched BlogPosting + BreadcrumbList
  *   - KaTeX CSS linked only when the note body contains math
  *
@@ -18,7 +17,6 @@
  */
 import { render, type CollectionEntry } from "astro:content";
 import Page from "./Page.astro";
-import { site } from "../data/home";
 import { noteJsonLd, noteBreadcrumbJsonLd } from "../lib/jsonld";
 import { wordCount } from "../lib/jsonld-safe";
 import { plainText, readingTimeMinutes, excerpt } from "../lib/markdown-text";
@@ -39,7 +37,7 @@ interface Props {
 }
 
 const { entry, prev, next, related = [] } = Astro.props;
-const { Content, headings } = await render(entry);
+const { Content } = await render(entry);
 
 const body = entry.body ?? "";
 const minutes = readingTimeMinutes(body);
@@ -61,11 +59,6 @@ const hasMath = bodyHasMath(body);
 
 const fmtDate = (d: Date) =>
   d.toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
-
-const tocItems = (headings ?? []).filter((h) => h.depth === 2 || h.depth === 3);
-const showToc = tocItems.length >= 4;
-
-const editUrl = `${site.repoUrl}/blob/main/src/content/library/notes/${entry.id}.md`;
 
 const jsonLd = [
   noteJsonLd(entry, notePath, {
@@ -113,46 +106,33 @@ const jsonLd = [
               {entry.data.updated && <span class="note-updated">Updated {fmtDate(entry.data.updated)}</span>}
             </span>
             {entry.data.tags && entry.data.tags.length > 0 && (
-              <span class="note-tags">
-                {entry.data.tags.map((t) =>
-                  isLinkedTag(t, linkedTags) ? (
-                    <a class="note-tag" href={tagHref(t)}>#{t}</a>
-                  ) : (
-                    <span class="note-tag">#{t}</span>
-                  ),
-                )}
-              </span>
+              <>
+                <span class="detail-sep" aria-hidden="true">·</span>
+                <span class="note-tags">
+                  {entry.data.tags.map((t) =>
+                    isLinkedTag(t, linkedTags) ? (
+                      <a class="note-tag" href={tagHref(t)}>#{t}</a>
+                    ) : (
+                      <span class="note-tag">#{t}</span>
+                    ),
+                  )}
+                </span>
+              </>
             )}
           </Fragment>
           <Fragment slot="action">
-            <button type="button" class="note-copy-link" data-copy-link aria-label="Copy link to this note">
-              <Icon name="copy" size={13} /><span>Copy link</span>
+            <button type="button" class="note-copy-link" data-copy-link aria-label="Copy link" title="Copy link">
+              <Icon name="copy" size={14} />
             </button>
           </Fragment>
         </DetailHeader>
 
-        {showToc && (
-          <details class="note-toc note-toc-narrow">
-            <summary><span>On this page</span><Icon name="chevron-down" size={14} /></summary>
-            <ol class="note-toc-list">
-              {tocItems.map((h) => (
-                <li class:list={["note-toc-item", { "is-sub": h.depth === 3 }]}>
-                  <a href={`#${h.slug}`} data-toc-link data-toc-target={h.slug}>{h.text}</a>
-                </li>
-              ))}
-            </ol>
-          </details>
-        )}
 
         <div class="prose" data-enter>
           <Content />
         </div>
 
         <footer class="note-foot">
-          <p class="note-edit">
-            <a href={editUrl} target="_blank" rel="noopener noreferrer"><span>Edit source</span><Icon name="arrow-up-right" size={14} /></a>
-          </p>
-
           {(prev || next) && (
             <nav class="note-pager" aria-label="More notes">
               {prev ? (
@@ -223,9 +203,41 @@ const jsonLd = [
     width: 100%;
     transform: scaleX(0);
     transform-origin: 0 50%;
-    background: var(--vermilion);
-    will-change: transform;
+    background: var(--ink);
   }
+
+  /* Where the browser supports it, reading progress is driven by a
+     scroll-driven animation instead of by JavaScript. The bar then
+     updates on the compositor in lockstep with the scroll — it cannot
+     lag, cannot tear away from the scroll position under load, and costs
+     no main-thread work at all. prose.ts detects this support and skips
+     binding its own handler.
+
+     `contain 0%` to `contain 100%` is the range where the article fully
+     contains the viewport: article top at viewport top, through to
+     article bottom at viewport bottom. Same definition of progress the
+     JS used, expressed declaratively. */
+  @supports (animation-timeline: view()) {
+    .note[data-note] {
+      view-timeline: --note-read block;
+    }
+
+    .note-progress-bar {
+      animation: note-read-progress linear both;
+      animation-timeline: --note-read;
+      animation-range: contain 0% contain 100%;
+    }
+
+    @keyframes note-read-progress {
+      from {
+        transform: scaleX(0);
+      }
+      to {
+        transform: scaleX(1);
+      }
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .note-progress { display: none; }
   }
@@ -238,22 +250,16 @@ const jsonLd = [
     display: inline-flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.45rem 1rem;
-  }
-
-  .note-facts > * + * {
-    position: relative;
+    gap: 0.4rem;
+    font-size: 0.8125rem;
+    color: var(--ghost);
   }
 
   .note-facts > * + *::before {
-    position: absolute;
-    top: 50%;
-    left: -0.58rem;
-    width: 3px;
-    height: 3px;
-    background: var(--ghost);
-    content: "";
-    transform: translateY(-50%) rotate(45deg);
+    content: "·";
+    margin-right: 0.4rem;
+    color: var(--faint);
+    font-weight: var(--font-bold);
   }
 
   .note-date {
@@ -269,54 +275,36 @@ const jsonLd = [
   .note-tags {
     display: inline-flex;
     flex-wrap: wrap;
-    gap: 0.35rem 0.65rem;
-    align-items: baseline;
+    gap: 0.35rem 0.5rem;
+    align-items: center;
     max-inline-size: 100%;
     overflow-wrap: anywhere;
   }
 
   .note-tag {
+    display: inline-flex;
+    align-items: center;
     font-size: 0.75rem;
-    color: var(--faint);
-    text-decoration: none;
-    transition: color var(--t-color);
-  }
-
-  a.note-tag:hover { color: var(--ink); }
-
-  .note-toc-narrow {
-    margin: -1.5rem 0 2.75rem;
-    padding: 0.8rem 1rem;
-    border-radius: var(--r-4);
-    background: var(--chrome-surface-bg);
+    color: var(--ghost);
+    background: var(--canvas);
     border: 1px solid var(--chrome-surface-border);
     box-shadow: var(--chrome-surface-shadow);
-    -webkit-backdrop-filter: blur(20px) saturate(170%);
-    backdrop-filter: blur(20px) saturate(170%);
-    transition: background-color var(--t-color), border-color var(--t-color);
-    max-inline-size: 100%;
-    min-inline-size: 0;
+    padding: 0.12rem 0.55rem;
+    border-radius: var(--r-pill);
+    text-decoration: none;
+    line-height: 1.25;
+    transition:
+      color var(--t-color),
+      background-color var(--t-color),
+      border-color var(--t-color),
+      box-shadow var(--t-color);
   }
-  .note-toc-narrow summary {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    min-block-size: 44px;
-    font-size: 0.85rem;
-    font-weight: 540;
-    color: var(--muted);
-    list-style: none;
-    border-radius: 4px;
+
+  a.note-tag:hover {
+    color: var(--ink);
+    border-color: color-mix(in oklch, var(--ink) 18%, transparent);
+    background: color-mix(in oklch, var(--ink) 3%, var(--canvas));
   }
-  .note-toc-narrow summary:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-offset);
-  }
-  .note-toc-narrow summary::-webkit-details-marker { display: none; }
-  .note-toc-narrow summary :global(.ui-icon) { transition: transform var(--dur-2) var(--ease-out); }
-  .note-toc-narrow[open] summary :global(.ui-icon) { transform: rotate(180deg); }
-  .note-toc-narrow[open] summary { margin-bottom: 0.7rem; }
 
   .note-toc-rail {
     display: none;
@@ -345,12 +333,10 @@ const jsonLd = [
   .note-toc-item a:hover { color: var(--ink); }
   .note-toc-item.is-sub { padding-left: 1.1rem; }
   .note-toc-item a[aria-current="true"] {
-    color: var(--vermilion);
+    color: var(--ink);
   }
 
   @media (min-width: 72rem) {
-    .note-toc-narrow { display: none; }
-
     .note-toc-rail {
       display: block;
       position: fixed;
@@ -445,10 +431,10 @@ const jsonLd = [
       transform: translateY(-50%);
       padding: 0.32rem 0.8rem;
       border-radius: var(--r-pill);
-      background: color-mix(in oklch, var(--canvas) 94%, var(--ink) 6%);
+      background: var(--chrome-surface-bg);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--rule);
+      border: 1px solid var(--chrome-surface-border);
       color: var(--ink);
       font-size: 0.75rem;
       font-weight: var(--font-medium);
@@ -461,8 +447,8 @@ const jsonLd = [
     }
 
     :root[data-theme="dark"] .note-toc-tooltip {
-      background: color-mix(in oklch, var(--canvas) 88%, var(--ink) 12%);
-      border-color: color-mix(in oklch, var(--rule) 80%, transparent);
+      background: var(--chrome-surface-bg);
+      border-color: var(--chrome-surface-border);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.25);
     }
 
@@ -482,59 +468,33 @@ const jsonLd = [
   .note-foot {
     margin-top: clamp(3.5rem, 8vw, 5.5rem);
   }
-  .note-edit { margin: 0; }
-  .note-edit a {
-    display: inline-flex;
-    min-block-size: 44px;
-    align-items: center;
-    gap: 0.4rem;
-    padding-inline: 0.7rem;
-    border-radius: var(--r-pill);
-    background: var(--chrome-surface-bg);
-    border: 1px solid var(--chrome-surface-border);
-    box-shadow: var(--chrome-surface-shadow);
-    -webkit-backdrop-filter: blur(20px) saturate(170%);
-    backdrop-filter: blur(20px) saturate(170%);
-    font-size: 0.85rem;
-    color: var(--faint);
-    text-decoration: none;
-    transition: color var(--t-color), background-color var(--t-color), border-color var(--t-color);
-  }
-  .note-edit a:hover {
-    color: var(--ink);
-    background: var(--surface-row-hover);
-    border-color: color-mix(in oklch, var(--ink) 18%, transparent);
-  }
 
   .note-pager {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-    margin-top: 1.75rem;
+    gap: 1.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--rule);
+    margin-top: 0;
     max-inline-size: 100%;
     min-inline-size: 0;
   }
   .note-page {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 0.75rem;
-    min-block-size: 7rem;
-    padding: 1rem;
-    border-radius: var(--r-4);
-    background: var(--chrome-surface-bg);
-    border: 1px solid var(--chrome-surface-border);
-    box-shadow: var(--chrome-surface-shadow);
-    -webkit-backdrop-filter: blur(20px) saturate(170%);
-    backdrop-filter: blur(20px) saturate(170%);
+    gap: 0.35rem;
+    padding: 0.6rem 0.85rem;
+    margin-inline: -0.85rem;
+    border-radius: var(--r-3);
+    background: transparent;
+    border: none;
+    box-shadow: none;
     text-decoration: none;
     color: var(--ink);
     min-width: 0;
     transition:
-      transform var(--dur-2) var(--ease-out),
       background-color var(--t-color),
-      border-color var(--t-color),
-      box-shadow var(--dur-2) var(--ease-out);
+      transform var(--dur-1) var(--ease-out);
   }
   .note-next { text-align: end; align-items: flex-end; }
   .note-page.is-empty { visibility: hidden; }
@@ -542,9 +502,11 @@ const jsonLd = [
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    font-size: 0.78rem;
-    font-weight: 520;
-    color: var(--faint);
+    font-size: 0.72rem;
+    font-weight: var(--font-medium);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ghost);
     transition: color var(--t-color);
   }
   .note-page-icon {
@@ -552,9 +514,9 @@ const jsonLd = [
     transition: transform var(--dur-2) var(--ease-out);
   }
   .note-page-title {
-    font-size: 1rem;
-    font-weight: 520;
-    line-height: 1.35;
+    font-size: 0.9375rem;
+    font-weight: var(--font-medium);
+    line-height: 1.4;
     color: var(--ink);
     transition: color var(--t-color);
     text-decoration: none;
@@ -562,22 +524,22 @@ const jsonLd = [
     text-wrap: pretty;
     overflow-wrap: anywhere;
   }
-  .note-page:active { background: var(--surface-row-press); }
+  .note-page:active {
+    background: color-mix(in oklch, var(--ink) 6%, transparent);
+    transform: scale(0.98);
+  }
 
   @media (hover: hover) and (pointer: fine) {
     .note-page:hover,
     .note-page:focus-visible {
-      transform: translateY(-2px);
-      background: var(--surface-row-hover);
-      border-color: color-mix(in oklch, var(--ink) 18%, transparent);
-      box-shadow: var(--shadow-2);
+      background: color-mix(in oklch, var(--ink) 4%, transparent);
     }
     .note-page:hover .note-page-dir,
-    .note-page:focus-visible .note-page-dir { color: var(--vermilion); }
+    .note-page:focus-visible .note-page-dir { color: var(--ink); }
     .note-prev:hover .note-page-icon,
-    .note-prev:focus-visible .note-page-icon { transform: translateX(-1.5px); }
+    .note-prev:focus-visible .note-page-icon { transform: translateX(-2px); }
     .note-next:hover .note-page-icon,
-    .note-next:focus-visible .note-page-icon { transform: translateX(1.5px); }
+    .note-next:focus-visible .note-page-icon { transform: translateX(2px); }
   }
 
   .note-related {
@@ -600,8 +562,8 @@ const jsonLd = [
   }
   @media (hover: hover) and (pointer: fine) {
     .note-related-list:hover a {
-      opacity: 0.45;
-      filter: blur(0.2px);
+      opacity: var(--dim-opacity);
+      filter: blur(var(--dim-blur));
       transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
     }
     .note-related-list:hover a:hover,
@@ -652,9 +614,13 @@ const jsonLd = [
       -webkit-hyphens: none;
       text-wrap: pretty;
     }
-    .note-pager { grid-template-columns: 1fr; }
+    .note-pager {
+      grid-template-columns: 1fr;
+      gap: 0.85rem;
+      padding-top: 1.5rem;
+    }
     .note-next { text-align: start; align-items: flex-start; }
-    .note-page { min-block-size: 6.25rem; }
+    .note-page { padding: 0.5rem 0.65rem; margin-inline: -0.65rem; }
     .note-page.is-empty { display: none; }
   }
 
