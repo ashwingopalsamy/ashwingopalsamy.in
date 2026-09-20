@@ -1,0 +1,154 @@
+---
+const variants = [
+  { id: "original", name: "Original", route: "/", summary: "The current homepage." },
+  { id: "refined", name: "Refined", route: "/__preview/home/refined/", summary: "A shorter introduction with the same social preview cards." },
+] as const;
+---
+
+<div class="preview-page preview-page--comparison">
+  <header class="comparison-intro">
+    <p class="comparison-kicker">Homepage comparison</p>
+    <h1>Original / Refined</h1>
+    <p>Compare the current homepage with a restrained pass at the same width.</p>
+  </header>
+
+  <nav class="comparison-chooser" aria-label="Homepage preview directions">
+    {variants.map((variant, index) => (
+      <a class:list={["comparison-choice", { "is-selected": index === 1 }]} href={variant.route} data-preview-choice={variant.id} aria-current={index === 1 ? "page" : undefined}>
+        <span class="comparison-choice__number">0{index + 1}</span>
+        <span class="comparison-choice__copy"><strong>{variant.name}</strong><span>{variant.summary}</span></span>
+        <span aria-hidden="true">↗</span>
+      </a>
+    ))}
+  </nav>
+
+  <section class="comparison-stage" aria-label="Selected preview">
+    <div class="comparison-stage__header">
+      <div><p>Live comparison</p><span data-preview-name>Refined</span></div>
+      <div class="comparison-controls" role="group" aria-label="Preview viewport">
+        <button type="button" data-preview-mode="desktop" aria-pressed="true">Desktop · 1280px</button>
+        <button type="button" data-preview-mode="mobile" aria-pressed="false">Mobile · 390px</button>
+      </div>
+    </div>
+    <div class="comparison-viewer" data-preview-viewer data-preview-mode="desktop">
+      <div class="comparison-scaler"><div class="comparison-frame"><iframe src="/__preview/home/refined/" title="Refined desktop preview" data-preview-frame></iframe></div></div>
+    </div>
+  </section>
+  <p class="comparison-footer-link"><a href="/__preview/home/refined/" data-preview-direct>Open the refined homepage directly ↗</a></p>
+  <noscript><style>.comparison-controls { display: none; } .comparison-viewer { overflow: hidden; }</style></noscript>
+</div>
+
+<style>
+  .comparison-intro { max-width: 34rem; }
+  .comparison-kicker { margin: 0 0 1rem; color: var(--ghost); font-size: 0.8125rem; }
+  .comparison-intro h1 { margin: 0; color: var(--ink); font-size: 1.35rem; font-weight: 500; letter-spacing: normal; line-height: 1.3; }
+  .comparison-intro > p:last-child { max-width: 55ch; margin: 0.75rem 0 0; color: var(--muted); font-size: 0.9375rem; line-height: 1.55; }
+  .comparison-chooser { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; max-width: 40rem; margin-top: 2rem; }
+  .comparison-choice { display: grid; grid-template-columns: 2rem minmax(0, 1fr) 1rem; gap: 0.8rem; align-items: start; padding: 1.1rem 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); color: var(--ink); text-decoration: none; transition: background-color 180ms ease, padding-inline 180ms ease; }
+  .comparison-choice:hover, .comparison-choice:focus-visible, .comparison-choice.is-selected { padding-inline: 0.6rem; background: color-mix(in oklch, var(--ink) 3%, transparent); }
+  .comparison-choice__number { color: var(--ghost); font-size: 0.8125rem; }
+  .comparison-choice__copy { display: grid; gap: 0.4rem; }
+  .comparison-choice__copy strong { font-size: 1rem; font-weight: 520; }
+  .comparison-choice__copy span { color: var(--muted); font-size: 0.9rem; line-height: 1.45; }
+  .comparison-stage { margin-top: 3rem; }
+  .comparison-stage__header { display: flex; justify-content: space-between; gap: 1rem; align-items: end; padding-bottom: 0.9rem; border-bottom: 1px solid var(--rule); color: var(--ghost); font-size: 0.8125rem; }
+  .comparison-stage__header p, .comparison-stage__header span { margin: 0; }
+  .comparison-stage__header span { display: block; margin-top: 0.28rem; color: var(--muted); }
+  .comparison-controls { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; }
+  .comparison-controls button { min-height: 2.25rem; padding: 0.45rem 0.7rem; border: 1px solid var(--rule-strong); border-radius: 999px; background: transparent; color: var(--muted); font: inherit; cursor: pointer; transition: background-color 180ms ease, color 180ms ease, transform 180ms ease; }
+  .comparison-controls button[aria-pressed="true"] { background: var(--ink); color: var(--canvas); }
+  .comparison-controls button:hover, .comparison-controls button:focus-visible { transform: translateY(-1px); color: var(--ink); }
+  .comparison-controls button[aria-pressed="true"]:hover, .comparison-controls button[aria-pressed="true"]:focus-visible { color: var(--canvas); }
+  .comparison-viewer { --comparison-width: 1280px; --comparison-height: 760px; --comparison-scale: 1; width: 100%; margin-top: 1.25rem; }
+  .comparison-scaler { width: calc(var(--comparison-width) * var(--comparison-scale)); height: calc(var(--comparison-height) * var(--comparison-scale)); margin-inline: auto; }
+  .comparison-frame { width: var(--comparison-width); height: var(--comparison-height); overflow: hidden; outline: 1px solid var(--rule-strong); outline-offset: -1px; border-radius: 0.9rem; background: var(--canvas); box-shadow: 0 8px 30px color-mix(in oklch, var(--ink) 8%, transparent); transform: scale(var(--comparison-scale)); transform-origin: top left; }
+  .comparison-frame iframe { display: block; width: 100%; height: 100%; border: 0; background: var(--canvas); }
+  .comparison-footer-link { margin-top: 2.5rem; color: var(--ghost); font-size: 0.8125rem; }
+  .comparison-footer-link a { color: inherit; }
+  .comparison-footer-link a:hover, .comparison-footer-link a:focus-visible { color: var(--ink); }
+  @media (max-width: 48rem) { .comparison-chooser { grid-template-columns: 1fr; gap: 0.75rem; margin-top: 3rem; } .comparison-stage__header { align-items: start; flex-direction: column; } .comparison-controls { justify-content: flex-start; } }
+  @media (prefers-reduced-motion: reduce) { .comparison-choice, .comparison-controls button { transition: none; } }
+</style>
+
+<script>
+  import { onPageCleanup, pageSignal } from "../../../scripts/lifecycle";
+
+  function initComparison() {
+    const signal = pageSignal();
+    const choices = document.querySelectorAll<HTMLAnchorElement>("[data-preview-choice]");
+    const frame = document.querySelector<HTMLIFrameElement>("[data-preview-frame]");
+    const viewer = document.querySelector<HTMLElement>("[data-preview-viewer]");
+    const name = document.querySelector<HTMLElement>("[data-preview-name]");
+    const direct = document.querySelector<HTMLAnchorElement>("[data-preview-direct]");
+    const modes = document.querySelectorAll<HTMLButtonElement>("button[data-preview-mode]");
+    if (!choices.length || !frame || !viewer || !name || !direct || !modes.length) return;
+    if (viewer.dataset.previewReady === "true") return;
+    viewer.dataset.previewReady = "true";
+
+    let mode: "desktop" | "mobile" = "desktop";
+    const resize = () => {
+      const width = mode === "desktop" ? 1280 : 390;
+      const height = mode === "desktop" ? 760 : 844;
+      const available = viewer.clientWidth;
+      const scale = available ? Math.min(1, available / width) : 1;
+      viewer.style.setProperty("--comparison-width", `${width}px`);
+      viewer.style.setProperty("--comparison-height", `${height}px`);
+      viewer.style.setProperty("--comparison-scale", String(scale));
+    };
+    const observer = new ResizeObserver(resize);
+    observer.observe(viewer);
+    const selectedChoice = () => document.querySelector<HTMLAnchorElement>("[data-preview-choice].is-selected");
+    const restoreSelectedFrame = () => {
+      if (frame.src !== "about:blank") return;
+      const selected = selectedChoice();
+      if (!selected) return;
+      const label = selected.querySelector("strong")?.textContent ?? "Selected preview";
+      frame.src = selected.href;
+      frame.title = `${label} ${mode} preview`;
+      name.textContent = label;
+      direct.href = selected.href;
+      direct.textContent = `Open ${label} directly ↗`;
+    };
+
+    const select = (choice: HTMLAnchorElement) => {
+      const route = choice.href;
+      const label = choice.querySelector("strong")?.textContent ?? "Selected preview";
+      choices.forEach((item) => {
+        const selected = item === choice;
+        item.classList.toggle("is-selected", selected);
+        if (selected) item.setAttribute("aria-current", "page"); else item.removeAttribute("aria-current");
+      });
+      frame.src = route;
+      frame.title = `${label} ${mode} preview`;
+      name.textContent = label;
+      direct.href = route;
+      direct.textContent = `Open ${label} directly ↗`;
+    };
+    const setMode = (next: "desktop" | "mobile") => {
+      mode = next;
+      viewer.dataset.previewMode = mode;
+      modes.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.previewMode === mode)));
+      const selected = selectedChoice();
+      const label = selected?.querySelector("strong")?.textContent ?? "Selected preview";
+      frame.title = `${label} ${mode} preview`;
+      resize();
+    };
+
+    choices.forEach((choice) => choice.addEventListener("click", (event) => {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      select(choice);
+    }, { signal }));
+    modes.forEach((button) => button.addEventListener("click", () => setMode(button.dataset.previewMode === "mobile" ? "mobile" : "desktop"), { signal }));
+    resize();
+    restoreSelectedFrame();
+    onPageCleanup(() => {
+      observer.disconnect();
+      viewer.dataset.previewReady = "";
+      frame.src = "about:blank";
+    });
+  }
+
+  initComparison();
+  document.addEventListener("astro:page-load", initComparison);
+</script>

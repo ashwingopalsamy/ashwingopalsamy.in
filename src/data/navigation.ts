@@ -10,6 +10,7 @@ export interface SiteNavItem {
 export function normalizeNavigationPath(pathname: string): string {
   const path = pathname.split(/[?#]/, 1)[0] || "/";
   if (path === "/") return path;
+  if (path === "/__preview/home/refined" || path === "/__preview/home/refined/") return "/";
   return `/${path.replace(/^\/+|\/+$/g, "")}/`;
 }
 

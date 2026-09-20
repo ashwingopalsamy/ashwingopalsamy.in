@@ -1,0 +1,41 @@
+---
+import Page from "../layouts/Page.astro";
+import ComparisonPreview from "./__preview/home/index.astro";
+import HomeRefinedPreview from "../components/HomeRefinedPreview.astro";
+
+export function getStaticPaths() {
+  return [
+    { params: { preview: "__preview/home" }, props: { kind: "comparison" } },
+    { params: { preview: "__preview/home/refined" }, props: { kind: "refined" } },
+  ];
+}
+
+const definitions = {
+  comparison: {
+    title: "Homepage previews",
+    description: "Original and refined noindex homepage previews for Ashwin Gopalsamy.",
+    bodyClass: "home-preview home-preview-comparison",
+    component: ComparisonPreview,
+  },
+  refined: {
+    title: "Refined homepage preview",
+    description: "A restrained homepage preview for Ashwin Gopalsamy.",
+    bodyClass: "home home-preview home-preview--refined",
+    component: HomeRefinedPreview,
+  },
+} as const;
+
+const { kind = "comparison" } = Astro.props;
+const definition = definitions[kind as keyof typeof definitions] ?? definitions.comparison;
+const Preview = definition.component;
+---
+
+<Page
+  title={definition.title}
+  description={definition.description}
+  robots="noindex,follow"
+  pagefind={false}
+  bodyClass={definition.bodyClass}
+>
+  <Preview />
+</Page>

@@ -1,0 +1,231 @@
+---
+import Connect from "./Connect.astro";
+import SocialProfilePreviews from "./SocialProfilePreviews.astro";
+import { resumeUrl, site, socials } from "../data/home";
+import { getGithubContributions } from "../lib/github-contributions";
+
+const quickLinks = socials.filter(
+  (social) => social.id === "github" || social.id === "linkedin" || social.id === "x",
+);
+const contributions = await getGithubContributions();
+---
+
+<div class="refined-home">
+  <section class="refined-intro" aria-label="Introduction">
+    <h1 class="visually-hidden">{site.name} · Staff Software Engineer, Payments Infrastructure</h1>
+    <p class="refined-lede">
+      Hey! I'm <a href="/more/" aria-label="More about Ashwin">Ashwin</a>. I build the infrastructure behind global payments.
+    </p>
+    <p class="refined-context">
+      I work remotely as a Staff Software Engineer at <a href="https://developers.pismo.io/pismo-docs" target="_blank" rel="noopener noreferrer">Pismo, a Visa company</a>, and study AI at <a href="https://cdso.utexas.edu/msai" target="_blank" rel="noopener noreferrer">UT Austin</a> alongside work.
+    </p>
+    <p class="refined-context">
+      Off the clock, I'm happiest around good machinery and cars, or lost in anthropology, history, and long-form craft. Here’s my <a href="/library/">library</a>, <a href="/more/photos/">photos I take</a>, and <a href="/more/cafe/">cafes I try</a>.
+    </p>
+  </section>
+
+  <section class="refined-contact" aria-label="Contact and profiles">
+    <h2 class="visually-hidden">Contact and profiles</h2>
+    <div class="refined-contact__row">
+      <div class="refined-cta-row">
+        <a class="refined-cta refined-cta--primary" href={site.cal} target="_blank" rel="noopener noreferrer">Let's talk</a>
+        {resumeUrl && <a class="refined-cta refined-cta--secondary" href={resumeUrl} download="AshwinGopalsamy_Resume.pdf">Resume</a>}
+      </div>
+      <span class="refined-row-sep" aria-hidden="true"></span>
+      <div class="refined-socials">
+        <SocialProfilePreviews links={quickLinks} contributions={contributions} />
+      </div>
+    </div>
+  </section>
+
+  <hr class="page-rule" />
+
+  <Connect />
+</div>
+
+<style>
+  .refined-intro {
+    margin-top: 0;
+    font-size: var(--text-md);
+  }
+
+  .refined-lede {
+    max-width: var(--measure-hero);
+    margin: 0;
+    color: var(--ink);
+    font-size: clamp(1.1rem, 1rem + 0.5vw, 1.25rem);
+    line-height: 1.45;
+    letter-spacing: -0.015em;
+    text-wrap: pretty;
+  }
+
+  .refined-context {
+    max-width: var(--measure-hero);
+    margin: 1.5em 0 0;
+    color: var(--ghost);
+    line-height: var(--leading-relaxed);
+    text-wrap: pretty;
+  }
+
+  .refined-intro a {
+    color: var(--ink);
+    text-decoration: none;
+    text-decoration-color: color-mix(in oklch, var(--ink) 55%, transparent);
+    text-decoration-thickness: 0.75px;
+    text-underline-offset: 0.2em;
+  }
+
+  .refined-intro a:hover,
+  .refined-intro a:focus-visible {
+    text-decoration-line: underline;
+  }
+
+  .refined-home > .page-rule {
+    margin-block: var(--space-rule);
+  }
+
+  .refined-home :global(.connect-grid) {
+    grid-template-columns: 1fr;
+    grid-template-rows: 152px 200px;
+    gap: var(--space-4);
+  }
+
+  .refined-home :global(.quote-block) {
+    margin-top: var(--space-5);
+  }
+
+  .refined-contact {
+    margin-top: var(--space-6);
+  }
+
+  .refined-contact__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .refined-cta-row,
+  .refined-socials {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .refined-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0.65rem 1.3rem;
+    border-radius: var(--r-pill);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: transform var(--dur-2) var(--ease-out), box-shadow var(--t-move), background-color var(--t-color), border-color var(--t-color), color var(--t-color);
+  }
+
+  .refined-cta:hover,
+  .refined-cta:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-1);
+  }
+
+  .refined-cta:active {
+    transform: scale(var(--press-scale, .978));
+    transition: transform var(--dur-press, 70ms) var(--ease-snap);
+  }
+
+  .refined-cta--primary {
+    background: var(--ink);
+    color: var(--canvas);
+  }
+
+  .refined-cta--secondary {
+    border: 1px solid var(--cta-secondary-border);
+    background: var(--cta-secondary-bg);
+    color: var(--ink);
+  }
+
+  .refined-row-sep {
+    width: 1px;
+    height: 1.1rem;
+    flex-shrink: 0;
+    background: var(--rule-strong);
+  }
+
+  .refined-socials {
+    gap: 1rem;
+  }
+
+  .refined-socials :global(.social-preview__avatar) {
+    display: none !important;
+  }
+
+  .refined-socials :global(.social-preview__panel) {
+    background: var(--canvas);
+    border-color: var(--rule-strong);
+    box-shadow: var(--shadow-2);
+  }
+
+  @media (min-width: 42.5rem) {
+    .refined-home :global(.connect-grid) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: 152px;
+    }
+
+    .refined-home :global(.connect-grid .loc-card) {
+      min-height: 0;
+      height: 152px;
+    }
+  }
+
+  @media (max-width: 38rem) {
+    .refined-contact__row {
+      align-items: stretch;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .refined-cta-row {
+      width: 100%;
+      max-width: 21rem;
+    }
+
+    .refined-cta {
+      flex: 1;
+    }
+
+    .refined-row-sep {
+      display: none;
+    }
+
+    .refined-socials {
+      flex-wrap: wrap;
+      gap: 0.8rem 1rem;
+    }
+
+    .refined-home :global(.connect-grid) {
+      grid-template-columns: 1fr;
+      grid-template-rows: 152px 200px;
+      gap: var(--space-5);
+    }
+
+    .refined-home :global(.connect-grid .loc-card) {
+      min-height: 200px;
+      height: 200px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .refined-cta {
+      transition: none;
+    }
+
+    .refined-cta:hover,
+    .refined-cta:focus-visible,
+    .refined-cta:active {
+      transform: none;
+    }
+  }
+</style>
