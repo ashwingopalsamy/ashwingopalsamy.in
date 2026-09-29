@@ -78,4 +78,25 @@ const craft = defineCollection({
   }),
 });
 
-export const collections = { books, watch, notes, articles, craft };
+const photos = defineCollection({
+  loader: glob({ pattern: "*.md", base: "./src/content/photos" }),
+  schema: ({ image }) => z.object({
+    // Store only metadata-stripped masters from src/assets/photos; keep camera
+    // originals outside the site repository and never copy them to public/.
+    source: image(),
+    order: z.number().int().positive(),
+    alt: z.string().trim().min(1),
+    caption: z.string().trim().min(1).optional(),
+    // A curated label preserves the precision the photographer chooses
+    // (for example, a year or season) without implying EXIF-level certainty.
+    date: z.string().trim().min(1).optional(),
+    location: z.string().trim().min(1).optional(),
+    // New entries stay out of production until their image, order, and copy
+    // have been reviewed and explicitly approved.
+    draft: z.boolean().default(true),
+    // Synthetic gallery studies can be reviewed locally but must never ship.
+    generatedPreview: z.boolean().default(false),
+  }),
+});
+
+export const collections = { books, watch, notes, articles, craft, photos };

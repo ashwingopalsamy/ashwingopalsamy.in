@@ -5,6 +5,15 @@ import { moreDestinations } from "../data/more";
 import Icon from "../components/Icon.astro";
 import StatusPill from "../components/StatusPill.astro";
 import PageIntro from "../components/PageIntro.astro";
+import { getPhotoEntries } from "../data/photos";
+
+const photos = await getPhotoEntries();
+const hasPublishedPhotos = photos.some(({ data }) => !data.draft);
+const destinations = moreDestinations.map((destination) =>
+  destination.id === "photos" && hasPublishedPhotos
+    ? { ...destination, status: "live" as const }
+    : destination,
+);
 ---
 
 <Page title="More" description="Beyond the homepage: library, photos, cafes, people, and other corners Ashwin Gopalsamy keeps tending."
@@ -13,7 +22,7 @@ import PageIntro from "../components/PageIntro.astro";
 >
   <PageIntro title="more" lede="The parts of this site that do not fit neatly anywhere else." />
   <div class="bento" data-enter-batch>
-    {moreDestinations.map((destination) => (
+    {destinations.map((destination) => (
       <a
         class:list={["tile", destination.className, destination.status === "coming-soon" && "is-coming"]}
         data-enter

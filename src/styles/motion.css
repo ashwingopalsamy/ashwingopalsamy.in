@@ -280,3 +280,85 @@
     transition: none;
   }
 }
+
+/* Photo routes keep their content plane still. Named image layers below
+   supply the only movement, so controls and captions do not blur or drift
+   while a photograph changes. */
+.column-body.photo-page > main[data-route-content] {
+  view-transition-name: photo-route;
+}
+
+::view-transition-group(photo-route),
+::view-transition-old(photo-route),
+::view-transition-new(photo-route) {
+  animation: none;
+}
+
+::view-transition-old(photo-route),
+::view-transition-new(photo-route) {
+  opacity: 1;
+}
+
+/* Opening and closing use the browser's shared-element geometry animation
+   on the uncropped image itself. Its intrinsic ratio stays constant. */
+::view-transition-group(photo-open) {
+  animation-duration: var(--dur-overlay);
+  animation-timing-function: var(--ease-travel);
+}
+
+::view-transition-old(photo-open),
+::view-transition-new(photo-open) {
+  animation-duration: var(--dur-overlay);
+  animation-timing-function: var(--ease-travel);
+}
+
+/* A fixed-size stage gives viewer-to-viewer navigation identical geometry;
+   only its image pixels dissolve. */
+@keyframes photo-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes photo-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+::view-transition-group(photo-swap),
+::view-transition-group(photo-caption) {
+  animation: none;
+}
+
+::view-transition-old(photo-swap),
+::view-transition-old(photo-caption) {
+  animation: photo-fade-out var(--dur-exit) var(--ease-exit) both;
+}
+
+::view-transition-new(photo-swap),
+::view-transition-new(photo-caption) {
+  animation: photo-fade-in var(--dur-shift) var(--ease-enter) both;
+}
+
+@supports not (view-transition-name: none) {
+  .column-body.photo-page > main[data-route-content][data-navigation-phase="entering"] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(photo-open),
+  ::view-transition-group(photo-swap),
+  ::view-transition-group(photo-caption),
+  ::view-transition-old(photo-open),
+  ::view-transition-new(photo-open),
+  ::view-transition-old(photo-swap),
+  ::view-transition-new(photo-swap),
+  ::view-transition-old(photo-caption),
+  ::view-transition-new(photo-caption) {
+    animation: none !important;
+  }
+}

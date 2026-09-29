@@ -69,6 +69,10 @@ export function resolveBackTarget(pathname: string): BackTarget {
     };
   }
 
+  if (norm.startsWith("/more/photos/") && norm !== "/more/photos/") {
+    return { isHome: false, href: "/more/photos/", label: "Back to photos" };
+  }
+
   if (norm.startsWith("/more/")) {
     return { isHome: false, href: norm === "/more/" ? "/" : "/more/", label: norm === "/more/" ? "Back to home" : "Back to more" };
   }

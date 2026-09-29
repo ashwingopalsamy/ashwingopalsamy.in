@@ -1,0 +1,89 @@
+---
+import HomeRefinedPreview from "./HomeRefinedPreview.astro";
+
+interface Props {
+  variant: "connected" | "open";
+}
+
+const { variant } = Astro.props;
+---
+
+<div class:list={["visual-study", `visual-study--${variant}`]}>
+  <HomeRefinedPreview />
+</div>
+
+<style>
+  .visual-study--connected :global(.refined-home) :global(.connect-grid) {
+    gap: 0;
+    overflow: hidden;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--r-5);
+  }
+
+  .visual-study--connected :global(.refined-home) :global(.spotify-wrap),
+  .visual-study--connected :global(.refined-home) :global(.loc-card) {
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .visual-study--connected :global(.refined-home) :global(.loc-card) {
+    border-block-start: 1px solid var(--rule);
+  }
+
+  .visual-study--connected :global(.refined-home) :global(.quote-block) {
+    position: relative;
+  }
+
+  .visual-study--connected :global(.refined-home) :global(.quote-controls) {
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-end: 0;
+    margin-bottom: 0;
+  }
+
+  @media (min-width: 42.5rem) {
+    .visual-study--connected :global(.refined-home) :global(.loc-card) {
+      border-block-start: 0;
+      border-inline-start: 1px solid var(--rule);
+    }
+
+    .visual-study--open :global(.refined-home) :global(.connect-grid) {
+      position: relative;
+      grid-template-columns: 1fr;
+      grid-template-rows: 224px;
+      gap: 0;
+      min-height: 224px;
+    }
+
+    .visual-study--open :global(.refined-home) :global(.connect-grid .loc-card) {
+      grid-area: 1 / 1;
+      min-height: 224px;
+      height: 224px;
+      z-index: 0;
+    }
+
+    .visual-study--open :global(.refined-home) :global(.spotify-wrap) {
+      position: absolute;
+      inset-block-start: 36px;
+      inset-inline-end: 16px;
+      z-index: 1;
+      width: calc((100% - 16px) / 2);
+      height: 152px;
+      box-shadow: var(--shadow-1), inset 0 0 0 1px color-mix(in oklch, var(--ink) 10%, transparent);
+    }
+
+    .visual-study--open :global(.refined-home) :global(.loc-card .loc-pill) {
+      inset-block-start: 14px;
+      inset-inline-end: auto;
+      inset-block-end: auto;
+      inset-inline-start: 14px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .visual-study--connected :global(.refined-home) :global(.quote-controls),
+    .visual-study--open :global(.refined-home) :global(.quote-controls) {
+      transition: none;
+    }
+  }
+</style>

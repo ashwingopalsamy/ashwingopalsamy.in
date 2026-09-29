@@ -1,0 +1,67 @@
+---
+import HomeRefinedPreview from "./HomeRefinedPreview.astro";
+
+interface Props {
+  variant: "mono" | "orange";
+}
+
+const { variant } = Astro.props;
+---
+
+<div class:list={["cloud-study", `cloud-study--${variant}`]}>
+  <HomeRefinedPreview />
+</div>
+
+<style>
+  :global(body:has(.column-body.home-preview--cloud-mono) .site-chrome),
+  :global(body:has(.column-body.home-preview--cloud-orange) .site-chrome),
+  :global(.column-body.home-preview--cloud-mono),
+  :global(.column-body.home-preview--cloud-orange) {
+    font-family: "Inter Variable", "Inter Fallback", system-ui, -apple-system, sans-serif;
+  }
+
+  :global(body:has(.column-body.home-preview--cloud-mono) .site-chrome *),
+  :global(body:has(.column-body.home-preview--cloud-orange) .site-chrome *),
+  :global(.column-body.home-preview--cloud-mono *),
+  :global(.column-body.home-preview--cloud-orange *) {
+    font-family: inherit !important;
+  }
+
+  :global(.column-body.home-preview--cloud-mono .quote-text),
+  :global(.column-body.home-preview--cloud-orange .quote-text),
+  :global(.column-body.home-preview--cloud-mono .attribution),
+  :global(.column-body.home-preview--cloud-orange .attribution),
+  :global(.column-body.home-preview--cloud-mono .quote-author),
+  :global(.column-body.home-preview--cloud-orange .quote-author) {
+    font-family: "Inter Variable", "Inter Fallback", system-ui, -apple-system, sans-serif !important;
+  }
+
+  :global(.column-body.home-preview--cloud-orange .refined-cta--primary) {
+    background: #f65b00 !important;
+    color: #171717 !important;
+  }
+
+  :global(.column-body.home-preview--cloud-orange .refined-cta--primary:hover),
+  :global(.column-body.home-preview--cloud-orange .refined-cta--primary:focus-visible) {
+    background: #f65b00 !important;
+    color: #171717 !important;
+    box-shadow: var(--shadow-1), 0 0 0 3px color-mix(in oklch, #f65b00 18%, transparent) !important;
+  }
+
+  :global(.column-body.home-preview--cloud-orange .refined-intro a:hover),
+  :global(.column-body.home-preview--cloud-orange .refined-intro a:focus-visible) {
+    color: #b83d00;
+  }
+
+  :global(:root[data-theme="dark"] .column-body.home-preview--cloud-orange .refined-intro a:hover),
+  :global(:root[data-theme="dark"] .column-body.home-preview--cloud-orange .refined-intro a:focus-visible) {
+    color: #ffad73;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme]) .column-body.home-preview--cloud-orange .refined-intro a:hover),
+    :global(:root:not([data-theme]) .column-body.home-preview--cloud-orange .refined-intro a:focus-visible) {
+      color: #ffad73;
+    }
+  }
+</style>

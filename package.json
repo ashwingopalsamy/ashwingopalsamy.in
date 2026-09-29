@@ -9,7 +9,7 @@
     "scripts": {
         "dev": "astro dev",
         "start": "astro dev",
-        "build": "astro build && pagefind --site dist",
+        "build": "node scripts/validate-photo-assets.mjs && astro build && pagefind --site dist",
         "preview": "astro preview",
         "check": "astro check",
         "check:functions": "tsc --project tsconfig.functions.json --noEmit",

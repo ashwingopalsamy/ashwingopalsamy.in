@@ -1,0 +1,359 @@
+---
+import { getImage, Picture } from "astro:assets";
+import Icon from "../../../components/Icon.astro";
+import { getPhotoEntries, photoHref, photoWidths, type PhotoEntry } from "../../../data/photos";
+import Page from "../../../layouts/Page.astro";
+import { getPhotoImageSources, PHOTO_DETAIL_SIZES } from "../../../lib/photo-image-sources";
+import { absUrl } from "../../../lib/urls";
+
+interface Props {
+  photo: PhotoEntry;
+  index: number;
+  total: number;
+  previous?: PhotoEntry;
+  next?: PhotoEntry;
+}
+
+export async function getStaticPaths() {
+  const photos = await getPhotoEntries();
+
+  return photos.map((photo, index) => ({
+    params: { slug: photo.id },
+    props: {
+      photo,
+      index,
+      total: photos.length,
+      previous: photos[index - 1],
+      next: photos[index + 1],
+    },
+  }));
+}
+
+const { photo, index, total, previous, next } = Astro.props;
+const { caption, date, location, alt, source } = photo.data;
+const pageTitle = caption ?? `Photo ${String(index + 1).padStart(2, "0")}`;
+const pageDescription = [caption, date, location].filter(Boolean).join(" · ") || alt;
+const sizes = PHOTO_DETAIL_SIZES;
+const widths = photoWidths(source.width);
+const [previousSources, nextSources] = await Promise.all([
+  previous ? getPhotoImageSources(previous.data.source, sizes) : undefined,
+  next ? getPhotoImageSources(next.data.source, sizes) : undefined,
+]);
+const robots = import.meta.env.DEV || photo.data.draft ? "noindex,follow" : undefined;
+const socialImage = await getImage({
+  src: source,
+  width: Math.min(source.width, 1200),
+  format: "jpeg",
+  quality: 82,
+});
+const requestedSocialWidth = Math.min(source.width, 1200);
+const socialImageWidth = socialImage.options.width ?? requestedSocialWidth;
+const socialImageHeight = socialImage.options.height ?? Math.round(source.height * requestedSocialWidth / source.width);
+---
+
+<Page
+  title={pageTitle}
+  description={pageDescription}
+  ogImage={absUrl(socialImage.src)}
+  ogImageAlt={alt}
+  ogImageWidth={socialImageWidth}
+  ogImageHeight={socialImageHeight}
+  ogImageType="image/jpeg"
+  bodyClass="photo-page"
+  pagefind={false}
+  robots={robots}
+>
+  <article class="photo-detail" data-photo-detail={photo.id}>
+    <figure class="photo-detail-figure">
+      <figcaption class="photo-detail-caption" data-photo-caption>
+        <div class="photo-detail-heading">
+          <h1>{pageTitle}</h1>
+          <p class="photo-position">{String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}</p>
+        </div>
+        {photo.data.generatedPreview && (
+          <p class="photo-origin">AI-generated preview · not a personal photograph</p>
+        )}
+        {date || location ? (
+          <p class="photo-detail-meta">
+            {date && <span>{date}</span>}
+            {date && location && <span aria-hidden="true"> · </span>}
+            {location && <span>{location}</span>}
+          </p>
+        ) : null}
+      </figcaption>
+      <nav class="photo-navigation" aria-label="Photo navigation">
+        {previous ? (
+          <a
+            class="photo-control"
+            href={photoHref(previous.id)}
+            rel="prev"
+            aria-label="Previous photo"
+            data-photo-target={previous.id}
+            data-photo-avif={previousSources?.avif}
+            data-photo-webp={previousSources?.webp}
+            data-photo-jpeg={previousSources?.jpeg}
+            data-photo-jpeg-src={previousSources?.jpegSrc}
+            data-photo-sizes={previousSources?.sizes}
+          >
+            <span aria-hidden="true"><Icon name="arrow-left" size={18} strokeWidth={1.8} /></span>
+          </a>
+        ) : (
+          <button class="photo-control" type="button" disabled aria-label="No previous photo">
+            <span aria-hidden="true"><Icon name="arrow-left" size={18} strokeWidth={1.8} /></span>
+          </button>
+        )}
+        {next ? (
+          <a
+            class="photo-control"
+            href={photoHref(next.id)}
+            rel="next"
+            aria-label="Next photo"
+            data-photo-target={next.id}
+            data-photo-avif={nextSources?.avif}
+            data-photo-webp={nextSources?.webp}
+            data-photo-jpeg={nextSources?.jpeg}
+            data-photo-jpeg-src={nextSources?.jpegSrc}
+            data-photo-sizes={nextSources?.sizes}
+          >
+            <span aria-hidden="true"><Icon name="arrow-right" size={18} strokeWidth={1.8} /></span>
+          </a>
+        ) : (
+          <button class="photo-control" type="button" disabled aria-label="No next photo">
+            <span aria-hidden="true"><Icon name="arrow-right" size={18} strokeWidth={1.8} /></span>
+          </button>
+        )}
+      </nav>
+      <div class="photo-stage">
+        <div class="photo-media" data-photo-media data-photo-id={photo.id} transition:persist={`photo-${photo.id}`}>
+          <Picture
+            src={source}
+            alt={alt}
+            widths={widths}
+            sizes={sizes}
+            formats={["avif", "webp"]}
+            fallbackFormat="jpeg"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+            class="photo-image"
+            pictureAttributes={{ class: "photo-picture" }}
+          />
+        </div>
+      </div>
+    </figure>
+    <p class="photo-status" role="status" aria-live="polite" aria-atomic="true" data-photo-status></p>
+
+  </article>
+</Page>
+
+<script>
+  import "../../../scripts/photo-transitions";
+</script>
+
+<style>
+  .photo-detail {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .photo-navigation {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    align-self: start;
+    gap: 0;
+    padding: 2px;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-pill);
+    background: var(--surface-inline-bg);
+  }
+
+  .photo-control {
+    display: grid;
+    inline-size: 38px;
+    block-size: 38px;
+    flex: 0 0 38px;
+    place-items: center;
+    border: 0;
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: var(--ink);
+    text-decoration: none;
+    transition:
+      background-color var(--dur-tint) linear,
+      color var(--dur-tint) linear;
+  }
+
+  .photo-control:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+  }
+
+  .photo-control:disabled {
+    color: var(--faint);
+    cursor: not-allowed;
+  }
+
+  .photo-control[aria-busy="true"] {
+    position: relative;
+    cursor: progress;
+  }
+
+  .photo-control[aria-busy="true"]::after {
+    position: absolute;
+    inset: 4px;
+    border: 1px solid transparent;
+    border-block-start-color: currentColor;
+    border-radius: 50%;
+    animation: photo-control-spin 800ms linear infinite;
+    content: "";
+    opacity: 0.7;
+  }
+
+  .photo-control[aria-busy="true"] > span {
+    opacity: 0.45;
+  }
+
+  @keyframes photo-control-spin {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+
+  .photo-detail-figure {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr);
+    column-gap: var(--space-3);
+    row-gap: var(--space-4);
+    min-inline-size: 0;
+    margin: 0;
+  }
+
+  .photo-detail-caption {
+    grid-column: 1;
+    grid-row: 1;
+    display: grid;
+    align-content: start;
+    gap: var(--space-1);
+    min-inline-size: 0;
+  }
+
+  .photo-stage {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid;
+    block-size: min(60svh, 56rem);
+    min-inline-size: 0;
+    min-block-size: 12rem;
+    place-items: center;
+    overflow: hidden;
+    background: transparent;
+  }
+
+  .photo-stage :global(.photo-media) {
+    display: grid;
+    inline-size: 100%;
+    block-size: 100%;
+    place-items: center;
+  }
+
+  .photo-stage :global(.photo-picture) {
+    display: grid;
+    inline-size: 100%;
+    block-size: 100%;
+    place-items: center;
+  }
+
+  .photo-stage :global(.photo-image) {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    max-inline-size: 100%;
+    max-block-size: min(60svh, 56rem);
+    border-radius: var(--r-4);
+    object-fit: contain;
+  }
+
+  .photo-status {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .photo-detail-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: var(--space-3);
+    min-inline-size: 0;
+  }
+
+  .photo-detail-heading h1 {
+    min-inline-size: 0;
+    margin: 0;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--text-lg);
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .photo-position,
+  .photo-detail-meta,
+  .photo-origin {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--text-xs);
+  }
+
+  .photo-origin {
+    font-family: inherit;
+  }
+
+  .photo-position {
+    flex: 0 0 auto;
+    font-family: inherit;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .photo-origin,
+  .photo-detail-meta {
+    overflow-wrap: anywhere;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .photo-control:not(:disabled):hover {
+      background: color-mix(in oklch, var(--surface-inline-bg), var(--ink) 6%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .photo-control {
+      transition: none;
+    }
+
+    .photo-control[aria-busy="true"]::after {
+      animation: none;
+    }
+
+  }
+
+  @media (max-width: 38rem) {
+    .photo-stage {
+      block-size: min(42svh, 32rem);
+      min-block-size: 10rem;
+    }
+
+    .photo-stage :global(.photo-image) {
+      max-block-size: min(42svh, 32rem);
+    }
+
+  }
+</style>

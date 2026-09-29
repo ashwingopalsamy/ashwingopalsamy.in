@@ -97,7 +97,9 @@ function handleNavigationPress(event: MouseEvent) {
     return;
   }
 
+  const clickedHref = link.getAttribute("href");
   updateNavigation(target.pathname);
+  if (clickedHref !== null) link.setAttribute("href", clickedHref);
 }
 
 function handleBeforePreparation(event: Event) {

@@ -1,6 +1,7 @@
 import { getCollection } from "astro:content";
 import { CANONICAL_KNOWLEDGE } from "../data/canonical-knowledge";
 import { moreDestinations } from "../data/more";
+import { getPhotoEntries, photoHref } from "../data/photos";
 import { bookHref, noteHref, watchHref } from "./library";
 import { getTagBuckets, tagHref } from "./tags";
 import { slashPath } from "./urls";
@@ -34,25 +35,43 @@ function day(date: Date): string {
 }
 
 export async function getSitemapEntries(): Promise<SitemapEntry[]> {
-  const [books, watch, notes, craft, tags] = await Promise.all([
+  const [books, watch, notes, craft, tags, photos] = await Promise.all([
     getCollection("books"),
     getCollection("watch"),
     getCollection("notes"),
     getCollection("craft"),
     getTagBuckets(),
+    getPhotoEntries(),
   ]);
   const isProd = import.meta.env.PROD;
   const visibleNotes = isProd ? notes.filter((entry) => !entry.data.draft) : notes;
+  const publishedPhotos = photos.filter((entry) => !entry.data.draft);
   const entries: SitemapEntry[] = [
     ...staticEntries,
     ...moreDestinations
-      .filter((destination) => destination.status === "live" && destination.id !== "library" && destination.id !== "ai")
+      .filter((destination) =>
+        destination.status === "live" &&
+        destination.id !== "library" &&
+        destination.id !== "ai" &&
+        destination.id !== "photos",
+      )
       .map((destination) => ({
         path: destination.href,
         title: destination.title,
         section: "More",
       })),
   ];
+
+  if (publishedPhotos.length > 0) {
+    entries.push({ path: "/more/photos/", title: "Photos", section: "More" });
+    publishedPhotos.forEach((photo, index) => {
+      entries.push({
+        path: photoHref(photo.id),
+        title: photo.data.caption ?? `Photo ${String(index + 1).padStart(2, "0")}`,
+        section: "Photos",
+      });
+    });
+  }
 
   for (const entry of books) {
     const path = bookHref(entry);

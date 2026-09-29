@@ -1,18 +1,241 @@
 ---
+import { getImage, Picture } from "astro:assets";
 import ComingSoon from "../../components/ComingSoon.astro";
+import PageIntro from "../../components/PageIntro.astro";
 import Page from "../../layouts/Page.astro";
+import { getPhotoEntries, photoHref, photoWidths } from "../../data/photos";
+import { getPhotoImageSources } from "../../lib/photo-image-sources";
 import { ogPath } from "../../lib/og-url";
+import { absUrl } from "../../lib/urls";
 
-const description = "I am editing this down to photographs that are worth another look. The quiet page is more honest until then.";
+const comingSoonDescription = "I am editing this down to photographs that are worth another look. The quiet page is more honest until then.";
+const photos = await getPhotoEntries();
+const hasPublishedPhotos = photos.some(({ data }) => !data.draft);
+const hasDraftPhotos = photos.some(({ data }) => data.draft);
+const hasGeneratedPreviews = photos.some(({ data }) => data.generatedPreview);
+const pageDescription = hasPublishedPhotos
+  ? "A gallery of photographs by Ashwin Gopalsamy."
+  : comingSoonDescription;
+const robots = import.meta.env.DEV || !hasPublishedPhotos ? "noindex,follow" : undefined;
+const sizes = "(max-width: 38rem) calc(100vw - 2.5rem), (max-width: 50rem) calc((100vw - 3.75rem) / 2), 368px";
+const coverSource = photos[0]?.data.source;
+const socialImage = coverSource
+  ? await getImage({
+      src: coverSource,
+      width: Math.min(coverSource.width, 1200),
+      format: "jpeg",
+      quality: 82,
+    })
+  : undefined;
+const requestedSocialWidth = coverSource ? Math.min(coverSource.width, 1200) : undefined;
+const socialImageWidth = socialImage?.options.width ?? requestedSocialWidth;
+const socialImageHeight = socialImage?.options.height ?? (
+  coverSource && requestedSocialWidth
+    ? Math.round(coverSource.height * requestedSocialWidth / coverSource.width)
+    : undefined
+);
+const socialImageAlt = photos[0]?.data.alt ?? "Photos · Ashwin Gopalsamy";
+const photoCards = await Promise.all(photos.map(async (photo) => ({
+  photo,
+  detailSources: await getPhotoImageSources(photo.data.source),
+})));
 ---
 
 <Page
   title="Photos"
-  description={`${description} Coming soon.`}
-  ogImage={ogPath("more/photos")}
-  ogImageAlt="Photos · Ashwin Gopalsamy"
-  pagefind={false}
-  robots="noindex,follow"
+  description={hasPublishedPhotos ? pageDescription : `${pageDescription} Coming soon.`}
+  ogImage={socialImage ? absUrl(socialImage.src) : ogPath("more/photos")}
+  ogImageAlt={socialImageAlt}
+  ogImageWidth={socialImageWidth}
+  ogImageHeight={socialImageHeight}
+  ogImageType={socialImage ? "image/jpeg" : undefined}
+  bodyClass="photo-page"
+  pagefind={hasPublishedPhotos && !import.meta.env.DEV}
+  robots={robots}
 >
-  <ComingSoon title="Photos" description={description} />
+  {photos.length === 0 ? (
+    <ComingSoon title="Photos" description={comingSoonDescription} />
+  ) : (
+    <section class="photo-index" aria-label="Photo gallery">
+      <PageIntro title="photos" lede="Frames worth a second look." />
+      {import.meta.env.DEV && hasDraftPhotos && (
+        <p class="photo-draft-note">
+          {hasGeneratedPreviews
+            ? "AI-generated previews · not personal photographs"
+            : "Unpublished photos are shown only in this local preview."}
+        </p>
+      )}
+      <ol class="photo-wall">
+        {photoCards.map(({ photo, detailSources }, index) => (
+          <li class="photo-wall-item">
+            <figure class="photo-figure">
+              <a
+                class="photo-link"
+                href={photoHref(photo.id)}
+                data-photo-target={photo.id}
+                data-photo-avif={detailSources.avif}
+                data-photo-webp={detailSources.webp}
+                data-photo-jpeg={detailSources.jpeg}
+                data-photo-jpeg-src={detailSources.jpegSrc}
+                data-photo-sizes={detailSources.sizes}
+              >
+                <div class="photo-media" data-photo-media data-photo-id={photo.id} transition:persist={`photo-${photo.id}`}>
+                  <Picture
+                    src={photo.data.source}
+                    alt={photo.data.alt}
+                    widths={photoWidths(photo.data.source.width)}
+                    sizes={sizes}
+                    formats={["avif", "webp"]}
+                    fallbackFormat="jpeg"
+                    loading={index === 0 ? "eager" : "lazy"}
+                    fetchpriority={index === 0 ? "high" : undefined}
+                    decoding="async"
+                    class="photo-image"
+                    pictureAttributes={{ class: "photo-picture" }}
+                  />
+                </div>
+              </a>
+              {(photo.data.caption || photo.data.date || photo.data.location) && (
+                <figcaption class="photo-caption-area">
+                  {photo.data.caption && <p class="photo-caption">{photo.data.caption}</p>}
+                  {(photo.data.date || photo.data.location) && (
+                    <p class="photo-meta">
+                      {photo.data.date && (
+                        <span>{photo.data.date}</span>
+                      )}
+                      {photo.data.date && photo.data.location && <span aria-hidden="true"> · </span>}
+                      {photo.data.location && <span>{photo.data.location}</span>}
+                    </p>
+                  )}
+                </figcaption>
+              )}
+            </figure>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )}
+  {photos.length > 0 && <p class="photo-status" role="status" aria-live="polite" aria-atomic="true" data-photo-status />}
 </Page>
+
+<script>
+  import "../../scripts/photo-transitions";
+</script>
+
+<style>
+  .photo-index {
+    inline-size: 100%;
+  }
+
+  .photo-draft-note {
+    margin: 0 0 var(--space-4);
+    color: var(--muted);
+    font-size: var(--text-xs);
+  }
+
+  .photo-wall {
+    columns: 2;
+    column-gap: var(--space-5);
+    column-fill: balance;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .photo-wall-item {
+    display: inline-block;
+    inline-size: 100%;
+    break-inside: avoid;
+    padding-block-end: var(--space-6);
+  }
+
+  .photo-figure {
+    min-inline-size: 0;
+    margin: 0;
+  }
+
+  .photo-link {
+    display: block;
+    overflow: hidden;
+    border-radius: var(--r-3);
+    outline: 1px solid color-mix(in oklch, var(--ink) 10%, transparent);
+    outline-offset: -1px;
+    background: var(--surface-inline-bg);
+    transition: outline-color var(--dur-tint) linear;
+  }
+
+  .photo-link:focus-visible {
+    outline-color: color-mix(in oklch, var(--ink) 34%, transparent);
+  }
+
+  .photo-link:focus-visible {
+    outline-width: 2px;
+    outline-offset: 3px;
+  }
+
+  .photo-link :global(.photo-media),
+  .photo-link :global(.photo-picture),
+  .photo-link :global(.photo-image) {
+    display: block;
+    inline-size: 100%;
+  }
+
+  .photo-link :global(.photo-image) {
+    block-size: auto;
+  }
+
+  .photo-link[data-photo-pending="true"] {
+    outline-color: color-mix(in oklch, var(--ink) 28%, transparent);
+  }
+
+  .photo-status {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .photo-caption-area {
+    padding-block-start: var(--space-2);
+  }
+
+  .photo-caption,
+  .photo-meta {
+    margin: 0;
+  }
+
+  .photo-caption {
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--text-base);
+    font-style: normal;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .photo-meta {
+    margin-block-start: var(--space-1);
+    color: var(--muted);
+    font-size: var(--text-xs);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .photo-link:hover {
+      outline-color: color-mix(in oklch, var(--ink) 34%, transparent);
+    }
+  }
+
+  @media (max-width: 38rem) {
+    .photo-wall {
+      columns: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .photo-link {
+      transition: none;
+    }
+  }
+</style>
