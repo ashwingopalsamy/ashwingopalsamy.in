@@ -19,7 +19,7 @@
 import { showToast } from "./toast";
 import { playAccent, isSoundEnabled } from "./sound";
 import { pageSignal, onPageCleanup } from "./lifecycle";
-import { onScrollFrame } from "./scroll-scheduler";
+import { invalidateScrollMetrics, onScrollFrame } from "./scroll-scheduler";
 import { copyToClipboard } from "./clipboard";
 import { mermaidFallbacks, STEEL_9 } from "../lib/theme";
 import { iconMarkup } from "../lib/ui-icons";
@@ -32,8 +32,7 @@ import { track, trackCopy } from "./telemetry";
 const COPY_ICON = iconMarkup("copy", { size: 13, strokeWidth: 1.8 });
 const DONE_ICON = iconMarkup("check", { size: 13, strokeWidth: 2.2 });
 
-function initCodeCopy() {
-  const signal = pageSignal();
+function initCodeCopy(signal: AbortSignal) {
   document.querySelectorAll<HTMLElement>(".prose .code-figure").forEach((fig) => {
     if (fig.querySelector(".code-actions")) return;
     const pre = fig.querySelector("pre");
@@ -49,19 +48,22 @@ function initCodeCopy() {
     copyBtn.title = "Copy code";
     copyBtn.setAttribute("aria-label", "Copy code");
     copyBtn.innerHTML = COPY_ICON;
+    let resetTimer = 0;
 
     copyBtn.addEventListener(
       "click",
       async () => {
         const text = pre.innerText.replace(/\n$/, "");
-        const ok = await copyToClipboard(text);
+        const ok = await copyToClipboard(text, signal);
+        if (signal.aborted || !copyBtn.isConnected) return;
         if (ok) {
           copyBtn.classList.add("is-done");
           copyBtn.innerHTML = DONE_ICON;
           if (isSoundEnabled()) playAccent("copy");
           trackCopy("code");
           showToast({ message: "Copied to clipboard", anchor: copyBtn, duration: 1600 });
-          window.setTimeout(() => {
+          window.clearTimeout(resetTimer);
+          resetTimer = window.setTimeout(() => {
             copyBtn.classList.remove("is-done");
             copyBtn.innerHTML = COPY_ICON;
           }, 1400);
@@ -74,7 +76,10 @@ function initCodeCopy() {
 
     toolbar.appendChild(copyBtn);
     fig.appendChild(toolbar);
-    signal.addEventListener("abort", () => toolbar.remove(), { once: true });
+    onPageCleanup(() => {
+      window.clearTimeout(resetTimer);
+      toolbar.remove();
+    }, signal);
   });
 }
 
@@ -82,8 +87,7 @@ function initCodeCopy() {
 /*  heading anchors                                                    */
 /* ------------------------------------------------------------------ */
 
-function initHeadingAnchors() {
-  const signal = pageSignal();
+function initHeadingAnchors(signal: AbortSignal) {
   document.querySelectorAll<HTMLElement>(".prose .h-anchor").forEach((a) => {
     if (a.dataset.enhanced) return;
     a.dataset.enhanced = "true";
@@ -94,7 +98,8 @@ function initHeadingAnchors() {
         // let the default hash navigation happen, but also copy the link
         const href = a.getAttribute("href") ?? "";
         const url = location.origin + location.pathname + href;
-        const ok = await copyToClipboard(url);
+        const ok = await copyToClipboard(url, signal);
+        if (signal.aborted || !a.isConnected) return;
         if (ok) {
           if (isSoundEnabled()) playAccent("copy");
           trackCopy("heading_anchor");
@@ -110,8 +115,7 @@ function initHeadingAnchors() {
 /*  Copy page link                                                     */
 /* ------------------------------------------------------------------ */
 
-function initCopyLink() {
-  const signal = pageSignal();
+function initCopyLink(signal: AbortSignal) {
   document.querySelectorAll<HTMLButtonElement>("[data-copy-link]").forEach((btn) => {
     if (btn.dataset.enhanced === "true") return;
     btn.dataset.enhanced = "true";
@@ -120,7 +124,8 @@ function initCopyLink() {
       "click",
       async () => {
         const url = location.href.split("#")[0];
-        const ok = await copyToClipboard(url);
+        const ok = await copyToClipboard(url, signal);
+        if (signal.aborted || !btn.isConnected) return;
         if (ok) {
           if (isSoundEnabled()) playAccent("copy");
           trackCopy("page_link");
@@ -138,7 +143,7 @@ function initCopyLink() {
 /*  Footnote previews                                                  */
 /* ------------------------------------------------------------------ */
 
-function initFootnotePreviews() {
+function initFootnotePreviews(signal: AbortSignal) {
   const prose = document.querySelector<HTMLElement>(".prose");
   if (!prose) return;
 
@@ -150,11 +155,25 @@ function initFootnotePreviews() {
   });
   if (!refs.length) return;
 
-  const signal = pageSignal();
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let card: HTMLElement | null = null;
   let openFor: HTMLElement | null = null;
   let hideTimer = 0;
+  let sizeDirty = true;
+  let cardSize = { width: 0, height: 0 };
+  let pendingPosition: { left: number; top: number } | null = null;
+  let sizeObserver: ResizeObserver | null = null;
+
+  onPageCleanup(() => {
+    window.clearTimeout(hideTimer);
+    sizeObserver?.disconnect();
+    if (openFor) openFor.removeAttribute("aria-describedby");
+    card?.remove();
+    card = null;
+    openFor = null;
+    pendingPosition = null;
+    refs.forEach((ref) => delete ref.dataset.fnPreview);
+  }, signal);
 
   const ensureCard = () => {
     if (card) return card;
@@ -163,12 +182,15 @@ function initFootnotePreviews() {
     card.className = "fn-preview";
     card.setAttribute("role", "tooltip");
     card.hidden = true;
+    card.style.position = "fixed";
     document.body.appendChild(card);
-    onPageCleanup(() => {
-      if (openFor) openFor.removeAttribute("aria-describedby");
-      card?.remove();
-      card = null;
-    });
+    if ("ResizeObserver" in window) {
+      sizeObserver = new ResizeObserver(() => {
+        sizeDirty = true;
+        invalidateScrollMetrics();
+      });
+      sizeObserver.observe(card);
+    }
     return card;
   };
 
@@ -179,20 +201,22 @@ function initFootnotePreviews() {
       openFor = null;
     }
     if (!card) return;
+    pendingPosition = null;
     card.hidden = true;
     card.innerHTML = "";
   };
 
-  const position = (anchor: HTMLElement) => {
-    if (!card) return;
+  const measurePosition = () => {
+    pendingPosition = null;
+    if (!card || card.hidden || !openFor?.isConnected || signal.aborted) return;
     const gap = 8;
-    const rect = anchor.getBoundingClientRect();
-    card.hidden = false;
-    card.style.position = "fixed";
-    card.style.left = "0";
-    card.style.top = "0";
-    card.style.visibility = "hidden";
-    const box = card.getBoundingClientRect();
+    const rect = openFor.getBoundingClientRect();
+    if (sizeDirty) {
+      const box = card.getBoundingClientRect();
+      cardSize = { width: box.width, height: box.height };
+      sizeDirty = false;
+    }
+    const box = cardSize;
     let left = rect.left + rect.width / 2 - box.width / 2;
     let top = rect.bottom + gap;
     const vw = window.innerWidth;
@@ -202,12 +226,18 @@ function initFootnotePreviews() {
       top = rect.top - box.height - gap;
     }
     top = Math.max(8, top);
-    card.style.left = `${Math.round(left)}px`;
-    card.style.top = `${Math.round(top)}px`;
+    pendingPosition = { left: Math.round(left), top: Math.round(top) };
+  };
+
+  const applyPosition = () => {
+    if (!card || !pendingPosition || signal.aborted) return;
+    card.style.left = `${pendingPosition.left}px`;
+    card.style.top = `${pendingPosition.top}px`;
     card.style.visibility = "";
   };
 
   const show = (anchor: HTMLElement) => {
+    if (signal.aborted || !anchor.isConnected) return;
     const href = anchor.getAttribute("href") ?? "";
     const id = href.replace(/^#/, "");
     if (!id) return;
@@ -222,9 +252,15 @@ function initFootnotePreviews() {
     const clone = target.cloneNode(true) as HTMLElement;
     clone.querySelectorAll(".footnote-backref").forEach((n) => n.remove());
     el.innerHTML = clone.innerHTML;
+    el.hidden = false;
+    el.style.left = "0";
+    el.style.top = "0";
+    el.style.visibility = "hidden";
+    sizeDirty = true;
     openFor = anchor;
     anchor.setAttribute("aria-describedby", "fn-preview-tooltip");
-    position(anchor);
+    measurePosition();
+    applyPosition();
   };
 
   const scheduleHide = () => {
@@ -288,16 +324,14 @@ function initFootnotePreviews() {
     { signal },
   );
 
-  onScrollFrame(() => {
-    if (openFor && card && !card.hidden) position(openFor);
-  }, signal);
+  onScrollFrame(applyPosition, signal, measurePosition);
 }
 
 /* ------------------------------------------------------------------ */
 /*  reading progress                                                   */
 /* ------------------------------------------------------------------ */
 
-function initProgress() {
+function initProgress(signal: AbortSignal) {
   const article = document.querySelector<HTMLElement>(".note[data-note]");
   const bar = document.querySelector<HTMLElement>(".note-progress-bar");
   if (!article || !bar) return;
@@ -308,11 +342,14 @@ function initProgress() {
      control of the same transform. */
   if (CSS.supports("animation-timeline", "view()")) return;
 
-  onScrollFrame(({ viewport }) => {
+  let progress = 0;
+  onScrollFrame(() => {
+    bar.style.transform = `scaleX(${progress})`;
+  }, signal, ({ viewport }) => {
     const rect = article.getBoundingClientRect();
     const total = rect.height - viewport;
     const scrolled = Math.min(Math.max(-rect.top, 0), Math.max(total, 1));
-    bar.style.transform = `scaleX(${total > 0 ? scrolled / total : 0})`;
+    progress = total > 0 ? scrolled / total : 0;
   });
 }
 
@@ -324,7 +361,10 @@ let mermaidLoader: Promise<typeof import("mermaid").default> | null = null;
 
 function loadMermaid(): Promise<typeof import("mermaid").default> {
   if (!mermaidLoader) {
-    mermaidLoader = import("mermaid").then((m) => m.default);
+    mermaidLoader = import("mermaid").then((m) => m.default).catch((error: unknown) => {
+      mermaidLoader = null;
+      throw error;
+    });
   }
   return mermaidLoader;
 }
@@ -406,13 +446,13 @@ function readThemeVars(theme: string): Record<string, string> {
 }
 
 let initTheme = "";
-let mermaidReady: Promise<typeof import("mermaid").default> | null = null;
+let mermaidWork: Promise<void> = Promise.resolve();
 
-function ensureMermaidReady(theme: string): Promise<typeof import("mermaid").default> {
-  if (mermaidReady && initTheme === theme) return mermaidReady;
-  initTheme = theme;
-  mermaidReady = loadMermaid()
-    .then((mermaid) => {
+async function ensureMermaidReady(theme: string, current: () => boolean) {
+  const mermaid = await loadMermaid();
+  if (!current()) return null;
+  if (initTheme !== theme) {
+    try {
       mermaid.initialize({
         startOnLoad: false,
         securityLevel: "loose",
@@ -425,14 +465,13 @@ function ensureMermaidReady(theme: string): Promise<typeof import("mermaid").def
         journey: { useMaxWidth: true },
         gitGraph: { useMaxWidth: true },
       });
-      return mermaid;
-    })
-    .catch((err) => {
-      mermaidReady = null;
+      initTheme = theme;
+    } catch (err) {
       initTheme = "";
       throw err;
-    });
-  return mermaidReady;
+    }
+  }
+  return mermaid;
 }
 
 function markDiagramError(fig: HTMLElement) {
@@ -449,41 +488,56 @@ function markDiagramError(fig: HTMLElement) {
 const svgCache = new WeakMap<HTMLElement, Record<string, string>>();
 let mermaidId = 0;
 
-async function renderDiagram(fig: HTMLElement, theme: string) {
+function renderDiagram(fig: HTMLElement, theme: string, signal: AbortSignal, latest: () => boolean): Promise<void> {
   const sourceEl = fig.querySelector<HTMLElement>(".diagram-source");
   const canvas = fig.querySelector<HTMLElement>(".diagram-canvas");
-  if (!sourceEl || !canvas) return;
+  if (!sourceEl || !canvas) return Promise.resolve();
   const source = sourceEl.textContent ?? "";
-
-  const cache = svgCache.get(fig) ?? {};
-  if (cache[theme]) {
-    canvas.innerHTML = cache[theme];
-    fig.classList.add("is-enhanced", "is-rendered");
-    fig.classList.remove("has-error");
-    return;
-  }
-
-  let id = "";
-  try {
-    const mermaid = await ensureMermaidReady(theme);
-    id = `mmd-${++mermaidId}`;
-    const { svg } = await mermaid.render(id, source);
+  const current = () => !signal.aborted && fig.isConnected && latest();
+  const commit = (svg: string) => {
+    if (!current()) return;
     canvas.innerHTML = svg;
-    cache[theme] = svg;
-    svgCache.set(fig, cache);
     fig.classList.add("is-enhanced", "is-rendered");
     fig.classList.remove("has-error");
-    addExpandButton(fig);
-  } catch {
-    if (id) {
+    addExpandButton(fig, signal);
+  };
+
+  // Mermaid owns global configuration and temporary DOM. Keep initialize
+  // and render in the same serial job across pages and theme changes.
+  const job = mermaidWork.then(async () => {
+    if (!current()) return;
+    const cache = svgCache.get(fig) ?? {};
+    if (cache[theme]) {
+      commit(cache[theme]);
+      return;
+    }
+    let id = "";
+    try {
+      const mermaid = await ensureMermaidReady(theme, current);
+      if (!mermaid || !current()) return;
+      id = `mmd-${++mermaidId}`;
+      const { svg } = await mermaid.render(id, source);
+      if (!current()) return;
       document.getElementById(`d${id}`)?.remove();
       document.getElementById(id)?.remove();
+      id = "";
+      cache[theme] = svg;
+      svgCache.set(fig, cache);
+      commit(svg);
+    } catch {
+      if (current()) markDiagramError(fig);
+    } finally {
+      if (id) {
+        document.getElementById(`d${id}`)?.remove();
+        document.getElementById(id)?.remove();
+      }
     }
-    markDiagramError(fig);
-  }
+  });
+  mermaidWork = job.catch(() => undefined);
+  return mermaidWork;
 }
 
-function addExpandButton(fig: HTMLElement) {
+function addExpandButton(fig: HTMLElement, signal: AbortSignal) {
   if (fig.querySelector(".diagram-toolbar")) return;
   const toolbar = document.createElement("div");
   toolbar.className = "diagram-toolbar";
@@ -492,23 +546,28 @@ function addExpandButton(fig: HTMLElement) {
   btn.className = "diagram-expand";
   btn.setAttribute("aria-label", "Expand diagram");
   btn.innerHTML = iconMarkup("expand", { size: 15, strokeWidth: 1.8 });
-  btn.addEventListener("click", () => openOverlay(fig), { signal: pageSignal() });
+  btn.addEventListener("click", () => openOverlay(fig, signal), { signal });
   toolbar.appendChild(btn);
   fig.appendChild(toolbar);
+  onPageCleanup(() => toolbar.remove(), signal);
 }
 
 /* --- expand overlay (lightbox) --- */
 
 let overlay: HTMLElement | null = null;
 let overlayPrevFocus: HTMLElement | null = null;
+let overlayBody: HTMLElement | null = null;
+let overlayOverflow = "";
 
-function closeOverlay() {
+function closeOverlay(restoreFocus = true) {
   if (!overlay) return;
   overlay.remove();
   overlay = null;
-  overlayPrevFocus?.focus?.();
+  document.removeEventListener("keydown", onOverlayKey);
+  if (restoreFocus && overlayPrevFocus?.isConnected) overlayPrevFocus.focus();
   overlayPrevFocus = null;
-  document.body.style.overflow = "";
+  if (overlayBody) overlayBody.style.overflow = overlayOverflow;
+  overlayBody = null;
 }
 
 function onOverlayKey(e: KeyboardEvent) {
@@ -518,7 +577,8 @@ function onOverlayKey(e: KeyboardEvent) {
   }
 }
 
-function openOverlay(fig: HTMLElement) {
+function openOverlay(fig: HTMLElement, signal: AbortSignal) {
+  if (signal.aborted || !fig.isConnected) return;
   closeOverlay();
   track({ type: "palette", target: "diagram:expand" });
   const svg = fig.querySelector<HTMLElement>(".diagram-canvas svg")?.cloneNode(true) as HTMLElement | null;
@@ -540,8 +600,7 @@ function openOverlay(fig: HTMLElement) {
   close.className = "diagram-overlay-close";
   close.setAttribute("aria-label", "Close");
   close.innerHTML = iconMarkup("close", { size: 16, strokeWidth: 2 });
-  const signal = pageSignal();
-  close.addEventListener("click", closeOverlay, { signal });
+  close.addEventListener("click", () => closeOverlay(), { signal });
 
   stage.appendChild(close);
   ov.appendChild(stage);
@@ -555,40 +614,65 @@ function openOverlay(fig: HTMLElement) {
   );
 
   document.body.appendChild(ov);
+  overlayBody = document.body;
+  overlayOverflow = overlayBody.style.overflow;
   document.body.style.overflow = "hidden";
   document.addEventListener("keydown", onOverlayKey, { signal });
-  onPageCleanup(closeOverlay);
+  onPageCleanup(() => {
+    if (overlay === ov) closeOverlay(false);
+  }, signal);
   overlay = ov;
   close.focus();
 }
 
-async function initDiagrams() {
+function initDiagrams(signal: AbortSignal) {
   const diagrams = Array.from(document.querySelectorAll<HTMLElement>(".prose .diagram[data-diagram]"));
   if (diagrams.length === 0) return;
 
-  const theme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
-  for (const fig of diagrams) {
-    await renderDiagram(fig, theme);
-  }
-
   const root = document.documentElement;
-  const obs = new MutationObserver(async (muts) => {
-    for (const m of muts) {
-      if (m.attributeName === "data-theme") {
-        const next = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+  const readTheme = () => root.dataset.theme === "dark" ? "dark" : "light";
+  let desiredTheme = readTheme();
+  let revision = 0;
+  let rendering = false;
+
+  const renderLatest = async () => {
+    if (rendering || signal.aborted) return;
+    rendering = true;
+    try {
+      let completedRevision = -1;
+      while (!signal.aborted && completedRevision !== revision) {
+        const requestedRevision = revision;
+        const theme = desiredTheme;
+        const latest = () => requestedRevision === revision && theme === readTheme();
         for (const fig of diagrams) {
-          await renderDiagram(fig, next);
+          if (signal.aborted || !latest()) break;
+          await renderDiagram(fig, theme, signal, latest);
+          if (signal.aborted || !latest()) break;
         }
+        completedRevision = requestedRevision;
       }
+    } finally {
+      rendering = false;
     }
+  };
+
+  const obs = new MutationObserver(() => {
+    const next = readTheme();
+    if (signal.aborted || next === desiredTheme) return;
+    desiredTheme = next;
+    revision += 1;
+    void renderLatest();
   });
+  onPageCleanup(() => {
+    revision += 1;
+    obs.disconnect();
+  }, signal);
   obs.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
-  onPageCleanup(() => obs.disconnect());
+  void renderLatest();
 }
 
-function initNotePagerKeys() {
+function initNotePagerKeys(signal: AbortSignal) {
   if (!document.querySelector(".note[data-note]")) return;
-  const signal = pageSignal();
   document.addEventListener(
     "keydown",
     (e) => {
@@ -618,15 +702,20 @@ function initNotePagerKeys() {
 /*  init                                                               */
 /* ------------------------------------------------------------------ */
 
+let initializedSignal: AbortSignal | null = null;
+
 function init() {
   if (!document.querySelector(".prose, .note[data-note], [data-copy-link]")) return;
-  initCodeCopy();
-  initHeadingAnchors();
-  initCopyLink();
-  initFootnotePreviews();
-  initProgress();
-  initDiagrams();
-  initNotePagerKeys();
+  const signal = pageSignal();
+  if (initializedSignal === signal || signal.aborted) return;
+  initializedSignal = signal;
+  initCodeCopy(signal);
+  initHeadingAnchors(signal);
+  initCopyLink(signal);
+  initFootnotePreviews(signal);
+  initProgress(signal);
+  initDiagrams(signal);
+  initNotePagerKeys(signal);
 }
 
 init();

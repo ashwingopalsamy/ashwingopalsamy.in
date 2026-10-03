@@ -1,6 +1,7 @@
 import { isSoundEnabled, playAccent, setSoundEnabled } from "./sound";
 import { showToast } from "./toast";
 import { copyToClipboard } from "./clipboard";
+import { pageSignal } from "./lifecycle";
 import { calculate, convertQuery, formatCalculation, generatePassword, isCalculationQuery, randomChoice, roll, transformText } from "./palette-utils";
 import { hydratePaletteIcons, iconMarkup, paletteAiIcon, paletteContentIcon, paletteFallbackIcon, palettePageIcon, paletteRouteIcon, profileIconKey, type PaletteIconKey } from "./palette-icons";
 import { BROWSE_CATEGORIES, QUERY_RECIPES, ROOT_RECIPE_IDS, recipeById, shouldTrackRecent, truncateMatches, type BrowseCategory, type QueryRecipe, type ResultSummary } from "./palette-discovery";
@@ -89,6 +90,9 @@ interface PaletteLockedSibling {
 }
 
 interface PalettePageLock {
+  body: HTMLElement;
+  html: HTMLElement;
+  signal: AbortSignal;
   scrollX: number;
   scrollY: number;
   bodyStyle: {
@@ -159,6 +163,10 @@ let searchTimer = 0;
 let queryVersion = 0;
 let timeTicker: number | undefined;
 let closeTimer: number | undefined;
+let openFrame = 0;
+let restoreScrollFrame = 0;
+let pendingScrollRestore: PalettePageLock | null = null;
+let paletteSession = 0;
 let pageLock: PalettePageLock | null = null;
 let storedState: StoredPaletteState = loadState();
 let paletteViewportMedia: MediaQueryList | null = null;
@@ -312,7 +320,8 @@ function loadManifest(): Promise<PaletteManifest | null> {
 function loadPagefind(): Promise<PagefindApi | null> {
   if (pagefind) return Promise.resolve(pagefind);
   if (pagefindPromise) return pagefindPromise;
-  pagefindPromise = (new Function("return import('/pagefind/pagefind.js')")() as Promise<PagefindApi>)
+  const pagefindUrl = "/pagefind/pagefind.js";
+  pagefindPromise = (import(/* @vite-ignore */ pagefindUrl) as Promise<PagefindApi>)
     .then(async (mod) => {
       await mod.init?.();
       pagefind = mod;
@@ -327,7 +336,10 @@ function loadPagefind(): Promise<PagefindApi | null> {
 
 function loadTime() {
   if (timePromise) return timePromise;
-  timePromise = import("./palette-time");
+  timePromise = import("./palette-time").catch((error: unknown) => {
+    timePromise = null;
+    throw error;
+  });
   return timePromise;
 }
 
@@ -349,7 +361,9 @@ function formatNativeTime(zone: string): string {
 }
 
 async function copyText(value: string, message = "Copied") {
-  const copied = await copyToClipboard(value);
+  const signal = pageSignal();
+  const copied = await copyToClipboard(value, signal);
+  if (signal.aborted) return copied;
   if (copied) {
     playAccent("copy");
     showToast({ message, duration: 1600 });
@@ -387,6 +401,9 @@ function lockPageForPalette(root: HTMLElement) {
     });
 
   pageLock = {
+    body,
+    html,
+    signal: pageSignal(),
     scrollX: window.scrollX,
     scrollY: window.scrollY,
     bodyStyle: {
@@ -418,10 +435,12 @@ function lockPageForPalette(root: HTMLElement) {
 }
 
 function unlockPageForPalette(restoreScroll = true) {
+  cancelAnimationFrame(restoreScrollFrame);
+  restoreScrollFrame = 0;
+  pendingScrollRestore = null;
   const lock = pageLock;
   if (!lock) return;
-  const body = document.body;
-  const html = document.documentElement;
+  const { body, html } = lock;
   body.style.position = lock.bodyStyle.position;
   body.style.top = lock.bodyStyle.top;
   body.style.left = lock.bodyStyle.left;
@@ -437,7 +456,17 @@ function unlockPageForPalette(restoreScroll = true) {
     else element.setAttribute("aria-hidden", ariaHidden);
   });
   pageLock = null;
-  if (restoreScroll) requestAnimationFrame(() => window.scrollTo(lock.scrollX, lock.scrollY));
+  if (restoreScroll) {
+    const session = paletteSession;
+    pendingScrollRestore = lock;
+    restoreScrollFrame = requestAnimationFrame(() => {
+      restoreScrollFrame = 0;
+      pendingScrollRestore = null;
+      if (session === paletteSession && !lock.signal.aborted && document.body === body && !pageLock) {
+        window.scrollTo(lock.scrollX, lock.scrollY);
+      }
+    });
+  }
 }
 
 function keepActiveRowInView(list: HTMLElement, row: HTMLElement) {
@@ -454,10 +483,17 @@ function keepActiveRowInView(list: HTMLElement, row: HTMLElement) {
 }
 
 function navigate(href: string) {
+  closePalette(false, true);
+  const signal = pageSignal();
+  const session = paletteSession;
   playAccent("tap");
   void import("astro:transitions/client")
-    .then(({ navigate: astroNavigate }) => astroNavigate(href))
-    .catch(() => location.assign(href));
+    .then(({ navigate: astroNavigate }) => {
+      if (!signal.aborted && session === paletteSession) return astroNavigate(href);
+    })
+    .catch(() => {
+      if (!signal.aborted && session === paletteSession) location.assign(href);
+    });
 }
 
 function openExternal(href: string) {
@@ -717,12 +753,15 @@ function vCard(profile: PaletteManifest["profile"]): string {
 }
 
 async function copyRemoteText(href: string, message: string) {
+  const signal = pageSignal();
   try {
-    const response = await fetch(href, { credentials: "same-origin" });
+    const response = await fetch(href, { credentials: "same-origin", signal });
     if (!response.ok) throw new Error("Request failed");
-    await copyText(await response.text(), message);
+    const text = await response.text();
+    if (signal.aborted) return;
+    await copyText(text, message);
   } catch {
-    showToast({ message: "That file could not be read", duration: 2200 });
+    if (!signal.aborted) showToast({ message: "That file could not be read", duration: 2200 });
   }
 }
 
@@ -1388,8 +1427,9 @@ function goBack() {
   const { input, list } = els();
   if (input) input.value = snapshot.query;
   renderList();
+  const session = paletteSession;
   requestAnimationFrame(() => {
-    if (list) list.scrollTop = snapshot.scrollTop;
+    if (list && open && session === paletteSession) list.scrollTop = snapshot.scrollTop;
   });
   if (snapshot.mode === "search") {
     input?.focus({ preventScroll: true });
@@ -1501,6 +1541,15 @@ export function openPalette(nextMode: PaletteOpenMode = "search", instant = fals
   wirePaletteViewport();
   window.clearTimeout(closeTimer);
   closeTimer = undefined;
+  cancelAnimationFrame(restoreScrollFrame);
+  restoreScrollFrame = 0;
+  const pendingRestore = pendingScrollRestore;
+  pendingScrollRestore = null;
+  if (pendingRestore && !pendingRestore.signal.aborted && document.body === pendingRestore.body) {
+    window.scrollTo(pendingRestore.scrollX, pendingRestore.scrollY);
+  }
+  cancelAnimationFrame(openFrame);
+  const session = ++paletteSession;
   open = true;
   trackPalette(requestedMode);
   mode = "search";
@@ -1508,7 +1557,7 @@ export function openPalette(nextMode: PaletteOpenMode = "search", instant = fals
   resultSummary = null;
   expandedQueryKey = "";
   pendingActiveItemId = undefined;
-  prevFocus = document.activeElement as HTMLElement | null;
+  if (!pageLock) prevFocus = document.activeElement as HTMLElement | null;
   root.hidden = false;
   root.setAttribute("aria-hidden", "false");
   document.documentElement.dataset.palette = "open";
@@ -1516,7 +1565,10 @@ export function openPalette(nextMode: PaletteOpenMode = "search", instant = fals
   syncPaletteViewport();
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduce || instant) root.classList.add("is-instant"); else root.classList.remove("is-instant");
-  requestAnimationFrame(() => root.classList.add("is-open"));
+  openFrame = requestAnimationFrame(() => {
+    openFrame = 0;
+    if (open && session === paletteSession && root.isConnected) root.classList.add("is-open");
+  });
   startTicker();
   playAccent("pop");
   document.addEventListener("keydown", onKey);
@@ -1535,16 +1587,25 @@ export function openPalette(nextMode: PaletteOpenMode = "search", instant = fals
   }
   if (requestedMode !== "search") return;
   void loadManifest().then(() => {
-    if (!open) return;
+    if (!open || session !== paletteSession) return;
     if (mode === "search" && !input.value) void refresh(input.value);
     if (mode === "directory") showDirectory();
   });
 }
 
-export function closePalette(fromUser = false) {
+export function closePalette(fromUser = false, forNavigation = false) {
   const { root, input } = els();
-  if (!open) return;
+  if (!open && !forNavigation) return;
   if (fromUser) playAccent("dismiss");
+  const session = ++paletteSession;
+  cancelAnimationFrame(openFrame);
+  openFrame = 0;
+  cancelAnimationFrame(restoreScrollFrame);
+  restoreScrollFrame = 0;
+  pendingScrollRestore = null;
+  window.clearTimeout(searchTimer);
+  window.clearTimeout(closeTimer);
+  closeTimer = undefined;
   open = false;
   mode = "search";
   viewStack = [];
@@ -1556,15 +1617,15 @@ export function closePalette(fromUser = false) {
   document.documentElement.removeAttribute("data-palette");
   document.removeEventListener("keydown", onKey);
   clearPaletteViewport();
-  const closeLocation = location.href;
   if (!root) {
-    unlockPageForPalette(location.href === closeLocation);
+    unlockPageForPalette(!forNavigation);
     prevFocus = null;
     return;
   }
   root.classList.remove("is-open");
   const finish = () => {
-    if (open) return;
+    if (open || session !== paletteSession) return;
+    closeTimer = undefined;
     root.hidden = true;
     root.setAttribute("aria-hidden", "true");
     root.removeAttribute("data-palette-mode");
@@ -1573,11 +1634,11 @@ export function closePalette(fromUser = false) {
       input.readOnly = false;
     }
     syncQuerySlot();
-    unlockPageForPalette();
-    prevFocus?.focus?.({ preventScroll: true });
+    unlockPageForPalette(!forNavigation);
+    if (!forNavigation && prevFocus?.isConnected) prevFocus.focus({ preventScroll: true });
     prevFocus = null;
   };
-  if (root.classList.contains("is-instant")) finish();
+  if (forNavigation || root.classList.contains("is-instant")) finish();
   else closeTimer = window.setTimeout(finish, PALETTE_EXIT_MS);
 }
 
@@ -1601,6 +1662,7 @@ function wireDialog() {
   });
   input.addEventListener("input", () => {
     if (mode !== "search") return;
+    queryVersion += 1;
     window.clearTimeout(searchTimer);
     const query = input.value;
     searchTimer = window.setTimeout(() => void refresh(query), 40);
@@ -1667,4 +1729,5 @@ document.addEventListener(
 document.addEventListener("keydown", globalKeys);
 init();
 document.addEventListener("astro:page-load", init);
-document.addEventListener("astro:before-swap", () => { if (open) closePalette(); });
+document.addEventListener("astro:before-preparation", () => closePalette(false, true));
+document.addEventListener("astro:before-swap", () => closePalette(false, true));

@@ -18,6 +18,8 @@
 import { showToast } from "./toast";
 import { playAccent, isSoundEnabled } from "./sound";
 import { iconMarkup } from "../lib/ui-icons";
+import { onPageCleanup, pageSignal } from "./lifecycle";
+import { copyToClipboard } from "./clipboard";
 
 export interface Token {
   type: "keyword" | "type" | "func" | "string" | "comment" | "constant" | "text";
@@ -872,36 +874,25 @@ const GIT_ICON = iconMarkup("git-commit", { size: 12, strokeWidth: 1.8 });
 const USERS_ICON = iconMarkup("people", { size: 12, strokeWidth: 1.8 });
 const EXT_ICON = iconMarkup("external", { size: 10, strokeWidth: 2 });
 
-async function copyText(text: string): Promise<boolean> {
-  try {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(text);
-      return true;
-    }
-  } catch {
-    /* fallback below */
-  }
-  try {
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.style.position = "fixed";
-    ta.style.opacity = "0";
-    document.body.appendChild(ta);
-    ta.select();
-    const ok = document.execCommand("copy");
-    document.body.removeChild(ta);
-    return ok;
-  } catch {
-    return false;
-  }
-}
-
 function enhanceSnippet(sectionEl: HTMLElement, data: TourModuleData) {
   // If already enhanced in this exact DOM tree, skip
   if (sectionEl.querySelector(".go-tour-snippet")) return;
 
   const figure = sectionEl.querySelector<HTMLElement>(".code-figure");
   if (!figure) return;
+  const signal = pageSignal();
+  const timers = new Set<number>();
+  onPageCleanup(() => {
+    timers.forEach((timer) => window.clearTimeout(timer));
+    timers.clear();
+  }, signal);
+  const schedule = (fn: () => void, delay: number) => {
+    const timer = window.setTimeout(() => {
+      timers.delete(timer);
+      if (!signal.aborted && sectionEl.isConnected) fn();
+    }, delay);
+    timers.add(timer);
+  };
 
   const oldCopy = figure.querySelector(".code-copy");
   if (oldCopy) (oldCopy as HTMLElement).style.display = "none";
@@ -1085,13 +1076,14 @@ function enhanceSnippet(sectionEl: HTMLElement, data: TourModuleData) {
   // Copy Action
   copyBtn.onclick = async () => {
     const currentText = isEditing ? textarea.value : code;
-    const ok = await copyText(currentText);
+    const ok = await copyToClipboard(currentText, signal);
+    if (signal.aborted || !sectionEl.isConnected) return;
     if (ok) {
       copyBtn.classList.add("is-done");
       copyBtn.innerHTML = CHECK_ICON;
       if (isSoundEnabled()) playAccent("copy");
       showToast({ message: "Copied to clipboard", anchor: copyBtn, duration: 1600 });
-      window.setTimeout(() => {
+      schedule(() => {
         copyBtn.classList.remove("is-done");
         copyBtn.innerHTML = COPY_ICON;
       }, 1400);
@@ -1144,7 +1136,7 @@ function enhanceSnippet(sectionEl: HTMLElement, data: TourModuleData) {
     runBtn.innerHTML = `<span class="spinner" style="display:inline-block;width:10px;height:10px;border:1.5px solid currentColor;border-top-color:transparent;border-radius:50%;animation:diagram-spin 0.6s linear infinite"></span>`;
 
     const start = performance.now();
-    window.setTimeout(() => {
+    schedule(() => {
       const elapsed = Math.round((performance.now() - start + 80) * 10) / 10;
       runBtn.removeAttribute("disabled");
       runBtn.innerHTML = PLAY_ICON;
@@ -1222,10 +1214,15 @@ function enhanceSpecFooters() {
   });
 }
 
+let initializedSignal: AbortSignal | undefined;
+
 export function initGoTour() {
   if (!document.querySelector('[data-note-tour="go-1-27"]')) {
     return;
   }
+  const signal = pageSignal();
+  if (initializedSignal === signal) return;
+  initializedSignal = signal;
 
   Object.entries(TOUR_MODULES).forEach(([id, data]) => {
     const section = document.getElementById(id) || document.querySelector(`[data-spec-id="${id}"]`)?.parentElement;

@@ -13,8 +13,9 @@
  * really expensive ones (document height) cached until something can
  * plausibly have changed them.
  *
- * Subscribers receive already-measured numbers and must not read layout
- * themselves. That is the whole contract.
+ * Subscribers receive already-measured numbers. Extra geometry belongs in
+ * an optional measurement callback; all measurements finish before any
+ * subscriber writes to the page.
  */
 
 import { pageSignal } from "./lifecycle";
@@ -34,7 +35,12 @@ export interface ScrollFrame {
 
 type Subscriber = (frame: ScrollFrame) => void;
 
-const subscribers = new Set<Subscriber>();
+interface Subscription {
+  update: Subscriber;
+  measure?: Subscriber;
+}
+
+const subscribers = new Set<Subscription>();
 
 let frameHandle = 0;
 let listening = false;
@@ -79,9 +85,19 @@ function runFrame() {
   };
   lastY = y;
 
-  for (const fn of subscribers) {
+  const ready: Subscription[] = [];
+  for (const subscription of subscribers) {
     try {
-      fn(frame);
+      subscription.measure?.(frame);
+      ready.push(subscription);
+    } catch {
+      /* A failed measurement must not commit stale geometry. */
+    }
+  }
+  for (const subscription of ready) {
+    if (!subscribers.has(subscription)) continue;
+    try {
+      subscription.update(frame);
     } catch {
       /* one bad subscriber must not stop the rest of the frame */
     }
@@ -130,20 +146,24 @@ function startListening() {
  * Unsubscribes automatically on client-side navigation. Pass `null` for a
  * subscriber that should outlive navigations (telemetry), in which case
  * the returned function is the only way to detach.
+ * `measure` may read layout, but must not mutate it. `fn` may write DOM,
+ * but must not read layout. Existing subscribers need no extra callback.
  */
 export function onScrollFrame(
   fn: Subscriber,
   signal: AbortSignal | null = pageSignal(),
+  measure?: Subscriber,
 ): () => void {
+  if (signal?.aborted) return () => {};
   startListening();
-  subscribers.add(fn);
+  const subscription = { update: fn, measure };
+  subscribers.add(subscription);
 
-  const off = () => subscribers.delete(fn);
-  if (signal?.aborted) {
-    off();
-  } else {
-    signal?.addEventListener("abort", off, { once: true });
-  }
+  const off = () => {
+    subscribers.delete(subscription);
+    signal?.removeEventListener("abort", off);
+  };
+  signal?.addEventListener("abort", off, { once: true });
 
   /* Deliver one frame immediately so subscribers do not have to
      duplicate an initial-state read. */

@@ -13,7 +13,6 @@ export type NavigationPhase = "idle" | "preparing" | "entering";
 declare global {
   interface Window {
     __siteNavigationShellReady?: boolean;
-    __siteIntroAnimated?: boolean;
   }
 }
 
@@ -23,16 +22,17 @@ let navigationEpoch = 0;
 
 function setPhase(phase: NavigationPhase, root: Document = document) {
   const content = root.querySelector<HTMLElement>(contentSelector);
-  if (content) content.dataset.navigationPhase = phase;
-  if (root === document) document.documentElement.dataset.navigationPhase = phase;
+  if (content && content.dataset.navigationPhase !== phase) content.dataset.navigationPhase = phase;
+  if (root.documentElement.dataset.navigationPhase !== phase) root.documentElement.dataset.navigationPhase = phase;
 }
 
 export function updateNavigation(pathname = location.pathname, root: Document = document) {
   const backTarget = resolveBackTarget(pathname);
   root.querySelectorAll<HTMLAnchorElement>(".logo-control").forEach((logo) => {
-    logo.dataset.state = backTarget.isHome ? "home" : "back";
-    logo.href = backTarget.href;
-    logo.setAttribute("aria-label", backTarget.label);
+    const state = backTarget.isHome ? "home" : "back";
+    if (logo.dataset.state !== state) logo.dataset.state = state;
+    if (logo.getAttribute("href") !== backTarget.href) logo.setAttribute("href", backTarget.href);
+    if (logo.getAttribute("aria-label") !== backTarget.label) logo.setAttribute("aria-label", backTarget.label);
   });
 
   root.querySelectorAll<HTMLElement>(".site-nav, .site-nav-bottom").forEach((navigation) => {
@@ -41,24 +41,40 @@ export function updateNavigation(pathname = location.pathname, root: Document = 
     links.forEach((link, index) => {
       const active = isNavigationItemActive(pathname, new URL(link.href, location.href).pathname);
       if (active) selected = index;
-      link.classList.toggle("active", active);
-      if (active) link.setAttribute("aria-current", "page");
-      else link.removeAttribute("aria-current");
+      if (link.classList.contains("active") !== active) link.classList.toggle("active", active);
+      if (active) {
+        if (link.getAttribute("aria-current") !== "page") link.setAttribute("aria-current", "page");
+      } else if (link.hasAttribute("aria-current")) link.removeAttribute("aria-current");
     });
-    navigation.toggleAttribute("data-no-active", selected < 0);
-    navigation.dataset.activeIndex = String(Math.max(0, selected));
+    const noActive = selected < 0;
+    if (navigation.hasAttribute("data-no-active") !== noActive) navigation.toggleAttribute("data-no-active", noActive);
+    const activeIndex = String(Math.max(0, selected));
+    if (navigation.dataset.activeIndex !== activeIndex) navigation.dataset.activeIndex = activeIndex;
   });
 }
 
-function settleIncoming() {
+function cancelSettlement() {
   cancelAnimationFrame(settleFrame);
+  settleFrame = 0;
+}
+
+function settleIncoming() {
+  cancelSettlement();
+  const epoch = navigationEpoch;
   const content = document.querySelector<HTMLElement>(contentSelector);
   if (!content) {
     document.documentElement.dataset.navigationPhase = "idle";
     return;
   }
+  const isCurrent = () => epoch === navigationEpoch && content.isConnected &&
+    document.querySelector(contentSelector) === content;
   settleFrame = requestAnimationFrame(() => {
-    settleFrame = requestAnimationFrame(() => setPhase("idle"));
+    settleFrame = 0;
+    if (!isCurrent()) return;
+    settleFrame = requestAnimationFrame(() => {
+      settleFrame = 0;
+      if (isCurrent()) setPhase("idle");
+    });
   });
 }
 
@@ -74,12 +90,14 @@ function handleNavigationPress(event: MouseEvent) {
   ) return;
 
   const link = event.target.closest<HTMLAnchorElement>(".site-nav a[href], .site-nav-bottom a[href], .logo-control[href]");
-  if (!link) return;
+  if (!link || link.hasAttribute("download") || link.dataset.astroReload !== undefined ||
+    (link.target && link.target !== "_self")) return;
   const target = new URL(link.href, location.href);
   if (target.origin !== location.origin) return;
 
-  const isSamePath = normalizeNavigationPath(target.pathname) === normalizeNavigationPath(location.pathname);
-  if (isSamePath) {
+  const isSameDestination = normalizeNavigationPath(target.pathname) === normalizeNavigationPath(location.pathname) &&
+    target.search === location.search && target.hash === location.hash;
+  if (isSameDestination && !target.hash) {
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
@@ -96,27 +114,20 @@ function handleNavigationPress(event: MouseEvent) {
     });
     return;
   }
-
-  const clickedHref = link.getAttribute("href");
-  updateNavigation(target.pathname);
-  if (clickedHref !== null) link.setAttribute("href", clickedHref);
 }
 
 function handleBeforePreparation(event: Event) {
   const navigation = event as TransitionBeforePreparationEvent;
-  if (normalizeNavigationPath(navigation.to.pathname) === normalizeNavigationPath(navigation.from.pathname)) {
-    const isMobile = window.matchMedia("(max-width: 38rem)").matches;
-    if (!isMobile) {
-      navigation.preventDefault();
-      return;
-    }
-  }
+  cancelSettlement();
   const epoch = ++navigationEpoch;
+  const content = document.querySelector(contentSelector);
   setPhase("preparing");
-  updateNavigation(navigation.to.pathname);
   navigation.signal.addEventListener("abort", () => {
-    requestAnimationFrame(() => {
-      if (epoch !== navigationEpoch) return;
+    if (epoch !== navigationEpoch || document.querySelector(contentSelector) !== content) return;
+    cancelSettlement();
+    settleFrame = requestAnimationFrame(() => {
+      settleFrame = 0;
+      if (epoch !== navigationEpoch || document.querySelector(contentSelector) !== content) return;
       setPhase("idle");
       updateNavigation(location.pathname);
     });
@@ -125,36 +136,16 @@ function handleBeforePreparation(event: Event) {
 
 function handleBeforeSwap(event: Event) {
   const navigation = event as TransitionBeforeSwapEvent;
-  // The transition is deliberately NOT skipped. The browser has already
-  // captured both documents by this point; skipping threw that capture
-  // away and the effect had to be re-created by blurring live DOM. The
-  // route blur now runs on the snapshot layers instead (motion.css),
-  // which is the same look for a fraction of the cost.
+  // Keep the existing snapshot choreography. Theme and intro state have
+  // already been prepared by the early shared theme controller.
   setPhase("entering", navigation.newDocument);
-  try {
-    if (
-      window.__siteIntroAnimated ||
-      sessionStorage.getItem("intro-animated") === "true" ||
-      document.documentElement.dataset.introAnimated === "true"
-    ) {
-      navigation.newDocument.documentElement.dataset.introAnimated = "true";
-      document.documentElement.dataset.introAnimated = "true";
-    }
-  } catch {}
   updateNavigation(navigation.to.pathname, navigation.newDocument);
-  updateNavigation(navigation.to.pathname, document);
 }
 
 function handleAfterSwap() {
-  navigationEpoch += 1;
-  try {
-    if (
-      window.__siteIntroAnimated ||
-      sessionStorage.getItem("intro-animated") === "true"
-    ) {
-      document.documentElement.dataset.introAnimated = "true";
-    }
-  } catch {}
+  // The header is persisted by Astro. Commit its route state once, after
+  // the old capture and body swap but before the incoming capture. Starting
+  // its animations during preparation captures a partly changed old page.
   updateNavigation(location.pathname, document);
   settleIncoming();
 }
@@ -167,7 +158,6 @@ function initNavigationShell() {
   document.addEventListener("astro:before-preparation", handleBeforePreparation);
   document.addEventListener("astro:before-swap", handleBeforeSwap);
   document.addEventListener("astro:after-swap", handleAfterSwap);
-  document.addEventListener("astro:page-load", handleAfterSwap);
 }
 
 initNavigationShell();

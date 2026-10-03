@@ -29,7 +29,7 @@ const contributions = await getGithubContributions();
     <div class="enriched-contact__row">
       <div class="enriched-cta-row">
         <a class="enriched-cta enriched-cta--primary" href={site.cal} target="_blank" rel="noopener noreferrer">Let's talk</a>
-        {resumeUrl && <a class="enriched-cta enriched-cta--secondary" href={resumeUrl} download="AshwinGopalsamy_Resume.pdf">Resume</a>}
+        {resumeUrl && <a class="enriched-cta enriched-cta--secondary" href={resumeUrl} download="AshwinGopalsamy_Resume.pdf" data-astro-prefetch="false">Resume</a>}
       </div>
       <span class="enriched-row-sep" aria-hidden="true"></span>
       <div class="enriched-socials">

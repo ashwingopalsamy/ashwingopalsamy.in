@@ -1,7 +1,7 @@
 ---
 import { ClientRouter } from "astro:transitions";
 import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
-import "../styles/fonts.css";
+import fontStyles from "../styles/fonts.css?inline";
 // geometry first (global.css consumes --step-*/--r-*), motion last so its
 // retuned duration and easing tokens win over the legacy values.
 import "../styles/geometry.css";
@@ -94,6 +94,10 @@ const documentTitle = isHome
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
+    <!-- Keep font faces alive across route-specific inline stylesheet swaps.
+         Astro otherwise merges them into CSS whose contents vary by page. -->
+    <style is:inline data-astro-transition-persist="site-fonts" set:html={fontStyles} />
+
     <link
       rel="preload"
       href={interLatin}
@@ -104,43 +108,90 @@ const documentTitle = isHome
     <script
       is:inline
       set:html={`(function () {
+        if (window.__siteThemeController) {
+          window.__siteThemeController.sync(document);
+          return;
+        }
         var CANVAS_DARK = ${JSON.stringify(CANVAS_DARK)};
         var CANVAS_LIGHT = ${JSON.stringify(CANVAS_LIGHT)};
-        function resolveTheme() {
-          var t = null;
+        var colorScheme = window.matchMedia("(prefers-color-scheme: dark)");
+        var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+        function storedTheme() {
           try {
-            t = localStorage.getItem("theme");
+            var t = localStorage.getItem("theme");
+            return t === "light" || t === "dark" ? t : null;
           } catch (e) {}
-          if (t !== "light" && t !== "dark") {
-            t = window.matchMedia("(prefers-color-scheme: dark)").matches
-              ? "dark"
-              : "light";
-          }
-          return t;
+          return null;
         }
-
-        function applyTheme() {
-          var theme = resolveTheme();
-          document.documentElement.dataset.theme = theme;
-          if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-            document.documentElement.dataset.motion = "on";
+        function canvas(theme) {
+          return theme === "dark" ? CANVAS_DARK : CANVAS_LIGHT;
+        }
+        var stored = storedTheme();
+        var current = stored || (colorScheme.matches ? "dark" : "light");
+        var explicitTheme = stored !== null;
+        function apply(theme, persist, target) {
+          target = target || document;
+          if (persist) {
+            explicitTheme = true;
+            try { localStorage.setItem("theme", theme); } catch (e) {}
           }
-          try {
-            if (sessionStorage.getItem("intro-animated") === "true") {
-              document.documentElement.dataset.introAnimated = "true";
-            }
-          } catch (e) {}
-          var tc = document.querySelector('meta[name="theme-color"]:not([media])');
+          current = theme;
+          var root = target.documentElement;
+          if (root.dataset.theme !== theme) root.dataset.theme = theme;
+          if (reducedMotion.matches) {
+            if (root.hasAttribute("data-motion")) delete root.dataset.motion;
+          } else if (root.dataset.motion !== "on") {
+            root.dataset.motion = "on";
+          }
+          var tc = target.querySelector('meta[name="theme-color"]:not([media])');
           if (!tc) {
-            tc = document.createElement("meta");
+            tc = target.createElement("meta");
             tc.setAttribute("name", "theme-color");
-            document.head.appendChild(tc);
+            target.head.appendChild(tc);
           }
-          tc.setAttribute("content", theme === "dark" ? CANVAS_DARK : CANVAS_LIGHT);
+          if (tc.getAttribute("content") !== canvas(theme)) tc.setAttribute("content", canvas(theme));
+          target.querySelectorAll(".theme-toggle").forEach(function (button) {
+            var pressed = String(theme === "dark");
+            if (button.getAttribute("aria-pressed") !== pressed) button.setAttribute("aria-pressed", pressed);
+          });
+        }
+        function introHasAnimated() {
+          if (window.__siteIntroAnimated || document.documentElement.dataset.introAnimated === "true") return true;
+          try { return sessionStorage.getItem("intro-animated") === "true"; } catch (e) {}
+          return false;
+        }
+        function sync(target) {
+          target = target || document;
+          apply(current, false, target);
+          if (target !== document && introHasAnimated()) target.documentElement.dataset.introAnimated = "true";
         }
 
-        applyTheme();
-        document.addEventListener("astro:after-swap", applyTheme);
+        window.__siteThemeController = {
+          current: function () { return current; },
+          canvas: canvas,
+          apply: apply,
+          sync: sync
+        };
+        sync(document);
+        try {
+          if (sessionStorage.getItem("intro-animated") === "true") document.documentElement.dataset.introAnimated = "true";
+        } catch (e) {}
+        document.addEventListener("astro:before-swap", function (event) {
+          sync(event.newDocument);
+        }, { capture: true });
+        document.addEventListener("astro:after-swap", function () {
+          sync(document);
+        }, { capture: true });
+        colorScheme.addEventListener("change", function (event) {
+          if (!explicitTheme) apply(event.matches ? "dark" : "light", false, document);
+        });
+        reducedMotion.addEventListener("change", function () { sync(document); });
+        window.addEventListener("storage", function (event) {
+          if (event.key !== "theme" && event.key !== null) return;
+          var next = event.key === "theme" ? event.newValue : storedTheme();
+          explicitTheme = next === "light" || next === "dark";
+          apply(explicitTheme ? next : (colorScheme.matches ? "dark" : "light"), false, document);
+        });
       })();`}
     />
 
@@ -221,20 +272,6 @@ const documentTitle = isHome
     <meta name="theme-color" content={CANVAS_LIGHT} media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content={CANVAS_DARK} media="(prefers-color-scheme: dark)" />
     <ClientRouter />
-    <script type="speculationrules" is:inline>
-      {
-        "prerender": [{
-          "where": {
-            "and": [
-              { "href_matches": "/*" },
-              { "not": { "href_matches": ["/*.md", "/pagefind/*", "/og/*", "/api/*"] } },
-              { "not": { "selector_matches": "[data-no-prerender]" } }
-            ]
-          },
-          "eagerness": "conservative"
-        }]
-      }
-    </script>
     <slot name="head" />
   </head>
   <body>
@@ -260,8 +297,9 @@ const documentTitle = isHome
     </div>
 
     <script>
-      import { onPageCleanup } from "../scripts/lifecycle";
+      import { onPageCleanup, pageSignal } from "../scripts/lifecycle";
       import "../scripts/navigation-shell";
+      import "../scripts/navigation-prefetch";
       import "../scripts/floating-toc";
       import "../scripts/grid-overlay";
 
@@ -276,9 +314,14 @@ const documentTitle = isHome
           : (fn) => setTimeout(fn, 200);
 
       whenIdle(() => {
-        void import("../scripts/console").then((m) => m.initConsole());
-        void import("../scripts/telemetry").then((m) => m.initTelemetry());
-        void import("../scripts/webmcp");
+        void import("../scripts/console").then((m) => m.initConsole()).catch(() => undefined);
+        void import("../scripts/telemetry").then((m) => m.initTelemetry()).catch(() => undefined);
+        const supportsWebMcp = [document, navigator, window].some(
+          (host) => "modelContext" in host && Boolean(host.modelContext),
+        );
+        if (supportsWebMcp) {
+          void import("../scripts/webmcp").then((m) => m.initWebMcp()).catch(() => undefined);
+        }
       });
 
       declare global {
@@ -288,7 +331,12 @@ const documentTitle = isHome
         }
       }
 
+      let enhancedPage: AbortSignal | null = null;
+
       function enhance() {
+        const signal = pageSignal();
+        if (enhancedPage === signal) return;
+        enhancedPage = signal;
         const isHomePage = Boolean(document.querySelector(".column-body.home"));
         if (isHomePage) {
           window.__siteIntroAnimated = true;
@@ -368,7 +416,7 @@ const documentTitle = isHome
           onPageCleanup(() => {
             el.removeEventListener("animationend", onAnimationDone);
             el.removeEventListener("animationcancel", onAnimationDone);
-          });
+          }, signal);
           el.classList.add("revealing");
         }
 
@@ -386,7 +434,7 @@ const documentTitle = isHome
             { rootMargin: "0px", threshold: 0 }
           );
           toObserve.forEach((el) => io.observe(el));
-          onPageCleanup(() => io.disconnect());
+          onPageCleanup(() => io.disconnect(), signal);
         }
       }
 
@@ -400,7 +448,7 @@ const documentTitle = isHome
           document.documentElement.dataset.accent = "off-hours";
           // The Web Audio engine is pulled in on the gesture that needs
           // it, not on every page load.
-          void import("../scripts/sound").then((m) => m.playAccent("pop"));
+          void import("../scripts/sound").then((m) => m.playAccent("pop")).catch(() => undefined);
         }
       });
       document.addEventListener("keyup", () => {

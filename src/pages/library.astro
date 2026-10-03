@@ -140,6 +140,7 @@ const collectionPage = libraryCollectionPageJsonLd([
     const indicator = root.querySelector<HTMLElement>(".library-selection");
     const panels = new Map(inputs.map((input) => [input.value, document.getElementById(`library-panel-${input.value}`)]));
     let resizeFrame = 0;
+    let focusFrame = 0;
 
     const selectedView = () => inputs.find((input) => input.checked)?.value ?? "all";
     const setPanels = (view: string) => {
@@ -154,14 +155,14 @@ const collectionPage = libraryCollectionPageJsonLd([
       const offsetTop = label.offsetTop;
       const width = label.offsetWidth;
       const height = label.offsetHeight;
+      const selectorBox = center ? selector.getBoundingClientRect() : null;
+      const labelBox = center ? label.getBoundingClientRect() : null;
       indicator.style.transform = `translate3d(${offsetLeft}px, ${offsetTop}px, 0)`;
       indicator.style.width = `${width}px`;
       indicator.style.height = `${height}px`;
       indicator.style.opacity = "1";
       root.dataset.indicatorReady = "true";
-      const selectorBox = selector.getBoundingClientRect();
-      const labelBox = label.getBoundingClientRect();
-      if (center && (labelBox.left < selectorBox.left || labelBox.right > selectorBox.right)) {
+      if (selectorBox && labelBox && (labelBox.left < selectorBox.left || labelBox.right > selectorBox.right)) {
         label.scrollIntoView({ block: "nearest", inline: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
       }
     };
@@ -178,7 +179,12 @@ const collectionPage = libraryCollectionPageJsonLd([
       setPanels(view);
       moveIndicator(view, center);
       if (updateUrl) replaceView(view);
-      if (focusPanel) requestAnimationFrame(() => panels.get(view)?.focus({ preventScroll: true }));
+      if (focusPanel) {
+        cancelAnimationFrame(focusFrame);
+        focusFrame = requestAnimationFrame(() => {
+          if (!signal.aborted) panels.get(view)?.focus({ preventScroll: true });
+        });
+      }
     };
     const syncLocation = () => {
       const requested = new URL(location.href).searchParams.get("view");
@@ -202,12 +208,15 @@ const collectionPage = libraryCollectionPageJsonLd([
     window.addEventListener("popstate", syncLocation, { signal });
     const queueMeasure = () => {
       cancelAnimationFrame(resizeFrame);
-      resizeFrame = requestAnimationFrame(() => moveIndicator(selectedView()));
+      resizeFrame = requestAnimationFrame(() => {
+        if (!signal.aborted) moveIndicator(selectedView());
+      });
     };
     const observer = selector ? new ResizeObserver(queueMeasure) : null;
     if (selector) observer?.observe(selector);
     signal.addEventListener("abort", () => {
       cancelAnimationFrame(resizeFrame);
+      cancelAnimationFrame(focusFrame);
       observer?.disconnect();
       delete root.dataset.enhanced;
     }, { once: true });

@@ -77,31 +77,44 @@ import Icon from "./Icon.astro";
 </div>
 
 <script>
+  import { pageSignal } from "../scripts/lifecycle";
+
   let paletteLoaded = false;
   let paletteLoading: Promise<typeof import("../scripts/palette")> | null = null;
+  let paletteOpenIntent = 0;
 
   function loadPaletteModule() {
     if (!paletteLoading) {
       paletteLoading = import("../scripts/palette").then((m) => {
         paletteLoaded = true;
         return m;
+      }).catch((error: unknown) => {
+        paletteLoading = null;
+        throw error;
       });
     }
     return paletteLoading;
   }
 
   function open(mode?: "directory" | "search" | "help", instant?: boolean) {
-    loadPaletteModule().then((m) => {
+    const signal = pageSignal();
+    const intent = ++paletteOpenIntent;
+    void loadPaletteModule().then((m) => {
+      if (signal.aborted || intent !== paletteOpenIntent) return;
       m.openPalette(mode, instant);
-    });
+    }).catch(() => undefined);
   }
+
+  document.addEventListener("astro:before-preparation", () => {
+    paletteOpenIntent += 1;
+  });
 
   document.addEventListener(
     "pointerover",
     (e) => {
       if (paletteLoaded) return;
       if ((e.target as HTMLElement | null)?.closest(".palette-trigger, .header-palette-trigger, [data-palette-entry], .palette-home-hint")) {
-        loadPaletteModule();
+        void loadPaletteModule().catch(() => undefined);
       }
     },
     { passive: true },

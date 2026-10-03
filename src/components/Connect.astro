@@ -523,6 +523,7 @@ const pickIndex = quoteIndexOfTheDayServer();
   const EMBED_SRC =
     "https://open.spotify.com/embed/track/7iy5huRZ9bNI3ce79DcdCD?utm_source=generator&si=840308c6390e4ea1";
   const LOAD_MS = 8000;
+  let spotifySignal: AbortSignal | null = null;
 
   function showFallback(wrap: HTMLElement) {
     wrap.classList.remove("is-loading");
@@ -535,6 +536,7 @@ const pickIndex = quoteIndexOfTheDayServer();
   }
 
   function mountSpotify(wrap: HTMLElement, signal: AbortSignal) {
+    if (signal.aborted || !wrap.isConnected) return;
     if (wrap.dataset.spotifyInit === "true" || wrap.dataset.spotifyInit === "pending") return;
     wrap.dataset.spotifyInit = "pending";
     wrap.dataset.spotifyErrors = "0";
@@ -578,13 +580,15 @@ const pickIndex = quoteIndexOfTheDayServer();
       window.clearTimeout(timer);
       iframe.remove();
       delete wrap.dataset.spotifyInit;
-    });
+    }, signal);
   }
 
   function initSpotifyEmbed() {
     const wraps = document.querySelectorAll<HTMLElement>(".spotify-wrap");
     if (!wraps.length) return;
     const signal = pageSignal();
+    if (spotifySignal === signal || signal.aborted) return;
+    spotifySignal = signal;
 
     if (prefersReducedData()) {
       wraps.forEach(showFallback);
@@ -610,7 +614,7 @@ const pickIndex = quoteIndexOfTheDayServer();
       if (el.dataset.spotifyInit === "true" || el.dataset.spotifyInit === "fallback") return;
       io.observe(el);
     });
-    onPageCleanup(() => io.disconnect());
+    onPageCleanup(() => io.disconnect(), signal);
   }
 
   initSpotifyEmbed();
@@ -623,6 +627,7 @@ const pickIndex = quoteIndexOfTheDayServer();
   import { getPresence } from "../scripts/presence";
   import { showToast } from "../scripts/toast";
   import { copyToClipboard } from "../scripts/clipboard";
+  import { onPageCleanup, pageSignal } from "../scripts/lifecycle";
 
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -632,30 +637,6 @@ const pickIndex = quoteIndexOfTheDayServer();
     author: string;
     source?: string;
     night?: boolean;
-  }
-
-  function activeCard() {
-    return document.querySelector<HTMLElement>(".quote-card.active");
-  }
-
-  function swap(next: QuoteData) {
-    document.querySelectorAll<HTMLElement>(".quote-card").forEach((card) => {
-      const active = Number(card.dataset.quoteIndex) === next.index;
-      card.classList.toggle("active", active);
-      card.setAttribute("aria-hidden", active ? "false" : "true");
-      if (active) card.removeAttribute("inert");
-      else card.setAttribute("inert", "");
-    });
-  }
-
-  function nextQuote(): QuoteData | null {
-    const current = Number(activeCard()?.dataset.quoteIndex);
-    if (!Number.isFinite(current) || quotes.length < 2) return null;
-    const pool = quotes
-      .map((quote, index) => ({ ...quote, index }))
-      .filter((quote) => quote.index !== current);
-    if (pool.length === 0) return null;
-    return pool[Math.floor(Math.random() * pool.length)];
   }
 
   function quoteOfTheDay(): QuoteData {
@@ -672,101 +653,160 @@ const pickIndex = quoteIndexOfTheDayServer();
     return { ...quotes[index], index };
   }
 
-  let flipping = false;
-  let keysBound = false;
-
-  function spinAgain() {
-    const btn = document.getElementById("quote-again");
-    if (!btn || reduce.matches) return;
-    btn.classList.remove("is-spinning");
-    void btn.offsetWidth;
-    btn.classList.add("is-spinning");
-    btn.addEventListener(
-      "animationend",
-      () => btn.classList.remove("is-spinning"),
-      { once: true }
-    );
-  }
-
-  async function rotate() {
-    const card = activeCard();
-
-    const next = nextQuote();
-    if (!next) return;
-    playAccent("flip");
-    spinAgain();
-
-    if (reduce.matches || !card || typeof card.animate !== "function") {
-      swap(next);
-      return;
-    }
-    if (flipping) return;
-    flipping = true;
-
-    const movementEase = "cubic-bezier(0.77, 0, 0.175, 1)";
-    const enterEase = "cubic-bezier(0.23, 1, 0.32, 1)";
-
-    let down: Animation | null = null;
-    let up: Animation | null = null;
-
-    try {
-      down = card.animate(
-        [
-          { transform: "rotateX(0deg)", opacity: 1 },
-          { transform: "rotateX(-90deg)", opacity: 0 },
-        ],
-        { duration: 180, easing: movementEase, fill: "forwards" }
-      );
-      await down.finished;
-
-      swap(next);
-      const nextCard = activeCard();
-
-      const textNodes = [
-        activeCard()?.querySelector<HTMLElement>(".quote-text"),
-        activeCard()?.querySelector<HTMLElement>(".quote-author"),
-      ].filter(Boolean) as HTMLElement[];
-      for (const n of textNodes) {
-        if (typeof n.animate === "function") {
-          n.animate(
-            [
-              { filter: "blur(4px)", opacity: 0.4 },
-              { filter: "blur(0)", opacity: 1 },
-            ],
-            { duration: 260, easing: "cubic-bezier(0,0,0.2,1)" }
-          );
-        }
-      }
-
-      up = nextCard?.animate(
-        [
-          { transform: "rotateX(90deg)", opacity: 0 },
-          { transform: "rotateX(0deg)", opacity: 1 },
-        ],
-        { duration: 220, easing: enterEase, fill: "forwards" }
-      ) ?? null;
-      if (up) await up.finished;
-    } catch {
-      swap(next);
-    } finally {
-      down?.cancel();
-      up?.cancel();
-      flipping = false;
-    }
-  }
+  let quoteSignal: AbortSignal | null = null;
 
   function init() {
     const block = document.querySelector<HTMLElement>(".quote-block");
     if (!block) return;
+    const signal = pageSignal();
+    if (quoteSignal === signal || signal.aborted) return;
+    quoteSignal = signal;
+    const active = () => !signal.aborted && block.isConnected;
+    const againButton = block.querySelector<HTMLElement>("#quote-again");
+    const copyButton = block.querySelector<HTMLElement>("#quote-copy");
+    const viewport = block.querySelector<HTMLElement>("#quote-viewport");
+    const animations = new Set<Animation>();
+    let flipping = false;
+    let copiedTimer = 0;
+
+    onPageCleanup(() => {
+      window.clearTimeout(copiedTimer);
+      animations.forEach((animation) => animation.cancel());
+      animations.clear();
+      flipping = false;
+      againButton?.classList.remove("is-spinning");
+      copyButton?.classList.remove("copied");
+      delete block.dataset.enhanced;
+      if (viewport) delete viewport.dataset.swipeEnhanced;
+    }, signal);
+
+    function activeCard() {
+      return block.querySelector<HTMLElement>(".quote-card.active");
+    }
+
+    function swap(next: QuoteData) {
+      if (!active()) return;
+      block.querySelectorAll<HTMLElement>(".quote-card").forEach((card) => {
+        const selected = Number(card.dataset.quoteIndex) === next.index;
+        card.classList.toggle("active", selected);
+        card.setAttribute("aria-hidden", selected ? "false" : "true");
+        if (selected) card.removeAttribute("inert");
+        else card.setAttribute("inert", "");
+      });
+    }
+
+    function nextQuote(): QuoteData | null {
+      const current = Number(activeCard()?.dataset.quoteIndex);
+      if (!Number.isFinite(current) || quotes.length < 2) return null;
+      const pool = quotes
+        .map((quote, index) => ({ ...quote, index }))
+        .filter((quote) => quote.index !== current);
+      if (pool.length === 0) return null;
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    function spinAgain() {
+      const btn = againButton;
+      if (!btn || reduce.matches) return;
+      btn.classList.remove("is-spinning");
+      void btn.offsetWidth;
+      btn.classList.add("is-spinning");
+      btn.addEventListener(
+        "animationend",
+        () => btn.classList.remove("is-spinning"),
+        { once: true, signal }
+      );
+    }
+
+    async function rotate() {
+      if (!active()) return;
+      const card = activeCard();
+
+      const next = nextQuote();
+      if (!next) return;
+      playAccent("flip");
+      spinAgain();
+
+      if (reduce.matches || !card || typeof card.animate !== "function") {
+        swap(next);
+        return;
+      }
+      if (flipping) return;
+      flipping = true;
+
+      const movementEase = "cubic-bezier(0.77, 0, 0.175, 1)";
+      const enterEase = "cubic-bezier(0.23, 1, 0.32, 1)";
+
+      let down: Animation | null = null;
+      let up: Animation | null = null;
+
+      try {
+        down = card.animate(
+          [
+            { transform: "rotateX(0deg)", opacity: 1 },
+            { transform: "rotateX(-90deg)", opacity: 0 },
+          ],
+          { duration: 180, easing: movementEase, fill: "forwards" }
+        );
+        animations.add(down);
+        await down.finished;
+        if (!active()) return;
+
+        swap(next);
+        const nextCard = activeCard();
+
+        const textNodes = [
+          activeCard()?.querySelector<HTMLElement>(".quote-text"),
+          activeCard()?.querySelector<HTMLElement>(".quote-author"),
+        ].filter(Boolean) as HTMLElement[];
+        for (const n of textNodes) {
+          if (typeof n.animate === "function") {
+            const textAnimation = n.animate(
+              [
+                { filter: "blur(4px)", opacity: 0.4 },
+                { filter: "blur(0)", opacity: 1 },
+              ],
+              { duration: 260, easing: "cubic-bezier(0,0,0.2,1)" }
+            );
+            animations.add(textAnimation);
+            void textAnimation.finished.then(
+              () => animations.delete(textAnimation),
+              () => animations.delete(textAnimation),
+            );
+          }
+        }
+
+        up = nextCard?.animate(
+          [
+            { transform: "rotateX(90deg)", opacity: 0 },
+            { transform: "rotateX(0deg)", opacity: 1 },
+          ],
+          { duration: 220, easing: enterEase, fill: "forwards" }
+        ) ?? null;
+        if (up) {
+          animations.add(up);
+          await up.finished;
+          if (!active()) return;
+        }
+      } catch {
+        if (active()) swap(next);
+      } finally {
+        down?.cancel();
+        up?.cancel();
+        if (down) animations.delete(down);
+        if (up) animations.delete(up);
+        flipping = false;
+      }
+    }
 
     if (quotes.length > 0) swap(quoteOfTheDay());
 
     if (block.dataset.enhanced !== "true") {
       block.dataset.enhanced = "true";
 
-      document.getElementById("quote-again")?.addEventListener("click", rotate);
+      againButton?.addEventListener("click", () => void rotate(), { signal });
 
-      document.getElementById("quote-copy")?.addEventListener("click", async () => {
+      copyButton?.addEventListener("click", async () => {
         const card = activeCard();
         const t = card?.querySelector<HTMLElement>(".quote-text")?.textContent ?? "";
         const a = card?.querySelector<HTMLElement>(".quote-author")?.textContent ?? "";
@@ -778,41 +818,38 @@ const pickIndex = quoteIndexOfTheDayServer();
           .replace(/[ \t]+/g, " ")
           .replace(/ ([.,!?])/g, "$1")
           .trim();
-        const copied = await copyToClipboard(payload);
+        const copied = await copyToClipboard(payload, signal);
+        if (!active()) return;
         if (copied) {
           playAccent("copy");
-          const btn = document.getElementById("quote-copy");
+          const btn = copyButton;
           btn?.classList.add("copied");
           showToast({ message: "Quote copied", duration: 2200 });
-          window.setTimeout(() => btn?.classList.remove("copied"), 1200);
+          window.clearTimeout(copiedTimer);
+          copiedTimer = window.setTimeout(() => btn?.classList.remove("copied"), 1200);
         } else {
           showToast({ message: "Couldn’t copy quote", duration: 2600 });
         }
-      });
+      }, { signal });
 
-      if (!keysBound) {
-        keysBound = true;
-        document.addEventListener("keydown", (e) => {
-          if (e.key !== "j") return;
-          if (e.metaKey || e.ctrlKey || e.altKey) return;
-          const tag = (e.target as HTMLElement | null)?.tagName;
-          if (
-            tag === "INPUT" ||
-            tag === "TEXTAREA" ||
-            (e.target as HTMLElement)?.isContentEditable
-          )
-            return;
-          const live = document.querySelector(".quote-block");
-          if (!live) return;
-          const rect = live.getBoundingClientRect();
-          const inView = rect.top < window.innerHeight && rect.bottom > 0;
-          if (!inView) return;
-          e.preventDefault();
-          rotate();
-        });
-      }
+      document.addEventListener("keydown", (e) => {
+        if (!active()) return;
+        if (e.key !== "j") return;
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        const tag = (e.target as HTMLElement | null)?.tagName;
+        if (
+          tag === "INPUT" ||
+          tag === "TEXTAREA" ||
+          (e.target as HTMLElement)?.isContentEditable
+        )
+          return;
+        const rect = block.getBoundingClientRect();
+        const inView = rect.top < window.innerHeight && rect.bottom > 0;
+        if (!inView) return;
+        e.preventDefault();
+        void rotate();
+      }, { signal });
 
-      const viewport = document.getElementById("quote-viewport");
       if (viewport && !viewport.dataset.swipeEnhanced) {
         viewport.dataset.swipeEnhanced = "true";
         let sx = 0;
@@ -823,17 +860,17 @@ const pickIndex = quoteIndexOfTheDayServer();
           sx = e.clientX;
           sy = e.clientY;
           tracking = true;
-        });
+        }, { signal });
         viewport.addEventListener("pointerup", (e) => {
           if (!tracking) return;
           tracking = false;
           const dx = e.clientX - sx;
           const dy = e.clientY - sy;
-          if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5) rotate();
-        });
+          if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5) void rotate();
+        }, { signal });
         viewport.addEventListener("pointercancel", () => {
           tracking = false;
-        });
+        }, { signal });
       }
     }
   }

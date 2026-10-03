@@ -539,15 +539,29 @@ const shortSha = buildMeta.commit;
 </style>
 
 <script>
+  import type { TransitionBeforeSwapEvent } from "astro:transitions/client";
+  import { onPageCleanup, pageSignal } from "../scripts/lifecycle";
   import { playAccent } from "../scripts/sound";
   import { tickPresence } from "../scripts/presence";
 
   const ASHWIN_TZ = "Asia/Kolkata";
   type TooltipView = "presence" | "timezone";
   let tooltipView: TooltipView = "presence";
-  let tickInterval: ReturnType<typeof setInterval> | undefined;
-  let visibilityBound = false;
   const visitorTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const offsetFormatters = new Map<string, Intl.DateTimeFormat>();
+
+  interface ClockContext {
+    signal: AbortSignal;
+    footer: HTMLElement;
+    button: HTMLButtonElement;
+    tooltip: HTMLElement | null;
+    dot: HTMLElement | null;
+    slots: HTMLElement[];
+    interval?: ReturnType<typeof setInterval>;
+    lastSecond: number;
+  }
+
+  let clock: ClockContext | null = null;
 
   const fmtSec = new Intl.DateTimeFormat("en-GB", {
     hour: "2-digit",
@@ -558,17 +572,22 @@ const shortSha = buildMeta.commit;
   });
 
   function offsetMinutes(tz: string, date: Date): number {
+    let formatter = offsetFormatters.get(tz);
+    if (!formatter) {
+      formatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: tz,
+        hour12: false,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+      offsetFormatters.set(tz, formatter);
+    }
     const parts: Record<string, string> = {};
-    for (const part of new Intl.DateTimeFormat("en-US", {
-      timeZone: tz,
-      hour12: false,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    }).formatToParts(date)) {
+    for (const part of formatter.formatToParts(date)) {
       parts[part.type] = part.value;
     }
     const asUTC = Date.UTC(
@@ -609,93 +628,112 @@ const shortSha = buildMeta.commit;
     return [h[0]!, h[1]!, m[0]!, m[1]!, s[0]!, s[1]!];
   }
 
-  function updateDigits(slots: NodeListOf<HTMLElement>, digits: string[]) {
+  function prepareClock(event: Event) {
+    const incoming = (event as TransitionBeforeSwapEvent).newDocument;
+    const digits = getAshwinTimeDigits(new Date());
+    incoming.querySelectorAll<HTMLElement>(".site-footer .digit-slot").forEach((slot, index) => {
+      if (digits[index] !== undefined) slot.textContent = digits[index]!;
+    });
+  }
+
+  function updateDigits(context: ClockContext, digits: string[]) {
+    const changed: HTMLElement[] = [];
     digits.forEach((d, i) => {
-      const slot = slots[i];
+      const slot = context.slots[i];
       if (!slot) return;
       if (slot.textContent !== d) {
         slot.textContent = d;
         slot.classList.remove("ticking");
-        void slot.offsetWidth;
-        slot.classList.add("ticking");
+        changed.push(slot);
       }
     });
+    if (!changed.length) return;
+    // Restart all changed digits together with one intentional layout flush.
+    void context.button.offsetWidth;
+    changed.forEach((slot) => slot.classList.add("ticking"));
   }
 
-  function render() {
-    const footer = document.querySelector<HTMLElement>(".site-footer");
-    const btn = footer?.querySelector<HTMLButtonElement>("#local-time");
-    const tooltipEl = footer?.querySelector<HTMLElement>("#clock-tooltip");
-    const dot = footer?.querySelector<HTMLElement>(".dot");
-    if (!btn) return;
-
+  function render(context: ClockContext, force = false) {
+    if (context.signal.aborted || !context.footer.isConnected) return;
     const now = new Date();
+    const second = Math.floor(now.getTime() / 1000);
+    if (!force && context.lastSecond === second) return;
+    context.lastSecond = second;
     const presence = tickPresence(now);
-    dot?.style.setProperty("--presence", presence.token);
-    if (dot) dot.dataset.presence = presence.state;
+    const { dot, tooltip, button } = context;
+    if (dot) {
+      if (dot.style.getPropertyValue("--presence") !== presence.token) dot.style.setProperty("--presence", presence.token);
+      if (dot.dataset.presence !== presence.state) dot.dataset.presence = presence.state;
+    }
 
     const digits = getAshwinTimeDigits(now);
-    const slots = footer?.querySelectorAll<HTMLElement>(".digit-slot");
-    if (slots && slots.length === 6) {
-      updateDigits(slots, digits);
+    if (tooltip) {
+      const text = tooltipView === "presence" ? presence.label : getTimezoneRelation(now);
+      if (tooltip.textContent !== text) tooltip.textContent = text;
     }
-
-    if (tooltipEl) {
-      tooltipEl.textContent = tooltipView === "presence" ? presence.label : getTimezoneRelation(now);
-    }
-    btn.setAttribute("aria-label", `${presence.label} · ${digits[0]}${digits[1]}:${digits[2]}${digits[3]}:${digits[4]}${digits[5]}`);
+    const label = `${presence.label} · ${digits[0]}${digits[1]}:${digits[2]}${digits[3]}:${digits[4]}${digits[5]}`;
+    if (button.getAttribute("aria-label") !== label) button.setAttribute("aria-label", label);
+    if (context.slots.length === 6) updateDigits(context, digits);
   }
 
-  function stopClock() {
-    if (tickInterval !== undefined) {
-      clearInterval(tickInterval);
-      tickInterval = undefined;
+  function stopClock(context: ClockContext) {
+    if (context.interval !== undefined) {
+      clearInterval(context.interval);
+      context.interval = undefined;
     }
   }
 
-  function startClock() {
-    stopClock();
-    render();
+  function startClock(context: ClockContext) {
+    stopClock(context);
+    if (context.signal.aborted || !context.footer.isConnected) return;
+    render(context, true);
     if (document.visibilityState === "hidden") return;
-    tickInterval = setInterval(render, 250);
+    context.interval = setInterval(() => render(context), 250);
   }
 
   function init() {
+    const signal = pageSignal();
+    if (clock?.signal === signal) return;
     const footer = document.querySelector<HTMLElement>(".site-footer");
     const btn = footer?.querySelector<HTMLButtonElement>("#local-time");
-    if (!btn) return;
+    if (!footer || !btn || signal.aborted) return;
 
-    if (!btn.dataset.enhanced) {
-      btn.dataset.enhanced = "true";
-
-      btn.addEventListener("click", () => {
-        tooltipView = tooltipView === "presence" ? "timezone" : "presence";
-        playAccent("tick");
-        render();
-      });
-    }
-
-    startClock();
-  }
-
-  function onVisibility() {
-    if (document.visibilityState === "hidden") {
-      stopClock();
-      return;
-    }
-    startClock();
-  }
-
-  if (!visibilityBound) {
-    visibilityBound = true;
-    document.addEventListener("visibilitychange", onVisibility);
+    const context: ClockContext = {
+      signal,
+      footer,
+      button: btn,
+      tooltip: footer.querySelector<HTMLElement>("#clock-tooltip"),
+      dot: footer.querySelector<HTMLElement>(".dot"),
+      slots: Array.from(footer.querySelectorAll<HTMLElement>(".digit-slot")),
+      lastSecond: -1,
+    };
+    clock = context;
+    btn.dataset.enhanced = "true";
+    btn.addEventListener("click", () => {
+      tooltipView = tooltipView === "presence" ? "timezone" : "presence";
+      playAccent("tick");
+      render(context, true);
+    }, { signal });
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") stopClock(context);
+      else startClock(context);
+    }, { signal });
+    onPageCleanup(() => {
+      stopClock(context);
+      if (clock === context) clock = null;
+    }, signal);
+    startClock(context);
   }
 
   init();
+  document.addEventListener("astro:before-swap", prepareClock);
+  document.addEventListener("astro:after-swap", init);
   document.addEventListener("astro:page-load", init);
 </script>
 
 <script>
+  import { pageSignal } from "../scripts/lifecycle";
+
   const REPO_BANTERS = [
     "View source code",
     "Wanna fork? Go for it.",
@@ -707,6 +745,7 @@ const shortSha = buildMeta.commit;
   ];
 
   let repoBanterIndex = -1;
+  let repoPage: AbortSignal | null = null;
 
   function nextBanter(): string {
     const pool = REPO_BANTERS.filter((_, i) => i !== repoBanterIndex);
@@ -716,18 +755,22 @@ const shortSha = buildMeta.commit;
   }
 
   function initRepoBtn() {
+    const signal = pageSignal();
+    if (repoPage === signal || signal.aborted) return;
     const btn = document.getElementById("repo-btn");
     const tooltip = document.getElementById("repo-tooltip");
-    if (!btn || !tooltip || btn.dataset.repoEnhanced === "true") return;
+    if (!btn || !tooltip) return;
+    repoPage = signal;
     btn.dataset.repoEnhanced = "true";
 
     tooltip.textContent = nextBanter();
 
     btn.addEventListener("pointerenter", () => {
       tooltip.textContent = nextBanter();
-    });
+    }, { signal });
   }
 
   initRepoBtn();
+  document.addEventListener("astro:after-swap", initRepoBtn);
   document.addEventListener("astro:page-load", initRepoBtn);
 </script>

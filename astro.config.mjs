@@ -34,7 +34,7 @@ export default defineConfig({
     inlineStylesheets: "always",
   },
   prefetch: {
-    // Safari/Firefox fallback for Speculation Rules; Chromium uses prerender.
+    // Astro owns hover prefetch; touch intent uses the same prefetch API.
     defaultStrategy: "hover",
   },
   markdown: {

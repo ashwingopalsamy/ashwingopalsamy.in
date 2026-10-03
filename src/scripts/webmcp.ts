@@ -25,6 +25,8 @@ type NavigatorWithModelContext = Navigator & { modelContext?: ToolContext };
 type WindowWithModelContext = Window & { modelContext?: ToolContext };
 
 let registeredSignal: AbortSignal | null = null;
+const contextWork = new WeakMap<ToolContext, Promise<void>>();
+const contextOwners = new WeakMap<ToolContext, Map<string, AbortSignal>>();
 
 export function contexts(): ToolContext[] {
   const doc = typeof document !== "undefined" ? (document as DocumentWithModelContext).modelContext : undefined;
@@ -40,32 +42,47 @@ function sameOrigin(path: string): URL {
   return url;
 }
 
-function mergeSignals(pageSignal: AbortSignal, execSignal?: AbortSignal): AbortSignal {
-  if (!execSignal) return pageSignal;
+function mergeSignals(pageSignal: AbortSignal, execSignal?: AbortSignal): { signal: AbortSignal; dispose: () => void } {
+  const noop = () => {};
+  if (!execSignal) return { signal: pageSignal, dispose: noop };
   if (typeof AbortSignal.any === "function") {
-    return AbortSignal.any([pageSignal, execSignal]);
+    return { signal: AbortSignal.any([pageSignal, execSignal]), dispose: noop };
   }
   const controller = new AbortController();
   const onAbort = () => controller.abort();
+  const dispose = () => {
+    pageSignal.removeEventListener("abort", onAbort);
+    execSignal.removeEventListener("abort", onAbort);
+  };
   if (pageSignal.aborted || execSignal.aborted) {
     controller.abort();
-    return controller.signal;
+    return { signal: controller.signal, dispose };
   }
   pageSignal.addEventListener("abort", onAbort, { once: true });
   execSignal.addEventListener("abort", onAbort, { once: true });
-  return controller.signal;
+  return { signal: controller.signal, dispose };
+}
+
+function requireActive(signal: AbortSignal): void {
+  if (signal.aborted) throw signal.reason ?? new DOMException("Operation aborted", "AbortError");
 }
 
 async function fetchJson(path: string, signal: AbortSignal): Promise<unknown> {
   const response = await fetch(sameOrigin(path), { signal, headers: { Accept: "application/json" } });
+  requireActive(signal);
   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-  return response.json();
+  const result: unknown = await response.json();
+  requireActive(signal);
+  return result;
 }
 
 async function fetchMarkdown(path: string, signal: AbortSignal): Promise<string> {
   const response = await fetch(sameOrigin(path), { signal, headers: { Accept: "text/markdown" } });
+  requireActive(signal);
   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-  return response.text();
+  const result = await response.text();
+  requireActive(signal);
+  return result;
 }
 
 function integer(value: unknown, fallback: number): number {
@@ -94,7 +111,8 @@ export function tools(signal: AbortSignal): BrowserTool[] {
       inputSchema: TOOL_SCHEMAS.searchSite.jsonSchema,
       annotations: TOOL_SCHEMAS.searchSite.annotations,
       execute: async ({ query, limit }, options?: { signal?: AbortSignal }) => {
-        const opSignal = mergeSignals(signal, options?.signal);
+        const operation = mergeSignals(signal, options?.signal);
+        const opSignal = operation.signal;
         const t0 = performance.now();
         try {
           const manifest = (await fetchJson("/api/palette.json", opSignal)) as { content?: Array<Record<string, unknown>> };
@@ -110,6 +128,8 @@ export function tools(signal: AbortSignal): BrowserTool[] {
         } catch (err) {
           trackWebMcp(TOOL_SCHEMAS.searchSite.name, performance.now() - t0, false, 0);
           throw err;
+        } finally {
+          operation.dispose();
         }
       },
     },
@@ -119,7 +139,8 @@ export function tools(signal: AbortSignal): BrowserTool[] {
       inputSchema: TOOL_SCHEMAS.getProfile.jsonSchema,
       annotations: TOOL_SCHEMAS.getProfile.annotations,
       execute: async (_input, options?: { signal?: AbortSignal }) => {
-        const opSignal = mergeSignals(signal, options?.signal);
+        const operation = mergeSignals(signal, options?.signal);
+        const opSignal = operation.signal;
         const t0 = performance.now();
         try {
           const res = await fetchJson("/api/ai-summary.json", opSignal);
@@ -128,6 +149,8 @@ export function tools(signal: AbortSignal): BrowserTool[] {
         } catch (err) {
           trackWebMcp(TOOL_SCHEMAS.getProfile.name, performance.now() - t0, false, 0);
           throw err;
+        } finally {
+          operation.dispose();
         }
       },
     },
@@ -137,7 +160,8 @@ export function tools(signal: AbortSignal): BrowserTool[] {
       inputSchema: TOOL_SCHEMAS.listContent.jsonSchema,
       annotations: TOOL_SCHEMAS.listContent.annotations,
       execute: async ({ kind, limit }, options?: { signal?: AbortSignal }) => {
-        const opSignal = mergeSignals(signal, options?.signal);
+        const operation = mergeSignals(signal, options?.signal);
+        const opSignal = operation.signal;
         const t0 = performance.now();
         try {
           const manifest = (await fetchJson("/api/palette.json", opSignal)) as { content?: Array<Record<string, unknown>> };
@@ -151,6 +175,8 @@ export function tools(signal: AbortSignal): BrowserTool[] {
         } catch (err) {
           trackWebMcp(TOOL_SCHEMAS.listContent.name, performance.now() - t0, false, 0);
           throw err;
+        } finally {
+          operation.dispose();
         }
       },
     },
@@ -160,7 +186,8 @@ export function tools(signal: AbortSignal): BrowserTool[] {
       inputSchema: TOOL_SCHEMAS.getNoteMarkdown.jsonSchema,
       annotations: TOOL_SCHEMAS.getNoteMarkdown.annotations,
       execute: async ({ slug }, options?: { signal?: AbortSignal }) => {
-        const opSignal = mergeSignals(signal, options?.signal);
+        const operation = mergeSignals(signal, options?.signal);
+        const opSignal = operation.signal;
         const t0 = performance.now();
         try {
           const res = await fetchMarkdown(`/blog/${encodeURIComponent(String(slug))}.md`, opSignal);
@@ -169,18 +196,46 @@ export function tools(signal: AbortSignal): BrowserTool[] {
         } catch (err) {
           trackWebMcp(TOOL_SCHEMAS.getNoteMarkdown.name, performance.now() - t0, false, 0);
           throw err;
+        } finally {
+          operation.dispose();
         }
       },
     },
   ];
 }
 
-export async function registerContextTools(context: ToolContext, toolList: BrowserTool[], signal: AbortSignal): Promise<void> {
+function queueContextWork(context: ToolContext, work: () => Promise<void>): Promise<void> {
+  const next = (contextWork.get(context) ?? Promise.resolve()).then(work);
+  contextWork.set(context, next.catch(() => undefined));
+  return next;
+}
+
+async function unregisterOwnedTools(context: ToolContext, signal: AbortSignal): Promise<void> {
+  const owners = contextOwners.get(context);
+  if (!owners) return;
+  for (const [name, owner] of owners) {
+    if (owner !== signal) continue;
+    try {
+      await context.unregisterTool?.(name);
+    } catch {
+      // A signal-aware context may already have removed this registration.
+    } finally {
+      if (owners.get(name) === signal) owners.delete(name);
+    }
+  }
+}
+
+export function registerContextTools(context: ToolContext, toolList: BrowserTool[], signal: AbortSignal): Promise<void> {
+  return queueContextWork(context, () => registerOwnedTools(context, toolList, signal));
+}
+
+async function registerOwnedTools(context: ToolContext, toolList: BrowserTool[], signal: AbortSignal): Promise<void> {
   if (signal.aborted) return;
   let existingNames: Set<string> = new Set();
   if (typeof context.getTools === "function") {
     try {
       const existing = await context.getTools();
+      if (signal.aborted) return;
       if (Array.isArray(existing)) {
         existingNames = new Set(existing.map((t) => t.name));
       }
@@ -189,11 +244,22 @@ export async function registerContextTools(context: ToolContext, toolList: Brows
     }
   }
 
+  let owners = contextOwners.get(context);
+  if (!owners) {
+    owners = new Map();
+    contextOwners.set(context, owners);
+  }
+
   for (const tool of toolList) {
     if (signal.aborted) return;
     if (existingNames.has(tool.name)) continue;
     try {
       await context.registerTool(tool, { signal });
+      owners.set(tool.name, signal);
+      if (signal.aborted) {
+        await unregisterOwnedTools(context, signal);
+        return;
+      }
     } catch (error) {
       if (isKnownDuplicateRegistration(error) || signal.aborted) {
         continue;
@@ -212,27 +278,24 @@ export async function initWebMcp(): Promise<void> {
   registeredSignal = signal;
   const registered = tools(signal);
 
+  // Install cleanup before any context work can yield. The per-context
+  // queue finishes old unregister calls before successor registration.
+  onPageCleanup(() => {
+    available.forEach((context) => {
+      void queueContextWork(context, () => unregisterOwnedTools(context, signal)).catch(() => undefined);
+    });
+    if (registeredSignal === signal) registeredSignal = null;
+  }, signal);
+
   for (const context of available) {
     if (signal.aborted) break;
     await registerContextTools(context, registered, signal);
+    if (signal.aborted) break;
   }
-
-  onPageCleanup(() => {
-    available.forEach((context) => {
-      registered.forEach((tool) => {
-        try {
-          void context.unregisterTool?.(tool.name);
-        } catch {
-          return;
-        }
-      });
-    });
-    if (registeredSignal === signal) registeredSignal = null;
-  });
 }
 
 if (typeof document !== "undefined") {
   document.addEventListener("astro:page-load", () => {
-    void initWebMcp();
+    void initWebMcp().catch(() => undefined);
   });
 }

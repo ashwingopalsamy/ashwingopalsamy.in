@@ -146,7 +146,7 @@ const variants = [
       observer.disconnect();
       viewer.dataset.previewReady = "";
       frame.src = "about:blank";
-    });
+    }, signal);
   }
 
   initComparison();

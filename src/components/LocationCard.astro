@@ -285,10 +285,14 @@ const PIN_LON = 76.9558;
     dot.dataset.presence = presence.state;
   }
 
+  let initializedSignal: AbortSignal | undefined;
+
   function initPresenceDot() {
     const dot = document.querySelector<HTMLElement>(".loc-dot");
     if (!dot) return;
     const signal = pageSignal();
+    if (initializedSignal === signal) return;
+    initializedSignal = signal;
     syncDotPresence(dot, tickPresence(new Date()));
     document.addEventListener(PRESENCE_EVENT, (e) => {
       syncDotPresence(dot, (e as CustomEvent<Presence>).detail);

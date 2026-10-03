@@ -542,35 +542,37 @@ const jsonLd = {
 </Page>
 
 <script>
-  import { pageSignal } from "../scripts/lifecycle";
+  import { onPageCleanup, pageSignal } from "../scripts/lifecycle";
+  import { onScrollFrame } from "../scripts/scroll-scheduler";
   import { playAccent, isSoundEnabled, type Accent } from "../scripts/sound";
   import { tickPresence } from "../scripts/presence";
   import { showToast } from "../scripts/toast";
   import { copyToClipboard } from "../scripts/clipboard";
 
   function enhanceDesignGuide() {
-    const root = document.querySelector<HTMLElement>("[data-design-guide]");
-    if (!root || root.dataset.enhanced === "true") return;
-    root.dataset.enhanced = "true";
     const signal = pageSignal();
+    const root = document.querySelector<HTMLElement>("[data-design-guide]");
+    if (!root || root.dataset.enhanced === "true" || signal.aborted) return;
+    root.dataset.enhanced = "true";
 
     const progress = root.querySelector<HTMLElement>("[data-progress-bar]");
-    let frame = 0;
-    const updateProgress = () => {
-      frame = 0;
-      if (!progress) return;
-      const start = root.offsetTop;
-      const distance = Math.max(1, root.offsetHeight - innerHeight);
-      progress.style.transform = `scaleX(${Math.min(1, Math.max(0, (scrollY - start) / distance))})`;
-    };
-    window.addEventListener(
-      "scroll",
-      () => {
-        if (!frame) frame = requestAnimationFrame(updateProgress);
-      },
-      { signal, passive: true },
-    );
-    updateProgress();
+    if (progress) {
+      let measuredProgress = 0;
+      onScrollFrame(
+        () => {
+          if (signal.aborted || !root.isConnected) return;
+          const transform = `scaleX(${measuredProgress})`;
+          if (progress.style.transform !== transform) progress.style.transform = transform;
+        },
+        signal,
+        ({ y, viewport }) => {
+          if (signal.aborted || !root.isConnected) return;
+          const start = root.offsetTop;
+          const distance = Math.max(1, root.offsetHeight - viewport);
+          measuredProgress = Math.min(1, Math.max(0, (y - start) / distance));
+        },
+      );
+    }
 
     const swatches = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-swatch-index]"));
     const swatchToken = root.querySelector<HTMLElement>("[data-swatch-token]");
@@ -580,10 +582,13 @@ const jsonLd = {
     const swatchCopyBtn = root.querySelector<HTMLButtonElement>("[data-swatch-copy]");
     let currentSwatchIndex = 0;
     let copiedTimer = 0;
+    let copyEpoch = 0;
+    const resetTimers = new Map<HTMLButtonElement, number>();
 
     const selectSwatch = async (index: number, shouldCopy: boolean) => {
       const swatch = swatches[index];
-      if (!swatch) return;
+      if (!swatch || signal.aborted || !root.isConnected) return;
+      const request = ++copyEpoch;
       currentSwatchIndex = index;
       swatches.forEach((s, i) => s.setAttribute("aria-pressed", String(i === index)));
       if (swatchToken) swatchToken.textContent = swatch.dataset.token ?? "";
@@ -594,7 +599,8 @@ const jsonLd = {
         return;
       }
       const val = swatch.dataset.value ?? "";
-      const ok = await copyToClipboard(val);
+      const ok = await copyToClipboard(val, signal);
+      if (signal.aborted || !root.isConnected || !swatch.isConnected || request !== copyEpoch) return;
       if (ok) {
         if (isSoundEnabled()) playAccent("copy");
         showToast({
@@ -608,8 +614,10 @@ const jsonLd = {
       clearTimeout(copiedTimer);
       if (ok) {
         copiedTimer = window.setTimeout(() => {
+          copiedTimer = 0;
+          if (signal.aborted || !root.isConnected) return;
           swatchDisplay?.removeAttribute("data-copied");
-          if (swatchStatus) swatchStatus.textContent = "Copy OKLCH";
+          if (request === copyEpoch && swatchStatus) swatchStatus.textContent = "Copy OKLCH";
         }, 1600);
       }
     };
@@ -754,6 +762,8 @@ const jsonLd = {
           const dur = btn.dataset.duration ?? "150ms";
           const dot = btn.querySelector<HTMLElement>("[data-dot]");
           if (!dot || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+          const previousTimer = resetTimers.get(btn);
+          if (previousTimer !== undefined) window.clearTimeout(previousTimer);
           dot.style.transition = "none";
           dot.style.transform = "scale(1)";
           dot.style.background = "";
@@ -763,10 +773,12 @@ const jsonLd = {
           dot.style.transform = "scale(1.6)";
           dot.style.background = "var(--ink)";
           const resetTimer = window.setTimeout(() => {
+            resetTimers.delete(btn);
+            if (signal.aborted || !dot.isConnected) return;
             dot.style.transform = "scale(1)";
             dot.style.background = "";
           }, ms + 80);
-          signal.addEventListener("abort", () => clearTimeout(resetTimer), { once: true });
+          resetTimers.set(btn, resetTimer);
         },
         { signal },
       );
@@ -788,6 +800,8 @@ const jsonLd = {
       if (routePill) {
         routePill.style.transform = `translateX(${next * 100}%)`;
       }
+      routeAnimations.forEach((a) => a.cancel());
+      routeAnimations = [];
       if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
         routeIndex = next;
         routeOld.textContent = routeNames[routeIndex]!;
@@ -795,7 +809,6 @@ const jsonLd = {
         routeStatus.textContent = "Reduced motion is active. The page change is instant.";
         return;
       }
-      routeAnimations.forEach((a) => a.cancel());
       routeOld.textContent = routeNames[routeIndex]!;
       routeNew.textContent = routeNames[next]!;
       const outgoing = routeOld.animate(
@@ -863,28 +876,29 @@ const jsonLd = {
     const presenceRows = Array.from(root.querySelectorAll<HTMLElement>("[data-presence-row]"));
 
     const setPresence = () => {
+      if (signal.aborted || !root.isConnected) return;
       const p = tickPresence();
       presenceRows.forEach((el) => {
-        el.toggleAttribute("data-current", el.dataset.presenceRow === p.state);
+        const current = el.dataset.presenceRow === p.state;
+        if (el.hasAttribute("data-current") !== current) el.toggleAttribute("data-current", current);
       });
       if (presenceLive) {
-        presenceLive.textContent = `${p.label} It is currently around ${String(p.hour).padStart(2, "0")}:00 IST.`;
+        const text = `${p.label} It is currently around ${String(p.hour).padStart(2, "0")}:00 IST.`;
+        if (presenceLive.textContent !== text) presenceLive.textContent = text;
       }
     };
     setPresence();
     const presenceInterval = setInterval(setPresence, 15000);
 
-    signal.addEventListener(
-      "abort",
-      () => {
-        clearTimeout(copiedTimer);
-        clearInterval(presenceInterval);
-        routeAnimations.forEach((a) => a.cancel());
-        cancelAnimationFrame(frame);
-        delete root.dataset.enhanced;
-      },
-      { once: true },
-    );
+    onPageCleanup(() => {
+      clearTimeout(copiedTimer);
+      clearInterval(presenceInterval);
+      resetTimers.forEach((timer) => window.clearTimeout(timer));
+      resetTimers.clear();
+      routeAnimations.forEach((a) => a.cancel());
+      routeAnimations = [];
+      delete root.dataset.enhanced;
+    }, signal);
   }
 
   enhanceDesignGuide();

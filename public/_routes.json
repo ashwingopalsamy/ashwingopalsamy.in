@@ -5,6 +5,7 @@
   ],
   "exclude": [
     "/_astro/*",
+    "/pagefind/*",
     "/map/v1/*",
     "/favicon.ico",
     "/favicon.svg",

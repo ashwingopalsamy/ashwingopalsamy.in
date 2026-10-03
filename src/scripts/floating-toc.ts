@@ -13,9 +13,13 @@ import { onScrollFrame } from "./scroll-scheduler";
    someone actually operates the rail. Loading it eagerly here put it in
    the critical entry chunk of every page on the site, including pages
    that have no table of contents at all. */
-async function tick(): Promise<void> {
-  const { isSoundEnabled, playAccent } = await import("./sound");
-  if (isSoundEnabled()) playAccent("tick");
+async function tick(signal: AbortSignal): Promise<void> {
+  try {
+    const { isSoundEnabled, playAccent } = await import("./sound");
+    if (!signal.aborted && isSoundEnabled()) playAccent("tick");
+  } catch {
+    /* Optional sound must not interrupt the rail. */
+  }
 }
 
 interface HeadingItem {
@@ -86,7 +90,12 @@ function hasScrollRoom(): boolean {
   return isDesktop && hasHeight;
 }
 
+let initializedSignal: AbortSignal | undefined;
+
 export function initUniversalFloatingToc() {
+  const signal = pageSignal();
+  if (initializedSignal === signal) return;
+
   // Clean up any stale floating rail instances
   document.querySelectorAll<HTMLElement>("[data-toc-rail]").forEach((r) => r.remove());
 
@@ -96,7 +105,7 @@ export function initUniversalFloatingToc() {
   const headings = scanContentHeadings(main);
   if (headings.length < 4) return;
 
-  const signal = pageSignal();
+  initializedSignal = signal;
 
   // Create floating rail container
   const rail = document.createElement("nav");
@@ -183,7 +192,7 @@ export function initUniversalFloatingToc() {
     btn.addEventListener(
       "click",
       () => {
-        void tick();
+        void tick(signal);
         scrollToTarget(id);
       },
       { signal },
@@ -291,14 +300,14 @@ export function initUniversalFloatingToc() {
         const nextIdx = Math.min(buttons.length - 1, currentIdx + 1);
         if (nextIdx !== currentIdx) {
           e.preventDefault();
-          void tick();
+          void tick(signal);
           scrollToTarget(buttons[nextIdx].id);
         }
       } else if (e.key === "k") {
         const prevIdx = Math.max(0, currentIdx - 1);
         if (prevIdx !== currentIdx) {
           e.preventDefault();
-          void tick();
+          void tick(signal);
           scrollToTarget(buttons[prevIdx].id);
         }
       }

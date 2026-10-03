@@ -137,48 +137,38 @@
 </style>
 
 <script>
+  import { onPageCleanup, pageSignal } from "../scripts/lifecycle";
   import { playAccent } from "../scripts/sound";
 
   const root = document.documentElement;
-  const media = window.matchMedia("(prefers-color-scheme: dark)");
 
   type Theme = "light" | "dark";
 
-  function storedTheme(): Theme | null {
-    try {
-      const v = localStorage.getItem("theme");
-      return v === "light" || v === "dark" ? v : null;
-    } catch {
-      return null;
+  declare global {
+    interface Window {
+      __siteThemeController?: {
+        current(): Theme;
+        canvas(theme: Theme): string;
+        apply(theme: Theme, persist?: boolean, target?: Document): void;
+        sync(target?: Document): void;
+      };
     }
-  }
-
-  function currentTheme(): Theme {
-    return root.dataset.theme === "dark" ? "dark" : "light";
-  }
-
-  function apply(theme: Theme, persist: boolean) {
-    root.dataset.theme = theme;
-    if (persist) {
-      try {
-        localStorage.setItem("theme", theme);
-      } catch {
-        /* private mode */
-      }
-    }
-    document.querySelectorAll<HTMLButtonElement>(".theme-toggle").forEach((btn) => {
-      btn.setAttribute("aria-pressed", String(theme === "dark"));
-    });
-    const tc = document.querySelector('meta[name="theme-color"]:not([media])');
-    const canvasHex = getComputedStyle(root).getPropertyValue("--canvas-hex").trim();
-    if (tc && canvasHex) tc.setAttribute("content", canvasHex);
   }
 
   let veil: HTMLDivElement | null = null;
   let veilTimer: number | undefined;
   let currentAnim: Animation | null = null;
+  let enhancedPage: AbortSignal | null = null;
 
-  function runVeil(oldHex: string) {
+  function stopVeil() {
+    currentAnim?.cancel();
+    currentAnim = null;
+    window.clearTimeout(veilTimer);
+    veilTimer = undefined;
+    veil?.remove();
+  }
+
+  function runVeil(oldHex: string, duration: number, easing: string) {
     const el = document.body;
     if (typeof el.animate !== "function") return;
 
@@ -188,12 +178,7 @@
       veil.setAttribute("aria-hidden", "true");
     }
 
-    const cs = getComputedStyle(root);
-    const easing = cs.getPropertyValue("--ease").trim() || "ease";
-    const duration = parseInt(cs.getPropertyValue("--dur-3"), 10) || 200;
-
-    currentAnim?.cancel();
-    veil.remove();
+    stopVeil();
     veil.style.background = oldHex;
     document.body.appendChild(veil);
 
@@ -215,40 +200,37 @@
   }
 
   function setThemeFromClick(next: Theme) {
-    const oldHex = getComputedStyle(root).getPropertyValue("--canvas-hex").trim();
-    if (!oldHex) return;
-    apply(next, true);
-
+    const controller = window.__siteThemeController;
+    if (!controller) return;
+    const oldHex = controller.canvas(controller.current());
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const canVeil = !reduce && root.dataset.motion === "on";
+    // Read the existing motion tokens before applying the new palette.
+    const cs = canVeil ? getComputedStyle(root) : null;
+    const easing = cs?.getPropertyValue("--ease").trim() || "ease";
+    const duration = cs ? parseInt(cs.getPropertyValue("--dur-3"), 10) || 200 : 200;
+    controller.apply(next, true);
     if (!canVeil) return;
 
-    runVeil(oldHex);
+    runVeil(oldHex, duration, easing);
   }
 
   function init() {
+    const signal = pageSignal();
+    if (enhancedPage === signal) return;
+    enhancedPage = signal;
     document.querySelectorAll<HTMLButtonElement>(".theme-toggle").forEach((btn) => {
-      if (btn.dataset.enhanced) return;
       btn.dataset.enhanced = "true";
       btn.addEventListener("click", () => {
-        setThemeFromClick(currentTheme() === "dark" ? "light" : "dark");
+        setThemeFromClick(window.__siteThemeController?.current() === "dark" ? "light" : "dark");
         playAccent("theme");
-      });
+      }, { signal });
     });
-    apply(currentTheme(), false);
+    onPageCleanup(stopVeil, signal);
+    window.__siteThemeController?.sync(document);
   }
 
   init();
+  document.addEventListener("astro:after-swap", init);
   document.addEventListener("astro:page-load", init);
-  document.addEventListener("astro:before-swap", () => veil?.remove());
-
-  media.addEventListener("change", (e) => {
-    if (!storedTheme()) apply(e.matches ? "dark" : "light", false);
-  });
-
-  window.addEventListener("storage", (e) => {
-    if (e.key === "theme") {
-      apply(e.newValue === "dark" ? "dark" : "light", false);
-    }
-  });
 </script>

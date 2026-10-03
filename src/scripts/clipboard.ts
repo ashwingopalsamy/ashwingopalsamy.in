@@ -1,4 +1,7 @@
-export async function copyToClipboard(value: string): Promise<boolean> {
+import { pageSignal } from "./lifecycle";
+
+export async function copyToClipboard(value: string, signal = pageSignal()): Promise<boolean> {
+  if (signal.aborted) return false;
   try {
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(value);
@@ -7,6 +10,7 @@ export async function copyToClipboard(value: string): Promise<boolean> {
   } catch {
   }
 
+  if (signal.aborted) return false;
   const area = document.createElement("textarea");
   area.value = value;
   area.setAttribute("readonly", "true");

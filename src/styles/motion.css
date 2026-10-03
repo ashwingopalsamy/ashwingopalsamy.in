@@ -131,16 +131,15 @@
    handoff, the incoming text was unreadable for a quarter second, and
    the blur radius changed every frame on live, un-promoted DOM.
 
-   Here the same blur runs on ::view-transition-old/new — flat textures
-   the compositor already holds — so it is a shader pass, not a
-   re-raster. The two halves overlap, and the blur is confined to the
-   page: the chrome is excluded from the root snapshot and holds still
-   (see the block below).
+   The same blur runs on viewport-sized root snapshots. A fixed opaque
+   canvas sits behind them, so opacity and blur cannot expose an unpainted
+   viewport. The chrome keeps its existing leaf names.
    ------------------------------------------------------------------ */
 
 /* The pseudo tree must never eat clicks. */
 ::view-transition {
   pointer-events: none;
+  background: var(--canvas);
 }
 
 ::view-transition-group(*),

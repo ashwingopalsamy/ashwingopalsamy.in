@@ -1,4 +1,5 @@
 import { navigate } from "astro:transitions/client";
+import { prefersReducedData } from "./network";
 import type {
   TransitionBeforePreparationEvent,
   TransitionBeforeSwapEvent,
@@ -117,7 +118,7 @@ function ensurePreloadHolder(): HTMLDivElement {
   return preloadHolder;
 }
 
-function createWarmEntry(target: PhotoTarget, key: string): WarmEntry {
+function createWarmEntry(target: PhotoTarget, key: string, priority: "low" | "high"): WarmEntry {
   const {
     photoTarget: id,
     photoAvif,
@@ -146,11 +147,11 @@ function createWarmEntry(target: PhotoTarget, key: string): WarmEntry {
   const image = document.createElement("img");
   image.className = "photo-image photo-preload-image";
   image.alt = "";
+  image.decoding = "async";
+  image.fetchPriority = priority;
   image.sizes = photoSizes;
   image.srcset = photoJpeg;
   image.src = photoJpegSrc;
-  image.decoding = "async";
-  image.fetchPriority = "low";
   image.style.cssText = "display:block;inline-size:1px;block-size:1px;object-fit:contain";
   picture.append(image);
   ensurePreloadHolder().append(picture);
@@ -161,13 +162,20 @@ function createWarmEntry(target: PhotoTarget, key: string): WarmEntry {
 function discardEntry(entry: WarmEntry): void {
   if (warmEntries.get(entry.id) === entry) warmEntries.delete(entry.id);
   entry.picture.remove();
+  entry.picture.querySelectorAll("source").forEach((source) => source.removeAttribute("srcset"));
+  entry.image.removeAttribute("srcset");
+  entry.image.removeAttribute("src");
 }
 
-function trimWarmCache(): void {
-  const completed = [...warmEntries.values()]
-    .filter((entry) => entry.image.complete && entry.image.naturalWidth > 0)
-    .sort((left, right) => right.lastUsed - left.lastUsed);
-  for (const entry of completed.slice(WARM_CACHE_LIMIT)) discardEntry(entry);
+function reserveWarmSlot(priority: "low" | "high"): boolean {
+  if (warmEntries.size < WARM_CACHE_LIMIT) return true;
+  const activeId = activeRequest?.link.dataset.photoTarget;
+  const candidate = [...warmEntries.values()]
+    .filter((entry) => entry.id !== activeId && (priority === "high" || Boolean(entry.decodedSrc)))
+    .sort((left, right) => left.lastUsed - right.lastUsed)[0];
+  if (!candidate) return false;
+  discardEntry(candidate);
+  return true;
 }
 
 async function decodeImage(image: HTMLImageElement): Promise<void> {
@@ -185,6 +193,7 @@ async function decodeImage(image: HTMLImageElement): Promise<void> {
 }
 
 async function warmPhoto(target: PhotoTarget, priority: "low" | "high" = "low"): Promise<WarmEntry | null> {
+  if (priority === "low" && prefersReducedData()) return null;
   const key = sourceKey(target);
   if (!key) throw new Error("Photo target has no optimized image candidates.");
   const id = target.dataset.photoTarget!;
@@ -202,12 +211,13 @@ async function warmPhoto(target: PhotoTarget, priority: "low" | "high" = "low"):
     entry = undefined;
   }
   if (!entry) {
-    entry = createWarmEntry(target, key);
+    if (!reserveWarmSlot(priority)) return null;
+    entry = createWarmEntry(target, key, priority);
     warmEntries.set(id, entry);
   }
 
   entry.lastUsed = performance.now();
-  entry.image.fetchPriority = priority;
+  if (priority === "high" || entry.image.fetchPriority !== "high") entry.image.fetchPriority = priority;
   try {
     if (!entry.decoding || (entry.decodedSrc && entry.image.currentSrc && entry.decodedSrc !== entry.image.currentSrc)) {
       const decodingEntry = entry;
@@ -219,8 +229,8 @@ async function warmPhoto(target: PhotoTarget, priority: "low" | "high" = "low"):
       });
     }
     await entry.decoding;
+    if (warmEntries.get(id) !== entry) return null;
     entry.lastUsed = performance.now();
-    trimWarmCache();
     return entry;
   } catch (error) {
     if (warmEntries.get(entry.id) === entry) discardEntry(entry);
@@ -311,6 +321,7 @@ function clearActiveRequest(message = ""): void {
 }
 
 function handleWarmIntent(event: Event): void {
+  if (event.defaultPrevented || activeRequest || prefersReducedData()) return;
   const target = photoTarget(event.target as Element | null);
   if (!target || target.hasAttribute("aria-busy")) return;
   void warmPhoto(target).catch(() => undefined);
@@ -468,7 +479,7 @@ function handleAfterSwap(): void {
     clearActiveRequest();
   }
   if (!isPhotoPath(location.pathname)) {
-    for (const entry of warmEntries.values()) entry.picture.remove();
+    for (const entry of warmEntries.values()) discardEntry(entry);
     warmEntries.clear();
     preloadHolder?.remove();
   }

@@ -1182,6 +1182,7 @@ a {
 
 @media (prefers-reduced-motion: reduce) {
   [data-route-content] {
+    opacity: 1 !important;
     filter: none !important;
     transform: none !important;
     transition: none !important;
@@ -1358,5 +1359,4 @@ a {
 .tok-comment { color: var(--code-comment); font-style: italic; }
 .tok-punct { color: var(--muted); }
 .tok-op { color: var(--code-kw); }
-
 

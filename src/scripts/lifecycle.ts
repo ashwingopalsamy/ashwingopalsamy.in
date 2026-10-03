@@ -4,9 +4,9 @@
  * One AbortController per page. Listeners/observers/timers take
  * `{ signal: pageSignal() }` or register via `onPageCleanup`.
  * `astro:before-swap` aborts the controller so nothing leaks across visits.
- * A capture-phase `astro:page-load` handler rotates the controller so any
- * eager module-level `init()` listeners are cleared before the bubble-phase
- * page inits re-bind.
+ * A capture-phase `astro:after-swap` handler starts the incoming page's
+ * lifetime before its scripts run. Initial `astro:page-load` keeps the same
+ * signal, so eager initialization survives the first load event.
  */
 
 let page: AbortController | null = null;
@@ -20,8 +20,7 @@ export function pageSignal(): AbortSignal {
 }
 
 /** Run `fn` when the page is about to swap away (or if already aborted). */
-export function onPageCleanup(fn: () => void): void {
-  const signal = pageSignal();
+export function onPageCleanup(fn: () => void, signal = pageSignal()): void {
   const run = () => {
     try {
       fn();
@@ -40,9 +39,9 @@ if (typeof document !== "undefined") {
   document.addEventListener("astro:before-swap", () => {
     page?.abort();
     page = null;
-  });
+  }, { capture: true });
   document.addEventListener(
-    "astro:page-load",
+    "astro:after-swap",
     () => {
       page?.abort();
       page = new AbortController();

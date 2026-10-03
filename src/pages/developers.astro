@@ -573,14 +573,24 @@ const developersJsonLd = [
 <script>
   import { showToast } from "../scripts/toast";
   import { playAccent, isSoundEnabled } from "../scripts/sound";
-  import { pageSignal } from "../scripts/lifecycle";
+  import { onPageCleanup, pageSignal } from "../scripts/lifecycle";
   import { copyToClipboard } from "../scripts/clipboard";
 
+  let initializedSignal: AbortSignal | undefined;
+
   function initDeveloperPage() {
+    const widget = document.querySelector<HTMLElement>("[data-sdk-widget]");
+    if (!widget) return;
     const signal = pageSignal();
+    if (initializedSignal === signal) return;
+    initializedSignal = signal;
+    const feedbackTimers = new Set<number>();
+    onPageCleanup(() => {
+      feedbackTimers.forEach((timer) => window.clearTimeout(timer));
+      feedbackTimers.clear();
+    }, signal);
 
     // 1. SDK Tab Switcher
-    const widget = document.querySelector<HTMLElement>("[data-sdk-widget]");
     if (widget) {
       const tabs = widget.querySelectorAll<HTMLButtonElement>(".sdk-nav-btn");
       const panels = widget.querySelectorAll<HTMLElement>(".sdk-body-panel");
@@ -616,15 +626,16 @@ const developersJsonLd = [
     }
 
     // 2. Clipboard copy buttons with tactile feedback
-    const copyButtons = document.querySelectorAll<HTMLButtonElement>(".action-btn");
-    copyButtons.forEach((btn) => {
+    const copyButtons = widget.closest("main")?.querySelectorAll<HTMLButtonElement>(".action-btn");
+    copyButtons?.forEach((btn) => {
       btn.addEventListener(
         "click",
         async () => {
           const text = btn.dataset.copy;
           if (!text) return;
 
-          const success = await copyToClipboard(text);
+          const success = await copyToClipboard(text, signal);
+          if (signal.aborted || !btn.isConnected) return;
           if (success) {
             btn.classList.add("is-done");
             if (isSoundEnabled()) playAccent("copy");
@@ -633,9 +644,11 @@ const developersJsonLd = [
               anchor: btn,
               duration: 1600,
             });
-            window.setTimeout(() => {
-              btn.classList.remove("is-done");
+            const timer = window.setTimeout(() => {
+              feedbackTimers.delete(timer);
+              if (!signal.aborted && btn.isConnected) btn.classList.remove("is-done");
             }, 1400);
+            feedbackTimers.add(timer);
           } else {
             showToast({
               message: "Copy failed",

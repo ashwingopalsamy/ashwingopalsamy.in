@@ -23,7 +23,7 @@ const contributions = await getGithubContributions();
       </a>
       {
         resumeUrl && (
-          <a class="cta cta-secondary" href={resumeUrl} download="AshwinGopalsamy_Resume.pdf">
+          <a class="cta cta-secondary" href={resumeUrl} download="AshwinGopalsamy_Resume.pdf" data-astro-prefetch="false">
             Resume
           </a>
         )

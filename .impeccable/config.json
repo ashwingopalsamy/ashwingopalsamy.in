@@ -1,0 +1,50 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-10-03T17:20:13.678Z",
+        "reason": "User approved engine-only upgrade requires preserving every existing font; DESIGN.md explicitly assigns Inter to navigation and prose."
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "cubic-bezier(0, 0, 0, 1.25)",
+        "files": [
+          "src/components/ThemeToggle.astro"
+        ],
+        "createdAt": "2026-10-03T17:20:22.439Z",
+        "reason": "User approved design freeze preserves every existing easing; this unchanged curve drives the authored sun and moon icon morph in ThemeToggle."
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "var(--ease-spring-snap)",
+        "files": [
+          "src/styles/global.css"
+        ],
+        "createdAt": "2026-10-03T17:20:29.122Z",
+        "reason": "User approved design freeze preserves every existing easing; DESIGN.md documents this sampled spring and global.css uses it for the unchanged keyboard focus ring landing."
+      },
+      {
+        "rule": "layout-transition",
+        "value": "*",
+        "files": [
+          "src/pages/__preview/home/index.astro"
+        ],
+        "createdAt": "2026-10-03T17:20:34.769Z",
+        "reason": "Agent triage: existing homepage comparison fixture intentionally animates chooser padding; source matches HEAD and user approved preserving every existing visual effect and duration."
+      },
+      {
+        "rule": "layout-transition",
+        "value": "*",
+        "files": [
+          "src/styles/global.css"
+        ],
+        "createdAt": "2026-10-03T17:20:43.695Z",
+        "reason": "Agent triage: unchanged TOC dash width and height convey hover and active state inside a fixed-size control; source matches HEAD and user approved preserving existing visual effects, geometry and motion values."
+      }
+    ]
+  }
+}
