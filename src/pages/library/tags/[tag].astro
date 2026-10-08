@@ -55,7 +55,7 @@ const fmt = (d: Date) =>
     </div>
   </header>
 
-  <ul class="note-list" data-enter>
+  <ul class="note-list surface-stack" data-enter>
     {notes.map((n) => (
       <li class="note-row">
         <a class="note-link" href={slashPath(`/blog/${n.id}`)}>
@@ -82,7 +82,7 @@ const fmt = (d: Date) =>
 
   .tag-title {
     max-inline-size: 22ch;
-    font-size: clamp(1.85rem, 4.5vw, 2.5rem);
+    font-size: var(--type-detail-title-size);
     font-weight: 640;
     letter-spacing: -0.035em;
     line-height: 1.08;
@@ -107,39 +107,22 @@ const fmt = (d: Date) =>
   }
 
   .tag-count-badge {
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     color: var(--faint);
     font-variant-numeric: tabular-nums;
   }
 
   .note-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
+    --surface-row-gap: 0.15rem;
     max-width: 100%;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .note-list:hover .note-link {
-      opacity: var(--dim-opacity);
-      filter: blur(var(--dim-blur));
-      transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
-    }
-    .note-list:hover .note-link:hover,
-    .note-list:hover .note-link:focus-visible {
-      opacity: 1;
-      filter: none;
-    }
   }
   .note-link {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 1rem;
-    padding: 0.65rem 0.85rem;
-    margin-inline: -0.85rem;
+    padding: var(--step-3) var(--step-3);
+    margin-inline: calc(var(--step-3) * -1);
     border-radius: var(--r-3);
     background: transparent;
     border: none;
@@ -148,9 +131,7 @@ const fmt = (d: Date) =>
     color: var(--ink);
     transition:
       background-color var(--t-color),
-      opacity var(--dur-2) var(--ease),
-      filter var(--dur-2) var(--ease),
-      transform var(--dur-1) var(--ease-out);
+      transform var(--dur-press) var(--ease-enter);
   }
   @media (hover: hover) and (pointer: fine) {
     .note-link:hover,

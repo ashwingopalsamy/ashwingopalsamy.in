@@ -67,11 +67,11 @@
 
   .theme-toggle:active {
     transform: scale(0.94);
-    transition: transform 90ms var(--ease);
+    transition: transform var(--dur-press) var(--ease-enter);
   }
 
   :global(.tt-icon) {
-    transition: transform var(--dur-2) var(--ease-out);
+    transition: transform var(--dur-tint) var(--ease-enter);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -87,13 +87,13 @@
   :global(.tt-clip-path) {
     transition-property: d, translate;
     transition-duration: calc(var(--toggles-expand--duration) * 0.6);
-    transition-timing-function: cubic-bezier(0, 0, 0.5, 1);
+    transition-timing-function: var(--ease-morph);
     transition-delay: 0s;
   }
 
   :global([data-theme="dark"] .tt-clip-path) {
     d: path("M-9 3h25a1 1 0 0017 13v30H0Z");
-    transition-timing-function: cubic-bezier(0, 0, 0, 1.25);
+    transition-timing-function: var(--ease-overshoot);
     transition-delay: calc(var(--toggles-expand--duration) * 0.4);
   }
 
@@ -105,22 +105,40 @@
 
   :global(.tt-circle) {
     transform-origin: center;
-    transition: transform calc(var(--toggles-expand--duration) * 0.65) cubic-bezier(0, 0, 0, 1.25) calc(var(--toggles-expand--duration) * 0.35);
+    transition: transform calc(var(--toggles-expand--duration) * 0.65) var(--ease-overshoot) calc(var(--toggles-expand--duration) * 0.35);
   }
 
   :global([data-theme="dark"] .tt-circle) {
     transform: scale(1.4);
-    transition: transform calc(var(--toggles-expand--duration) * 0.65) cubic-bezier(0, 0, 0, 1.25);
+    transition: transform calc(var(--toggles-expand--duration) * 0.65) var(--ease-overshoot);
   }
 
   :global(.tt-rays) {
     transform-origin: center;
-    transition: transform calc(var(--toggles-expand--duration) * 0.65) cubic-bezier(0, 0, 0, 1.25) calc(var(--toggles-expand--duration) * 0.35);
+    transition: transform calc(var(--toggles-expand--duration) * 0.65) var(--ease-overshoot) calc(var(--toggles-expand--duration) * 0.35);
   }
 
   :global([data-theme="dark"] .tt-rays) {
     transform: scale(0.75);
-    transition: transform calc(var(--toggles-expand--duration) * 0.65) cubic-bezier(0, 0, 0, 1.25);
+    transition: transform calc(var(--toggles-expand--duration) * 0.65) var(--ease-overshoot);
+  }
+
+  /* The sun/moon swap still lands; it just does not travel there. */
+  @media (prefers-reduced-motion: reduce) {
+    .theme-toggle:active,
+    .theme-toggle:hover :global(.tt-icon),
+    .theme-toggle:active :global(.tt-icon) {
+      transform: none;
+    }
+
+    :global(.tt-clip-path),
+    :global([data-theme="dark"] .tt-clip-path),
+    :global(.tt-circle),
+    :global([data-theme="dark"] .tt-circle),
+    :global(.tt-rays),
+    :global([data-theme="dark"] .tt-rays) {
+      transition: none;
+    }
   }
 </style>
 
@@ -133,6 +151,14 @@
     left: 0;
     z-index: var(--z-overlay);
     pointer-events: none;
+  }
+
+  /* The veil masks the flip, so the restyle must not also run every colour
+     transition on the page. The toggle's own sun/moon morph is exempt. */
+  :root[data-theme-switching] *:not(.theme-toggle, .theme-toggle *),
+  :root[data-theme-switching] *:not(.theme-toggle, .theme-toggle *)::before,
+  :root[data-theme-switching] *:not(.theme-toggle, .theme-toggle *)::after {
+    transition: none !important;
   }
 </style>
 
@@ -159,6 +185,7 @@
   let veilTimer: number | undefined;
   let currentAnim: Animation | null = null;
   let enhancedPage: AbortSignal | null = null;
+  let switchTicket = 0;
 
   function stopVeil() {
     currentAnim?.cancel();
@@ -207,9 +234,17 @@
     const canVeil = !reduce && root.dataset.motion === "on";
     // Read the existing motion tokens before applying the new palette.
     const cs = canVeil ? getComputedStyle(root) : null;
-    const easing = cs?.getPropertyValue("--ease").trim() || "ease";
-    const duration = cs ? parseInt(cs.getPropertyValue("--dur-3"), 10) || 200 : 200;
+    const easing = cs?.getPropertyValue("--ease-enter").trim() || "ease";
+    const duration = cs ? parseInt(cs.getPropertyValue("--dur-shift"), 10) || 200 : 200;
+    // Suppress page-wide transitions for the frame that paints the new palette.
+    root.dataset.themeSwitching = "";
     controller.apply(next, true);
+    const ticket = ++switchTicket;
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        if (ticket === switchTicket) delete root.dataset.themeSwitching;
+      }),
+    );
     if (!canVeil) return;
 
     runVeil(oldHex, duration, easing);
@@ -231,6 +266,4 @@
   }
 
   init();
-  document.addEventListener("astro:after-swap", init);
-  document.addEventListener("astro:page-load", init);
 </script>

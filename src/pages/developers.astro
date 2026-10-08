@@ -174,20 +174,8 @@ const protocols = [
   },
 ];
 
-const rateLimitHeaders = [
-  { header: "RateLimit-Limit", tag: "120", desc: "Maximum requests permitted per sliding window (120 per minute)." },
-  { header: "RateLimit-Remaining", tag: "0..120", desc: "Remaining request budget available in the active window." },
-  { header: "RateLimit-Reset", tag: "60s", desc: "Seconds remaining until current window quota fully resets." },
-  { header: "RateLimit-Policy", tag: "120;w=60", desc: "Standard IETF quota policy descriptor (120 req / 60s window)." },
-  { header: "X-RateLimit-*", tag: "Legacy", desc: "Compatibility headers provided for legacy HTTP clients and proxies." },
+const responseHeaders = [
   { header: "API-Version", tag: "2026-08-22", desc: "Contract release timestamp defining endpoint behavior." },
-];
-
-const permissions = [
-  { scope: "site.read", tag: "Read-Only", desc: "Unrestricted read access to public profiles, craft projects, and technical notes." },
-  { scope: "profile.read", tag: "Read-Only", desc: "Access verified identity facts, career history, and current employment metadata." },
-  { scope: "content.search", tag: "Read-Only", desc: "Execute semantic and keyword queries across technical notes and library entries." },
-  { scope: "notes.read", tag: "Read-Only", desc: "Retrieve raw Markdown source and frontmatter for published technical notes." },
 ];
 
 const discoveryGroups = [
@@ -196,8 +184,7 @@ const discoveryGroups = [
     items: [
       { path: "/openapi.json", desc: "OpenAPI 3.1.0 complete REST API specification." },
       { path: "/developers.md", desc: "Developer integration guide in plain Markdown format." },
-      { path: "/auth.md", desc: "Agent authentication, token discovery, and security schemes." },
-      { path: "/.well-known/oauth-protected-resource", desc: "OAuth 2.0 protected resource metadata discovery." },
+      { path: "/auth.md", desc: "Authentication notes: public interfaces require none." },
     ],
   },
   {
@@ -475,15 +462,15 @@ const developersJsonLd = [
 
     <hr class="page-rule" data-enter />
 
-    <!-- Headers & Rate Limiting -->
-    <section class="dev-section" aria-label="Headers & Rate Limiting">
-      <h2 class="section-heading">Headers & Rate Limits</h2>
+    <!-- Response Headers -->
+    <section class="dev-section" aria-label="Response Headers">
+      <h2 class="section-heading">Headers</h2>
       <p class="editorial-p p-grey">
-        Standard IETF RateLimit headers are returned on all endpoints (120 req/min sliding window):
+        API responses carry a version header:
       </p>
       <div class="spec-stream surface-stream">
         {
-          rateLimitHeaders.map((item) => (
+          responseHeaders.map((item) => (
             <div class="spec-row-item surface-row">
               <div class="spec-label-group">
                 <span class="spec-name mono">{item.header}</span>
@@ -520,25 +507,6 @@ const developersJsonLd = [
       </div>
     </section>
 
-    <hr class="page-rule" data-enter />
-
-    <!-- Scoped Permissions -->
-    <section class="dev-section" aria-label="Scoped Permissions">
-      <h2 class="section-heading">Permissions</h2>
-      <div class="spec-stream surface-stream">
-        {
-          permissions.map((item) => (
-            <div class="spec-row-item surface-row">
-              <div class="spec-label-group">
-                <span class="spec-name mono">{item.scope}</span>
-                <span class="spec-value-tag">{item.tag}</span>
-              </div>
-              <span class="spec-desc p-grey">{item.desc}</span>
-            </div>
-          ))
-        }
-      </div>
-    </section>
 
     <hr class="page-rule" data-enter />
 
@@ -664,7 +632,6 @@ const developersJsonLd = [
 
   if (typeof document !== "undefined") {
     initDeveloperPage();
-    document.addEventListener("astro:page-load", initDeveloperPage);
   }
 </script>
 
@@ -690,7 +657,7 @@ const developersJsonLd = [
   }
 
   .dev-section:last-of-type {
-    margin-bottom: var(--space-8);
+    margin-bottom: var(--step-8);
   }
 
   /* ------------------------------------------------------------------ */
@@ -706,7 +673,7 @@ const developersJsonLd = [
 
   .editorial-lede {
     color: var(--ink);
-    font-size: clamp(1.05rem, 1.02rem + 0.18vw, 1.15rem);
+    font-size: var(--text-md);
     line-height: 1.62;
     text-wrap: pretty;
     margin: 0 0 1.25rem;
@@ -727,7 +694,7 @@ const developersJsonLd = [
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin-bottom: 0.85rem;
+    margin-bottom: var(--step-3);
   }
 
   .p-grey {
@@ -790,19 +757,19 @@ const developersJsonLd = [
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 2.65rem;
-    padding: 0.55rem 1.25rem;
+    min-height: var(--control-hit);
+    padding: var(--step-2) calc(var(--step) * 5);
     border-radius: var(--r-pill);
     background: var(--canvas);
     border: 1px solid var(--chrome-surface-border);
     box-shadow: var(--chrome-surface-shadow);
     color: var(--ink);
-    font-size: 0.9375rem;
+    font-size: var(--text-ui);
     font-weight: 500;
     text-decoration: none;
     overflow: hidden;
     transition:
-      transform var(--dur-2) var(--ease-out),
+      transform var(--dur-tint) var(--ease-enter),
       box-shadow var(--t-move),
       background-color var(--t-color),
       border-color var(--t-color),
@@ -820,34 +787,40 @@ const developersJsonLd = [
     overflow: hidden;
     pointer-events: none;
     transition:
-      max-width var(--dur-2) var(--ease-out),
-      opacity var(--dur-2) var(--ease-out),
-      margin var(--dur-2) var(--ease-out),
-      transform var(--dur-2) var(--ease-out),
-      color var(--dur-1) var(--ease-out);
+      max-width var(--dur-tint) var(--ease-enter),
+      opacity var(--dur-tint) var(--ease-enter),
+      margin var(--dur-tint) var(--ease-enter),
+      transform var(--dur-tint) var(--ease-enter),
+      color var(--dur-press) var(--ease-enter);
   }
 
   .dev-cta:hover,
   .dev-cta:focus-visible {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-2);
     background: var(--canvas);
     border-color: color-mix(in oklch, var(--ink) 25%, transparent);
     text-decoration: none;
   }
 
-  .dev-cta:hover :global(.dev-cta-arrow),
-  .dev-cta:focus-visible :global(.dev-cta-arrow) {
-    max-width: 1.25rem;
-    opacity: 1;
-    margin-inline-start: 0.4rem;
-    color: var(--ink);
-    transform: translateX(0) scale(1);
+  @media (hover: hover) and (pointer: fine) {
+    .dev-cta:hover,
+    .dev-cta:focus-visible {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-2);
+    }
+
+    .dev-cta:hover :global(.dev-cta-arrow),
+    .dev-cta:focus-visible :global(.dev-cta-arrow) {
+      max-width: 1.25rem;
+      opacity: 1;
+      margin-inline-start: var(--step-2);
+      color: var(--ink);
+      transform: translateX(0) scale(1);
+    }
   }
 
   .dev-cta:active {
     transform: scale(0.96);
-    transition: transform var(--dur-1) var(--ease);
+    transition: transform var(--dur-press) var(--ease-enter);
   }
 
   /* ------------------------------------------------------------------ */
@@ -864,23 +837,23 @@ const developersJsonLd = [
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-2);
+    gap: var(--step-2);
     padding: 0.15rem 0;
   }
 
   .sdk-nav-pills {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
+    gap: var(--step-1);
     background: color-mix(in oklch, var(--ink) 4.5%, transparent);
     border: 1px solid var(--chrome-surface-border);
     box-shadow: inset 0 1px 2px color-mix(in oklch, var(--ink) 4%, transparent);
-    padding: 3px;
+    padding: var(--step-1);
     border-radius: var(--r-pill);
   }
 
   .sdk-nav-btn {
-    padding: 0.35rem 0.9rem;
+    padding: var(--step-1) var(--step-4);
     border: 1px solid transparent;
     border-radius: var(--r-pill);
     background: transparent;
@@ -944,7 +917,7 @@ const developersJsonLd = [
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.75rem 1.15rem;
+    padding: var(--step-3) calc(var(--step) * 5);
     background: var(--chrome-surface-bg);
     border-bottom: 1px solid var(--chrome-surface-border);
     min-inline-size: 0;
@@ -981,7 +954,7 @@ const developersJsonLd = [
 
   .code-view pre {
     margin: 0;
-    padding: 1.15rem 1.25rem;
+    padding: calc(var(--step) * 5) calc(var(--step) * 5);
     font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
     font-size: 0.8125rem;
     line-height: 1.68;
@@ -1053,7 +1026,7 @@ const developersJsonLd = [
   .cli-stream {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    gap: var(--step-4);
     margin-top: 1rem;
   }
 
@@ -1068,7 +1041,7 @@ const developersJsonLd = [
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;
-    gap: var(--space-2);
+    gap: var(--step-2);
   }
 
   .cli-badge {
@@ -1097,7 +1070,7 @@ const developersJsonLd = [
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-4);
+    gap: var(--step-4);
     padding: 0.75rem 1rem;
     margin-inline: -1rem;
     border-radius: var(--r-3);
@@ -1123,11 +1096,11 @@ const developersJsonLd = [
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 0.6rem;
+    gap: var(--step-2);
   }
 
   .http-badge {
-    font-size: 0.6875rem;
+    font-size: var(--text-xs);
     font-weight: 600;
     color: var(--muted);
     background: var(--canvas);
@@ -1169,7 +1142,7 @@ const developersJsonLd = [
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    padding: 0.85rem 1rem;
+    padding: var(--step-3) var(--step-4);
     margin-inline: -1rem;
     border-radius: var(--r-3);
     min-inline-size: 0;
@@ -1181,7 +1154,7 @@ const developersJsonLd = [
     align-items: flex-start;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: var(--space-2);
+    gap: var(--step-2);
   }
 
   .proto-title-group {
@@ -1192,7 +1165,7 @@ const developersJsonLd = [
 
   .proto-title {
     margin: 0;
-    font-size: 0.9375rem;
+    font-size: var(--text-ui);
     font-weight: var(--font-semibold);
     letter-spacing: -0.01em;
     color: var(--ink);
@@ -1227,8 +1200,8 @@ const developersJsonLd = [
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-2);
-    padding: 0.55rem 0.85rem;
+    gap: var(--step-2);
+    padding: var(--step-2) var(--step-3);
     border-radius: var(--r-3);
     background: var(--canvas);
     border: 1px solid var(--chrome-surface-border);
@@ -1266,7 +1239,7 @@ const developersJsonLd = [
     grid-template-columns: 16rem minmax(0, 1fr);
     align-items: baseline;
     gap: 0.5rem 1.5rem;
-    padding: 0.65rem 1rem;
+    padding: var(--step-3) var(--step-4);
     margin-inline: -1rem;
     border-radius: var(--r-3);
     min-inline-size: 0;
@@ -1277,7 +1250,7 @@ const developersJsonLd = [
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;
-    gap: 0.45rem;
+    gap: var(--step-2);
   }
 
   .spec-name {
@@ -1287,7 +1260,7 @@ const developersJsonLd = [
   }
 
   .spec-value-tag {
-    font-size: 0.6875rem;
+    font-size: var(--text-xs);
     color: var(--faint);
     background: var(--canvas);
     border: 1px solid var(--chrome-surface-border);
@@ -1316,12 +1289,12 @@ const developersJsonLd = [
   .discovery-group-block {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: var(--step-1);
   }
 
   .discovery-group-title {
-    margin: 0 0 0.35rem;
-    font-size: 0.9375rem;
+    margin: 0 0 var(--step-1);
+    font-size: var(--text-ui);
     font-weight: var(--font-semibold);
     letter-spacing: -0.01em;
     color: var(--ink);
@@ -1346,8 +1319,8 @@ const developersJsonLd = [
     display: grid;
     grid-template-columns: 16rem minmax(0, 1fr);
     align-items: baseline;
-    gap: 0.4rem 1.5rem;
-    padding: 0.65rem 1rem;
+    gap: var(--step-2) var(--step-5);
+    padding: var(--step-3) var(--step-4);
     margin-inline: -1rem;
     border-radius: var(--r-3);
     background: transparent;
@@ -1378,8 +1351,8 @@ const developersJsonLd = [
     .proto-desc {
       text-align: justify;
       text-justify: inter-word;
-      hyphens: none;
-      -webkit-hyphens: none;
+      hyphens: auto;
+      -webkit-hyphens: auto;
       text-wrap: pretty;
     }
 
@@ -1388,33 +1361,33 @@ const developersJsonLd = [
       grid-template-columns: 1fr;
       gap: 0.25rem;
       border-radius: var(--r-3);
-      padding: 0.65rem 0.85rem;
-      margin-inline: -0.85rem;
+      padding: var(--step-3) var(--step-3);
+      margin-inline: calc(var(--step-3) * -1);
     }
 
     .endpoint-row {
       align-items: flex-start;
-      gap: var(--space-2);
+      gap: var(--step-2);
       border-radius: var(--r-3);
-      padding: 0.65rem 0.85rem;
-      margin-inline: -0.85rem;
+      padding: var(--step-3) var(--step-3);
+      margin-inline: calc(var(--step-3) * -1);
     }
 
     .proto-row {
-      padding: 0.65rem 0.85rem;
-      margin-inline: -0.85rem;
+      padding: var(--step-3) var(--step-3);
+      margin-inline: calc(var(--step-3) * -1);
     }
 
     .proto-header {
       flex-direction: column;
       align-items: flex-start;
-      gap: var(--space-2);
+      gap: var(--step-2);
     }
 
     .sdk-tab-rail {
       flex-direction: column;
       align-items: flex-start;
-      gap: var(--space-2);
+      gap: var(--step-2);
     }
 
     .sdk-header-label {
@@ -1424,12 +1397,25 @@ const developersJsonLd = [
     .quick-cta-row {
       flex-direction: column;
       align-items: stretch;
-      gap: 0.6rem;
+      gap: var(--step-2);
     }
 
     .dev-cta {
       justify-content: center;
       width: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dev-cta:hover,
+    .dev-cta:focus-visible,
+    .dev-cta:active,
+    .sdk-nav-btn:active,
+    .action-btn:active,
+    .dev-cta :global(.dev-cta-arrow),
+    .dev-cta:hover :global(.dev-cta-arrow),
+    .dev-cta:focus-visible :global(.dev-cta-arrow) {
+      transform: none;
     }
   }
 </style>

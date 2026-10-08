@@ -1,13 +1,12 @@
 import { applySecurityHeaders } from "../src/lib/security-headers";
-import { applyRateLimitHeaders } from "./_unavailable";
 
 export const API_VERSION = "2026-08-22";
 
 export function apiJson(data: unknown, status = 200, extraHeaders?: HeadersInit): Response {
-  let headers = applySecurityHeaders(new Headers(extraHeaders), "json-api-public");
-  headers = applyRateLimitHeaders(headers);
+  const headers = applySecurityHeaders(new Headers(extraHeaders), "json-api-public");
   headers.set("Content-Type", "application/json; charset=utf-8");
   headers.set("API-Version", API_VERSION);
+  headers.set("Access-Control-Expose-Headers", "API-Version");
   if (!headers.has("Cache-Control")) {
     headers.set("Cache-Control", "public, max-age=3600");
   }
@@ -26,10 +25,10 @@ export function apiProblem(
   resolutionHint: string,
   instanceUrl?: string,
 ): Response {
-  let headers = applySecurityHeaders(new Headers(), "json-api-public");
-  headers = applyRateLimitHeaders(headers);
+  const headers = applySecurityHeaders(new Headers(), "json-api-public");
   headers.set("Content-Type", "application/problem+json; charset=utf-8");
   headers.set("API-Version", API_VERSION);
+  headers.set("Access-Control-Expose-Headers", "API-Version");
   headers.set("X-Robots-Tag", "noindex");
 
   if (status === 429) {

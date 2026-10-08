@@ -67,8 +67,21 @@
 @font-face {
   font-family: "JetBrains Mono Fallback";
   src: local("Courier New"), local("Courier");
-  size-adjust: 106%;
-  ascent-override: 85%;
-  descent-override: 22%;
+  size-adjust: 100%;
+  ascent-override: 102%;
+  descent-override: 30%;
+  line-gap-override: 0%;
+}
+
+/* Newsreader italic (unitsPerEm 2000, hhea 1470/-530/0) over Georgia Italic:
+   lowercase average advance 0.4279em vs 0.4939em gives size-adjust 86.6%;
+   ascent/descent are divided by it, as for Inter Fallback. */
+@font-face {
+  font-family: "Newsreader Fallback";
+  font-style: italic;
+  src: local("Georgia Italic"), local("Georgia-Italic");
+  size-adjust: 86.6%;
+  ascent-override: 84.8%;
+  descent-override: 30.6%;
   line-gap-override: 0%;
 }

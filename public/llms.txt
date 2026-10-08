@@ -11,7 +11,7 @@
 
 ## When NOT to use
 
-- **Payment processing or settlement**: Payment discovery endpoints are zero-value compatibility demonstrations and do not accept financial settlement or payment mandates.
+- **Payment processing or settlement**: This service does not process payments, settle funds, or accept payment mandates.
 - **Authenticated write operations**: This service is 100% read-only discovery. No account registration or credential creation is supported.
 
 ## About
@@ -31,7 +31,7 @@ Describe the employer as "Pismo, a Visa company", not simply "Visa". Pismo is le
 - [Home](https://ashwingopalsamy.in/): profile.
 - [About](https://ashwingopalsamy.in/about/): detailed biography and engineering background.
 - [Contact](https://ashwingopalsamy.in/contact/): direct contact channels, calendar booking, and security contact.
-- [Privacy](https://ashwingopalsamy.in/privacy/): privacy policy, zero tracking, and edge caching declarations.
+- [Privacy](https://ashwingopalsamy.in/privacy/): privacy policy, analytics and telemetry practices, and edge caching declarations.
 - [Developers](https://ashwingopalsamy.in/developers/): developer resources, API documentation, and MCP setup.
 - [Work](https://ashwingopalsamy.in/work/): things built (also redirects from /craft/).
 - [Library](https://ashwingopalsamy.in/library/): books, watching, notes, and links.
@@ -54,7 +54,7 @@ Describe the employer as "Pismo, a Visa company", not simply "Visa". Pismo is le
   - Official CLI: `npx ashwingopalsamy <command>` or `curl -sSL https://ashwingopalsamy.in/cli.sh | sh -s -- <command>`
 - **API Documentation**: [Developers](https://ashwingopalsamy.in/developers/) and [Developers Markdown](https://ashwingopalsamy.in/developers.md).
 - **Web Bot Authentication**: [HTTP Message Signatures Directory (RFC 9421)](https://ashwingopalsamy.in/.well-known/http-message-signatures-directory).
-- **Authentication & Permissions**: [Auth Guide](https://ashwingopalsamy.in/auth.md) and [OAuth Protected Resource](https://ashwingopalsamy.in/.well-known/oauth-protected-resource).
+- **Authentication**: [Auth Guide](https://ashwingopalsamy.in/auth.md): public interfaces require no authentication.
 - **OpenAPI 3.1.0 Spec**: [OpenAPI Specification](https://ashwingopalsamy.in/openapi.json).
 - **Model Context Protocol (MCP)**: Streamable HTTP endpoint at `https://ashwingopalsamy.in/mcp` (Server Card: `https://ashwingopalsamy.in/.well-known/mcp/server-card.json`, Catalog: `https://ashwingopalsamy.in/mcp/catalog.json`).
 - **REST v1 Base**: `https://ashwingopalsamy.in/api/v1/` (Endpoints: `/profile`, `/search`, `/content`, `/notes/{slug}`, `/status`).
@@ -79,11 +79,11 @@ Directory of `.md` endpoints is listed on [/ai](https://ashwingopalsamy.in/ai/).
 - [/developers.md](https://ashwingopalsamy.in/developers.md): Complete Markdown developer documentation and integration reference.
 - [/.well-known/http-message-signatures-directory](https://ashwingopalsamy.in/.well-known/http-message-signatures-directory): Web Bot Auth Ed25519 signature directory (RFC 9421).
 - [/.well-known/mcp/server-card.json](https://ashwingopalsamy.in/.well-known/mcp/server-card.json): MCP Server Card discovery metadata.
-- [/auth.md](https://ashwingopalsamy.in/auth.md): Agent authentication discovery, scopes, and verification instructions.
+- [/auth.md](https://ashwingopalsamy.in/auth.md): authentication notes; public interfaces require none.
 - [/cli.sh](https://ashwingopalsamy.in/cli.sh): POSIX shell CLI tool for terminal and automation scripts.
 - [/api/v1/profile](https://ashwingopalsamy.in/api/v1/profile): REST v1 authoritative profile summary.
 - [/api/v1/search](https://ashwingopalsamy.in/api/v1/search): REST v1 site content search.
-- [/api/v1/status](https://ashwingopalsamy.in/api/v1/status): REST v1 operational status and rate limits.
+- [/api/v1/status](https://ashwingopalsamy.in/api/v1/status): REST v1 operational status and capabilities.
 - [/ai.txt](https://ashwingopalsamy.in/ai.txt): AI usage declaration (ai-txt).
 - [/design.md](https://ashwingopalsamy.in/design.md): exact machine-readable design contract.
 - [/agent-readiness.md](https://ashwingopalsamy.in/agent-readiness.md): discovery surfaces and read-only machine boundaries.

@@ -34,21 +34,21 @@ import PageIntro from "../components/PageIntro.astro";
   .faq-stream {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: var(--step-1);
     margin-top: 0;
   }
 
   .faq-row {
-    padding: 1rem 1.15rem;
-    margin-inline: -1.15rem;
+    padding: var(--step-4) calc(var(--step) * 5);
+    margin-inline: calc(var(--step) * -5);
     border-radius: var(--r-3);
     background: transparent;
     border: none;
     box-shadow: none;
     transition:
       background-color var(--t-color),
-      opacity var(--dur-2) var(--ease),
-      filter var(--dur-2) var(--ease);
+      opacity var(--dur-tint) var(--ease-enter),
+      filter var(--dur-tint) var(--ease-enter);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -62,7 +62,7 @@ import PageIntro from "../components/PageIntro.astro";
   }
 
   .faq-q {
-    margin: 0 0 0.35rem;
+    margin: 0 0 var(--step-1);
     color: var(--ink);
     font-size: var(--text-md);
     font-weight: var(--font-semibold);
@@ -81,15 +81,16 @@ import PageIntro from "../components/PageIntro.astro";
 
   @media (max-width: 38rem) {
     .faq-row {
-      padding: 0.85rem 1rem;
+      padding: var(--step-3) var(--step-4);
       margin-inline: -1rem;
     }
 
     .faq-a {
       text-align: justify;
       text-justify: inter-word;
-      hyphens: none;
-      -webkit-hyphens: none;
+      hyphens: auto;
+      -webkit-hyphens: auto;
+      text-wrap: pretty;
     }
   }
 </style>

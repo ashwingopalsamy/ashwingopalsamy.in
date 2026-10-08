@@ -31,15 +31,6 @@
         "rule": "layout-transition",
         "value": "*",
         "files": [
-          "src/pages/__preview/home/index.astro"
-        ],
-        "createdAt": "2026-10-03T17:20:34.769Z",
-        "reason": "Agent triage: existing homepage comparison fixture intentionally animates chooser padding; source matches HEAD and user approved preserving every existing visual effect and duration."
-      },
-      {
-        "rule": "layout-transition",
-        "value": "*",
-        "files": [
           "src/styles/global.css"
         ],
         "createdAt": "2026-10-03T17:20:43.695Z",

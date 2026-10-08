@@ -1,5 +1,4 @@
 ---
-import { ClientRouter } from "astro:transitions";
 import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 import fontStyles from "../styles/fonts.css?inline";
 // geometry first (global.css consumes --step-*/--r-*), motion last so its
@@ -94,9 +93,8 @@ const documentTitle = isHome
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
-    <!-- Keep font faces alive across route-specific inline stylesheet swaps.
-         Astro otherwise merges them into CSS whose contents vary by page. -->
-    <style is:inline data-astro-transition-persist="site-fonts" set:html={fontStyles} />
+    <!-- Font faces ship first, before any route stylesheet. -->
+    <style is:inline set:html={fontStyles} />
 
     <link
       rel="preload"
@@ -176,16 +174,63 @@ const documentTitle = isHome
         try {
           if (sessionStorage.getItem("intro-animated") === "true") document.documentElement.dataset.introAnimated = "true";
         } catch (e) {}
-        document.addEventListener("astro:before-swap", function (event) {
-          sync(event.newDocument);
-        }, { capture: true });
-        document.addEventListener("astro:after-swap", function () {
-          sync(document);
-        }, { capture: true });
+        // A prerendered page (speculation rules) may be activated long after it
+        // was built; hold its CSS animations until someone is looking.
+        if (document.prerendering) {
+          document.documentElement.dataset.prerendering = "";
+          document.addEventListener("prerenderingchange", function () {
+            delete document.documentElement.dataset.prerendering;
+          }, { once: true });
+        }
+        // Route direction for the cross-document view transition: motion.css
+        // reverses the axis for history traversals back. pagereveal fires
+        // before the first frame, so it has to be registered in the head.
+        window.addEventListener("pagereveal", function (event) {
+          if (!event.viewTransition) return;
+          var activation = window.navigation && window.navigation.activation;
+          var back = Boolean(activation && activation.navigationType === "traverse" &&
+            activation.from && activation.entry && activation.entry.index < activation.from.index);
+          var root = document.documentElement;
+          root.dataset.routeDir = back ? "back" : "forward";
+          // The logo swaps between the home mark and the back arrow only when
+          // one side of the navigation is the home page.
+          var fromPath = null;
+          try { fromPath = activation && activation.from && activation.from.url ? new URL(activation.from.url).pathname : null; } catch (e) {}
+          if (fromPath !== null && (fromPath === "/") !== (location.pathname === "/")) root.dataset.logoSwap = "";
+          else delete root.dataset.logoSwap;
+        });
+        // Without cross-document view transitions (Firefox today) an internal
+        // navigation still arrives with the same gesture: opacity and travel
+        // on the content, settled two frames after the DOM is parsed.
+        if (!("CSSViewTransitionRule" in window) && document.documentElement.dataset.motion === "on") {
+          var internal = false;
+          try { internal = Boolean(document.referrer) && new URL(document.referrer).origin === location.origin; } catch (e) {}
+          var navEntry = performance.getEntriesByType ? performance.getEntriesByType("navigation")[0] : null;
+          if (internal && (!navEntry || navEntry.type !== "reload")) {
+            var root = document.documentElement;
+            root.dataset.routeFallback = "entering";
+            if (navEntry && navEntry.type === "back_forward") root.dataset.routeDir = "back";
+            var settle = function () {
+              requestAnimationFrame(function () {
+                requestAnimationFrame(function () { root.dataset.routeFallback = "idle"; });
+              });
+            };
+            if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", settle, { once: true });
+            else settle();
+          }
+        }
         colorScheme.addEventListener("change", function (event) {
           if (!explicitTheme) apply(event.matches ? "dark" : "light", false, document);
         });
         reducedMotion.addEventListener("change", function () { sync(document); });
+        // A page restored from the back/forward cache missed any theme change
+        // made on the pages after it (storage events are not replayed).
+        window.addEventListener("pageshow", function (event) {
+          if (!event.persisted) return;
+          var restored = storedTheme();
+          explicitTheme = restored !== null;
+          apply(restored || (colorScheme.matches ? "dark" : "light"), false, document);
+        });
         window.addEventListener("storage", function (event) {
           if (event.key !== "theme" && event.key !== null) return;
           var next = event.key === "theme" ? event.newValue : storedTheme();
@@ -271,12 +316,11 @@ const documentTitle = isHome
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content={CANVAS_LIGHT} media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content={CANVAS_DARK} media="(prefers-color-scheme: dark)" />
-    <ClientRouter />
     <slot name="head" />
   </head>
   <body>
     <a href="#main" class="skip-link">Skip to content</a>
-    <div class="site-chrome" transition:persist="site-chrome" data-pagefind-ignore>
+    <div class="site-chrome" data-pagefind-ignore>
       <div class="column column-header">
         <SiteHeader />
       </div>
@@ -286,7 +330,6 @@ const documentTitle = isHome
       <main
         id="main"
         data-route-content
-        data-navigation-phase="idle"
         data-pagefind-body={pagefind ? "" : undefined}
         data-pagefind-ignore={pagefind ? undefined : "true"}
       >
@@ -304,7 +347,8 @@ const documentTitle = isHome
       import "../scripts/grid-overlay";
 
       /* Nothing below affects the first interaction: the devtools console
-         art, the telemetry queue and the WebMCP bridge are all observers.
+         art, the telemetry queue, the web-vitals observers and the WebMCP
+         bridge are all observers.
          Keeping them in the critical entry chunk meant the browser parsed
          and ran them before the page could respond to anything. They now
          load once the main thread is actually free. */
@@ -316,6 +360,7 @@ const documentTitle = isHome
       whenIdle(() => {
         void import("../scripts/console").then((m) => m.initConsole()).catch(() => undefined);
         void import("../scripts/telemetry").then((m) => m.initTelemetry()).catch(() => undefined);
+        void import("../scripts/vitals").then((m) => m.initVitals()).catch(() => undefined);
         const supportsWebMcp = [document, navigator, window].some(
           (host) => "modelContext" in host && Boolean(host.modelContext),
         );
@@ -326,7 +371,6 @@ const documentTitle = isHome
 
       declare global {
         interface Window {
-          __siteInitialRevealComplete?: boolean;
           __siteIntroAnimated?: boolean;
         }
       }
@@ -346,11 +390,19 @@ const documentTitle = isHome
         }
 
         const items = document.querySelectorAll<HTMLElement>("[data-enter]:not(.entered)");
-        if (window.__siteInitialRevealComplete) {
+        // Entrances belong to the first page of a visit, not to every
+        // navigation inside it: skip them when this document was reached from
+        // another page of the site or from history.
+        const navEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+        let internal = false;
+        try {
+          internal = Boolean(document.referrer) && new URL(document.referrer).origin === location.origin;
+        } catch {}
+        const firstOfVisit = navEntry?.type === "reload" || (navEntry?.type !== "back_forward" && !internal);
+        if (!firstOfVisit) {
           items.forEach((el) => el.classList.add("entered"));
           return;
         }
-        window.__siteInitialRevealComplete = true;
         const motionOn = document.documentElement.dataset.motion === "on";
         // Cap the stagger so a long list never turns into a queue.
         const REVEAL_ORDER_CAP = isHomePage ? 5 : 2;
@@ -439,7 +491,6 @@ const documentTitle = isHome
       }
 
       enhance();
-      document.addEventListener("astro:page-load", enhance);
 
       const chord = (e: KeyboardEvent) =>
         e.altKey && e.shiftKey && (e.key === "v" || e.key === "V");

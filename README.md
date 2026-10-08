@@ -44,7 +44,7 @@ High-performance static-first personal portfolio engineered with modern web stan
 
 ### Requirements
 
-- Node.js 22+
+- Node.js 22 (pinned via `.nvmrc`)
 - npm 10+
 
 ### Setup
@@ -67,6 +67,10 @@ npm run check:functions
 # Build for production
 npm run build
 ```
+
+### Troubleshooting
+
+If `astro build` fails with `ImageNotFound` for a photo that no longer exists, clear the stale content cache with `rm -rf node_modules/.astro`.
 
 ---
 
@@ -113,7 +117,7 @@ Explore full capabilities at [/developers](https://ashwingopalsamy.in/developers
 
 ## Security
 
-- Hardened HTTP security headers (HSTS, strict CSP, Permissions-Policy) enforced via `public/_headers`.
+- HTTP security headers (HSTS, CSP, Permissions-Policy) live in `public/_headers`; the CSP currently allows inline script/style pending hash-based hardening.
 - RFC 9421 HTTP Message Signatures support for verified agent interaction.
 - Bounded payload ingestion (64 KiB) across edge protocols.
 - Security disclosures and vulnerability reporting via `/.well-known/security.txt`.

@@ -1,5 +1,4 @@
 import { applySecurityHeaders } from "../../src/lib/security-headers";
-import { applyRateLimitHeaders } from "../_unavailable";
 import { API_VERSION, apiProblem } from "../_api-response";
 
 interface PagesContext {
@@ -17,10 +16,10 @@ export const onRequest = async (context?: PagesContext): Promise<Response> => {
       context.request.url,
     );
   }
-  let headers = applySecurityHeaders(new Headers(), "json-api-public");
-  headers = applyRateLimitHeaders(headers);
+  const headers = applySecurityHeaders(new Headers(), "json-api-public");
   headers.set("Content-Type", "application/json; charset=utf-8");
   headers.set("API-Version", API_VERSION);
+  headers.set("Access-Control-Expose-Headers", "API-Version");
   headers.set("Cache-Control", "public, max-age=3600");
   headers.set("X-Robots-Tag", "noindex");
 
@@ -31,7 +30,6 @@ export const onRequest = async (context?: PagesContext): Promise<Response> => {
       credentials: false,
       payments: false,
       capabilities: ["profile", "search", "content-discovery", "mcp", "a2a"],
-      rateLimit: { limit: 120, windowSeconds: 60, policy: "120;w=60" },
       versioning: { strategy: "url-path", current: "v1", apiVersion: API_VERSION },
     }) + "\n",
     {

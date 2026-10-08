@@ -14,7 +14,7 @@ const ogImage = ogPath("privacy");
 >
   <PageIntro
     title="privacy policy"
-    lede="Clear, transparent data practices: zero tracking, no cookies, and minimal edge processing."
+    lede="Clear, transparent data practices: what is measured, why, and how long it is kept."
   />
 
   <div class="page-prose" data-enter>
@@ -27,10 +27,10 @@ const ogImage = ogPath("privacy");
     </section>
 
     <section class="privacy-section">
-      <h2 class="privacy-h">Zero Tracking and No Cookies</h2>
+      <h2 class="privacy-h">Cookies and Identifiers</h2>
       <p class="privacy-p">
         This website does not set any tracking cookies, local storage tracking identifiers, or third-party marketing beacons.
-        There are no advertising networks, behavioral tracking scripts, or cross-site tracking mechanisms present.
+        There are no advertising networks or cross-site tracking mechanisms present.
       </p>
       <p class="privacy-p">
         Preferences such as dark mode or sound toggle are stored locally in your browser storage (localStorage)
@@ -46,8 +46,9 @@ const ogImage = ogPath("privacy");
       </p>
       <p class="privacy-p">
         We utilize Cloudflare Web Analytics and first-party edge telemetry (Cloudflare Analytics Engine) to monitor operational health,
-        request performance, status codes, deployment stability, AI crawler patterns, and aggregate feature usage (such as search frequency,
-        command palette open mode, resume downloads, and client-side error signatures).
+        request performance, status codes, deployment stability, AI crawler patterns, page performance (Core Web Vitals, including which
+        page element was involved and the connection type and device memory class your browser reports), and aggregate feature usage
+        (such as search frequency, command palette open mode, music player opens, resume downloads, and client-side error signatures).
       </p>
       <p class="privacy-p">
         This operational telemetry is privacy-preserving: it does not use cookies, does not collect personal identifiers,
@@ -93,7 +94,7 @@ const ogImage = ogPath("privacy");
   }
 
   .privacy-h {
-    font-size: 0.95rem;
+    font-size: var(--text-ui);
     font-weight: 600;
     color: var(--ink);
     margin: 2rem 0 0.75rem;
@@ -101,7 +102,7 @@ const ogImage = ogPath("privacy");
 
   .privacy-p {
     max-width: 62ch;
-    margin-bottom: 1.1rem;
+    margin-bottom: var(--step-4);
     color: var(--ghost);
     line-height: var(--leading-relaxed);
     transition: color var(--t-color);
@@ -125,7 +126,7 @@ const ogImage = ogPath("privacy");
     transition:
       color var(--t-color),
       font-weight var(--t-color),
-      background-size 320ms var(--ease-out);
+      background-size var(--dur-enter) var(--ease-enter);
   }
 
   .privacy-p a:hover,
@@ -155,8 +156,8 @@ const ogImage = ogPath("privacy");
     .privacy-p {
       text-align: justify;
       text-justify: inter-word;
-      hyphens: none;
-      -webkit-hyphens: none;
+      hyphens: auto;
+      -webkit-hyphens: auto;
       text-wrap: pretty;
     }
   }

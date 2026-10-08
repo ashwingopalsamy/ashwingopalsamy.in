@@ -100,7 +100,7 @@ const ogImage = ogPath("contact");
   }
 
   .contact-h {
-    font-size: 0.95rem;
+    font-size: var(--text-ui);
     font-weight: 600;
     color: var(--ink);
     margin: 2rem 0 0.75rem;
@@ -108,7 +108,7 @@ const ogImage = ogPath("contact");
 
   .contact-p {
     max-width: 100%;
-    margin-bottom: 1.1rem;
+    margin-bottom: var(--step-4);
     color: var(--ghost);
     line-height: var(--leading-relaxed);
     transition: color var(--t-color);
@@ -132,7 +132,7 @@ const ogImage = ogPath("contact");
     transition:
       color var(--t-color),
       font-weight var(--t-color),
-      background-size 320ms var(--ease-out);
+      background-size var(--dur-enter) var(--ease-enter);
   }
 
   .contact-link:hover,
@@ -158,13 +158,13 @@ const ogImage = ogPath("contact");
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: var(--step-2);
     color: var(--muted);
     max-width: 100%;
   }
 
   .contact-list li {
-    padding-left: 1.1rem;
+    padding-left: var(--step-4);
     position: relative;
   }
 
@@ -200,8 +200,8 @@ const ogImage = ogPath("contact");
     .contact-p {
       text-align: justify;
       text-justify: inter-word;
-      hyphens: none;
-      -webkit-hyphens: none;
+      hyphens: auto;
+      -webkit-hyphens: auto;
       text-wrap: pretty;
     }
   }

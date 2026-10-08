@@ -42,7 +42,7 @@ function formatDate(iso: string): string {
           {label}
         </h2>
       )}
-      <ul class="rows" data-variant={variant} role="list">
+      <ul class="rows surface-stack" data-variant={variant} role="list">
         {items.map((item) => {
           const title = isNote(item)
             ? item.title
@@ -99,7 +99,7 @@ function formatDate(iso: string): string {
 
   .content-list-heading {
     margin: 0 0 1.25rem;
-    font-size: 1rem;
+    font-size: var(--type-section-size);
     font-weight: 580;
     letter-spacing: -0.015em;
     color: var(--ink);
@@ -107,30 +107,7 @@ function formatDate(iso: string): string {
   }
 
   .rows {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .rows:hover .row {
-      opacity: var(--dim-opacity);
-      filter: blur(var(--dim-blur));
-      transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
-    }
-
-    .rows:hover .row:hover,
-    .rows:hover .row:focus-within {
-      opacity: 1;
-      filter: none;
-    }
-  }
-
-  .row {
-    transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
+    --surface-row-gap: 0.15rem;
   }
 
   .row-link,
@@ -163,12 +140,12 @@ function formatDate(iso: string): string {
     display: grid;
     grid-template-columns: minmax(12.5rem, 0.75fr) minmax(0, 1.25fr);
     align-items: baseline;
-    gap: var(--space-4);
+    gap: var(--step-4);
   }
 
   .row-title {
     font-weight: 560;
-    font-size: 1.05rem;
+    font-size: var(--text-md);
     letter-spacing: -0.015em;
     color: var(--ink);
     transition: color var(--t-color);
@@ -176,7 +153,7 @@ function formatDate(iso: string): string {
 
   .row-detail {
     color: var(--ghost);
-    font-size: 0.9375rem;
+    font-size: var(--text-ui);
     line-height: var(--leading-normal);
     overflow-wrap: anywhere;
     transition: color var(--t-color);
@@ -185,7 +162,7 @@ function formatDate(iso: string): string {
   .row-lede {
     display: block;
     margin-top: 0.25rem;
-    font-size: 0.9375rem;
+    font-size: var(--text-ui);
     color: var(--ghost);
     line-height: var(--leading-normal);
     transition: color var(--t-color);
@@ -193,7 +170,7 @@ function formatDate(iso: string): string {
 
   .row-date {
     flex-shrink: 0;
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
     font-family: var(--font-mono);
     color: var(--faint);
     transition: color var(--t-color);
@@ -213,8 +190,8 @@ function formatDate(iso: string): string {
   }
 
   .sample-tag {
-    margin-left: var(--space-2);
-    font-size: 0.75rem;
+    margin-left: var(--step-2);
+    font-size: var(--text-xs);
     color: var(--faint);
     white-space: nowrap;
   }
@@ -287,8 +264,8 @@ function formatDate(iso: string): string {
   @media (max-width: 38rem) {
     .row-link,
     .row-static {
-      padding: 0.75rem 0.65rem;
-      margin-inline: -0.65rem;
+      padding: var(--step-3) var(--step-3);
+      margin-inline: calc(var(--step-3) * -1);
     }
 
     .rows[data-variant="craft"] .row-main {
@@ -300,7 +277,7 @@ function formatDate(iso: string): string {
     .rows[data-variant="notes"] .row-static {
       display: grid;
       grid-template-columns: 1fr auto;
-      row-gap: 0.35rem;
+      row-gap: var(--step-1);
     }
 
     .rows[data-variant="notes"] .row-main {

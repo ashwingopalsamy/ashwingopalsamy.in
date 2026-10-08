@@ -75,7 +75,7 @@ const label = isExternal ? `Open ${item.title}, external site` : `Open ${item.ti
 <style>
   .library-row {
     margin: 0;
-    transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
+    transition: opacity var(--dur-tint) var(--ease-enter);
   }
 
   .library-row-shell {
@@ -84,9 +84,9 @@ const label = isExternal ? `Open ${item.title}, external site` : `Open ${item.ti
     align-items: center;
     justify-content: space-between;
     min-block-size: 2.25rem;
-    gap: var(--space-4);
-    padding: 0.65rem 0.85rem;
-    margin-inline: -0.85rem;
+    gap: var(--step-4);
+    padding: var(--step-3) var(--step-3);
+    margin-inline: calc(var(--step-3) * -1);
     border-radius: var(--r-3);
     background: var(--surface-row-rest);
     border: none;
@@ -95,7 +95,7 @@ const label = isExternal ? `Open ${item.title}, external site` : `Open ${item.ti
     color: inherit;
     transition:
       background-color var(--t-color),
-      transform var(--dur-1) var(--ease-out);
+      transform var(--dur-press) var(--ease-enter);
   }
 
   .library-row-shell:focus-visible {
@@ -106,7 +106,7 @@ const label = isExternal ? `Open ${item.title}, external site` : `Open ${item.ti
   .library-row-main {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: var(--step-2);
     min-inline-size: 0;
     flex: 1 1 auto;
     overflow: hidden;
@@ -125,9 +125,9 @@ const label = isExternal ? `Open ${item.title}, external site` : `Open ${item.ti
   }
 
   .library-row-main :global(.library-row-status) {
-    min-block-size: 1.125rem;
+    min-block-size: calc(var(--step) * 5);
     font-size: 0.5625rem;
-    padding-inline: 0.38rem;
+    padding-inline: var(--step-2);
     flex-shrink: 0;
   }
 
@@ -175,8 +175,8 @@ const label = isExternal ? `Open ${item.title}, external site` : `Open ${item.ti
     align-items: center;
     justify-content: center;
     color: var(--ghost);
-    width: 14px;
-    height: 14px;
+    width: var(--step-4);
+    height: var(--step-4);
     flex-shrink: 0;
     transition:
       color var(--dur-tint) linear,
@@ -228,13 +228,13 @@ const label = isExternal ? `Open ${item.title}, external site` : `Open ${item.ti
   @media (max-width: 38rem) {
     .library-row-shell {
       min-block-size: 2.25rem;
-      padding: 0.6rem 0.65rem;
-      margin-inline: -0.65rem;
-      gap: var(--space-2);
+      padding: var(--step-2) var(--step-3);
+      margin-inline: calc(var(--step-3) * -1);
+      gap: var(--step-2);
     }
 
     .library-row-main {
-      gap: 0.35rem;
+      gap: var(--step-1);
     }
   }
 

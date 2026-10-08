@@ -141,30 +141,58 @@ const collectionPage = libraryCollectionPageJsonLd([
     const panels = new Map(inputs.map((input) => [input.value, document.getElementById(`library-panel-${input.value}`)]));
     let resizeFrame = 0;
     let focusFrame = 0;
+    let slot: { x: number; y: number; w: number; h: number } | null = null;
 
     const selectedView = () => inputs.find((input) => input.checked)?.value ?? "all";
     const setPanels = (view: string) => {
       panels.forEach((panel, id) => panel?.toggleAttribute("hidden", id !== view));
     };
-    const moveIndicator = (view: string, center = false) => {
-      if (!selector || !indicator) return;
+    const labelFor = (view: string) => {
       const input = inputs.find((item) => item.value === view);
-      const label = input ? selector.querySelector<HTMLLabelElement>(`label[for="${input.id}"]`) : null;
-      if (!label) return;
-      const offsetLeft = label.offsetLeft;
-      const offsetTop = label.offsetTop;
-      const width = label.offsetWidth;
-      const height = label.offsetHeight;
-      const selectorBox = center ? selector.getBoundingClientRect() : null;
-      const labelBox = center ? label.getBoundingClientRect() : null;
-      indicator.style.transform = `translate3d(${offsetLeft}px, ${offsetTop}px, 0)`;
-      indicator.style.width = `${width}px`;
-      indicator.style.height = `${height}px`;
+      return selector && input ? selector.querySelector<HTMLLabelElement>(`label[for="${input.id}"]`) : null;
+    };
+    /* Everything the indicator needs from layout, read before any DOM write
+       so the panel swap in select() can never be followed by a forced layout. */
+    const measureIndicator = (view: string, center: boolean) => {
+      const label = indicator ? labelFor(view) : null;
+      if (!selector || !indicator || !label) return null;
+      const next = { x: label.offsetLeft, y: label.offsetTop, w: label.offsetWidth, h: label.offsetHeight };
+      let clipped = false;
+      if (center) {
+        const selectorBox = selector.getBoundingClientRect();
+        const labelBox = label.getBoundingClientRect();
+        clipped = labelBox.left < selectorBox.left || labelBox.right > selectorBox.right;
+      }
+      // where the pill is actually drawn, so a slide interrupted mid-flight restarts from there
+      const drawn = slot ? new DOMMatrixReadOnly(getComputedStyle(indicator).transform) : null;
+      return { label, next, clipped, drawn };
+    };
+    const scrollLabelIntoView = (label: HTMLElement) => {
+      label.scrollIntoView({ block: "nearest", inline: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    };
+    /* The pill always sits at its tab's true size and position (inline
+       width/height/transform). Moving it is a FLIP: the CSS animation starts
+       from the previous box re-expressed against the new one and eases to the
+       resting transform, so the slide is transform-only and the pill is
+       pixel-identical at rest. */
+    const placeIndicator = (measured: NonNullable<ReturnType<typeof measureIndicator>>) => {
+      if (!indicator) return;
+      const { next, drawn } = measured;
+      if (!slot || slot.x !== next.x || slot.y !== next.y || slot.w !== next.w || slot.h !== next.h) {
+        if (slot && drawn) {
+          indicator.style.setProperty("--slide-x", `${drawn.e}px`);
+          indicator.style.setProperty("--slide-y", `${drawn.f}px`);
+          indicator.style.setProperty("--slide-sx", String((slot.w * drawn.a) / next.w));
+          indicator.style.setProperty("--slide-sy", String((slot.h * drawn.d) / next.h));
+          indicator.dataset.slide = indicator.dataset.slide === "a" ? "b" : "a";
+        }
+        indicator.style.transform = `translate3d(${next.x}px, ${next.y}px, 0)`;
+        indicator.style.width = `${next.w}px`;
+        indicator.style.height = `${next.h}px`;
+        slot = next;
+      }
       indicator.style.opacity = "1";
       root.dataset.indicatorReady = "true";
-      if (selectorBox && labelBox && (labelBox.left < selectorBox.left || labelBox.right > selectorBox.right)) {
-        label.scrollIntoView({ block: "nearest", inline: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
-      }
     };
     const replaceView = (view: string) => {
       const url = new URL(location.href);
@@ -175,9 +203,11 @@ const collectionPage = libraryCollectionPageJsonLd([
     const select = (view: string, updateUrl: boolean, center = false, focusPanel = false) => {
       const input = inputs.find((item) => item.value === view);
       if (!input) return;
+      const measured = measureIndicator(view, center);
+      if (measured?.clipped) scrollLabelIntoView(measured.label);
       input.checked = true;
       setPanels(view);
-      moveIndicator(view, center);
+      if (measured) placeIndicator(measured);
       if (updateUrl) replaceView(view);
       if (focusPanel) {
         cancelAnimationFrame(focusFrame);
@@ -209,7 +239,9 @@ const collectionPage = libraryCollectionPageJsonLd([
     const queueMeasure = () => {
       cancelAnimationFrame(resizeFrame);
       resizeFrame = requestAnimationFrame(() => {
-        if (!signal.aborted) moveIndicator(selectedView());
+        if (signal.aborted) return;
+        const measured = measureIndicator(selectedView(), false);
+        if (measured) placeIndicator(measured);
       });
     };
     const observer = selector ? new ResizeObserver(queueMeasure) : null;
@@ -224,7 +256,6 @@ const collectionPage = libraryCollectionPageJsonLd([
   }
 
   enhanceLibrary();
-  document.addEventListener("astro:page-load", enhanceLibrary);
 </script>
 
 <style>
@@ -246,7 +277,7 @@ const collectionPage = libraryCollectionPageJsonLd([
     position: relative;
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--step-2);
     max-inline-size: 100%;
     overflow-x: auto;
     scrollbar-width: none;
@@ -261,6 +292,7 @@ const collectionPage = libraryCollectionPageJsonLd([
     position: absolute;
     top: 0;
     left: 0;
+    transform-origin: 0 0;
     border-radius: var(--r-pill);
     background: var(--ink);
     box-shadow: var(--shadow-1);
@@ -275,14 +307,41 @@ const collectionPage = libraryCollectionPageJsonLd([
      site's two segmented selectors and they should feel like one control
      wearing two hats. The spring's 2.3% overshoot on width is what gives
      this indicator the same momentum the nav pill gets from its stretch
-     keyframe, without needing a second mechanism. */
-  [data-library][data-indicator-ready="true"] .library-selection {
-    transition:
-      transform var(--dur-shift) var(--ease-spring-snap),
-      width var(--dur-shift) var(--ease-spring-snap),
-      height var(--dur-shift) var(--ease-spring-snap),
-      opacity var(--t-color),
-      background-color var(--t-color);
+     keyframe, without needing a second mechanism.
+
+     The pill rests at its tab's real size; the script writes where it was
+     (--slide-*, relative to its new box) and the slide runs from there to
+     the resting transform. Two identical keyframes under alternating names
+     let a new slide restart without a forced reflow. */
+  .library-selection[data-slide] {
+    animation-duration: var(--dur-shift);
+    animation-timing-function: var(--ease-spring-snap);
+  }
+
+  .library-selection[data-slide="a"] {
+    animation-name: library-slide-a;
+  }
+
+  .library-selection[data-slide="b"] {
+    animation-name: library-slide-b;
+  }
+
+  @keyframes library-slide-a {
+    from {
+      transform: translate3d(var(--slide-x), var(--slide-y), 0) scale(var(--slide-sx), var(--slide-sy));
+    }
+  }
+
+  @keyframes library-slide-b {
+    from {
+      transform: translate3d(var(--slide-x), var(--slide-y), 0) scale(var(--slide-sx), var(--slide-sy));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .library-selection[data-slide] {
+      animation: none;
+    }
   }
 
   .library-tab {
@@ -291,9 +350,9 @@ const collectionPage = libraryCollectionPageJsonLd([
     display: inline-flex;
     flex: 0 0 auto;
     align-items: center;
-    gap: 0.45rem;
-    min-block-size: 2.35rem;
-    padding: 0.35rem 0.85rem;
+    gap: var(--step-2);
+    min-block-size: calc(var(--step) * 9);
+    padding: var(--step-1) var(--step-3);
     border-radius: var(--r-pill);
     color: var(--faint);
     font-size: var(--text-sm);
@@ -301,7 +360,7 @@ const collectionPage = libraryCollectionPageJsonLd([
     cursor: pointer;
     text-decoration: none;
     user-select: none;
-    transition: color var(--t-color), background-color var(--t-color), transform var(--dur-1) var(--ease-out);
+    transition: color var(--t-color), background-color var(--t-color), transform var(--dur-press) var(--ease-enter);
   }
 
   .library-tab-label {
@@ -314,12 +373,12 @@ const collectionPage = libraryCollectionPageJsonLd([
     align-items: center;
     justify-content: center;
     min-inline-size: 1.25rem;
-    height: 1.15rem;
-    padding-inline: 0.35rem;
+    height: calc(var(--step) * 5);
+    padding-inline: var(--step-1);
     border-radius: var(--r-pill);
     background: color-mix(in oklch, var(--ink) 6%, transparent);
-    color: var(--ghost);
-    font-size: 0.6875rem;
+    color: var(--muted);
+    font-size: var(--text-xs);
     font-weight: var(--font-medium);
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -328,7 +387,7 @@ const collectionPage = libraryCollectionPageJsonLd([
 
   .library-tab:active {
     transform: scale(0.97);
-    transition-duration: var(--dur-1);
+    transition-duration: var(--dur-press);
   }
 
   #library-view-all:checked ~ .library-selector label[for="library-view-all"],
@@ -432,6 +491,26 @@ const collectionPage = libraryCollectionPageJsonLd([
     .library-selection,
     [data-library][data-indicator-ready="true"] .library-selection {
       transition: opacity var(--t-color), background-color var(--t-color) !important;
+    }
+  }
+
+  /* The pill is Highlight (global.css), so the active tab and its count read
+     as HighlightText. Gated on the pill existing: without script the label
+     itself is the fill and keeps the forced-colors defaults. */
+  @media (forced-colors: active) {
+    [data-library][data-indicator-ready="true"] #library-view-all:checked ~ .library-selector label[for="library-view-all"],
+    [data-library][data-indicator-ready="true"] #library-view-books:checked ~ .library-selector label[for="library-view-books"],
+    [data-library][data-indicator-ready="true"] #library-view-watch:checked ~ .library-selector label[for="library-view-watch"],
+    [data-library][data-indicator-ready="true"] #library-view-notes:checked ~ .library-selector label[for="library-view-notes"],
+    [data-library][data-indicator-ready="true"] #library-view-articles:checked ~ .library-selector label[for="library-view-articles"],
+    [data-library][data-indicator-ready="true"] #library-view-all:checked ~ .library-selector label[for="library-view-all"] .library-tab-count,
+    [data-library][data-indicator-ready="true"] #library-view-books:checked ~ .library-selector label[for="library-view-books"] .library-tab-count,
+    [data-library][data-indicator-ready="true"] #library-view-watch:checked ~ .library-selector label[for="library-view-watch"] .library-tab-count,
+    [data-library][data-indicator-ready="true"] #library-view-notes:checked ~ .library-selector label[for="library-view-notes"] .library-tab-count,
+    [data-library][data-indicator-ready="true"] #library-view-articles:checked ~ .library-selector label[for="library-view-articles"] .library-tab-count {
+      forced-color-adjust: none;
+      background: transparent !important;
+      color: HighlightText !important;
     }
   }
 </style>

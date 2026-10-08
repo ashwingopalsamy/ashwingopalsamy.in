@@ -1,0 +1,53 @@
+---
+/**
+ * Incoming half of the photo route choreography (see src/scripts/photo-transitions.ts).
+ * pagereveal fires before the first frame, so the arriving page's names must be set by an
+ * inline head script; the expect link holds rendering until <main> is parsed so the named
+ * elements exist by then.
+ */
+---
+
+<link rel="expect" href="#main" blocking="render" />
+<script is:inline>
+  addEventListener("pagereveal", function (event) {
+    if (!event.viewTransition) return;
+    var base = "/more/photos/";
+    function norm(path) { return path.endsWith("/") ? path : path + "/"; }
+    function idOf(path) {
+      path = norm(path);
+      if (path.indexOf(base) !== 0 || path === base) return null;
+      var id = path.slice(base.length, -1);
+      return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id) ? id : null;
+    }
+    function media(id) {
+      return document.querySelector('[data-photo-media][data-photo-id="' + CSS.escape(id) + '"]');
+    }
+    function image(el) { return el ? el.querySelector("img.photo-image") : null; }
+    var named = [];
+    function name(el, value) {
+      if (!el) return;
+      el.style.viewTransitionName = value;
+      named.push(el);
+    }
+
+    var activation = window.navigation && window.navigation.activation;
+    var from = null;
+    try { from = activation && activation.from && activation.from.url ? norm(new URL(activation.from.url).pathname) : null; } catch (e) {}
+    var to = norm(location.pathname);
+    var fromId = from && idOf(from);
+    var toId = idOf(to);
+
+    if (fromId && toId && fromId !== toId) {
+      name(media(toId), "photo-swap");
+      name(document.querySelector("[data-photo-caption]"), "photo-caption");
+    } else if (fromId && to === base) {
+      name(image(media(fromId)), "photo-open");
+    } else if (toId && fromId !== toId) {
+      name(image(media(toId)), "photo-open");
+    }
+
+    event.viewTransition.finished.finally(function () {
+      named.forEach(function (el) { el.style.viewTransitionName = ""; });
+    });
+  });
+</script>

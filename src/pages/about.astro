@@ -66,7 +66,7 @@ const ogImage = ogPath("about");
   }
 
   .about-h {
-    font-size: 0.95rem;
+    font-size: var(--text-ui);
     font-weight: 600;
     color: var(--ink);
     margin: 2rem 0 0.75rem;
@@ -74,7 +74,7 @@ const ogImage = ogPath("about");
 
   .about-p {
     max-width: 100%;
-    margin-bottom: 1.1rem;
+    margin-bottom: var(--step-4);
     color: var(--ghost);
     line-height: var(--leading-relaxed);
     transition: color var(--t-color);
@@ -98,7 +98,7 @@ const ogImage = ogPath("about");
     transition:
       color var(--t-color),
       font-weight var(--t-color),
-      background-size 320ms var(--ease-out);
+      background-size var(--dur-enter) var(--ease-enter);
   }
 
   .about-p a:hover,
@@ -128,8 +128,8 @@ const ogImage = ogPath("about");
     .about-p {
       text-align: justify;
       text-justify: inter-word;
-      hyphens: none;
-      -webkit-hyphens: none;
+      hyphens: auto;
+      -webkit-hyphens: auto;
       text-wrap: pretty;
     }
   }

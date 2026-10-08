@@ -78,15 +78,12 @@ const endpointGroups: EndpointGroup[] = [
   {
     id: "discovery",
     label: "Standards & Discovery",
-    description: "Machine-readable catalogs, OAuth discovery, security contacts, and DNS-AID publication.",
+    description: "Machine-readable catalogs, security contacts, and DNS-AID publication.",
     endpoints: [
       { name: ".well-known/api-catalog", href: "/.well-known/api-catalog", note: "Linkset of these surfaces (RFC 9727)." },
       { name: ".well-known/ai-catalog.json", href: "/.well-known/ai-catalog.json", note: "Agentic Resource Discovery (ARD) capability manifest." },
-      { name: ".well-known/oauth-protected-resource", href: "/.well-known/oauth-protected-resource", note: "OAuth Protected Resource Metadata, discovery-only.", status: "discovery-only" },
-      { name: ".well-known/oauth-authorization-server", href: "/.well-known/oauth-authorization-server", note: "OAuth Authorization Server Metadata, discovery-only.", status: "discovery-only" },
-      { name: ".well-known/openid-configuration", href: "/.well-known/openid-configuration", note: "OpenID Connect metadata, discovery-only.", status: "discovery-only" },
-      { name: "auth.md", href: "/auth.md", note: "Auth.md registration discovery, explicitly unavailable.", status: "unavailable" },
-      { name: "openapi.json", href: "/openapi.json", note: "MPP compatibility metadata with zero-value disabled payment info.", status: "discovery-only" },
+      { name: "auth.md", href: "/auth.md", note: "Authentication notes: public interfaces require none." },
+      { name: "openapi.json", href: "/openapi.json", note: "OpenAPI 3.1 specification for the REST v1 endpoints." },
       { name: ".well-known/ucp", href: "/.well-known/ucp", note: "UCP compatibility metadata, discovery-only.", status: "discovery-only" },
       { name: ".well-known/acp.json", href: "/.well-known/acp.json", note: "ACP compatibility convention, discovery-only.", status: "discovery-only" },
       { name: ".well-known/dns-aid", href: "/.well-known/dns-aid", note: "DNS-AID record and DNSSEC publication notes." },
@@ -251,7 +248,7 @@ const truth: Array<[string, string]> = [
     padding-bottom: 2px;
     transition:
       font-weight var(--t-color),
-      background-size 320ms var(--ease-out);
+      background-size var(--dur-enter) var(--ease-enter);
   }
 
   .ai-lede a:hover,
@@ -284,7 +281,7 @@ const truth: Array<[string, string]> = [
     font-weight: var(--font-semibold);
     letter-spacing: -0.015em;
     color: var(--ink);
-    margin: 2.75rem 0 0.85rem;
+    margin: calc(var(--step) * 11) 0 var(--step-3);
   }
 
   .ai-list {
@@ -293,12 +290,12 @@ const truth: Array<[string, string]> = [
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
+    gap: var(--step-3);
     color: var(--muted);
     max-width: 100%;
   }
   .ai-list li {
-    padding-left: 1.1rem;
+    padding-left: var(--step-4);
     position: relative;
     line-height: var(--leading-relaxed);
   }
@@ -307,8 +304,8 @@ const truth: Array<[string, string]> = [
     position: absolute;
     left: 0;
     top: 0.65em;
-    width: 5px;
-    height: 5px;
+    width: var(--dot-5);
+    height: var(--dot-5);
     background: var(--rule-strong);
     transform: rotate(45deg);
   }
@@ -326,8 +323,8 @@ const truth: Array<[string, string]> = [
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-4);
-    margin-bottom: var(--space-2);
+    gap: var(--step-4);
+    margin-bottom: var(--step-2);
   }
 
   .endpoint-catalog-heading .ai-h {
@@ -346,7 +343,7 @@ const truth: Array<[string, string]> = [
 
   .endpoint-catalog-intro {
     max-width: 100%;
-    margin: 0 0 var(--space-6);
+    margin: 0 0 var(--step-6);
   }
 
   .endpoint-group + .endpoint-group {
@@ -361,14 +358,14 @@ const truth: Array<[string, string]> = [
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: var(--space-4);
-    margin-bottom: var(--space-1);
+    gap: var(--step-4);
+    margin-bottom: var(--step-1);
   }
 
   .endpoint-group-heading h3 {
     margin: 0;
     color: var(--ink);
-    font-size: 1rem;
+    font-size: var(--type-section-size);
     font-weight: var(--font-semibold);
     letter-spacing: -0.015em;
     line-height: var(--leading-tight);
@@ -376,7 +373,7 @@ const truth: Array<[string, string]> = [
 
   .endpoint-group-description {
     max-width: 100%;
-    margin: 0 0 0.85rem;
+    margin: 0 0 var(--step-3);
     color: var(--ghost);
     font-size: var(--text-sm);
     line-height: var(--leading-snug);
@@ -398,23 +395,23 @@ const truth: Array<[string, string]> = [
   .endpoint-catalog-link {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: var(--step-1);
     min-width: 0;
-    padding: 0.65rem 0.85rem;
-    margin-inline: -0.85rem;
+    padding: var(--step-3) var(--step-3);
+    margin-inline: calc(var(--step-3) * -1);
     border-radius: var(--r-3);
     color: inherit;
     text-decoration: none;
     transition:
       background-color var(--t-color),
-      transform var(--dur-1) var(--ease-out);
+      transform var(--dur-press) var(--ease-enter);
   }
 
   .endpoint-catalog-main {
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;
-    gap: var(--space-1) var(--space-2);
+    gap: var(--step-1) var(--step-2);
     min-width: 0;
   }
 
@@ -459,9 +456,9 @@ const truth: Array<[string, string]> = [
     display: grid;
     grid-template-columns: 11.5rem minmax(0, 1fr);
     align-items: baseline;
-    gap: 0.4rem 1.25rem;
-    padding: 0.65rem 0.85rem;
-    margin-inline: -0.85rem;
+    gap: var(--step-2) calc(var(--step) * 5);
+    padding: var(--step-3) var(--step-3);
+    margin-inline: calc(var(--step-3) * -1);
     border-radius: var(--r-3);
   }
 
@@ -499,16 +496,16 @@ const truth: Array<[string, string]> = [
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: var(--space-3);
+    gap: var(--step-3);
     min-inline-size: 0;
-    padding: 0.65rem 0.85rem;
-    margin-inline: -0.85rem;
+    padding: var(--step-3) var(--step-3);
+    margin-inline: calc(var(--step-3) * -1);
     border-radius: var(--r-3);
     text-decoration: none;
     color: var(--ink);
     transition:
       background-color var(--t-color),
-      transform var(--dur-1) var(--ease-out);
+      transform var(--dur-press) var(--ease-enter);
   }
 
   .endpoint-link:focus-visible {
@@ -531,7 +528,7 @@ const truth: Array<[string, string]> = [
     background: var(--canvas);
     border: 1px solid var(--chrome-surface-border);
     box-shadow: var(--chrome-surface-shadow);
-    padding: 0.12rem 0.45rem;
+    padding: 0.12rem var(--step-2);
     border-radius: var(--r-pill);
     line-height: 1.2;
   }
@@ -549,8 +546,8 @@ const truth: Array<[string, string]> = [
     .prose-muted {
       text-align: justify;
       text-justify: inter-word;
-      hyphens: none;
-      -webkit-hyphens: none;
+      hyphens: auto;
+      -webkit-hyphens: auto;
       text-wrap: pretty;
     }
 
@@ -558,11 +555,11 @@ const truth: Array<[string, string]> = [
     .endpoint-group-heading {
       align-items: flex-start;
       flex-direction: column;
-      gap: var(--space-1);
+      gap: var(--step-1);
     }
 
     .endpoint-catalog-link {
-      padding-block: var(--space-3);
+      padding-block: var(--step-3);
     }
 
     .ai-row {

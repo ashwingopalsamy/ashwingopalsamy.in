@@ -33,7 +33,7 @@ const shortSha = buildMeta.commit;
     aria-label="Pollachi local time. Activate to toggle timezone."
   >
     <span class="dot" aria-hidden="true"></span>
-    <span id="clock-time" class="clock-time" aria-hidden="true"><span class="digit-slot">0</span><span class="digit-slot">0</span><span class="digit-sep">:</span><span class="digit-slot">0</span><span class="digit-slot">0</span><span class="digit-sep">:</span><span class="digit-slot">0</span><span class="digit-slot">0</span></span>
+    <span id="clock-time" class="clock-time" aria-hidden="true"><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-sep">:</span><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-sep">:</span><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-slot"><span class="digit-face">0</span></span></span>
     <span id="clock-tooltip" class="clock-tooltip" role="tooltip" aria-hidden="true">Pollachi · Around right now</span>
   </button>
 
@@ -62,10 +62,10 @@ const shortSha = buildMeta.commit;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     grid-template-rows: auto;
     align-items: center;
-    column-gap: var(--space-4);
-    row-gap: var(--space-3);
+    column-gap: var(--step-4);
+    row-gap: var(--step-3);
     margin-top: var(--space-footer, 2.75rem);
-    padding: var(--space-4) 0 calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
+    padding: var(--step-4) 0 calc(var(--step-6) + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid var(--rule);
     font-size: var(--text-sm);
     color: var(--muted);
@@ -88,9 +88,9 @@ const shortSha = buildMeta.commit;
   .footer-link {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: var(--step-1);
     min-block-size: 2.75rem;
-    padding: 0.2rem 0.6rem;
+    padding: var(--step-1) var(--step-2);
     border-radius: var(--r-pill);
     color: var(--muted);
     font-weight: var(--font-normal);
@@ -118,8 +118,8 @@ const shortSha = buildMeta.commit;
   }
 
   .footer-link-sep {
-    inline-size: 3px;
-    block-size: 3px;
+    inline-size: var(--dot-3);
+    block-size: var(--dot-3);
     border-radius: 50%;
     background: var(--faint);
     flex-shrink: 0;
@@ -161,7 +161,7 @@ const shortSha = buildMeta.commit;
     inline-size: 16px;
     block-size: 16px;
     flex-shrink: 0;
-    transition: transform var(--dur-2) var(--ease-out);
+    transition: transform var(--dur-tint) var(--ease-enter);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -182,7 +182,7 @@ const shortSha = buildMeta.commit;
     transform-origin: 100% 100%;
     inline-size: max-content;
     max-inline-size: min(18rem, calc(100vw - var(--mobile-gutter-start) - var(--mobile-gutter-end)));
-    padding: 0.35rem 0.75rem;
+    padding: var(--step-1) var(--step-3);
     border-radius: var(--r-pill);
     background: var(--ink);
     color: var(--canvas);
@@ -194,16 +194,17 @@ const shortSha = buildMeta.commit;
     box-shadow: var(--shadow-1);
     opacity: 0;
     pointer-events: none;
+    --tip-delay: 120ms;
     transition:
-      opacity 50ms ease-out,
-      transform 50ms ease-out;
+      opacity var(--dur-exit) var(--ease-enter),
+      transform var(--dur-exit) var(--ease-enter);
   }
 
   .repo-tooltip::after {
     content: "";
     position: absolute;
     top: 100%;
-    right: 0.9rem;
+    right: var(--step-4);
     border: 5px solid transparent;
     border-top-color: var(--ink);
   }
@@ -211,11 +212,17 @@ const shortSha = buildMeta.commit;
   .repo-btn:focus-visible .repo-tooltip,
   .repo-btn:hover .repo-tooltip {
     opacity: 1;
-    transform: translateY(0) scale(1);
     transition:
-      opacity 150ms ease-out,
-      transform 150ms ease-out;
-    transition-delay: 120ms;
+      opacity var(--dur-nudge) var(--ease-enter),
+      transform var(--dur-nudge) var(--ease-enter);
+    transition-delay: var(--tip-delay);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .repo-btn:focus-visible .repo-tooltip,
+    .repo-btn:hover .repo-tooltip {
+      transform: translateY(0) scale(1);
+    }
   }
   .clock {
     position: relative;
@@ -224,10 +231,10 @@ const shortSha = buildMeta.commit;
     justify-self: start;
     grid-column: 1;
     grid-row: 1;
-    gap: 0.45rem;
+    gap: var(--step-2);
     min-block-size: 2.75rem;
-    padding: 0.2rem 0.6rem;
-    margin-inline: -0.2rem;
+    padding: var(--step-1) var(--step-2);
+    margin-inline: calc(var(--step-1) * -1);
     border: 0;
     border-radius: var(--r-pill);
     background: transparent;
@@ -278,27 +285,25 @@ const shortSha = buildMeta.commit;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    position: relative;
     inline-size: 0.6em;
     text-align: center;
-    overflow: hidden;
-    will-change: transform, opacity, filter;
   }
 
-  .digit-slot.ticking {
-    animation: digit-snap-blur 240ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  @keyframes digit-snap-blur {
-    0% {
-      transform: translateY(50%);
-      opacity: 0.15;
-      filter: blur(2px);
-    }
-    100% {
-      transform: translateY(0);
-      opacity: 1;
-      filter: blur(0px);
-    }
+  /* A digit arrives from 50% below, blurred, and sharpens. The blur radius
+     is never animated: the script cross-fades the sharp face against this
+     copy, whose blur is fixed at the gesture's peak (2px) and so rasterises
+     once. Only the copy's opacity and the slot's transform move, and the
+     copy exists only for the length of one tick. */
+  .digit-ghost {
+    position: absolute;
+    inset: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    filter: blur(2px);
+    pointer-events: none;
   }
 
   .digit-sep {
@@ -312,14 +317,6 @@ const shortSha = buildMeta.commit;
     user-select: none;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .digit-slot.ticking {
-      animation: none !important;
-      transform: none !important;
-      filter: none !important;
-    }
-  }
-
   .footer-link :global(.footer-link-icon) {
     display: none;
   }
@@ -328,25 +325,43 @@ const shortSha = buildMeta.commit;
     --presence: var(--acc-green);
     position: relative;
     top: 0;
-    width: 7px;
-    height: 7px;
-    flex: 0 0 7px;
+    width: var(--dot-7);
+    height: var(--dot-7);
+    flex: 0 0 var(--dot-7);
     border-radius: 50%;
     background: var(--presence);
-    box-shadow: 0 0 0 0 color-mix(in oklch, var(--presence) 50%, transparent);
     transition:
       background-color var(--t-color),
-      box-shadow var(--t-color),
       transform var(--t-move);
-    animation: dot-pulse 3.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* The pulse ring is a same-colour disc concentric with the dot, so it is
+     invisible over the dot and reads as a ring outside it. Scaling 7px to
+     15px gives the 0 to 4px band the old box-shadow spread drew, on
+     transform + opacity instead of paint. */
+  .dot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: color-mix(in oklch, var(--presence) 50%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    animation: dot-pulse var(--dur-pulse) var(--ease-pulse) infinite;
+  }
+
+  .clock[data-idle] .dot::after {
+    animation-play-state: paused;
   }
 
   @keyframes dot-pulse {
     0%, 100% {
-      box-shadow: 0 0 0 0 color-mix(in oklch, var(--presence) 50%, transparent);
+      transform: scale(1);
+      opacity: 1;
     }
     50% {
-      box-shadow: 0 0 0 4px color-mix(in oklch, var(--presence) 0%, transparent);
+      transform: scale(2.142857);
+      opacity: 0;
     }
   }
 
@@ -360,7 +375,7 @@ const shortSha = buildMeta.commit;
     left: 0;
     inline-size: max-content;
     max-inline-size: min(18rem, calc(100vw - var(--mobile-gutter-start) - var(--mobile-gutter-end)));
-    padding: 0.35rem 0.75rem;
+    padding: var(--step-1) var(--step-3);
     border-radius: var(--r-pill);
     background: var(--ink);
     color: var(--canvas);
@@ -375,9 +390,10 @@ const shortSha = buildMeta.commit;
     z-index: calc(var(--z-overlay) + 10);
     transform: translateY(4px) scale(0.98);
     transform-origin: 0% 100%;
+    --tip-delay: 80ms;
     transition:
-      opacity 140ms ease-out,
-      transform 140ms ease-out;
+      opacity var(--dur-exit) var(--ease-enter),
+      transform var(--dur-exit) var(--ease-enter);
   }
 
   .clock-tooltip::after {
@@ -392,11 +408,17 @@ const shortSha = buildMeta.commit;
   .clock:focus-visible .clock-tooltip,
   .clock:hover .clock-tooltip {
     opacity: 1;
-    transform: translateY(0) scale(1);
     transition:
-      opacity 150ms ease-out,
-      transform 150ms ease-out;
-    transition-delay: 80ms;
+      opacity var(--dur-nudge) var(--ease-enter),
+      transform var(--dur-nudge) var(--ease-enter);
+    transition-delay: var(--tip-delay);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .clock:focus-visible .clock-tooltip,
+    .clock:hover .clock-tooltip {
+      transform: translateY(0) scale(1);
+    }
   }
 
   .footer-controls {
@@ -422,7 +444,7 @@ const shortSha = buildMeta.commit;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .dot {
+    .dot::after {
       animation: none;
     }
     .clock-tooltip {
@@ -436,7 +458,7 @@ const shortSha = buildMeta.commit;
       display: grid;
       grid-template-columns: 1fr auto;
       grid-template-rows: auto auto;
-      row-gap: 0.65rem;
+      row-gap: var(--step-3);
       column-gap: 0.5rem;
       align-items: center;
       margin-top: clamp(1.75rem, 4vw, 2.5rem);
@@ -449,9 +471,9 @@ const shortSha = buildMeta.commit;
       grid-row: 1;
       justify-self: start;
       min-width: 0;
-      gap: 0.45rem;
-      padding: 0.2rem 0.4rem;
-      margin-inline: -0.4rem;
+      gap: var(--step-2);
+      padding: var(--step-1) var(--step-2);
+      margin-inline: calc(var(--step-2) * -1);
       background: transparent;
       border: 0;
       border-radius: var(--r-pill);
@@ -484,7 +506,7 @@ const shortSha = buildMeta.commit;
     .footer-link {
       min-block-size: 2rem;
       font-size: var(--text-xs);
-      padding: 0.2rem 0.5rem;
+      padding: var(--step-1) var(--step-2);
     }
 
     .clock-time {
@@ -510,7 +532,7 @@ const shortSha = buildMeta.commit;
     }
 
     .repo-tooltip::after {
-      right: 0.9rem;
+      right: var(--step-4);
       left: auto;
     }
   }
@@ -539,7 +561,6 @@ const shortSha = buildMeta.commit;
 </style>
 
 <script>
-  import type { TransitionBeforeSwapEvent } from "astro:transitions/client";
   import { onPageCleanup, pageSignal } from "../scripts/lifecycle";
   import { playAccent } from "../scripts/sound";
   import { tickPresence } from "../scripts/presence";
@@ -557,11 +578,30 @@ const shortSha = buildMeta.commit;
     tooltip: HTMLElement | null;
     dot: HTMLElement | null;
     slots: HTMLElement[];
-    interval?: ReturnType<typeof setInterval>;
+    faces: HTMLElement[];
+    snaps: Array<{ ghost: HTMLElement; animations: Animation[] } | undefined>;
+    timer?: ReturnType<typeof setTimeout>;
+    inView: boolean;
     lastSecond: number;
   }
 
   let clock: ClockContext | null = null;
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let snapTiming: KeyframeAnimationOptions | undefined;
+
+  /* The tick gesture takes its duration and curve from the motion tokens.
+     Read once, on first use: WAAPI cannot resolve var() in timing. */
+  function getSnapTiming(): KeyframeAnimationOptions {
+    if (!snapTiming) {
+      const root = getComputedStyle(document.documentElement);
+      snapTiming = {
+        duration: parseFloat(root.getPropertyValue("--dur-enter")) || 240,
+        easing: root.getPropertyValue("--ease-enter").trim() || "cubic-bezier(0.16, 1, 0.3, 1)",
+      };
+    }
+    return snapTiming;
+  }
 
   const fmtSec = new Intl.DateTimeFormat("en-GB", {
     hour: "2-digit",
@@ -628,32 +668,59 @@ const shortSha = buildMeta.commit;
     return [h[0]!, h[1]!, m[0]!, m[1]!, s[0]!, s[1]!];
   }
 
-  function prepareClock(event: Event) {
-    const incoming = (event as TransitionBeforeSwapEvent).newDocument;
-    const digits = getAshwinTimeDigits(new Date());
-    incoming.querySelectorAll<HTMLElement>(".site-footer .digit-slot").forEach((slot, index) => {
-      if (digits[index] !== undefined) slot.textContent = digits[index]!;
-    });
+  function clearSnap(context: ClockContext, index: number) {
+    const snap = context.snaps[index];
+    if (!snap) return;
+    context.snaps[index] = undefined;
+    snap.animations.forEach((animation) => animation.cancel());
+    snap.ghost.remove();
   }
 
-  function updateDigits(context: ClockContext, digits: string[]) {
-    const changed: HTMLElement[] = [];
+  /* The digit arrives from 50% below at 15% opacity, blurred 2px, and settles
+     sharp. The blur radius stays constant: a blurred copy fades out while the
+     sharp face fades in, and the slot carries both. Starting an animation
+     needs no layout flush, unlike restarting a CSS class. */
+  function snapDigit(context: ClockContext, index: number, digit: string) {
+    const slot = context.slots[index];
+    const face = context.faces[index];
+    if (!slot || !face) return;
+    const ghost = face.cloneNode(false) as HTMLElement;
+    ghost.className = "digit-ghost";
+    ghost.setAttribute("aria-hidden", "true");
+    ghost.textContent = digit;
+    slot.appendChild(ghost);
+
+    const timing = getSnapTiming();
+    const ghostFade = ghost.animate(
+      [{ opacity: 0.15 }, { opacity: 0.35, offset: 0.5 }, { opacity: 0 }],
+      timing,
+    );
+    context.snaps[index] = {
+      ghost,
+      animations: [
+        slot.animate([{ transform: "translateY(50%)" }, { transform: "translateY(0)" }], timing),
+        face.animate([{ opacity: 0 }, { opacity: 0.35, offset: 0.5 }, { opacity: 1 }], timing),
+        ghostFade,
+      ],
+    };
+    ghostFade.onfinish = () => {
+      if (context.snaps[index]?.ghost === ghost) context.snaps[index] = undefined;
+      ghost.remove();
+    };
+  }
+
+  function updateDigits(context: ClockContext, digits: string[], animate: boolean) {
+    const motion = animate && !reduceMotion.matches;
     digits.forEach((d, i) => {
-      const slot = context.slots[i];
-      if (!slot) return;
-      if (slot.textContent !== d) {
-        slot.textContent = d;
-        slot.classList.remove("ticking");
-        changed.push(slot);
-      }
+      const face = context.faces[i];
+      if (!face || face.textContent === d) return;
+      clearSnap(context, i);
+      face.textContent = d;
+      if (motion) snapDigit(context, i, d);
     });
-    if (!changed.length) return;
-    // Restart all changed digits together with one intentional layout flush.
-    void context.button.offsetWidth;
-    changed.forEach((slot) => slot.classList.add("ticking"));
   }
 
-  function render(context: ClockContext, force = false) {
+  function render(context: ClockContext, force = false, animate = true) {
     if (context.signal.aborted || !context.footer.isConnected) return;
     const now = new Date();
     const second = Math.floor(now.getTime() / 1000);
@@ -673,22 +740,42 @@ const shortSha = buildMeta.commit;
     }
     const label = `${presence.label} · ${digits[0]}${digits[1]}:${digits[2]}${digits[3]}:${digits[4]}${digits[5]}`;
     if (button.getAttribute("aria-label") !== label) button.setAttribute("aria-label", label);
-    if (context.slots.length === 6) updateDigits(context, digits);
+    if (context.faces.length === 6) updateDigits(context, digits, animate);
   }
 
   function stopClock(context: ClockContext) {
-    if (context.interval !== undefined) {
-      clearInterval(context.interval);
-      context.interval = undefined;
+    if (context.timer !== undefined) {
+      clearTimeout(context.timer);
+      context.timer = undefined;
     }
   }
 
-  function startClock(context: ClockContext) {
-    stopClock(context);
-    if (context.signal.aborted || !context.footer.isConnected) return;
-    render(context, true);
-    if (document.visibilityState === "hidden") return;
-    context.interval = setInterval(() => render(context), 250);
+  /* One timer per second, aimed at the next second boundary, so the digits
+     change when the second does instead of up to 250ms late. */
+  function armClock(context: ClockContext) {
+    context.timer = setTimeout(() => {
+      context.timer = undefined;
+      if (context.signal.aborted || !context.footer.isConnected) return;
+      render(context);
+      armClock(context);
+    }, 1000 - (Date.now() % 1000));
+  }
+
+  /* Ticks only while the clock is on screen and the tab is visible. Coming
+     back, it shows the current time at once without animating the gap. */
+  function syncClock(context: ClockContext) {
+    const live = context.inView
+      && document.visibilityState === "visible"
+      && !context.signal.aborted
+      && context.footer.isConnected;
+    context.button.toggleAttribute("data-idle", !live);
+    if (!live) {
+      stopClock(context);
+      return;
+    }
+    if (context.timer !== undefined) return;
+    render(context, true, false);
+    armClock(context);
   }
 
   function init() {
@@ -705,6 +792,9 @@ const shortSha = buildMeta.commit;
       tooltip: footer.querySelector<HTMLElement>("#clock-tooltip"),
       dot: footer.querySelector<HTMLElement>(".dot"),
       slots: Array.from(footer.querySelectorAll<HTMLElement>(".digit-slot")),
+      faces: Array.from(footer.querySelectorAll<HTMLElement>(".digit-face")),
+      snaps: [],
+      inView: false,
       lastSecond: -1,
     };
     clock = context;
@@ -714,21 +804,25 @@ const shortSha = buildMeta.commit;
       playAccent("tick");
       render(context, true);
     }, { signal });
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") stopClock(context);
-      else startClock(context);
-    }, { signal });
+    // A stopped clock can hold a stale label; refresh it before focus is read.
+    btn.addEventListener("focus", () => render(context, true, false), { signal });
+    document.addEventListener("visibilitychange", () => syncClock(context), { signal });
+    // The margin starts the clock just before it scrolls into view.
+    const observer = new IntersectionObserver((entries) => {
+      context.inView = entries[entries.length - 1]!.isIntersecting;
+      syncClock(context);
+    }, { rootMargin: "160px 0px" });
+    observer.observe(btn);
     onPageCleanup(() => {
+      observer.disconnect();
       stopClock(context);
       if (clock === context) clock = null;
     }, signal);
-    startClock(context);
+    // First paint shows the right time even when the clock starts off screen.
+    render(context, true, false);
   }
 
   init();
-  document.addEventListener("astro:before-swap", prepareClock);
-  document.addEventListener("astro:after-swap", init);
-  document.addEventListener("astro:page-load", init);
 </script>
 
 <script>
@@ -771,6 +865,4 @@ const shortSha = buildMeta.commit;
   }
 
   initRepoBtn();
-  document.addEventListener("astro:after-swap", initRepoBtn);
-  document.addEventListener("astro:page-load", initRepoBtn);
 </script>

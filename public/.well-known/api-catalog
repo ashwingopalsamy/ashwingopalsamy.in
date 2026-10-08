@@ -117,7 +117,7 @@
                 {
                     "href": "https://ashwingopalsamy.in/openapi.json",
                     "type": "application/vnd.oai.openapi+json",
-                    "title": "MPP discovery metadata, discovery-only"
+                    "title": "OpenAPI 3.1 specification"
                 },
                 {
                     "href": "https://ashwingopalsamy.in/.well-known/ucp",
@@ -130,29 +130,9 @@
                     "title": "ACP compatibility metadata, discovery-only"
                 },
                 {
-                    "href": "https://ashwingopalsamy.in/.well-known/oauth-authorization-server",
-                    "type": "application/json",
-                    "title": "OAuth Authorization Server Metadata, discovery-only"
-                },
-                {
-                    "href": "https://ashwingopalsamy.in/.well-known/oauth-protected-resource",
-                    "type": "application/json",
-                    "title": "OAuth Protected Resource Metadata, discovery-only"
-                },
-                {
-                    "href": "https://ashwingopalsamy.in/.well-known/openid-configuration",
-                    "type": "application/json",
-                    "title": "OpenID Connect Metadata, discovery-only"
-                },
-                {
-                    "href": "https://ashwingopalsamy.in/.well-known/jwks.json",
-                    "type": "application/json",
-                    "title": "Empty JSON Web Key Set for discovery compatibility"
-                },
-                {
                     "href": "https://ashwingopalsamy.in/auth.md",
                     "type": "text/markdown",
-                    "title": "Auth.md registration discovery, unavailable"
+                    "title": "Authentication notes: public interfaces require none"
                 },
                 {
                     "href": "https://ashwingopalsamy.in/developers",

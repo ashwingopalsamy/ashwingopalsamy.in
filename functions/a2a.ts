@@ -1,6 +1,5 @@
 import { readBoundedJson } from "./_ingress";
 import { applySecurityHeaders } from "../src/lib/security-headers";
-import { applyRateLimitHeaders } from "./_unavailable";
 import { getProfile, searchSite } from "./_site-data";
 import type { RuntimeEnv } from "./_site-data";
 
@@ -21,8 +20,7 @@ const MAX_PART_LENGTH = 4096;
 const MAX_QUERY_LENGTH = 1024;
 
 function json(value: unknown, status = 200): Response {
-  let headers = applySecurityHeaders(new Headers(), "json-api-public");
-  headers = applyRateLimitHeaders(headers);
+  const headers = applySecurityHeaders(new Headers(), "json-api-public");
   headers.set("Content-Type", "application/json; charset=utf-8");
   return new Response(`${JSON.stringify(value)}\n`, {
     status,

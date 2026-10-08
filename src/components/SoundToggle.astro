@@ -58,7 +58,7 @@ import Icon from "./Icon.astro";
 
   .sound-toggle:active {
     transform: scale(0.94);
-    transition: transform 90ms var(--ease);
+    transition: transform var(--dur-press) var(--ease-enter);
   }
 
   .st-on,
@@ -67,8 +67,8 @@ import Icon from "./Icon.astro";
     display: grid;
     place-items: center;
     transition:
-      opacity 200ms var(--ease),
-      transform var(--dur-2) var(--ease-out);
+      opacity var(--dur-shift) var(--ease-enter),
+      transform var(--dur-tint) var(--ease-enter);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -90,6 +90,14 @@ import Icon from "./Icon.astro";
   }
   .sound-toggle[aria-pressed="false"] .st-off {
     opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sound-toggle:active,
+    .sound-toggle:hover .st-on,
+    .sound-toggle:hover .st-off {
+      transform: none;
+    }
   }
 </style>
 
@@ -120,5 +128,4 @@ import Icon from "./Icon.astro";
   onSoundChange(reflect);
 
   init();
-  document.addEventListener("astro:page-load", init);
 </script>

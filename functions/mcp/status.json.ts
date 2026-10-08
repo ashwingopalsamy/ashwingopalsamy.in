@@ -1,6 +1,5 @@
 import { appendMcpDiscoveryLinks, applyMcpCors, createMcpStatus } from "../_mcp-catalog";
 import { applySecurityHeaders } from "../../src/lib/security-headers";
-import { applyRateLimitHeaders } from "../_unavailable";
 
 interface PagesContext {
   request: Request;
@@ -8,7 +7,6 @@ interface PagesContext {
 
 function jsonResponse(body: unknown, status = 200, requestMethod = "GET"): Response {
   let headers = applySecurityHeaders(new Headers(), "json-api-public");
-  headers = applyRateLimitHeaders(headers);
   headers = applyMcpCors(appendMcpDiscoveryLinks(headers));
   headers.set("Content-Type", "application/json; charset=utf-8");
   headers.set("Cache-Control", "no-store");
@@ -17,7 +15,6 @@ function jsonResponse(body: unknown, status = 200, requestMethod = "GET"): Respo
 
 function methodNotAllowed(): Response {
   let headers = applySecurityHeaders(new Headers(), "json-api-public");
-  headers = applyRateLimitHeaders(headers);
   headers = applyMcpCors(appendMcpDiscoveryLinks(headers));
   headers.set("Allow", "GET, HEAD, OPTIONS");
   return new Response(null, { status: 405, headers });

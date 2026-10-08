@@ -41,7 +41,7 @@ const machineReadable = [
 
     <nav class="nf-group" aria-labelledby="nf-pages-label">
       <h2 class="nf-group-label" id="nf-pages-label">Pages</h2>
-      <ul class="nf-rows" role="list">
+      <ul class="nf-rows surface-stack" role="list">
         {pages.map((item) => (
           <li>
             <a class="nf-row" href={item.href}>
@@ -82,7 +82,7 @@ const machineReadable = [
   }
 
   .nf-404 {
-    font-family: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
+    font-family: "Newsreader Variable", "Newsreader Fallback", "Iowan Old Style", Georgia, serif;
     font-style: italic;
     font-size: var(--text-display);
     font-weight: 400;
@@ -151,33 +151,6 @@ const machineReadable = [
   /*  page rows — the site's row pattern, not a second one            */
   /* ---------------------------------------------------------------- */
 
-  .nf-rows {
-    display: flex;
-    flex-direction: column;
-    gap: var(--surface-row-gap);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .nf-rows:hover li {
-      opacity: var(--dim-opacity);
-      filter: blur(var(--dim-blur));
-      transition: opacity var(--dur-tint) var(--ease-enter), filter var(--dur-tint) var(--ease-enter);
-    }
-
-    .nf-rows:hover li:hover,
-    .nf-rows:hover li:focus-within {
-      opacity: 1;
-      filter: none;
-    }
-  }
-
-  .nf-rows li {
-    transition: opacity var(--dur-tint) var(--ease-enter), filter var(--dur-tint) var(--ease-enter);
-  }
-
   .nf-row {
     position: relative;
     display: grid;
@@ -211,14 +184,14 @@ const machineReadable = [
 
   .nf-row-label {
     font-weight: 560;
-    font-size: 1.05rem;
+    font-size: var(--text-md);
     letter-spacing: -0.015em;
     color: var(--ink);
   }
 
   .nf-row-detail {
     color: var(--ghost);
-    font-size: 0.9375rem;
+    font-size: var(--text-ui);
     line-height: var(--leading-normal);
     transition: color var(--t-color);
   }

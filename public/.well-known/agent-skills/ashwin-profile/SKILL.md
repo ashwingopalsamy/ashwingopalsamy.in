@@ -28,6 +28,6 @@ Pollachi, Tamil Nadu, and previously built core banking at Solaris SE.
 - A2A: `https://ashwingopalsamy.in/a2a`.
 - Agent Skills index: `https://ashwingopalsamy.in/.well-known/agent-skills/index.json`.
 
-All listed tools and endpoints are read-only. OAuth and commerce documents are
-compatibility metadata only. They do not issue credentials, accept payment
-mandates, or move funds.
+All listed tools and endpoints are read-only and need no authentication.
+Commerce documents are compatibility metadata only. They do not accept payment
+mandates or move funds.

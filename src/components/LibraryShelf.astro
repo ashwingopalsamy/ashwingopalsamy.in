@@ -42,7 +42,7 @@ const accents = {
     display: inline-flex;
     flex: 0 0 auto;
     align-items: center;
-    gap: 0.2rem;
+    gap: var(--step-1);
     color: var(--faint);
     font-size: var(--text-xs);
     font-weight: var(--font-medium);
@@ -56,7 +56,7 @@ const accents = {
   }
 
   .library-show-all :global(.ui-icon) {
-    transition: transform var(--dur-2) var(--ease-out);
+    transition: transform var(--dur-tint) var(--ease-enter);
   }
 
   @media (hover: hover) and (pointer: fine) {

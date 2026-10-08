@@ -25,7 +25,7 @@ const hasAction = Astro.slots.has("action");
   .detail-header {
     display: flex;
     flex-direction: column;
-    gap: 1.15rem;
+    gap: calc(var(--step) * 5);
     max-inline-size: 100%;
     padding-bottom: 1.5rem;
     margin-bottom: 2.25rem;
@@ -62,7 +62,7 @@ const hasAction = Astro.slots.has("action");
     flex-wrap: wrap;
     align-items: center;
     justify-content: flex-start;
-    gap: 0.5rem 0.65rem;
+    gap: var(--step-2) var(--step-3);
     padding-top: 0.25rem;
     min-inline-size: 0;
     max-inline-size: 100%;
@@ -72,8 +72,8 @@ const hasAction = Astro.slots.has("action");
     display: inline-flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.5rem 0.65rem;
-    font-size: 0.8125rem;
+    gap: var(--step-2) var(--step-3);
+    font-size: var(--text-sm);
     color: var(--ghost);
     min-inline-size: 0;
   }
@@ -89,7 +89,7 @@ const hasAction = Astro.slots.has("action");
   .detail-meta-left :global(.detail-date),
   .detail-meta-left :global(time) {
     font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     color: var(--muted);
     font-variant-numeric: tabular-nums;
   }
@@ -98,7 +98,7 @@ const hasAction = Astro.slots.has("action");
     display: inline-flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.35rem 0.5rem;
+    gap: var(--step-1) var(--step-2);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -116,12 +116,12 @@ const hasAction = Astro.slots.has("action");
   .detail-meta-left :global(.note-tag) {
     display: inline-flex;
     align-items: center;
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     color: var(--ghost);
     background: var(--canvas);
     border: 1px solid var(--chrome-surface-border);
     box-shadow: var(--chrome-surface-shadow);
-    padding: 0.12rem 0.55rem;
+    padding: 0.12rem var(--step-2);
     border-radius: var(--r-pill);
     text-decoration: none;
     line-height: 1.25;
@@ -142,12 +142,13 @@ const hasAction = Astro.slots.has("action");
   .detail-meta-actions {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: var(--step-1);
     flex-shrink: 0;
   }
 
   .detail-meta-actions :global(a),
   .detail-meta-actions :global(button) {
+    position: relative;
     display: inline-grid;
     place-items: center;
     width: 28px;
@@ -169,6 +170,15 @@ const hasAction = Astro.slots.has("action");
       transform var(--dur-press) var(--ease-snap);
   }
 
+  /* 28px to look at, 44px to hit */
+  .detail-meta-actions :global(a)::before,
+  .detail-meta-actions :global(button)::before {
+    content: "";
+    position: absolute;
+    inset: calc((var(--control-hit) - 28px) / -2);
+    border-radius: 50%;
+  }
+
   .detail-meta-actions :global(a:hover),
   .detail-meta-actions :global(a:focus-visible),
   .detail-meta-actions :global(button:hover),
@@ -180,7 +190,7 @@ const hasAction = Astro.slots.has("action");
 
   .detail-meta-actions :global(.ui-icon) {
     display: block;
-    transition: transform var(--dur-1) var(--ease-out);
+    transition: transform var(--dur-press) var(--ease-enter);
   }
 
   .detail-meta-actions :global(a:hover .ui-icon),
@@ -196,8 +206,8 @@ const hasAction = Astro.slots.has("action");
 
   @media (max-width: 38rem) {
     .detail-header {
-      gap: 0.85rem;
-      padding-bottom: 1.15rem;
+      gap: var(--step-3);
+      padding-bottom: calc(var(--step) * 5);
       margin-bottom: 1.5rem;
     }
 
@@ -206,8 +216,8 @@ const hasAction = Astro.slots.has("action");
     }
 
     .detail-meta-left {
-      gap: 0.35rem 0.5rem;
-      font-size: 0.78rem;
+      gap: var(--step-1) var(--step-2);
+      font-size: var(--text-sm);
     }
   }
 

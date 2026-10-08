@@ -13,7 +13,7 @@
  *   - Spec and reference pill badge enhancement
  *   - Keyboard shortcuts (j/k navigation)
  *
- * Fully re-entrant and lifecycle-safe for Astro view transitions.
+ * Idempotent per document (guarded by the page signal).
  */
 import { showToast } from "./toast";
 import { playAccent, isSoundEnabled } from "./sound";
@@ -1236,7 +1236,6 @@ export function initGoTour() {
 
 // Bind to lifecycle
 if (typeof document !== "undefined") {
-  document.addEventListener("astro:page-load", initGoTour);
   if (document.readyState === "complete" || document.readyState === "interactive") {
     initGoTour();
   }

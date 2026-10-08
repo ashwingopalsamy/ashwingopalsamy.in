@@ -66,13 +66,10 @@ export function initGridOverlay(): void {
     if (event.key === "g" || event.key === "G") hide();
   });
 
-  // A dropped keyup (tab away mid-press) must not leave it stuck on.
+  // A dropped keyup (tab away mid-press, or leaving the page) must not
+  // leave it stuck on, including when the page returns from the bfcache.
   window.addEventListener("blur", hide);
-
-  document.addEventListener("astro:before-swap", () => {
-    overlay?.remove();
-    overlay = null;
-  });
+  window.addEventListener("pagehide", hide);
 }
 
 if (typeof document !== "undefined") {

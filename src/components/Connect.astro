@@ -7,11 +7,17 @@ import { quotes } from "../data/home";
  * Connect - the closing "meanwhile" section: a full-width Spotify band
  * above a full-width map, then a bare quote. The contact block lives in
  * its own Contact component right after the homepage intro.
- * Spotify lazy-mounts with an 8s load timeout, then uses a static "Open in Spotify" card.
+ * Spotify is a static facade (a plain link to the track) until the visitor
+ * shows intent; only then is the real player mounted, with an 8s load
+ * timeout that falls back to a static "Open in Spotify" card.
  */
 
 const SPOTIFY_URL =
   "https://open.spotify.com/track/7iy5huRZ9bNI3ce79DcdCD?si=840308c6390e4ea1";
+const SPOTIFY_ART =
+  "https://image-cdn-ak.spotifycdn.com/image/ab67616d00001e025bf2893e37d9c69a366c3ecf";
+const SPOTIFY_MARK =
+  "M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.52 17.23c-.24.36-.7.48-1.06.24-2.88-1.78-6.52-2.16-10.8-1.18-.42.1-.84-.16-.94-.56-.1-.42.16-.84.56-.94 4.7-1.08 8.7-.64 11.94 1.36.36.22.48.7.3 1.08zm1.44-3.24c-.28.44-.88.58-1.32.3-3.32-2.04-8.38-2.64-12.3-1.44-.5.14-1.04-.14-1.18-.64-.14-.5.14-1.04.64-1.18 4.46-1.36 10-0.7 13.8 1.64.44.26.58.86.36 1.32zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.3c-.6.18-1.24-.16-1.42-.76-.18-.6.16-1.24.76-1.42 4.2-1.28 11.16-1.02 15.56 1.62.54.32.72 1.02.4 1.56-.32.52-1.02.7-1.56.38z";
 
 function quoteIndexOfTheDayServer() {
   const now = new Date();
@@ -24,14 +30,36 @@ const pickIndex = quoteIndexOfTheDayServer();
 
 <section class="connect" aria-label="Meanwhile" data-enter>
   <div class="connect-grid">
-    <div class="spotify-wrap is-loading" data-spotify-url={SPOTIFY_URL}>
-      <div class="spotify-skeleton" aria-hidden="true">
-        <div class="sk-art"></div>
-        <div class="sk-lines">
-          <span class="sk-line l1"></span>
-          <span class="sk-line l2"></span>
-        </div>
-      </div>
+    <div class="spotify-wrap" data-spotify-url={SPOTIFY_URL}>
+      <a
+        class="spotify-facade"
+        href={SPOTIFY_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Play Jessy's Land by A.R. Rahman, Megha on Spotify"
+      >
+        <img
+          class="spotify-art"
+          src={SPOTIFY_ART}
+          width="300"
+          height="300"
+          loading="lazy"
+          decoding="async"
+          alt=""
+        />
+        <span class="spotify-meta">
+          <span class="spotify-title">Jessy’s Land</span>
+          <span class="spotify-artist">A.R. Rahman, Megha</span>
+        </span>
+        <span class="spotify-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d={SPOTIFY_MARK} />
+          </svg>
+        </span>
+        <span class="spotify-play" aria-hidden="true">
+          <Icon name="play" size={16} class="spotify-play-icon" />
+        </span>
+      </a>
       <a
         class="spotify-fallback"
         href={SPOTIFY_URL}
@@ -41,7 +69,7 @@ const pickIndex = quoteIndexOfTheDayServer();
       >
         <span class="spotify-fallback-mark" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.52 17.23c-.24.36-.7.48-1.06.24-2.88-1.78-6.52-2.16-10.8-1.18-.42.1-.84-.16-.94-.56-.1-.42.16-.84.56-.94 4.7-1.08 8.7-.64 11.94 1.36.36.22.48.7.3 1.08zm1.44-3.24c-.28.44-.88.58-1.32.3-3.32-2.04-8.38-2.64-12.3-1.44-.5.14-1.04-.14-1.18-.64-.14-.5.14-1.04.64-1.18 4.46-1.36 10-0.7 13.8 1.64.44.26.58.86.36 1.32zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.3c-.6.18-1.24-.16-1.42-.76-.18-.6.16-1.24.76-1.42 4.2-1.28 11.16-1.02 15.56 1.62.54.32.72 1.02.4 1.56-.32.52-1.02.7-1.56.38z" />
+            <path d={SPOTIFY_MARK} />
           </svg>
         </span>
         <span class="spotify-fallback-copy">
@@ -112,14 +140,15 @@ const pickIndex = quoteIndexOfTheDayServer();
     grid-template-columns: 1fr;
     grid-template-rows: 152px 240px;
     align-items: stretch;
-    gap: var(--space-4);
+    gap: var(--step-4);
     margin-top: 0;
   }
 
   .spotify-wrap {
+    --spotify-h: 152px;
     position: relative;
     width: 100%;
-    height: 152px;
+    height: var(--spotify-h);
     flex-shrink: 0;
     border-radius: var(--r-5);
     overflow: hidden;
@@ -127,89 +156,135 @@ const pickIndex = quoteIndexOfTheDayServer();
     background: color-mix(in oklch, var(--ink) 4%, var(--canvas));
   }
 
+  /* Static stand-in for Spotify's compact embed. It is the whole card until
+     the visitor shows intent, so no third-party script, font or style loads
+     on first view. The real player is mounted on top and fades in. */
+  .spotify-facade {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--step-4);
+    padding: var(--step-3);
+    color: var(--ink);
+    text-decoration: none;
+    transition: background-color var(--t-color);
+  }
+
+  .spotify-facade:hover,
+  .spotify-facade:focus-visible {
+    text-decoration: none;
+    background: color-mix(in oklch, var(--ink) 3.5%, transparent);
+  }
+
+  .spotify-facade:focus-visible {
+    outline-offset: calc(var(--step) * -1);
+  }
+
+  .spotify-art {
+    display: block;
+    inline-size: calc(var(--spotify-h) - var(--step-3) * 2);
+    block-size: calc(var(--spotify-h) - var(--step-3) * 2);
+    border-radius: var(--r-2);
+    object-fit: cover;
+    filter: var(--media-monochrome-filter);
+  }
+
+  .spotify-meta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--step-1);
+    min-width: 0;
+    padding-inline-end: var(--step-6);
+  }
+
+  .spotify-title,
+  .spotify-artist {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .spotify-title {
+    font-weight: var(--font-semibold);
+    font-size: var(--text-base);
+    line-height: var(--leading-snug);
+  }
+
+  .spotify-artist {
+    font-size: var(--text-sm);
+    color: var(--muted);
+  }
+
+  .spotify-mark,
+  .spotify-play {
+    position: absolute;
+    inset-inline-end: var(--step-3);
+    display: grid;
+    place-items: center;
+  }
+
+  .spotify-mark {
+    inset-block-start: var(--step-3);
+    color: var(--ink);
+  }
+
+  .spotify-play {
+    inset-block-end: var(--step-3);
+    inline-size: calc(var(--step) * 10);
+    block-size: calc(var(--step) * 10);
+    border-radius: 50%;
+    color: var(--canvas);
+    background: var(--ink);
+    transition:
+      transform var(--t-move),
+      opacity var(--t-color);
+  }
+
+  :global(.spotify-play-icon) {
+    fill: currentColor;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .spotify-facade:hover .spotify-play,
+    .spotify-facade:focus-visible .spotify-play {
+      transform: scale(1.06);
+    }
+  }
+
+  .spotify-wrap.is-loading .spotify-play {
+    opacity: 0.6;
+  }
+
+  /* Hidden only after the player has finished fading in over it. */
+  .spotify-wrap.is-live .spotify-facade {
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0s linear var(--dur-overlay),
+      visibility 0s linear var(--dur-overlay);
+  }
+
   :global(.spotify-embed) {
+    position: absolute;
+    inset: 0;
     display: block;
     width: 100%;
     height: 100%;
     border: 0;
     filter: var(--media-monochrome-filter);
-    transition: opacity 280ms var(--ease);
+    transition: opacity var(--dur-overlay) var(--ease-enter);
   }
 
   .spotify-wrap.is-loading :global(.spotify-embed) {
     opacity: 0;
+    pointer-events: none;
   }
 
   .spotify-wrap.is-fallback :global(.spotify-embed),
-  .spotify-wrap.is-fallback .spotify-skeleton {
+  .spotify-wrap.is-fallback .spotify-facade {
     display: none;
-  }
-
-  .spotify-skeleton {
-    display: none;
-  }
-
-  .spotify-wrap.is-loading .spotify-skeleton {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    inset: 0;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    padding: 1rem;
-    border-radius: var(--r-5);
-    background: var(--canvas);
-  }
-
-  .sk-art {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .sk-lines {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .sk-line {
-    border-radius: var(--r-pill);
-  }
-  .sk-line.l1 { height: 10px; width: 70%; }
-  .sk-line.l2 { height: 8px; width: 45%; }
-
-  .sk-art,
-  .sk-line {
-    position: relative;
-    overflow: hidden;
-    background: color-mix(in oklch, var(--ink) 6%, var(--canvas));
-  }
-
-  .sk-art::after,
-  .sk-line::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    transform: translateX(-100%);
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      color-mix(in oklch, var(--ink) 8%, transparent) 50%,
-      transparent 100%
-    );
-    will-change: transform;
-    animation: sk-shimmer 1.4s ease-in-out infinite;
-  }
-
-  @keyframes sk-shimmer {
-    100% {
-      transform: translateX(100%);
-    }
   }
 
   .spotify-fallback {
@@ -217,8 +292,8 @@ const pickIndex = quoteIndexOfTheDayServer();
     position: absolute;
     inset: 0;
     align-items: center;
-    gap: 0.85rem;
-    padding: 1rem 1.1rem;
+    gap: var(--step-3);
+    padding: var(--step-4) var(--step-4);
     text-decoration: none;
     color: var(--ink);
     background: color-mix(in oklch, var(--ink) 4%, var(--canvas));
@@ -285,7 +360,7 @@ const pickIndex = quoteIndexOfTheDayServer();
     display: flex;
     flex-direction: column;
     position: relative;
-    margin-top: var(--space-5);
+    margin-top: var(--step-5);
     perspective: 1000px;
   }
 
@@ -311,7 +386,7 @@ const pickIndex = quoteIndexOfTheDayServer();
   }
 
   .quote-text {
-    font-family: "Newsreader Variable", "Iowan Old Style", Georgia, serif;
+    font-family: "Newsreader Variable", "Newsreader Fallback", "Iowan Old Style", Georgia, serif;
     font-style: italic;
     font-weight: 400;
     font-size: var(--text-lg);
@@ -328,7 +403,7 @@ const pickIndex = quoteIndexOfTheDayServer();
     justify-content: flex-end;
     gap: 0.75rem;
     margin-top: 1.5rem;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     color: var(--faint);
     transition: color var(--t-color);
     text-align: right;
@@ -343,9 +418,9 @@ const pickIndex = quoteIndexOfTheDayServer();
 
   .quote-author::before {
     display: inline-block;
-    width: 0.8rem;
+    width: var(--step-3);
     height: 1px;
-    margin: 0 0.45rem 0.25em 0;
+    margin: 0 var(--step-2) 0.25em 0;
     background: var(--rule-strong);
     content: "";
   }
@@ -413,13 +488,13 @@ const pickIndex = quoteIndexOfTheDayServer();
 
   .quote-btn:active {
     transform: scale(0.94);
-    transition: transform 90ms var(--ease);
+    transition: transform var(--dur-press) var(--ease-enter);
   }
 
   .quote-btn > :global(.ui-icon) {
     position: relative;
     z-index: 1;
-    transition: transform var(--dur-2) var(--ease-out);
+    transition: transform var(--dur-tint) var(--ease-enter);
   }
 
   .quote-again :global(.ui-icon) {
@@ -427,7 +502,7 @@ const pickIndex = quoteIndexOfTheDayServer();
   }
 
   .quote-again.is-spinning :global(.ui-icon) {
-    animation: quote-spin var(--dur-4) linear;
+    animation: quote-spin var(--dur-enter) linear;
   }
 
   @keyframes quote-spin {
@@ -476,24 +551,8 @@ const pickIndex = quoteIndexOfTheDayServer();
 
   @media (max-width: 38rem) {
     .connect-grid {
-      gap: var(--space-5);
+      gap: var(--step-5);
     }
-    .spotify-wrap.is-loading .spotify-skeleton {
-      flex-direction: row;
-      justify-content: flex-start;
-      align-items: center;
-      padding: 1rem 1.1rem;
-    }
-    .sk-art {
-      width: 56px;
-      height: 56px;
-    }
-    .sk-lines {
-      flex: 1;
-      align-items: flex-start;
-    }
-    .sk-line.l1 { width: 55%; }
-    .sk-line.l2 { width: 35%; }
     .connect-grid :global(.loc-card) {
       min-height: 240px;
       height: auto;
@@ -501,15 +560,6 @@ const pickIndex = quoteIndexOfTheDayServer();
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .sk-art,
-    .sk-line {
-      animation: none;
-    }
-    .sk-art::after,
-    .sk-line::after {
-      animation: none;
-      display: none;
-    }
     .quote-again.is-spinning :global(.ui-icon) {
       animation: none;
     }
@@ -520,10 +570,13 @@ const pickIndex = quoteIndexOfTheDayServer();
   import { pageSignal, onPageCleanup } from "../scripts/lifecycle";
   import { prefersReducedData } from "../scripts/network";
 
+  const SPOTIFY_ORIGIN = "https://open.spotify.com";
   const EMBED_SRC =
     "https://open.spotify.com/embed/track/7iy5huRZ9bNI3ce79DcdCD?utm_source=generator&si=840308c6390e4ea1";
   const LOAD_MS = 8000;
   let spotifySignal: AbortSignal | null = null;
+
+  type Intent = "hover" | "focus" | "tap";
 
   function showFallback(wrap: HTMLElement) {
     wrap.classList.remove("is-loading");
@@ -535,13 +588,29 @@ const pickIndex = quoteIndexOfTheDayServer();
     wrap.querySelector("iframe")?.remove();
   }
 
-  function mountSpotify(wrap: HTMLElement, signal: AbortSignal) {
+  function warmConnection() {
+    if (document.head.querySelector(`link[rel="preconnect"][href="${SPOTIFY_ORIGIN}"]`)) return;
+    const link = document.createElement("link");
+    link.rel = "preconnect";
+    link.href = SPOTIFY_ORIGIN;
+    document.head.appendChild(link);
+  }
+
+  function mountSpotify(wrap: HTMLElement, signal: AbortSignal, intent: Intent) {
     if (signal.aborted || !wrap.isConnected) return;
-    if (wrap.dataset.spotifyInit === "true" || wrap.dataset.spotifyInit === "pending") return;
+    const state = wrap.dataset.spotifyInit;
+    if (state === "true" || state === "pending" || state === "fallback") return;
     wrap.dataset.spotifyInit = "pending";
     wrap.dataset.spotifyErrors = "0";
     wrap.classList.add("is-loading");
     wrap.classList.remove("is-fallback");
+
+    // telemetry stays out of the home entry chunk (see Page.astro), so it
+    // is pulled in here rather than imported statically.
+    void import("../scripts/telemetry")
+      .then((m) => m.track({ type: "embed", name: "spotify", target: intent }))
+      .catch(() => undefined);
+    warmConnection();
 
     const iframe = document.createElement("iframe");
     iframe.className = "spotify-embed";
@@ -550,6 +619,9 @@ const pickIndex = quoteIndexOfTheDayServer();
     iframe.loading = "lazy";
     iframe.allow =
       "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
+    // Invisible until loaded: keep it out of the tab order and hit testing
+    // so the facade underneath keeps receiving the visitor's input.
+    iframe.inert = true;
 
     let settled = false;
     const finish = (ok: boolean) => {
@@ -557,8 +629,14 @@ const pickIndex = quoteIndexOfTheDayServer();
       settled = true;
       window.clearTimeout(timer);
       if (ok) {
+        const facade = wrap.querySelector<HTMLElement>(".spotify-facade");
+        const hadFocus = Boolean(facade?.contains(document.activeElement));
         wrap.classList.remove("is-loading");
+        wrap.classList.add("is-live");
         wrap.dataset.spotifyInit = "true";
+        iframe.inert = false;
+        if (facade) facade.inert = true;
+        if (hadFocus) iframe.focus();
       } else {
         showFallback(wrap);
       }
@@ -583,6 +661,45 @@ const pickIndex = quoteIndexOfTheDayServer();
     }, signal);
   }
 
+  function armSpotify(wrap: HTMLElement, signal: AbortSignal) {
+    const facade = wrap.querySelector<HTMLElement>(".spotify-facade");
+    if (!facade) return;
+
+    // Touch fires pointerenter on every scroll-through, so only a real
+    // pointer hover counts; a touch tap is handled by the click below.
+    wrap.addEventListener(
+      "pointerenter",
+      (event) => {
+        if (event.pointerType !== "touch") mountSpotify(wrap, signal, "hover");
+      },
+      { signal },
+    );
+    // Keyboard focus only. Pointer-initiated focus is followed by a click
+    // that carries the correct intent.
+    wrap.addEventListener(
+      "focusin",
+      (event) => {
+        if ((event.target as Element).matches(":focus-visible")) {
+          mountSpotify(wrap, signal, "focus");
+        }
+      },
+      { signal },
+    );
+    facade.addEventListener(
+      "click",
+      (event) => {
+        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+          return;
+        }
+        mountSpotify(wrap, signal, "tap");
+        // The player is loading in place of the navigation. If it could not
+        // start (or has failed), the link is left to open Spotify.
+        if (wrap.dataset.spotifyInit === "pending") event.preventDefault();
+      },
+      { signal },
+    );
+  }
+
   function initSpotifyEmbed() {
     const wraps = document.querySelectorAll<HTMLElement>(".spotify-wrap");
     if (!wraps.length) return;
@@ -590,35 +707,17 @@ const pickIndex = quoteIndexOfTheDayServer();
     if (spotifySignal === signal || signal.aborted) return;
     spotifySignal = signal;
 
-    if (prefersReducedData()) {
-      wraps.forEach(showFallback);
-      return;
-    }
-
-    if (!("IntersectionObserver" in window)) {
-      wraps.forEach((el) => mountSpotify(el, signal));
-      return;
-    }
-
-    const io = new IntersectionObserver(
-      (entries, obs) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          mountSpotify(entry.target as HTMLElement, signal);
-          obs.unobserve(entry.target);
-        });
-      },
-      { rootMargin: "150px 0px" },
-    );
-    wraps.forEach((el) => {
-      if (el.dataset.spotifyInit === "true" || el.dataset.spotifyInit === "fallback") return;
-      io.observe(el);
+    wraps.forEach((wrap) => {
+      wrap.dataset.spotifyInit ??= "facade";
     });
-    onPageCleanup(() => io.disconnect(), signal);
+
+    // Save-Data: the facade link is the experience; never mount the player.
+    if (prefersReducedData()) return;
+
+    wraps.forEach((wrap) => armSpotify(wrap, signal));
   }
 
   initSpotifyEmbed();
-  document.addEventListener("astro:page-load", initSpotifyEmbed);
 </script>
 
 <script>
@@ -876,5 +975,4 @@ const pickIndex = quoteIndexOfTheDayServer();
   }
 
   init();
-  document.addEventListener("astro:page-load", init);
 </script>

@@ -29,7 +29,8 @@
   /* ---------------------------------------------------------------- */
   /*  step — the 4px lattice                                          */
   /* ---------------------------------------------------------------- */
-  --step: 4px;
+  /* rem so lattice spacing scales with the reader's default font size like the rem values it replaces; 4px at the 16px default */
+  --step: 0.25rem;
 
   --step-1: calc(var(--step) * 1);   /*  4px  hairline gaps, icon insets */
   --step-2: calc(var(--step) * 2);   /*  8px  intra-component */
@@ -41,18 +42,6 @@
   --step-8: calc(var(--step) * 16);  /* 64px  between sections */
   --step-9: calc(var(--step) * 24);  /* 96px  between regions */
 
-  /* the existing --space-* names map onto the same lattice so nothing
-     has to be renamed to inherit the grid */
-  --space-1: var(--step-1);
-  --space-2: var(--step-2);
-  --space-3: var(--step-3);
-  --space-4: var(--step-4);
-  --space-5: var(--step-5);
-  --space-6: var(--step-6);
-  --space-7: var(--step-7);
-  --space-8: var(--step-8);
-  --space-9: var(--step-9);
-
   /* ---------------------------------------------------------------- */
   /*  rhythm — vertical spacing in line boxes                         */
   /* ---------------------------------------------------------------- */
@@ -62,11 +51,7 @@
      invisible ruling even though the type is fluid. */
   --rhythm: calc(1rem * var(--leading-normal, 1.68));
 
-  --rhythm-half: calc(var(--rhythm) * 0.5);
-  --rhythm-1: var(--rhythm);
   --rhythm-2: calc(var(--rhythm) * 2);
-  --rhythm-3: calc(var(--rhythm) * 3);
-  --rhythm-4: calc(var(--rhythm) * 4);
 
   /* ---------------------------------------------------------------- */
   /*  radius — concentric by construction                             */
@@ -107,6 +92,17 @@
   /* pill labels are centred on the box, but read low because caps have
      no descender. Lift by a hair. */
   --optical-pill-lift: 0.5px;
+  /* The 6px list-marker diamond keeps a barely-softened corner; the 2px
+     scale step would read as a rounded square at that size. */
+  --r-diamond: 0.75px;
+
+  /* Optical glyph sizes for dots and list markers. They are drawn, not laid
+     out, so they sit off the lattice on purpose; rem so they track the
+     text they mark. */
+  --dot-3: 0.1875rem;
+  --dot-5: 0.3125rem;
+  --dot-6: 0.375rem;
+  --dot-7: 0.4375rem;
 
   /* ---------------------------------------------------------------- */
   /*  the rail                                                        */

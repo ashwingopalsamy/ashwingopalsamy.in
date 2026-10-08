@@ -1,9 +1,14 @@
-import { navigate } from "astro:transitions/client";
+/**
+ * photo-transitions - the gallery ↔ photo ↔ photo choreography.
+ *
+ * Every navigation is a full document load with a native cross-document view
+ * transition. Intent (hover, focus, press) warms the destination image into
+ * the HTTP cache and decodes it; activation waits for that (briefly) so the
+ * arriving page paints the photo on its first frame. The leaving page names
+ * its elements on `pageswap` (below); the arriving page names its own on
+ * `pagereveal` (PhotoRouteReveal.astro, which must run before first render).
+ */
 import { prefersReducedData } from "./network";
-import type {
-  TransitionBeforePreparationEvent,
-  TransitionBeforeSwapEvent,
-} from "astro:transitions/client";
 
 interface PhotoTarget extends HTMLAnchorElement {
   dataset: DOMStringMap & {
@@ -26,7 +31,6 @@ interface WarmEntry {
   decoding?: Promise<void>;
 }
 
-type PhotoTransitionKind = "open" | "swap" | null;
 
 declare global {
   interface Window {
@@ -38,8 +42,6 @@ const PHOTO_BASE = "/more/photos/";
 const WARM_CACHE_LIMIT = 3;
 const warmEntries = new Map<string, WarmEntry>();
 let preloadHolder: HTMLDivElement | undefined;
-let activeTransitionKind: PhotoTransitionKind = null;
-let navigationEpoch = 0;
 let activeRequest: {
   token: symbol;
   href: string;
@@ -238,63 +240,6 @@ async function warmPhoto(target: PhotoTarget, priority: "low" | "high" = "low"):
   }
 }
 
-function copyImagePresentation(source: HTMLImageElement, target: HTMLImageElement): void {
-  target.className = source.className;
-  target.alt = source.alt;
-  target.removeAttribute("style");
-  for (const name of ["width", "height", "loading", "fetchpriority", "decoding", "data-image-component"]) {
-    const value = source.getAttribute(name);
-    if (value === null) target.removeAttribute(name);
-    else target.setAttribute(name, value);
-  }
-}
-
-function transplantWarmPicture(id: string, destinationMedia: HTMLElement): boolean {
-  const entry = warmEntries.get(id);
-  const destinationPicture = destinationMedia.querySelector<HTMLPictureElement>("picture.photo-picture");
-  const destinationImage = destinationPicture?.querySelector<HTMLImageElement>("img.photo-image");
-  const warmImage = entry?.picture.querySelector<HTMLImageElement>("img");
-  if (!entry || !destinationPicture || !destinationImage || !warmImage) return false;
-
-  const imageTransitionName = destinationImage.style.viewTransitionName;
-  entry.picture.className = destinationPicture.className;
-  copyImagePresentation(destinationImage, warmImage);
-  warmImage.style.viewTransitionName = imageTransitionName;
-  destinationPicture.replaceWith(entry.picture);
-  warmEntries.delete(id);
-  return true;
-}
-
-function syncPersistentPicture(currentMedia: HTMLElement, destinationMedia: HTMLElement): void {
-  const currentPicture = currentMedia.querySelector<HTMLPictureElement>("picture.photo-picture");
-  const destinationPicture = destinationMedia.querySelector<HTMLPictureElement>("picture.photo-picture");
-  const currentImage = currentPicture?.querySelector<HTMLImageElement>("img.photo-image");
-  const destinationImage = destinationPicture?.querySelector<HTMLImageElement>("img.photo-image");
-  if (!currentPicture || !destinationPicture || !currentImage || !destinationImage) return;
-
-  currentPicture.className = destinationPicture.className;
-  const currentSources = currentPicture.querySelectorAll("source");
-  const destinationSources = destinationPicture.querySelectorAll("source");
-  destinationSources.forEach((destination, index) => {
-    const current = currentSources[index];
-    if (!current) return;
-    for (const name of ["type", "media", "sizes", "srcset"]) {
-      const value = destination.getAttribute(name);
-      if (value === null) current.removeAttribute(name);
-      else if (current.getAttribute(name) !== value) current.setAttribute(name, value);
-    }
-  });
-
-  const transitionName = currentImage.style.viewTransitionName;
-  currentImage.className = destinationImage.className;
-  for (const name of ["alt", "sizes", "width", "height", "srcset", "src", "loading", "fetchpriority", "decoding"]) {
-    const value = destinationImage.getAttribute(name);
-    if (value === null) currentImage.removeAttribute(name);
-    else if (currentImage.getAttribute(name) !== value) currentImage.setAttribute(name, value);
-  }
-  currentImage.style.viewTransitionName = transitionName;
-}
-
 function clearTransitionNames(root: ParentNode = document): void {
   root.querySelectorAll<HTMLElement>("[data-photo-media], .photo-image, [data-photo-caption]").forEach((element) => {
     element.style.viewTransitionName = "";
@@ -366,123 +311,43 @@ async function handlePhotoActivation(event: MouseEvent): Promise<void> {
       return;
     }
     setStatus("Opening photo.");
-    await navigate(request.href, { sourceElement: target });
-    if (activeRequest === request) clearActiveRequest();
+    request.started = true;
+    location.assign(request.href);
   } catch {
     if (activeRequest !== request) return;
     clearActiveRequest("That photo could not be loaded. Activate the control to retry.");
   }
 }
 
-function handleBeforePreparation(rawEvent: Event): void {
-  const event = rawEvent as TransitionBeforePreparationEvent;
-  const epoch = ++navigationEpoch;
-  const fromPath = normalizePath(event.from.pathname);
-  const toPath = normalizePath(event.to.pathname);
+/** Leaving page: name what leaves, by the kind of photo route change. */
+function handlePageSwap(rawEvent: Event): void {
+  const event = rawEvent as Event & {
+    viewTransition: ViewTransition | null;
+    activation: { entry?: { url?: string | null } | null } | null;
+  };
+  clearTransitionNames();
+  const destination = event.activation?.entry?.url;
+  if (!event.viewTransition || !destination) return;
+  const fromPath = normalizePath(location.pathname);
+  const toPath = normalizePath(new URL(destination).pathname);
   const fromId = photoIdFromPath(fromPath);
   const toId = photoIdFromPath(toPath);
-  const fromGallery = fromPath === PHOTO_BASE;
-  const toGallery = toPath === PHOTO_BASE;
-
-  if (activeRequest) {
-    if (new URL(activeRequest.href).pathname === toPath) {
-      activeRequest.started = true;
-    } else {
-      clearActiveRequest();
-    }
-  }
-
-  clearTransitionNames();
-  activeTransitionKind = null;
 
   if (fromId && toId && fromId !== toId) {
-    activeTransitionKind = "swap";
     setTransitionName(mediaForId(document, fromId), "photo-swap");
     setTransitionName(document.querySelector<HTMLElement>("[data-photo-caption]"), "photo-caption");
-  } else if (fromId && toGallery) {
-    activeTransitionKind = "open";
+  } else if (fromId && toPath === PHOTO_BASE) {
     setTransitionName(imageForMedia(mediaForId(document, fromId)), "photo-open");
-  } else if (fromGallery && toId) {
-    activeTransitionKind = "open";
-    const source = photoTarget(event.sourceElement);
-    const outgoingMedia = source?.querySelector<HTMLElement>("[data-photo-media]") ?? mediaForId(document, toId);
-    setTransitionName(imageForMedia(outgoingMedia), "photo-open");
-  } else if (!isPhotoPath(fromPath) && toId) {
-    activeTransitionKind = "open";
+  } else if (fromPath === PHOTO_BASE && toId) {
+    setTransitionName(imageForMedia(mediaForId(document, toId)), "photo-open");
   }
-
-  event.signal.addEventListener("abort", () => {
-    if (epoch !== navigationEpoch) return;
-    clearTransitionNames();
-    if (activeRequest?.started && new URL(activeRequest.href).pathname === toPath) clearActiveRequest();
-  }, { once: true });
 }
 
-function handleBeforeSwap(rawEvent: Event): void {
-  const event = rawEvent as TransitionBeforeSwapEvent;
-  const epoch = navigationEpoch;
-  const fromPath = normalizePath(event.from.pathname);
-  const toPath = normalizePath(event.to.pathname);
-  const fromId = photoIdFromPath(fromPath);
-  const toId = photoIdFromPath(toPath);
-  const fromGallery = fromPath === PHOTO_BASE;
-  const toGallery = toPath === PHOTO_BASE;
-
-  if (toId) {
-    const destinationMedia = mediaForId(event.newDocument, toId);
-    if (destinationMedia) {
-      if (fromGallery) {
-        const existingMedia = mediaForId(document, toId);
-        if (existingMedia) {
-          if (!transplantWarmPicture(toId, existingMedia)) {
-            syncPersistentPicture(existingMedia, destinationMedia);
-          }
-          setTransitionName(imageForMedia(existingMedia), "photo-open");
-        }
-      } else if (fromId !== toId) {
-        transplantWarmPicture(toId, destinationMedia);
-      }
-    }
-  }
-
-  if (activeTransitionKind === "swap" && toId) {
-    setTransitionName(mediaForId(event.newDocument, toId), "photo-swap");
-    setTransitionName(event.newDocument.querySelector<HTMLElement>("[data-photo-caption]"), "photo-caption");
-  } else if (activeTransitionKind === "open") {
-    if (toId) setTransitionName(imageForMedia(mediaForId(event.newDocument, toId)), "photo-open");
-    else if (toGallery && fromId) {
-      const galleryLink = event.newDocument.querySelector<PhotoTarget>(
-        `a[data-photo-target="${CSS.escape(fromId)}"]`,
-      );
-      setTransitionName(imageForMedia(galleryLink?.querySelector<HTMLElement>("[data-photo-media]") ?? null), "photo-open");
-    }
-  }
-
-  event.viewTransition.finished.then(
-    () => {
-      if (epoch === navigationEpoch) {
-        clearTransitionNames();
-        activeTransitionKind = null;
-      }
-    },
-    () => {
-      if (epoch === navigationEpoch) {
-        clearTransitionNames();
-        activeTransitionKind = null;
-      }
-    },
-  );
-}
-
-function handleAfterSwap(): void {
-  if (activeRequest?.started && new URL(activeRequest.href).pathname === normalizePath(location.pathname)) {
-    clearActiveRequest();
-  }
-  if (!isPhotoPath(location.pathname)) {
-    for (const entry of warmEntries.values()) discardEntry(entry);
-    warmEntries.clear();
-    preloadHolder?.remove();
-  }
+/** Back in view from the back/forward cache: drop the pending and naming state. */
+function handlePageShow(event: PageTransitionEvent): void {
+  if (!event.persisted) return;
+  clearTransitionNames();
+  clearActiveRequest();
 }
 
 function initPhotoTransitions(): void {
@@ -492,10 +357,8 @@ function initPhotoTransitions(): void {
   document.addEventListener("pointerdown", handleWarmIntent, { passive: true });
   document.addEventListener("focusin", handleWarmIntent);
   document.addEventListener("click", (event) => void handlePhotoActivation(event), true);
-  document.addEventListener("astro:before-preparation", handleBeforePreparation);
-  document.addEventListener("astro:before-swap", handleBeforeSwap);
-  document.addEventListener("astro:after-swap", handleAfterSwap);
-  document.addEventListener("astro:page-load", handleAfterSwap);
+  window.addEventListener("pageswap", handlePageSwap);
+  window.addEventListener("pageshow", handlePageShow);
 }
 
 initPhotoTransitions();

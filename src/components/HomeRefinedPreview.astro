@@ -65,6 +65,8 @@ const contributions = await getGithubContributions();
     color: var(--ghost);
     line-height: var(--leading-relaxed);
     text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
     text-wrap: pretty;
   }
 
@@ -88,29 +90,29 @@ const contributions = await getGithubContributions();
   .refined-home :global(.connect-grid) {
     grid-template-columns: 1fr;
     grid-template-rows: 152px 200px;
-    gap: var(--space-4);
+    gap: var(--step-4);
   }
 
   .refined-home :global(.quote-block) {
-    margin-top: var(--space-5);
+    margin-top: var(--step-5);
   }
 
   .refined-contact {
-    margin-top: var(--space-6);
+    margin-top: var(--step-6);
   }
 
   .refined-contact__row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--step-3);
   }
 
   .refined-cta-row,
   .refined-socials {
     display: inline-flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: var(--step-2);
   }
 
   .refined-cta {
@@ -118,23 +120,25 @@ const contributions = await getGithubContributions();
     align-items: center;
     justify-content: center;
     min-height: 2.75rem;
-    padding: 0.65rem 1.3rem;
+    padding: var(--step-3) calc(var(--step) * 5);
     border-radius: var(--r-pill);
-    font-size: 0.9375rem;
+    font-size: var(--text-ui);
     font-weight: 500;
     text-decoration: none;
-    transition: transform var(--dur-2) var(--ease-out), box-shadow var(--t-move), background-color var(--t-color), border-color var(--t-color), color var(--t-color);
+    transition: transform var(--dur-tint) var(--ease-enter), box-shadow var(--t-move), background-color var(--t-color), border-color var(--t-color), color var(--t-color);
   }
 
-  .refined-cta:hover,
-  .refined-cta:focus-visible {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-1);
+  @media (hover: hover) and (pointer: fine) {
+    .refined-cta:hover,
+    .refined-cta:focus-visible {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-1);
+    }
   }
 
   .refined-cta:active {
     transform: scale(var(--press-scale, .978));
-    transition: transform var(--dur-press, 70ms) var(--ease-snap);
+    transition: transform var(--dur-press) var(--ease-snap);
   }
 
   .refined-cta--primary {
@@ -150,7 +154,7 @@ const contributions = await getGithubContributions();
 
   .refined-row-sep {
     width: 1px;
-    height: 1.1rem;
+    height: var(--step-4);
     flex-shrink: 0;
     background: var(--rule-strong);
   }
@@ -185,7 +189,7 @@ const contributions = await getGithubContributions();
     .refined-contact__row {
       align-items: stretch;
       flex-direction: column;
-      gap: 0.9rem;
+      gap: var(--step-4);
     }
 
     .refined-cta-row {
@@ -203,13 +207,13 @@ const contributions = await getGithubContributions();
 
     .refined-socials {
       flex-wrap: wrap;
-      gap: 0.8rem 1rem;
+      gap: var(--step-3) var(--step-4);
     }
 
     .refined-home :global(.connect-grid) {
       grid-template-columns: 1fr;
       grid-template-rows: 152px 200px;
-      gap: var(--space-5);
+      gap: var(--step-5);
     }
 
     .refined-home :global(.connect-grid .loc-card) {

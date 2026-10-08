@@ -100,7 +100,7 @@ export class AshwinGopalsamyClient {
   }
 
   /**
-   * Check operational status, rate limits, and protocol links.
+   * Check operational status and protocol links.
    */
   public async getStatus(): Promise<ApiStatus> {
     return this.request<ApiStatus>("/api/v1/status");

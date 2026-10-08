@@ -53,40 +53,42 @@ const contributions = await getGithubContributions();
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--step-3);
     margin-top: 1.25rem;
   }
 
   .cta-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.6rem;
+    gap: var(--step-2);
   }
 
   .cta {
     position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: var(--step-2);
     min-height: 2.75rem;
-    padding: 0.65rem 1.3rem;
+    padding: var(--step-3) calc(var(--step) * 5);
     border-radius: var(--r-pill);
     font-weight: 500;
-    font-size: 0.9375rem;
+    font-size: var(--text-ui);
     text-decoration: none;
     overflow: hidden;
     transition:
-      transform var(--dur-2) var(--ease-out),
+      transform var(--dur-tint) var(--ease-enter),
       box-shadow var(--t-move),
       background-color var(--t-color),
       border-color var(--t-color),
       color var(--t-color);
   }
 
-  .cta:hover,
-  .cta:focus-visible {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-2);
+  @media (hover: hover) and (pointer: fine) {
+    .cta:hover,
+    .cta:focus-visible {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-2);
+    }
   }
 
   .cta:focus-visible {
@@ -95,7 +97,7 @@ const contributions = await getGithubContributions();
 
   .cta:active {
     transform: scale(0.96);
-    transition: transform var(--dur-1) var(--ease);
+    transition: transform var(--dur-press) var(--ease-enter);
   }
 
   .cta-primary {
@@ -136,7 +138,7 @@ const contributions = await getGithubContributions();
 
   .row-sep {
     width: 1px;
-    height: 1.1rem;
+    height: var(--step-4);
     align-self: center;
     flex-shrink: 0;
     background: var(--rule-strong);
@@ -146,27 +148,27 @@ const contributions = await getGithubContributions();
   .contact-social-links {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--step-2);
   }
 
   .chip-all {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: var(--step-1);
     height: 2.75rem;
-    padding: 0 1.1rem;
+    padding: 0 var(--step-4);
     border-radius: var(--r-pill);
     border: 1px solid var(--chrome-surface-border);
     color: var(--muted);
     font-weight: 500;
-    font-size: 0.9375rem;
+    font-size: var(--text-ui);
     white-space: nowrap;
     text-decoration: none;
     transition:
       background-color var(--t-color),
       color var(--t-color),
       border-color var(--t-color),
-      transform var(--dur-2) var(--ease-out);
+      transform var(--dur-tint) var(--ease-enter);
   }
 
 
@@ -181,14 +183,14 @@ const contributions = await getGithubContributions();
 
   .chip-all:active {
     transform: translateY(-1px) scale(0.97);
-    transition: transform 90ms var(--ease);
+    transition: transform var(--dur-press) var(--ease-enter);
   }
 
   @media (max-width: 38rem) {
     .contact-row {
       flex-direction: column;
       align-items: stretch;
-      gap: 0.9rem;
+      gap: var(--step-4);
     }
     .row-sep {
       display: none;

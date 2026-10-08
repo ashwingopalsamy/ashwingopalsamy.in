@@ -188,7 +188,7 @@ func (c *Client) GetNoteMarkdown(ctx context.Context, slug string) (*NoteMarkdow
 	return &note, nil
 }
 
-// GetStatus checks operational status, rate limits, and capabilities.
+// GetStatus checks operational status and capabilities.
 func (c *Client) GetStatus(ctx context.Context) (*ApiStatus, error) {
 	var status ApiStatus
 	if err := c.doRequest(ctx, "/api/v1/status", nil, &status); err != nil {
