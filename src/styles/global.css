@@ -132,12 +132,29 @@
      .surface-stack / .surface-stream below; these two values are the only
      place the depth of the effect is decided, so they cannot drift apart
      per page. */
-  /* Viewport frame: corner radius tracks the viewport (12px to 24px), the
-     base shows only at the corners, the shadow lines the outer edge. */
-  --frame-radius: clamp(var(--step-3), 1.75vmin, var(--step-5));
-  --frame-base: color-mix(in oklch, var(--ink) 14%, var(--canvas));
-  --frame-shadow: color-mix(in oklch, var(--ink) 10%, transparent);
-  --frame-shadow-blur: var(--step-6);
+  /* Viewport frame: the page is a card inset from the window by a small
+     margin, with plain rounded corners, a hairline edge and a soft lift
+     onto the base it rests on. */
+  --frame-gap: calc(var(--step) * 1.5);
+  --frame-radius: calc(var(--step) * 1.5);
+  /* Tuning knobs (the dev tuner drives these); the dark theme overrides the
+     percentages and mixes the base from black instead of ink. */
+  --frame-base-mix: 5%;
+  --frame-edge-mix: 9%;
+  --frame-lift-alpha: 7%;
+  --frame-lift-y: 6px;
+  --frame-lift-blur: 20px;
+  --frame-base: color-mix(in oklch, var(--ink) var(--frame-base-mix), var(--canvas));
+  --frame-edge: color-mix(in oklch, var(--ink) var(--frame-edge-mix), transparent);
+  --frame-lift:
+    0 1px 2px color-mix(in oklch, oklch(0 0 0) calc(var(--frame-lift-alpha) * 0.85), transparent),
+    0 var(--frame-lift-y) var(--frame-lift-blur) color-mix(in oklch, oklch(0 0 0) var(--frame-lift-alpha), transparent);
+  /* Root scrollbar thumb, drawn inside the card; --scrollbar-*
+     below styles the inner scroll areas. */
+  --page-scrollbar-size: calc(var(--step) / 2);
+  --page-scrollbar-thumb-mix: 22%;
+  --page-scrollbar-thumb: color-mix(in oklch, var(--ink) var(--page-scrollbar-thumb-mix), transparent);
+  --page-scrollbar-thumb-hover: color-mix(in oklch, var(--ink) calc(var(--page-scrollbar-thumb-mix) + 14%), transparent);
   --dim-opacity: 0.45;
   --dim-blur: 0.2px;
 
@@ -191,8 +208,11 @@
 
 /* Dark ramp - explicit theme. No-JS OS-dark mirrors this block once below. */
 :root[data-theme="dark"] {
-  --frame-base: color-mix(in oklch, var(--canvas) 55%, oklch(0 0 0));
-  --frame-shadow: color-mix(in oklch, oklch(0 0 0) 45%, transparent);
+  --frame-base-mix: 53.5%;
+  --frame-edge-mix: 7%;
+  --frame-lift-alpha: 50%;
+  --page-scrollbar-thumb-mix: 35%;
+  --frame-base: color-mix(in oklch, oklch(0 0 0) var(--frame-base-mix), var(--canvas));
   --canvas: var(--color-9);
   --ink: var(--color-1);
   --muted: var(--color-3);
@@ -259,8 +279,11 @@
    components read the surface vars above and need no second copy. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --frame-base: color-mix(in oklch, var(--canvas) 55%, oklch(0 0 0));
-    --frame-shadow: color-mix(in oklch, oklch(0 0 0) 45%, transparent);
+    --frame-base-mix: 53.5%;
+    --frame-edge-mix: 7%;
+    --frame-lift-alpha: 50%;
+    --page-scrollbar-thumb-mix: 35%;
+    --frame-base: color-mix(in oklch, oklch(0 0 0) var(--frame-base-mix), var(--canvas));
     --canvas: var(--color-9);
     --ink: var(--color-1);
     --muted: var(--color-3);
@@ -443,6 +466,10 @@ html {
   overflow-x: clip;
   background: var(--canvas);
   -webkit-tap-highlight-color: transparent;
+  /* Mobile browsers inflate text per block unless told not to (iOS Safari,
+     Chrome Android font boosting); sizes must come only from the type tokens. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 @supports not selector(::-webkit-scrollbar) {
@@ -1410,20 +1437,101 @@ a {
   }
 }
 
-/* Viewport frame (experiment). The page reads as a rounded tile resting on a
-   darker base: the base shows only at the corners and a soft shadow lines
-   the outer edge. One fixed, static layer, rasterised once; it never takes
-   input and holds still through route transitions (chrome-frame). */
+/* Viewport frame (experiment). The page reads as a card resting on a base:
+   a small margin of base colour around the window, plain rounded corners, a
+   hairline page edge and a soft lift. One fixed, static layer drawn with
+   box-shadows (first listed paints on top): it never takes input and holds
+   still through route transitions (chrome-frame). The base spread covers the
+   margin and the corner pockets: gap + radius always reaches the window
+   corner. */
 .viewport-frame {
   position: fixed;
-  inset: 0;
+  inset: var(--frame-gap);
   z-index: var(--z-frame);
   pointer-events: none;
   border-radius: var(--frame-radius);
   box-shadow:
-    0 0 0 var(--frame-radius) var(--frame-base),
-    inset 0 0 var(--frame-shadow-blur) var(--frame-shadow);
+    inset 0 0 0 var(--hairline) var(--frame-edge),
+    var(--frame-lift),
+    0 0 0 calc(var(--frame-gap) + var(--frame-radius)) var(--frame-base);
   view-transition-name: chrome-frame;
+}
+
+@media (max-width: 38rem) {
+  :root {
+    --frame-gap: var(--step-1);
+  }
+}
+
+/* Root scrollbar, drawn inside the page card. The native bar lives outside
+   the layout viewport, so however it is styled it cuts through the frame's
+   right edge, and the site's styled ::-webkit-scrollbar also turns it into a
+   classic bar that takes width on touch screens. It is hidden wherever
+   scroll-driven animations can drive this one: the thumb rides the page's
+   scroll on the compositor, sized by page-scrollbar.ts. It is draggable only
+   with a fine pointer; on touch it is a passive position indicator.
+   Elsewhere (Firefox today) the site's styled native bar stays. */
+.page-scrollbar {
+  display: none;
+}
+
+@keyframes page-scroll-thumb {
+  from { transform: translateY(0); }
+  to { transform: translateY(var(--thumb-travel, 0px)); }
+}
+
+@supports (animation-timeline: scroll()) {
+  html {
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar {
+    display: none;
+  }
+
+  .page-scrollbar {
+    display: block;
+    position: fixed;
+    z-index: var(--z-frame);
+    inset-block: calc(var(--frame-gap) + var(--frame-radius));
+    inset-inline-end: calc(var(--frame-gap) + var(--step-1));
+    inline-size: var(--page-scrollbar-size);
+    pointer-events: none;
+  }
+
+  .page-scrollbar[data-idle] {
+    display: none;
+  }
+
+  .page-scrollbar-thumb {
+    position: relative;
+    block-size: var(--thumb-size, 0px);
+    border-radius: var(--r-pill);
+    background: var(--page-scrollbar-thumb);
+    transition: background-color var(--t-color);
+    animation: page-scroll-thumb linear both;
+    animation-timeline: scroll(root block);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .page-scrollbar-thumb {
+      pointer-events: auto;
+      touch-action: none;
+    }
+
+    /* A hairline-thin thumb keeps a comfortable grab area. */
+    .page-scrollbar-thumb::before {
+      content: "";
+      position: absolute;
+      inset-block: 0;
+      inset-inline: calc(var(--step-2) * -1);
+    }
+
+    .page-scrollbar-thumb:hover,
+    .page-scrollbar[data-dragging] .page-scrollbar-thumb {
+      background: var(--page-scrollbar-thumb-hover);
+    }
+  }
 }
 
 @media print, (forced-colors: active) {
@@ -1431,3 +1539,114 @@ a {
     display: none;
   }
 }
+
+/* Page flow (touch devices, page-flow.ts): pulling past either end of a page
+   moves to the neighbouring one. The browser's own overscroll (bounce and
+   pull-to-refresh) is switched off where the gesture is active so the two
+   never fight. The pill rises and fills with the pull; it is driven by one
+   custom property and only moves with transform and opacity. */
+html[data-page-flow] {
+  overscroll-behavior-y: none;
+}
+
+.page-flow {
+  position: fixed;
+  inset-inline: 0;
+  z-index: var(--z-toast);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  opacity: var(--flow, 0);
+  transform: translateY(calc((1 - var(--flow, 0)) * var(--flow-travel)));
+}
+
+.page-flow[data-edge="end"] {
+  --flow-travel: var(--step-4);
+  inset-block-end: calc(env(safe-area-inset-bottom) + var(--step) * 22);
+}
+
+.page-flow[data-edge="start"] {
+  --flow-travel: calc(var(--step-4) * -1);
+  inset-block-start: calc(env(safe-area-inset-top) + var(--step) * 20);
+}
+
+.page-flow:not([data-active]) {
+  transition:
+    opacity var(--dur-exit) var(--ease-exit),
+    transform var(--dur-exit) var(--ease-exit);
+}
+
+.page-flow-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--step-2);
+  padding: var(--step-2) var(--step-4);
+  overflow: hidden;
+  border: var(--hairline) solid var(--chrome-surface-border);
+  border-radius: var(--r-pill);
+  background: var(--chrome-surface-bg);
+  box-shadow: var(--shadow-2);
+  color: var(--muted);
+  font-size: var(--text-sm);
+  transition:
+    color var(--t-color),
+    background-color var(--t-color);
+}
+
+.page-flow-fill {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in oklch, var(--ink) 8%, transparent);
+  transform: scaleX(var(--flow, 0));
+  transform-origin: left center;
+}
+
+.page-flow[data-edge="start"] .page-flow-fill {
+  transform-origin: right center;
+}
+
+.page-flow-dir,
+.page-flow-label,
+.page-flow-icon {
+  position: relative;
+}
+
+.page-flow-label {
+  max-inline-size: calc(var(--step) * 48);
+  overflow: hidden;
+  color: var(--ink);
+  font-weight: var(--font-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page-flow-icon {
+  display: inline-flex;
+  color: var(--ink);
+}
+
+.page-flow[data-edge="start"] .page-flow-icon {
+  order: -1;
+}
+
+.page-flow[data-armed] .page-flow-pill {
+  background: var(--ink);
+  color: color-mix(in oklch, var(--canvas) 70%, transparent);
+}
+
+.page-flow[data-armed] .page-flow-label,
+.page-flow[data-armed] .page-flow-icon {
+  color: var(--canvas);
+}
+
+.page-flow[data-armed] .page-flow-fill {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-flow {
+    transform: none;
+  }
+}
+

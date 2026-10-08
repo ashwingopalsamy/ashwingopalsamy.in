@@ -2,6 +2,7 @@
 import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 import geistLatin from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import fontStyles from "../styles/fonts.css?inline";
+import DevTuner from "../components/DevTuner.astro";
 // geometry first (global.css consumes --step-*/--r-*), motion last so its
 // retuned duration and easing tokens win over the legacy values.
 import "../styles/geometry.css";
@@ -202,7 +203,10 @@ const documentTitle = isHome
           var back = Boolean(activation && activation.navigationType === "traverse" &&
             activation.from && activation.entry && activation.entry.index < activation.from.index);
           var root = document.documentElement;
-          root.dataset.routeDir = back ? "back" : "forward";
+          // A page-flow pull names its own direction (page-flow.ts).
+          var forced = null;
+          try { forced = sessionStorage.getItem("route-dir"); sessionStorage.removeItem("route-dir"); } catch (e) {}
+          root.dataset.routeDir = forced === "back" || forced === "forward" ? forced : (back ? "back" : "forward");
           // The logo swaps between the home mark and the back arrow only when
           // one side of the navigation is the home page.
           var fromPath = null;
@@ -350,6 +354,8 @@ const documentTitle = isHome
       <SiteFooter />
     </div>
     <div class="viewport-frame" aria-hidden="true"></div>
+    <div class="page-scrollbar" aria-hidden="true"><div class="page-scrollbar-thumb"></div></div>
+    {import.meta.env.DEV && <DevTuner />}
 
     <script>
       import { onPageCleanup, pageSignal } from "../scripts/lifecycle";
@@ -357,6 +363,7 @@ const documentTitle = isHome
       import "../scripts/navigation-prefetch";
       import "../scripts/floating-toc";
       import "../scripts/grid-overlay";
+      import "../scripts/page-scrollbar";
 
       /* Nothing below affects the first interaction: the devtools console
          art, the telemetry queue, the web-vitals observers and the WebMCP
@@ -376,6 +383,10 @@ const documentTitle = isHome
         const supportsWebMcp = [document, navigator, window].some(
           (host) => "modelContext" in host && Boolean(host.modelContext),
         );
+        // Touch devices: pull past either end of a page to move along the site.
+        if (matchMedia("(hover: none) and (pointer: coarse)").matches) {
+          void import("../scripts/page-flow").catch(() => undefined);
+        }
         if (supportsWebMcp) {
           void import("../scripts/webmcp").then((m) => m.initWebMcp()).catch(() => undefined);
         }

@@ -1,0 +1,249 @@
+---
+/**
+ * DevTuner - a dev-only panel (rendered only under `astro dev`, see
+ * Page.astro) for tuning the viewport frame and scrollbar live. Values apply
+ * as inline custom properties on <html>, persist in localStorage, and are
+ * POSTed to /__tune (astro.config.mjs), which writes them to .tune.json.
+ */
+---
+
+<div class="dev-tuner" data-dev-tuner>
+  <button type="button" class="dev-tuner-toggle" aria-expanded="false" data-tuner-toggle>Tune</button>
+  <div class="dev-tuner-panel" hidden data-tuner-panel>
+    <p class="dev-tuner-head">Frame &amp; scrollbar · <span data-tuner-theme></span></p>
+    <div class="dev-tuner-fields" data-tuner-fields></div>
+    <div class="dev-tuner-actions">
+      <button type="button" data-tuner-copy>Copy values</button>
+      <button type="button" data-tuner-reset>Reset</button>
+      <span class="dev-tuner-status" data-tuner-status></span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .dev-tuner {
+    position: fixed;
+    inset-block-end: var(--step-6);
+    inset-inline-start: var(--step-6);
+    z-index: calc(var(--z-frame) + 1);
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: var(--text-xs);
+    color: var(--ink);
+  }
+
+  .dev-tuner-toggle,
+  .dev-tuner-actions button {
+    padding: var(--step-1) var(--step-3);
+    border: var(--hairline) solid var(--rule-strong);
+    border-radius: var(--r-pill);
+    background: var(--canvas);
+    color: var(--ink);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .dev-tuner-panel {
+    margin-block-end: var(--step-2);
+    inline-size: calc(var(--step) * 72);
+    padding: var(--step-3);
+    border: var(--hairline) solid var(--rule-strong);
+    border-radius: var(--r-4);
+    background: var(--canvas);
+    box-shadow: var(--shadow-3);
+  }
+
+  .dev-tuner:has(.dev-tuner-panel:not([hidden])) {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: flex-start;
+  }
+
+  .dev-tuner-head {
+    margin: 0 0 var(--step-2);
+    color: var(--muted);
+  }
+
+  .dev-tuner-fields {
+    display: grid;
+    gap: var(--step-2);
+  }
+
+  /* Rows are built at runtime, so they need :global to escape scoping. */
+  .dev-tuner-fields :global(label) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--step-1);
+  }
+
+  .dev-tuner-fields :global(input) {
+    grid-column: 1 / -1;
+    inline-size: 100%;
+  }
+
+  .dev-tuner-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--step-2);
+    margin-block-start: var(--step-3);
+  }
+
+  .dev-tuner-status {
+    color: var(--muted);
+  }
+
+  /* Narrow screens: centred in the header row, between the logo and the
+     palette button, clear of the content and the bottom bar. */
+  @media (max-width: 38rem) {
+    .dev-tuner {
+      inset-block: var(--step-5) auto;
+      inset-inline-start: 50%;
+      translate: -50% 0;
+    }
+
+    /* The panel opens below the toggle, never off the top of the screen. */
+    .dev-tuner:has(.dev-tuner-panel:not([hidden])) {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .dev-tuner-panel {
+      margin-block: var(--step-2) 0;
+    }
+  }
+</style>
+
+<script>
+  type Theme = "light" | "dark";
+  interface Knob {
+    key: string;
+    label: string;
+    prop: string;
+    unit: "px" | "%";
+    min: number;
+    max: number;
+    step: number;
+    themed: boolean;
+    defaults: Record<Theme, number>;
+  }
+
+  // Defaults mirror the tokens in src/styles/global.css.
+  const KNOBS: Knob[] = [
+    { key: "gap", label: "margin", prop: "--frame-gap", unit: "px", min: 0, max: 32, step: 1, themed: false, defaults: { light: 6, dark: 6 } },
+    { key: "radius", label: "corner radius", prop: "--frame-radius", unit: "px", min: 0, max: 40, step: 1, themed: false, defaults: { light: 6, dark: 6 } },
+    { key: "base", label: "base depth", prop: "--frame-base-mix", unit: "%", min: 0, max: 90, step: 0.5, themed: true, defaults: { light: 5, dark: 53.5 } },
+    { key: "edge", label: "edge line", prop: "--frame-edge-mix", unit: "%", min: 0, max: 30, step: 0.5, themed: true, defaults: { light: 9, dark: 7 } },
+    { key: "liftAlpha", label: "shadow strength", prop: "--frame-lift-alpha", unit: "%", min: 0, max: 80, step: 0.5, themed: true, defaults: { light: 7, dark: 50 } },
+    { key: "liftY", label: "shadow offset", prop: "--frame-lift-y", unit: "px", min: 0, max: 32, step: 1, themed: false, defaults: { light: 6, dark: 6 } },
+    { key: "liftBlur", label: "shadow blur", prop: "--frame-lift-blur", unit: "px", min: 0, max: 64, step: 1, themed: false, defaults: { light: 20, dark: 20 } },
+    { key: "scrollbar", label: "scrollbar width", prop: "--page-scrollbar-size", unit: "px", min: 1, max: 14, step: 1, themed: false, defaults: { light: 2, dark: 2 } },
+    { key: "thumb", label: "scrollbar thumb", prop: "--page-scrollbar-thumb-mix", unit: "%", min: 4, max: 70, step: 1, themed: true, defaults: { light: 22, dark: 35 } },
+  ];
+
+  type State = Record<Theme, Record<string, number>>;
+  const STORAGE_KEY = "dev-tuner";
+  const root = document.documentElement;
+  const host = document.querySelector<HTMLElement>("[data-dev-tuner]");
+
+  const defaults = (): State => ({
+    light: Object.fromEntries(KNOBS.map((k) => [k.key, k.defaults.light])),
+    dark: Object.fromEntries(KNOBS.map((k) => [k.key, k.defaults.dark])),
+  });
+
+  function load(): State {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null") as State | null;
+      if (saved?.light && saved?.dark) return { light: { ...defaults().light, ...saved.light }, dark: { ...defaults().dark, ...saved.dark } };
+    } catch {}
+    return defaults();
+  }
+
+  const theme = (): Theme => (root.dataset.theme === "dark" ? "dark" : "light");
+  let state = load();
+  let postTimer = 0;
+
+  // Only values moved off their defaults are set inline, so untouched tokens
+  // keep their stylesheet rules (including the mobile frame overrides) and
+  // the dev page renders exactly like production.
+  function apply() {
+    const t = theme();
+    for (const knob of KNOBS) {
+      const value = state[t][knob.key];
+      if (value === knob.defaults[t]) root.style.removeProperty(knob.prop);
+      else root.style.setProperty(knob.prop, `${value}${knob.unit}`);
+    }
+  }
+
+  function snapshot() {
+    return {
+      light: state.light,
+      dark: state.dark,
+      css: KNOBS.map((k) => `${k.prop}: ${state.light[k.key]}${k.unit}${k.themed ? ` (dark: ${state.dark[k.key]}${k.unit})` : ""};`).join("\n"),
+    };
+  }
+
+  function persist() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+    window.clearTimeout(postTimer);
+    postTimer = window.setTimeout(() => {
+      void fetch("/__tune", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(snapshot()) })
+        .then(() => setStatus("saved"))
+        .catch(() => setStatus("save failed"));
+    }, 300);
+  }
+
+  function setStatus(text: string) {
+    const status = host?.querySelector<HTMLElement>("[data-tuner-status]");
+    if (status) status.textContent = text;
+  }
+
+  function render() {
+    const fields = host?.querySelector<HTMLElement>("[data-tuner-fields]");
+    const label = host?.querySelector<HTMLElement>("[data-tuner-theme]");
+    if (!fields) return;
+    if (label) label.textContent = `${theme()} theme`;
+    fields.replaceChildren(
+      ...KNOBS.map((knob) => {
+        const value = state[theme()][knob.key];
+        const row = document.createElement("label");
+        const name = document.createElement("span");
+        name.textContent = knob.themed ? `${knob.label} (${theme()})` : knob.label;
+        const out = document.createElement("output");
+        out.textContent = `${value}${knob.unit}`;
+        const input = document.createElement("input");
+        Object.assign(input, { type: "range", min: String(knob.min), max: String(knob.max), step: String(knob.step), value: String(value) });
+        input.addEventListener("input", () => {
+          const next = Number(input.value);
+          if (knob.themed) state[theme()][knob.key] = next;
+          else { state.light[knob.key] = next; state.dark[knob.key] = next; }
+          out.textContent = `${next}${knob.unit}`;
+          apply();
+          persist();
+        });
+        row.append(name, out, input);
+        return row;
+      }),
+    );
+  }
+
+  if (host) {
+    const toggle = host.querySelector<HTMLButtonElement>("[data-tuner-toggle]");
+    const panel = host.querySelector<HTMLElement>("[data-tuner-panel]");
+    toggle?.addEventListener("click", () => {
+      if (!panel) return;
+      panel.hidden = !panel.hidden;
+      toggle.setAttribute("aria-expanded", String(!panel.hidden));
+    });
+    host.querySelector("[data-tuner-copy]")?.addEventListener("click", () => {
+      void navigator.clipboard.writeText(JSON.stringify(snapshot(), null, 2)).then(() => setStatus("copied"));
+    });
+    host.querySelector("[data-tuner-reset]")?.addEventListener("click", () => {
+      state = defaults();
+      apply();
+      render();
+      persist();
+    });
+    new MutationObserver(() => { apply(); render(); }).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+    apply();
+    render();
+  }
+</script>

@@ -110,6 +110,7 @@
      answer an input, so the interaction scale above does not apply. */
   --dur-hero: 620ms;      /* hero line cascade: a spring stretched over its slot */
   --dur-spin: 800ms;      /* indeterminate spinner, one full turn */
+  --dur-shimmer: 1.4s;    /* loading-skeleton sweep */
   --dur-blink: 1.1s;      /* caret on/off cycle */
   --dur-beacon: 2s;       /* location ring, one expansion (plays twice) */
   --dur-breathe: 2.2s;    /* placeholder dots fading in and out */
