@@ -1,5 +1,6 @@
 ---
 import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
+import geistLatin from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import fontStyles from "../styles/fonts.css?inline";
 // geometry first (global.css consumes --step-*/--r-*), motion last so its
 // retuned duration and easing tokens win over the legacy values.
@@ -96,11 +97,21 @@ const documentTitle = isHome
     <!-- Font faces ship first, before any route stylesheet. -->
     <style is:inline set:html={fontStyles} />
 
+    <!-- Each viewport preloads only the face it sets body text in. -->
     <link
       rel="preload"
       href={interLatin}
       as="font"
       type="font/woff2"
+      media="(min-width: 38.0625rem)"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href={geistLatin}
+      as="font"
+      type="font/woff2"
+      media="(max-width: 38rem)"
       crossorigin
     />
     <script
@@ -338,6 +349,7 @@ const documentTitle = isHome
       </main>
       <SiteFooter />
     </div>
+    <div class="viewport-frame" aria-hidden="true"></div>
 
     <script>
       import { onPageCleanup, pageSignal } from "../scripts/lifecycle";

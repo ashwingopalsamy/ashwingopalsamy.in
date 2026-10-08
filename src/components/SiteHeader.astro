@@ -46,6 +46,7 @@ const backTarget = resolveBackTarget(path);
         <a
           class:list={["quiet-link", { active }]}
           href={item.href}
+          style={`view-transition-name: nav-${item.label}`}
           aria-label={item.ariaLabel || item.label}
           aria-current={active ? "page" : undefined}
         >
@@ -74,6 +75,7 @@ const backTarget = resolveBackTarget(path);
         <a
           class:list={["tab", { active }]}
           href={item.href}
+          style={`view-transition-name: nav-tab-${item.label}`}
           aria-label={item.ariaLabel || item.label}
           aria-current={active ? "page" : undefined}
         >
@@ -127,6 +129,14 @@ const backTarget = resolveBackTarget(path);
 
   .site-nav-bottom .nav-selection {
     view-transition-name: nav-selection-bottom;
+  }
+
+  /* Each label is its own layer too (named inline from the nav data), so
+     during a route change it paints above the sliding pill instead of
+     being covered by it. */
+  .site-nav .quiet-link,
+  .site-nav-bottom .tab {
+    view-transition-class: nav-label;
   }
 
   /* The glyphs inside the logo trade places across routes (motion.css); the
