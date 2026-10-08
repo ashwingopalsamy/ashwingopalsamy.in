@@ -74,3 +74,6 @@ out
 
 # OS
 .DS_Store
+
+# Dev tuner output (astro dev only)
+.tune.json

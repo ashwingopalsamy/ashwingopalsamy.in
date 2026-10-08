@@ -219,7 +219,7 @@ Mobile has its own physical constraints. Home, Work, AI, More, and Links stay in
 
 ## Elevation & Depth
 
-The whole page sits on a rounded tile above a darker base (the viewport frame): the base shows only at the corners, a soft shadow lines the outer edge, and the radius tracks the viewport between 12 and 24 pixels. It is one fixed, static layer held still through route transitions.
+The whole page sits on an inset card above a slightly darker base (the viewport frame): a 6px margin (4px on phones) and a 6px radius, a hairline edge, and a soft lift shadow (`--frame-*` tokens). It is one fixed, static layer held still through route transitions. The root scrollbar is drawn inside the card as a thin scroll-driven thumb, so the native bar never cuts through the frame's right edge; it is draggable with a mouse and a passive indicator on touch.
 
 Depth is used to separate persistent chrome, overlays, and feedback. A surface gets either a border or a shadow strong enough to explain its elevation. Blur is reserved for stationary chrome and overlays: the desktop header, the mobile bottom navigation (a short, fixed strip, so its blur stays cheap while content scrolls beneath it), the command palette, and floating tooltips.
 

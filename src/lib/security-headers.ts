@@ -41,7 +41,7 @@ export function strictCspDirectives(nonce: string): string {
     `style-src 'self' 'nonce-${nonce}'`,
     `style-src-elem 'self' 'nonce-${nonce}'`,
     "style-src-attr 'unsafe-inline'",
-    "img-src 'self' data: blob: https://image-cdn-ak.spotifycdn.com",
+    "img-src 'self' data: blob:",
     "font-src 'self' data:",
     "connect-src 'self' https://cloudflareinsights.com https://*.cloudflareinsights.com",
     "frame-src https://open.spotify.com",

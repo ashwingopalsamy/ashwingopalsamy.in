@@ -1,6 +1,36 @@
 import { defineConfig } from "astro/config";
 import { markdownProcessor } from "./src/lib/markdown/index.js";
 import { codeMetaTransformers } from "./src/lib/markdown/shiki-transformers.js";
+import { writeFile } from "node:fs/promises";
+
+// Dev only: the DevTuner panel POSTs its values here; they land in
+// .tune.json (gitignored) so they can be read back without copy-paste.
+const devTuner = {
+  name: "dev-tuner",
+  configureServer(server) {
+    server.middlewares.use("/__tune", (req, res) => {
+      if (req.method !== "POST") {
+        res.statusCode = 405;
+        return res.end();
+      }
+      let body = "";
+      req.on("data", (chunk) => {
+        body += chunk;
+        if (body.length > 16384) req.destroy();
+      });
+      req.on("end", async () => {
+        try {
+          const values = JSON.parse(body);
+          await writeFile(".tune.json", `${JSON.stringify({ savedAt: new Date().toISOString(), ...values }, null, 2)}\n`);
+          res.statusCode = 204;
+        } catch {
+          res.statusCode = 400;
+        }
+        res.end();
+      });
+    });
+  },
+};
 
 export default defineConfig({
   site: "https://ashwingopalsamy.in",
@@ -40,6 +70,7 @@ export default defineConfig({
     },
   },
   vite: {
+    plugins: [devTuner],
     build: {
       cssMinify: "lightningcss",
       rolldownOptions: {
