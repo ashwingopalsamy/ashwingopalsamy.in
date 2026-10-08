@@ -23,11 +23,6 @@ export const onRequest = async (context: PagesContext): Promise<Response> => {
     apiVersion: "2026-08-22",
     status: "operational",
     mode: "read-only-discovery",
-    rateLimit: {
-      limit: 120,
-      windowSeconds: 60,
-      policy: "120;w=60",
-    },
     versioning: {
       strategy: "url-path-and-header",
       current: "v1",

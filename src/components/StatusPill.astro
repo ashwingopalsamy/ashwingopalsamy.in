@@ -13,14 +13,14 @@ const { label, class: className } = Astro.props;
   .status-pill {
     display: inline-flex;
     align-items: center;
-    min-block-size: 1.15rem;
-    padding-inline: 0.45rem;
+    min-block-size: calc(var(--step) * 5);
+    padding-inline: var(--step-2);
     border-radius: var(--r-pill);
     background: var(--canvas);
     border: 1px solid var(--chrome-surface-border);
     box-shadow: var(--chrome-surface-shadow);
     color: var(--muted);
-    font-size: 0.625rem;
+    font-size: var(--text-2xs);
     font-weight: var(--font-medium);
     font-family: var(--font-mono);
     letter-spacing: 0.03em;

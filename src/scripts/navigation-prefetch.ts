@@ -67,7 +67,6 @@ if (typeof document !== "undefined" && !window.__siteNavigationPrefetchReady) {
   window.__siteNavigationPrefetchReady = true;
   document.addEventListener("touchstart", handleTouchIntent, { capture: true, passive: true });
   document.addEventListener("mousedown", respectReducedData, { capture: true, passive: true });
-  document.addEventListener("astro:before-swap", restoreTapPreferences);
   const connection = (navigator as Navigator & { connection?: EventTarget }).connection;
   connection?.addEventListener("change", () => {
     if (!prefersReducedData()) restoreTapPreferences();

@@ -1,5 +1,3 @@
-import { buildMeta } from "../src/lib/build";
-
 export interface AnalyticsEngineDataset {
   writeDataPoint(event?: {
     blobs?: (string | null | undefined)[];
@@ -219,7 +217,7 @@ export function classifySurface(pathname: string): Surface {
   ) {
     return "agent_doc";
   }
-  if (pathname.endsWith(".md") || pathname.includes("/__agent-markdown/")) return "markdown";
+  if (pathname.endsWith(".md")) return "markdown";
   return "page";
 }
 
@@ -264,7 +262,7 @@ export function generateCorrelationId(request: Request): string {
 export function getDeploymentSha(env?: TelemetryEnv): string {
   const envSha = env?.CF_PAGES_COMMIT_SHA;
   if (envSha) return envSha.slice(0, 7);
-  return buildMeta.commit ?? "local";
+  return "unknown";
 }
 
 export function recordToAnalyticsEngine(
@@ -415,7 +413,10 @@ export function emitEdgeTelemetry(
   }
 
   recordToAnalyticsEngine(env?.SITE_TELEMETRY, {
-    eventType: protocolMeta ? `${protocolMeta.name}_${protocolMeta.op}` : "edge_request",
+    // Speculative prefetch/prerender fetches are not page views.
+    eventType: protocolMeta
+      ? `${protocolMeta.name}_${protocolMeta.op}`
+      : /prefetch/i.test(request.headers.get("Sec-Purpose") ?? "") ? "edge_prefetch" : "edge_request",
     surface,
     route,
     method: request.method,

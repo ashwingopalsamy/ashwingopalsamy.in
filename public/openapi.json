@@ -33,11 +33,6 @@
     "categories": ["agent-discovery", "read-only-profile", "developer-resources"],
     "status": "operational"
   },
-  "security": [
-    { "OAuth2": ["site.read"] },
-    { "ApiKeyAuth": [] },
-    {}
-  ],
   "paths": {
     "/api/v1/profile": {
       "get": {
@@ -57,16 +52,6 @@
           },
           "405": {
             "description": "Method Not Allowed",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -129,16 +114,6 @@
           },
           "405": {
             "description": "Method Not Allowed",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -210,16 +185,6 @@
                 }
               }
             }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
           }
         }
       }
@@ -281,16 +246,6 @@
                 }
               }
             }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
           }
         }
       }
@@ -299,7 +254,7 @@
       "get": {
         "operationId": "getStatusV1",
         "summary": "Get API operational status",
-        "description": "Returns operational status, rate limit policy, versioning details, and protocol links.",
+        "description": "Returns operational status, versioning details, and protocol links.",
         "responses": {
           "200": {
             "description": "API status and capability metadata",
@@ -320,39 +275,22 @@
                 }
               }
             }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
           }
         }
       }
     },
     "/api": {
       "get": {
-        "operationId": "getCompatibilityEnvelope",
-        "summary": "Compatibility response",
-        "description": "This route returns an HTTP 402 compatibility response with a zero-value testnet schema challenge. It has no controlled recipient, facilitator, verification, or settlement.",
-        "x-payment-info": {
-          "intent": "charge",
-          "method": "disabled",
-          "amount": "0",
-          "currency": "USD",
-          "description": "Payment discovery is compatibility-only. The advertised amount is zero and no payment is accepted."
-        },
+        "operationId": "getApiIndex",
+        "summary": "Get API index",
+        "description": "Returns a read-only API index pointing to the public endpoints. No authentication or payment is required.",
         "responses": {
-          "402": {
-            "description": "Zero-value payment compatibility response; signatures are rejected and no settlement occurs",
+          "200": {
+            "description": "API index",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CompatibilityEnvelope"
+                  "$ref": "#/components/schemas/ApiIndex"
                 }
               }
             }
@@ -366,46 +304,12 @@
                 }
               }
             }
-          },
-          "429": {
-            "description": "Rate limit exceeded",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
           }
         }
       }
     }
   },
   "components": {
-    "securitySchemes": {
-      "OAuth2": {
-        "type": "oauth2",
-        "description": "OAuth 2.0 authorization code flow for agent access",
-        "flows": {
-          "authorizationCode": {
-            "authorizationUrl": "https://ashwingopalsamy.in/oauth/authorize",
-            "tokenUrl": "https://ashwingopalsamy.in/oauth/token",
-            "scopes": {
-              "site.read": "Read-only access to Ashwin Gopalsamy's public profile and library content",
-              "profile.read": "Read authoritative profile facts and career history",
-              "content.search": "Search technical notes, books, and craft articles",
-              "notes.read": "Retrieve raw markdown for published notes"
-            }
-          }
-        }
-      },
-      "ApiKeyAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT",
-        "description": "Optional bearer token for authenticated agent sessions (all endpoints allow unauthenticated read-only access by default)"
-      }
-    },
     "schemas": {
       "ProblemDetails": {
         "type": "object",
@@ -534,16 +438,6 @@
           "apiVersion": { "type": "string", "example": "2026-08-22" },
           "status": { "type": "string", "example": "operational" },
           "mode": { "type": "string", "example": "read-only-discovery" },
-          "rateLimit": {
-            "type": "object",
-            "description": "Rate limiting quotas and policies",
-            "properties": {
-              "limit": { "type": "integer", "example": 120 },
-              "windowSeconds": { "type": "integer", "example": 60 },
-              "policy": { "type": "string", "example": "120;w=60" }
-            },
-            "required": ["limit", "windowSeconds", "policy"]
-          },
           "versioning": {
             "type": "object",
             "description": "API versioning and deprecation schedule",
@@ -582,19 +476,17 @@
             "required": ["openapi", "developers", "mcp", "a2a", "llms"]
           }
         },
-        "required": ["service", "version", "apiVersion", "status", "mode", "rateLimit", "versioning", "capabilities", "links"]
+        "required": ["service", "version", "apiVersion", "status", "mode", "versioning", "capabilities", "links"]
       },
-      "CompatibilityEnvelope": {
+      "ApiIndex": {
         "type": "object",
-        "description": "Zero-value x402 payment compatibility discovery envelope",
+        "description": "Read-only API index",
         "properties": {
-          "error": { "type": "string", "example": "payment_required" },
-          "code": { "type": "string", "example": "payment_required" },
           "status": { "type": "string", "example": "discovery-only" },
           "message": { "type": "string" },
           "resolution_hint": { "type": "string" }
         },
-        "required": ["error", "code", "status", "message", "resolution_hint"]
+        "required": ["status", "message", "resolution_hint"]
       }
     }
   }

@@ -109,8 +109,8 @@ const PIN_LON = 76.9558;
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
-    gap: 0.35rem;
-    padding: 1.25rem 1.1rem;
+    gap: var(--step-1);
+    padding: calc(var(--step) * 5) var(--step-4);
     background: linear-gradient(
       135deg,
       color-mix(in oklch, var(--ink) 5%, var(--canvas)),
@@ -145,7 +145,7 @@ const PIN_LON = 76.9558;
   }
 
   .loc-fallback-coords {
-    margin: 0.35rem 0 0;
+    margin: var(--step-1) 0 0;
     font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
     font-size: var(--text-xs);
     color: var(--faint);
@@ -155,13 +155,13 @@ const PIN_LON = 76.9558;
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 15px;
-    height: 15px;
+    width: var(--step-4);
+    height: var(--step-4);
     border-radius: 50%;
     background: var(--loc-beacon);
     border: 2.5px solid var(--canvas);
     transform: translate(-50%, -50%);
-    animation: loc-pulse 2s ease-out 2 forwards;
+    animation: loc-pulse var(--dur-beacon) var(--ease-enter) 2 forwards;
   }
 
   .loc-dot::after {
@@ -172,7 +172,7 @@ const PIN_LON = 76.9558;
     background: var(--loc-beacon);
     opacity: 0.45;
     transform: scale(1);
-    animation: loc-pulse 2s ease-out 2 forwards;
+    animation: loc-pulse var(--dur-beacon) var(--ease-enter) 2 forwards;
     pointer-events: none;
   }
 
@@ -193,13 +193,13 @@ const PIN_LON = 76.9558;
 
   .loc-pill {
     position: absolute;
-    right: 14px;
-    bottom: 14px;
+    right: var(--step-4);
+    bottom: var(--step-4);
     z-index: 2;
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.5rem 0.85rem;
+    gap: var(--step-2);
+    padding: var(--step-2) var(--step-3);
     border-radius: var(--r-pill);
     font-size: var(--text-sm);
     font-weight: var(--font-medium);
@@ -235,13 +235,13 @@ const PIN_LON = 76.9558;
 
   .loc-attrib {
     position: absolute;
-    left: 10px;
+    left: var(--step-3);
     bottom: 8px;
     z-index: 2;
     display: inline-flex;
     align-items: center;
-    gap: 0.2rem;
-    font-size: 0.625rem;
+    gap: var(--step-1);
+    font-size: var(--text-2xs);
     color: color-mix(in oklch, var(--ink) 62%, transparent);
     white-space: nowrap;
   }
@@ -272,7 +272,7 @@ const PIN_LON = 76.9558;
       display: none;
     }
     .loc-pill {
-      transition: opacity 0.01ms;
+      transition: opacity var(--dur-instant);
     }
   }
 </style>
@@ -300,5 +300,4 @@ const PIN_LON = 76.9558;
   }
 
   initPresenceDot();
-  document.addEventListener("astro:page-load", initPresenceDot);
 </script>

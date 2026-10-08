@@ -83,35 +83,21 @@ function scanContentHeadings(main: HTMLElement): HeadingItem[] {
   return items;
 }
 
-function hasScrollRoom(): boolean {
-  if (typeof window === "undefined") return false;
-  const isDesktop = window.matchMedia("(min-width: 72rem)").matches;
-  const hasHeight = document.documentElement.scrollHeight >= window.innerHeight + 200;
-  return isDesktop && hasHeight;
-}
+/* Minimum scrollable overflow before the rail earns its place. */
+const MIN_SCROLL_ROOM = 200;
+
+const WIDE_RAIL = "(min-width: 72rem)";
 
 let initializedSignal: AbortSignal | undefined;
 
-export function initUniversalFloatingToc() {
-  const signal = pageSignal();
-  if (initializedSignal === signal) return;
-
-  // Clean up any stale floating rail instances
-  document.querySelectorAll<HTMLElement>("[data-toc-rail]").forEach((r) => r.remove());
-
-  const main = document.querySelector<HTMLElement>("main#main, main");
-  if (!main) return;
-
-  const headings = scanContentHeadings(main);
-  if (headings.length < 4) return;
-
-  initializedSignal = signal;
-
+function mountRail(main: HTMLElement, headings: HeadingItem[], signal: AbortSignal): HTMLElement {
   // Create floating rail container
   const rail = document.createElement("nav");
   rail.className = "note-toc-rail";
   rail.setAttribute("aria-label", "Table of contents");
   rail.setAttribute("data-toc-rail", "");
+  // Revealed by the first scroll frame once the page is known to scroll.
+  rail.style.display = "none";
 
   const track = document.createElement("div");
   track.className = "note-toc-rail-track";
@@ -148,11 +134,7 @@ export function initUniversalFloatingToc() {
   // Mount rail inside main
   main.appendChild(rail);
 
-  const checkVisibility = () => {
-    rail.style.display = hasScrollRoom() ? "" : "none";
-  };
-  checkVisibility();
-  window.addEventListener("resize", checkVisibility, { passive: true, signal });
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   const narrowLinks = Array.from(
     document.querySelectorAll<HTMLAnchorElement>(".note-toc-narrow a[data-toc-target]"),
@@ -185,7 +167,7 @@ export function initUniversalFloatingToc() {
     setActive(id);
     const headerOffset = 80;
     const y = target.el.getBoundingClientRect().top + window.scrollY - headerOffset;
-    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+    window.scrollTo({ top: Math.max(0, y), behavior: reduceMotion.matches ? "auto" : "smooth" });
   };
 
   buttons.forEach(({ btn, id }) => {
@@ -204,7 +186,7 @@ export function initUniversalFloatingToc() {
         const title = btn.dataset.tocTitle || btn.getAttribute("aria-label")?.replace(/^Jump to\s+/, "") || "";
         tooltip.textContent = title;
         const btnTop = btn.offsetTop + btn.offsetHeight / 2;
-        tooltip.style.top = `${btnTop}px`;
+        tooltip.style.setProperty("--toc-tip-y", `${btnTop}px`);
         track.classList.add("is-hovered");
       },
       { signal },
@@ -263,7 +245,15 @@ export function initUniversalFloatingToc() {
      very bottom (the last heading may never reach the line on a short
      final section). Both are cheap because the scheduler has already
      measured the page. */
+  let shown = false;
   onScrollFrame(({ y, viewport, docHeight }) => {
+    // Visibility rides the same frame: the scheduler re-measures on resize
+    // and whenever the document grows, so late content re-evaluates it.
+    const roomy = docHeight >= viewport + MIN_SCROLL_ROOM;
+    if (roomy !== shown) {
+      shown = roomy;
+      rail.style.display = roomy ? "" : "none";
+    }
     if (y < 120) {
       setActive(headings[0].id);
       return;
@@ -314,9 +304,51 @@ export function initUniversalFloatingToc() {
     },
     { signal },
   );
+
+  return rail;
+}
+
+export function initUniversalFloatingToc() {
+  const signal = pageSignal();
+  if (initializedSignal === signal) return;
+  initializedSignal = signal;
+
+  // Clean up any stale floating rail instances
+  document.querySelectorAll<HTMLElement>("[data-toc-rail]").forEach((r) => r.remove());
+
+  const main = document.querySelector<HTMLElement>("main#main, main");
+  if (!main) return;
+
+  /* The rail is display:none below 72rem, so nothing is scanned, built or
+     observed until the viewport is wide enough, and all of it is torn down
+     again when it narrows. */
+  const wide = window.matchMedia(WIDE_RAIL);
+  let headings: HeadingItem[] | undefined;
+  let unmount: (() => void) | null = null;
+
+  const sync = () => {
+    if (!wide.matches) {
+      unmount?.();
+      unmount = null;
+      return;
+    }
+    if (unmount) return;
+    headings ??= scanContentHeadings(main);
+    if (headings.length < 4) return;
+
+    const mounted = new AbortController();
+    signal.addEventListener("abort", () => mounted.abort(), { once: true, signal: mounted.signal });
+    const rail = mountRail(main, headings, mounted.signal);
+    unmount = () => {
+      mounted.abort();
+      rail.remove();
+    };
+  };
+
+  wide.addEventListener("change", sync, { signal });
+  sync();
 }
 
 if (typeof document !== "undefined") {
   initUniversalFloatingToc();
-  document.addEventListener("astro:page-load", initUniversalFloatingToc);
 }

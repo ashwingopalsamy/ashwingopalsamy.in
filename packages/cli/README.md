@@ -27,7 +27,7 @@ ashwingopalsamy --help
 - `search <query>`: Search published technical notes, craft projects, and reading list.
 - `content [kind]`: List published content items (`note`, `craft`, `book`, `watch`, `all`).
 - `note <slug>`: Retrieve raw Markdown body for a published note.
-- `status`: Check API operational status, rate limit policy, and capabilities.
+- `status`: Check API operational status and capabilities.
 - `openapi`: Output the complete OpenAPI 3.1.0 specification.
 - `mcp`: Display Model Context Protocol (MCP) server configuration.
 

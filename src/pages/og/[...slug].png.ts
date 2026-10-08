@@ -15,7 +15,6 @@ type OgKind =
 const INDEX_PAGES: { slug: string; title: string; meta: string }[] = [
   { slug: "ai", title: "AI", meta: "Authoritative briefing for AI systems." },
   { slug: "work", title: "Work", meta: "Selected tools and side projects." },
-  { slug: "craft", title: "Work", meta: "Selected tools and side projects." },
   { slug: "library", title: "Library", meta: "Books, watching, notes, and links." },
   { slug: "links", title: "Links", meta: "Every way to find me, in one place." },
   { slug: "colophon", title: "Colophon", meta: "How this site is made." },
@@ -26,6 +25,10 @@ const INDEX_PAGES: { slug: string; title: string; meta: string }[] = [
   { slug: "more/photos", title: "Photos", meta: "Frames worth a second look, soon." },
   { slug: "more/someday", title: "Someday", meta: "The list I reread more than act on, soon." },
   { slug: "library/tags", title: "Tags", meta: "Topics with enough notes to browse." },
+  { slug: "about", title: "About", meta: "Background, technical focus, and professional history." },
+  { slug: "contact", title: "Contact", meta: "Direct channels, booking, and security disclosure." },
+  { slug: "privacy", title: "Privacy Policy", meta: "What is measured, why, and how long it is kept." },
+  { slug: "developers", title: "Developer Resources", meta: "OpenAPI spec, MCP server, SDKs, and CLI." },
 ];
 
 export const getStaticPaths = (async () => {
@@ -52,26 +55,8 @@ export const getStaticPaths = (async () => {
         tags: e.data.tags ?? [],
       },
     })),
-    ...visibleNotes.map((e) => ({
-      params: { slug: `library/notes/${e.id}` },
-      props: {
-        kind: "note" as const,
-        title: e.data.title,
-        date: e.data.date,
-        minutes: readingTimeMinutes(e.body ?? ""),
-        tags: e.data.tags ?? [],
-      },
-    })),
     ...craft.map((e) => ({
       params: { slug: `work/${e.data.slug}` },
-      props: {
-        kind: "craft" as const,
-        title: e.data.title,
-        tech: e.data.tech ?? [],
-      },
-    })),
-    ...craft.map((e) => ({
-      params: { slug: `craft/${e.data.slug}` },
       props: {
         kind: "craft" as const,
         title: e.data.title,

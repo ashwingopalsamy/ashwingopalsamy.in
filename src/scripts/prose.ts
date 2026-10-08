@@ -11,10 +11,10 @@
  *   4. TOC scroll-spy maps IntersectionObserver state to aria-current
  *   5. reading-progress hairline (rAF scroll listener)
  *
- * Everything is idempotent and re-runs on `astro:page-load` so view transitions
- * are safe. Reduced motion is respected (no animated transitions, the progress
- * bar is hidden by CSS). No-JS: the page still reads - diagrams show their
- * source, no dead buttons are rendered.
+ * Everything is idempotent and runs once per document. Reduced motion is
+ * respected (no animated transitions, the progress bar is hidden by CSS).
+ * No-JS: the page still reads - diagrams show their source, no dead buttons
+ * are rendered.
  */
 import { showToast } from "./toast";
 import { playAccent, isSoundEnabled } from "./sound";
@@ -538,6 +538,14 @@ function renderDiagram(fig: HTMLElement, theme: string, signal: AbortSignal, lat
 }
 
 function addExpandButton(fig: HTMLElement, signal: AbortSignal) {
+  // Prerendered figures ship the toolbar; only wire it.
+  const shipped = fig.querySelector<HTMLButtonElement>(".diagram-expand[data-pending]");
+  if (shipped) {
+    shipped.removeAttribute("data-pending");
+    shipped.addEventListener("click", () => openOverlay(fig, signal), { signal });
+    onPageCleanup(() => shipped.setAttribute("data-pending", ""), signal);
+    return;
+  }
   if (fig.querySelector(".diagram-toolbar")) return;
   const toolbar = document.createElement("div");
   toolbar.className = "diagram-toolbar";
@@ -581,7 +589,12 @@ function openOverlay(fig: HTMLElement, signal: AbortSignal) {
   if (signal.aborted || !fig.isConnected) return;
   closeOverlay();
   track({ type: "palette", target: "diagram:expand" });
-  const svg = fig.querySelector<HTMLElement>(".diagram-canvas svg")?.cloneNode(true) as HTMLElement | null;
+  // Prerendered figures carry a light and a dark variant; expand the one shown.
+  const theme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+  const source =
+    fig.querySelector<HTMLElement>(`.diagram-canvas svg[data-variant="${theme}"]`) ??
+    fig.querySelector<HTMLElement>(".diagram-canvas svg");
+  const svg = source?.cloneNode(true) as HTMLElement | null;
   if (!svg) return;
   overlayPrevFocus = document.activeElement as HTMLElement | null;
 
@@ -626,7 +639,14 @@ function openOverlay(fig: HTMLElement, signal: AbortSignal) {
 }
 
 function initDiagrams(signal: AbortSignal) {
-  const diagrams = Array.from(document.querySelectorAll<HTMLElement>(".prose .diagram[data-diagram]"));
+  // Prerendered diagrams are already themed SVG; they only need the toolbar.
+  for (const fig of document.querySelectorAll<HTMLElement>(".prose .diagram[data-prerendered]")) {
+    addExpandButton(fig, signal);
+  }
+
+  const diagrams = Array.from(
+    document.querySelectorAll<HTMLElement>(".prose .diagram[data-diagram]:not([data-prerendered])"),
+  );
   if (diagrams.length === 0) return;
 
   const root = document.documentElement;
@@ -719,4 +739,3 @@ function init() {
 }
 
 init();
-document.addEventListener("astro:page-load", init);

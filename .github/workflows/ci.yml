@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Supersede in-flight runs for the same ref; deploys happen via Cloudflare Pages, not here.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # --ignore-scripts: no lifecycle code runs at install; esbuild falls back to its optional platform package.
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+
+      # Verifies registry signatures and provenance attestations of installed packages.
+      - run: npm audit signatures
+
+      - run: npm audit --omit=dev --audit-level=high
+
+      - run: npm run build

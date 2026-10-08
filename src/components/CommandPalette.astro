@@ -105,7 +105,8 @@ import Icon from "./Icon.astro";
     }).catch(() => undefined);
   }
 
-  document.addEventListener("astro:before-preparation", () => {
+  // Leaving the page cancels an open that is still waiting for the module.
+  window.addEventListener("pagehide", () => {
     paletteOpenIntent += 1;
   });
 
@@ -143,6 +144,11 @@ import Icon from "./Icon.astro";
 
   document.addEventListener("keydown", (e) => {
     if (paletteLoaded) return;
+    // A bare modifier press is the likely start of Cmd/Ctrl+K: fetch the chunk now.
+    if ((e.key === "Meta" || e.key === "Control") && !e.repeat) {
+      void loadPaletteModule().catch(() => undefined);
+      return;
+    }
     if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
       e.preventDefault();
       open("search", true);
@@ -285,9 +291,9 @@ import Icon from "./Icon.astro";
   .palette-chrome {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--step-2);
     min-height: 60px;
-    padding: var(--space-2) var(--space-3);
+    padding: var(--step-2) var(--step-3);
     border-bottom: 1px solid color-mix(in oklch, var(--ink) 8%, transparent);
   }
 
@@ -336,8 +342,15 @@ import Icon from "./Icon.astro";
   .palette-search {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--step-3);
     min-width: 0;
+  }
+
+  /* The input drops its own outline; the row carries the focus ring. */
+  .palette-search:focus-within {
+    border-radius: var(--r-2);
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
   }
 
   .palette-search-icon-box {
@@ -350,8 +363,8 @@ import Icon from "./Icon.astro";
   .palette-search-ico {
     flex-shrink: 0;
     color: var(--faint);
-    width: 18px;
-    height: 18px;
+    width: calc(var(--step) * 5);
+    height: calc(var(--step) * 5);
   }
 
   .palette-context-shell {
@@ -409,7 +422,7 @@ import Icon from "./Icon.astro";
     transition:
       color var(--t-color),
       border-color var(--t-color),
-      transform var(--dur-1) var(--ease);
+      transform var(--dur-press) var(--ease-enter);
   }
   .palette-close:hover {
     color: var(--ink);
@@ -439,7 +452,7 @@ import Icon from "./Icon.astro";
     z-index: 1;
     left: 0;
     right: 0;
-    height: 0.8rem;
+    height: var(--step-3);
     pointer-events: none;
     content: "";
     opacity: 0.7;
@@ -460,7 +473,7 @@ import Icon from "./Icon.astro";
     min-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
-    padding: var(--space-2) var(--space-2) var(--space-3);
+    padding: var(--step-2) var(--step-2) var(--step-3);
     overscroll-behavior: contain;
     scrollbar-color: color-mix(in oklch, var(--ink) 24%, transparent) transparent;
     scrollbar-width: thin;
@@ -473,7 +486,7 @@ import Icon from "./Icon.astro";
   }
 
   .palette-group {
-    padding: var(--space-4) var(--space-2) var(--space-2);
+    padding: var(--step-4) var(--step-2) var(--step-2);
     color: var(--faint);
     font-size: var(--text-xs);
     font-weight: 500;
@@ -483,18 +496,18 @@ import Icon from "./Icon.astro";
   }
 
   .palette-group:first-child {
-    padding-top: var(--space-2);
+    padding-top: var(--step-2);
   }
 
   .palette-item {
     position: relative;
     display: flex;
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--step-3);
     min-height: 3.25rem;
     min-inline-size: 0;
     margin-block: 2px;
-    padding: 0.55rem var(--space-3);
+    padding: var(--step-2) var(--step-3);
     border-radius: var(--r-4);
     cursor: pointer;
     color: var(--ink);
@@ -553,7 +566,7 @@ import Icon from "./Icon.astro";
   .palette-item:active {
     background: color-mix(in oklch, var(--ink) 12%, transparent);
     transform: translateY(0) scale(0.985);
-    transition: background-color var(--t-color), transform var(--dur-1) var(--ease);
+    transition: background-color var(--t-color), transform var(--dur-press) var(--ease-enter);
   }
 
   .palette-item-main {
@@ -580,15 +593,15 @@ import Icon from "./Icon.astro";
   }
 
   .palette-icon svg {
-    width: 17px;
-    height: 17px;
+    width: var(--step-4);
+    height: var(--step-4);
   }
 
   .palette-lucide,
   .palette-svg {
     display: inline-block;
-    width: 17px;
-    height: 17px;
+    width: var(--step-4);
+    height: var(--step-4);
     flex: 0 0 auto;
   }
 
@@ -605,14 +618,14 @@ import Icon from "./Icon.astro";
   }
 
   .palette-search-ico {
-    width: 18px;
-    height: 18px;
+    width: calc(var(--step) * 5);
+    height: calc(var(--step) * 5);
   }
 
   .palette-label {
     display: flex;
     align-items: center;
-    gap: 0.45rem;
+    gap: var(--step-2);
     min-width: 0;
     font-weight: var(--font-medium);
     font-size: var(--text-sm);
@@ -630,14 +643,14 @@ import Icon from "./Icon.astro";
     display: inline-flex;
     align-items: center;
     flex: 0 0 auto;
-    min-height: 1.15rem;
-    padding: 0.12rem 0.55rem;
+    min-height: calc(var(--step) * 5);
+    padding: 0.12rem var(--step-2);
     border: 1px solid var(--chrome-surface-border);
     border-radius: var(--r-pill);
     background: var(--canvas);
     box-shadow: var(--chrome-surface-shadow);
     color: var(--muted);
-    font-size: 0.62rem;
+    font-size: var(--text-2xs);
     font-weight: 600;
     letter-spacing: 0.08em;
     line-height: 1;
@@ -700,11 +713,11 @@ import Icon from "./Icon.astro";
     flex-shrink: 0;
     min-height: 1.5rem;
     font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
-    font-size: 0.68rem;
+    font-size: var(--text-xs);
     color: var(--faint);
     border: 1px solid var(--chrome-surface-border);
     border-radius: var(--r-pill);
-    padding: 0.1rem 0.45rem;
+    padding: 0.1rem var(--step-2);
     transition:
       color var(--t-color),
       border-color var(--t-color),
@@ -732,14 +745,14 @@ import Icon from "./Icon.astro";
   }
 
   .palette-external svg {
-    width: 14px;
-    height: 14px;
+    width: var(--step-4);
+    height: var(--step-4);
   }
 
   .palette-external .palette-lucide,
   .palette-external .palette-svg {
-    width: 14px;
-    height: 14px;
+    width: var(--step-4);
+    height: var(--step-4);
   }
 
   .palette-empty {
@@ -753,9 +766,9 @@ import Icon from "./Icon.astro";
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-3);
+    gap: var(--step-3);
     min-height: 2.75rem;
-    padding: var(--space-2) var(--space-3);
+    padding: var(--step-2) var(--step-3);
     border-top: 1px solid color-mix(in oklch, var(--ink) 8%, transparent);
     font-size: var(--text-xs);
     color: var(--faint);
@@ -770,7 +783,7 @@ import Icon from "./Icon.astro";
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: var(--space-4);
+    gap: var(--step-4);
     min-width: 0;
   }
 
@@ -780,10 +793,10 @@ import Icon from "./Icon.astro";
 
   .palette-footer kbd {
     font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
-    font-size: 0.68rem;
+    font-size: var(--text-xs);
     border: 1px solid var(--chrome-surface-border);
     border-radius: var(--r-pill);
-    padding: 0.08rem 0.45rem;
+    padding: 0.08rem var(--step-2);
     color: var(--muted);
   }
 
@@ -823,8 +836,9 @@ import Icon from "./Icon.astro";
   :root[data-motion="on"]:not([data-intro-animated="true"]) .palette-home-hint {
     opacity: 0;
     transform: translateY(12px);
-    animation: palette-hint-in 620ms var(--ease-spring) both;
-    animation-delay: 300ms;
+    animation: palette-hint-in var(--dur-hero) var(--ease-spring-pop) both;
+    --line-delay: 300ms;
+    animation-delay: var(--line-delay);
   }
   :root[data-intro-animated="true"] .palette-home-hint {
     opacity: 1;
@@ -875,10 +889,10 @@ import Icon from "./Icon.astro";
 
     .palette-chrome {
       min-height: 56px;
-      padding: var(--space-2) var(--mobile-gutter-end) var(--space-2) var(--mobile-gutter-start);
+      padding: var(--step-2) var(--mobile-gutter-end) var(--step-2) var(--mobile-gutter-start);
       display: flex;
       align-items: center;
-      gap: var(--space-2);
+      gap: var(--step-2);
       border-bottom: 1px solid color-mix(in oklch, var(--ink) 8%, transparent);
     }
 
@@ -933,8 +947,8 @@ import Icon from "./Icon.astro";
 
     .palette-list {
       padding-inline: var(--mobile-gutter-start) var(--mobile-gutter-end);
-      padding-bottom: var(--space-5);
-      scroll-padding-block: var(--space-3);
+      padding-bottom: var(--step-5);
+      scroll-padding-block: var(--step-3);
     }
 
     .palette-mobile-dock {
@@ -942,7 +956,7 @@ import Icon from "./Icon.astro";
       isolation: isolate;
       display: flex;
       align-items: center;
-      padding: var(--space-3) var(--mobile-gutter-end) calc(var(--space-3) + env(safe-area-inset-bottom, 0px)) var(--mobile-gutter-start);
+      padding: var(--step-3) var(--mobile-gutter-end) calc(var(--step-3) + env(safe-area-inset-bottom, 0px)) var(--mobile-gutter-start);
       background: linear-gradient(to top, var(--canvas) 85%, color-mix(in oklch, var(--canvas) 85%, transparent) 95%, transparent);
       box-sizing: border-box;
       min-inline-size: 0;
@@ -958,7 +972,7 @@ import Icon from "./Icon.astro";
       max-inline-size: 100%;
       height: 52px;
       min-height: 52px;
-      padding: 0 0.375rem 0 0.85rem;
+      padding: 0 var(--step-2) 0 var(--step-3);
       border: 1px solid var(--chrome-surface-border);
       border-radius: var(--r-pill);
       background: var(--chrome-surface-bg);
@@ -992,7 +1006,7 @@ import Icon from "./Icon.astro";
       grid-area: 1 / 1;
       display: flex;
       align-items: center;
-      gap: var(--space-3);
+      gap: var(--step-3);
       inline-size: 100%;
       height: 100%;
       padding: 0;
@@ -1006,15 +1020,15 @@ import Icon from "./Icon.astro";
       text-align: start;
       cursor: pointer;
       transition:
-        opacity var(--dur-2) var(--ease),
-        transform var(--dur-2) var(--ease);
+        opacity var(--dur-tint) var(--ease-enter),
+        transform var(--dur-tint) var(--ease-enter);
     }
 
     .palette-mobile-search-launch .palette-search-ico {
       flex-shrink: 0;
       color: var(--faint);
-      width: 17px;
-      height: 17px;
+      width: var(--step-4);
+      height: var(--step-4);
       transition: color var(--t-color);
     }
 
@@ -1064,8 +1078,8 @@ import Icon from "./Icon.astro";
       pointer-events: none;
       transform: translateY(4px);
       transition:
-        opacity var(--dur-2) var(--ease),
-        transform var(--dur-2) var(--ease);
+        opacity var(--dur-tint) var(--ease-enter),
+        transform var(--dur-tint) var(--ease-enter);
     }
 
     .palette[data-palette-mode="search"] .palette-mobile-dock .palette-query-shell {
@@ -1077,12 +1091,22 @@ import Icon from "./Icon.astro";
     .palette-mobile-dock .palette-search {
       display: flex;
       align-items: center;
-      gap: var(--space-3);
+      gap: var(--step-3);
       inline-size: 100%;
       height: 100%;
       padding: 0;
       border: 0;
       background: transparent;
+    }
+
+    /* The stage clips its children, so the ring goes on the stage itself. */
+    .palette-mobile-dock .palette-search:focus-within {
+      outline: none;
+    }
+
+    .palette-mobile-query-stage:has(#palette-input:focus-visible) {
+      outline: var(--focus-ring);
+      outline-offset: var(--focus-offset);
     }
 
     .palette-mobile-dock .palette-search-icon-box {
@@ -1096,8 +1120,8 @@ import Icon from "./Icon.astro";
     }
 
     .palette-mobile-dock .palette-search-ico {
-      width: 17px;
-      height: 17px;
+      width: var(--step-4);
+      height: var(--step-4);
       color: var(--faint);
     }
 
@@ -1115,10 +1139,10 @@ import Icon from "./Icon.astro";
       appearance: none;
       display: inline-grid;
       place-items: center;
-      flex: 0 0 38px;
-      inline-size: 38px;
-      block-size: 38px;
-      margin-inline-start: var(--space-1);
+      flex: 0 0 calc(var(--step) * 10);
+      inline-size: calc(var(--step) * 10);
+      block-size: calc(var(--step) * 10);
+      margin-inline-start: var(--step-1);
       padding: 0;
       border: 0;
       border-radius: 50%;
@@ -1128,7 +1152,7 @@ import Icon from "./Icon.astro";
       transition:
         color var(--t-color),
         background-color var(--t-color),
-        transform var(--dur-1) var(--ease-out);
+        transform var(--dur-press) var(--ease-enter);
     }
 
     .palette-mobile-close[hidden] {
@@ -1145,7 +1169,7 @@ import Icon from "./Icon.astro";
       transform: scale(0.94);
       background: color-mix(in oklch, var(--ink) 14%, transparent);
       color: var(--ink);
-      transition-duration: var(--dur-1);
+      transition-duration: var(--dur-press);
     }
   }
 
@@ -1154,7 +1178,7 @@ import Icon from "./Icon.astro";
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
       background: color-mix(in oklch, var(--ink) 45%, transparent);
-      transition: background-color 220ms var(--ease);
+      transition: background-color var(--dur-shift) var(--ease-enter);
     }
 
     .palette-panel {
@@ -1180,7 +1204,7 @@ import Icon from "./Icon.astro";
 
     .palette-panel {
       transform: none;
-      transition: opacity 160ms var(--ease);
+      transition: opacity var(--dur-nudge) var(--ease-enter);
     }
 
     .palette-mobile-search-launch,

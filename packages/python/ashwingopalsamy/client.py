@@ -80,6 +80,6 @@ class Client:
         return NoteMarkdown.from_dict(data)
 
     def get_status(self) -> ApiStatus:
-        """Check API operational status, rate limit policy, and capabilities."""
+        """Check API operational status and capabilities."""
         data = self._request("/api/v1/status")
         return ApiStatus.from_dict(data)

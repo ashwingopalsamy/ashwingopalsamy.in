@@ -13,8 +13,6 @@ colors:
   neutral-07: "oklch(0.4 0.005 240)"
   neutral-08: "oklch(0.3 0.004 240)"
   neutral-09: "oklch(0.2 0.003 240)"
-  accent-light: "oklch(0.58 0.2 25)"
-  accent-dark: "oklch(0.68 0.19 25)"
   warning-light: "oklch(0.76 0.16 65)"
   warning-dark: "oklch(0.78 0.15 65)"
   information-light: "oklch(0.58 0.19 255)"
@@ -59,27 +57,50 @@ typography:
     fontWeight: 400
     lineHeight: 1.4
     letterSpacing: 0.01em
+typeScale:
+  text-2xs: 0.625rem
+  text-ui: 0.9375rem
+  text-xs: "clamp(0.68rem, 0.66rem + 0.1vw, 0.75rem)"
+  text-sm: "clamp(0.8rem, 0.78rem + 0.12vw, 0.875rem)"
+  text-base: "clamp(1rem, 0.97rem + 0.18vw, 1.0625rem)"
+  text-md: "clamp(1.05rem, 1.02rem + 0.2vw, 1.15rem)"
+  text-lg: "clamp(1.12rem, 1.05rem + 0.35vw, 1.28rem)"
+  text-xl: "clamp(1.25rem, 1.15rem + 0.5vw, 1.4rem)"
+  text-display: "clamp(1.7rem, 1.45rem + 1.2vw, 1.95rem)"
 rounded:
-  radius-2: 2px
-  radius-4: 4px
-  radius-8: 8px
-  radius-12: 12px
-  radius-16: 16px
-  radius-20: 20px
-  pill: 999px
-  nestingRule: "inner = max(radius-2, outer - padding)"
+  r-1: 2px
+  r-2: 4px
+  r-3: 8px
+  r-4: 12px
+  r-5: 16px
+  r-6: 20px
+  r-pill: 999px
+  r-diamond: 0.75px
+  nestingRule: "--r-inner = max(--r-1, --r-outer - --r-gap)"
 spacing:
   step: 4px
-  space-4: 4px
-  space-8: 8px
-  space-12: 12px
-  space-16: 16px
-  space-24: 24px
-  space-32: 32px
-  space-48: 48px
-  space-64: 64px
-  space-96: 96px
+  step-1: 4px
+  step-2: 8px
+  step-3: 12px
+  step-4: 16px
+  step-5: 24px
+  step-6: 32px
+  step-7: 48px
+  step-8: 64px
+  step-9: 96px
   rhythm: "1rem * 1.68 — one body line box; editorial gaps are multiples of it"
+breakpoints:
+  compact: "max-width: 38rem — phone layout, five-track bottom navigation"
+  regular: "min-width: 42.5rem"
+  toc: "min-width: 72rem — floating table of contents"
+zIndex:
+  z-base: 0
+  z-veil: 5
+  z-raised: 10
+  z-sticky: 20
+  z-progress: 30
+  z-toast: 40
+  z-overlay: 60
 motion:
   ease-enter: cubic-bezier(0.16, 1, 0.3, 1)
   ease-exit: cubic-bezier(0.55, 0, 1, 0.45)
@@ -97,25 +118,33 @@ motion:
   dur-overlay: 280ms
   dur-route-out: 90ms
   dur-route-in: 200ms
+  dur-route-delay: 40ms
+  ease-overshoot: "cubic-bezier(0, 0, 0, 1.25)"
+  ease-morph: "cubic-bezier(0, 0, 0.5, 1)"
+  ease-pulse: "cubic-bezier(0.4, 0, 0.6, 1)"
+  ease-sway: "cubic-bezier(0.42, 0, 0.58, 1)"
+  dur-hero: 620ms
+  dur-spin: 800ms
+  dur-pulse: 3.6s
 components:
   desktop-navigation:
     backgroundColor: "{colors.neutral-01}"
     textColor: "{colors.neutral-09}"
     typography: "{typography.inter-400}"
-    rounded: "{rounded.pill}"
+    rounded: "{rounded.r-pill}"
     padding: 4px
     height: 46px
   desktop-navigation-active:
     backgroundColor: "{colors.neutral-09}"
     textColor: "{colors.neutral-01}"
     typography: "{typography.inter-450}"
-    rounded: "{rounded.pill}"
+    rounded: "{rounded.r-pill}"
     padding: 8px
   mobile-navigation:
     backgroundColor: "{colors.neutral-01}"
     textColor: "{colors.neutral-09}"
     typography: "{typography.inter-400}"
-    rounded: "{rounded.pill}"
+    rounded: "{rounded.r-pill}"
     padding: 4px
     height: 52px
     width: 100%
@@ -123,19 +152,19 @@ components:
     backgroundColor: "{colors.neutral-09}"
     textColor: "{colors.neutral-01}"
     typography: "{typography.inter-400}"
-    rounded: "{rounded.radius-10}"
+    rounded: "{rounded.r-pill}"
     padding: 12px
   progress-bar:
     backgroundColor: "{colors.neutral-09}"
     textColor: "#ffffff"
-    rounded: "{rounded.radius-2}"
+    rounded: "{rounded.r-1}"
     height: 2px
     width: 100px
   utility-input:
     backgroundColor: "{colors.neutral-01}"
     textColor: "{colors.neutral-09}"
     typography: "{typography.jetbrains-mono-400}"
-    rounded: "{rounded.radius-4}"
+    rounded: "{rounded.r-2}"
     padding: 12px
 ---
 
@@ -177,6 +206,8 @@ A **twelve column rail** measured across the content box, not the rail box. Widt
 
 Hold `G` on any page to see all of it. `?grid` pins the overlay on. If a rule, card edge or heading does not land on a line, the layout is wrong.
 
+`npm run tokens` reports every raw value that bypasses these systems (spacing off the lattice, raw durations, easings, radii, colours, font sizes, z-indices, unlisted breakpoints) and any drift between this file's frontmatter and the CSS. Radius, spacing, z-index and motion keys in the frontmatter are the CSS custom property names; colours keep their semantic names (`neutral-01` is `--color-1`, `success-light` is `--acc-green`).
+
 Optical corrections are named (`--mono-optical-shift`, `--optical-icon-inset`, `--optical-pill-lift`) so they read as deliberate compensation for how a glyph or icon sits, rather than as magic numbers someone nudged until it looked level.
 
 ## Layout
@@ -187,7 +218,7 @@ Mobile has its own physical constraints. Home, Work, AI, More, and Links stay in
 
 ## Elevation & Depth
 
-Depth is used to separate persistent chrome, overlays, and feedback. A surface gets either a border or a shadow strong enough to explain its elevation. Blur is reserved for stationary desktop chrome and overlays; the mobile navigation uses an opaque surface so scrolling remains cheap.
+Depth is used to separate persistent chrome, overlays, and feedback. A surface gets either a border or a shadow strong enough to explain its elevation. Blur is reserved for stationary chrome and overlays: the desktop header, the mobile bottom navigation (a short, fixed strip, so its blur stays cheap while content scrolls beneath it), the command palette, and floating tooltips.
 
 `backdrop-filter` is only correct where something non-uniform actually sits behind the element: the fixed header, the command palette, the location pill over its map, and floating tooltips. In the reading column the page is a flat canvas, so a backdrop blur there composites to identical pixels while costing a full-surface blur on every scroll frame. In-flow surfaces use `--surface-inline-bg`, the same colour pre-composited against the canvas.
 
@@ -211,7 +242,7 @@ Scroll-linked work is either driven by CSS scroll-driven animations, or by the s
 
 ## Shapes
 
-Small controls use the shared radius scale. Pills belong to compact navigation and segmented controls. Content containers use 10 to 16 pixel radii. List markers are 4 pixel diamonds; nested lists use a hollow diamond. Ordered lists use aligned tabular counters.
+Small controls use the shared radius scale. Pills belong to compact navigation and segmented controls. Content containers use `--r-4` to `--r-5` (12 to 16 pixels). List markers are 4 pixel diamonds; nested lists use a hollow diamond. Ordered lists use aligned tabular counters.
 
 ## Components
 
@@ -243,4 +274,4 @@ Every control needs a default, hover, active, focus, disabled, loading, empty, a
 
 The public site is static Astro with progressive enhancement. Theme, sound, maps, embeds, Mermaid, clipboard access, and local storage must all fail without taking the content with them. Reduced motion removes nonessential travel and shows the final state immediately while retaining useful color, focus, and status feedback.
 
-Machine-readable material is documented separately in [`docs/agent-readiness.md`](docs/agent-readiness.md). This file stays focused on the interface contract.
+Machine-readable material is documented separately in [`/agent-readiness.md`](https://ashwingopalsamy.in/agent-readiness.md). This file stays focused on the interface contract.

@@ -136,6 +136,7 @@ function iconPath(link: SocialLink): string {
 
 <style>
   .social-preview {
+    --brand-linkedin: #0a66c2;
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -145,7 +146,7 @@ function iconPath(link: SocialLink): string {
   .social-preview__triggers {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--step-2);
   }
 
   .chip {
@@ -187,7 +188,7 @@ function iconPath(link: SocialLink): string {
 
   .chip:active {
     transform: translateY(-1px) scale(0.96);
-    transition: transform var(--dur-1) var(--ease);
+    transition: transform var(--dur-press) var(--ease-enter);
   }
 
   .social-preview__bridge {
@@ -214,10 +215,10 @@ function iconPath(link: SocialLink): string {
     pointer-events: none;
     transform: translateX(-50%);
     transition:
-      inset-inline-start var(--dur-3) cubic-bezier(0.33, 1, 0.68, 1),
-      width var(--dur-3) cubic-bezier(0.33, 1, 0.68, 1),
-      height var(--dur-3) cubic-bezier(0.33, 1, 0.68, 1),
-      opacity var(--dur-2) var(--ease);
+      inset-inline-start var(--dur-shift) var(--ease-enter),
+      width var(--dur-shift) var(--ease-enter),
+      height var(--dur-shift) var(--ease-enter),
+      opacity var(--dur-tint) var(--ease-enter);
     isolation: isolate;
   }
 
@@ -239,7 +240,7 @@ function iconPath(link: SocialLink): string {
     inset-block-end: 0;
     inset-inline-start: 0;
     width: max-content;
-    max-width: calc(100vw - 2 * var(--space-3));
+    max-width: calc(100vw - 2 * var(--step-3));
     background: var(--canvas);
     color: var(--ink);
   }
@@ -262,15 +263,15 @@ function iconPath(link: SocialLink): string {
   .social-preview__card--github {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
-    padding: var(--space-3);
+    gap: var(--step-3);
+    padding: var(--step-3);
   }
 
   .social-preview__github-header {
     display: grid;
     grid-template-columns: 2.5rem minmax(0, 1fr);
     align-items: center;
-    gap: var(--space-3);
+    gap: var(--step-3);
   }
 
   .social-preview__avatar {
@@ -298,7 +299,7 @@ function iconPath(link: SocialLink): string {
   .social-preview__name {
     margin: 0;
     color: var(--ink);
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: var(--font-semibold);
     line-height: 1.25;
   }
@@ -328,7 +329,7 @@ function iconPath(link: SocialLink): string {
   .social-preview__profile-topline {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: var(--space-2);
+    gap: var(--step-2);
   }
 
   .social-preview__github-topline {
@@ -342,7 +343,7 @@ function iconPath(link: SocialLink): string {
   .social-preview__name-row {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-1);
+    gap: var(--step-1);
     min-width: 0;
   }
 
@@ -383,7 +384,7 @@ function iconPath(link: SocialLink): string {
     inset-block-start: var(--tooltip-y, 0px);
     inset-inline-start: var(--tooltip-x, 50%);
     max-inline-size: calc(100% - 1rem);
-    padding: 0.3rem 0.65rem;
+    padding: var(--step-1) var(--step-3);
     border-radius: var(--r-pill);
     background: var(--ink);
     box-shadow: var(--shadow-1);
@@ -423,7 +424,7 @@ function iconPath(link: SocialLink): string {
   .social-preview__avatar--featured {
     position: absolute;
     inset-block-end: 0;
-    inset-inline-start: var(--space-3);
+    inset-inline-start: var(--step-3);
     z-index: 1;
     width: 3.5rem;
     height: 3.5rem;
@@ -434,8 +435,8 @@ function iconPath(link: SocialLink): string {
   .social-preview__profile-body {
     display: grid;
     min-width: 0;
-    gap: var(--space-2);
-    padding: calc(1.75rem + var(--space-2)) var(--space-3) var(--space-3);
+    gap: var(--step-2);
+    padding: calc(1.75rem + var(--step-2)) var(--step-3) var(--step-3);
   }
 
   .social-preview__verified {
@@ -446,7 +447,7 @@ function iconPath(link: SocialLink): string {
   }
 
   .social-preview__verified--linkedin {
-    background: #0a66c2;
+    background: var(--brand-linkedin);
     -webkit-mask: url("/LinkedIn_Verified_Badge.svg") center / contain no-repeat;
     mask: url("/LinkedIn_Verified_Badge.svg") center / contain no-repeat;
   }
@@ -463,14 +464,14 @@ function iconPath(link: SocialLink): string {
     height: fit-content;
     padding: 0.25rem 0.75rem;
     border-radius: var(--r-pill);
-    color: #fff;
+    color: var(--color-1);
     font-size: var(--text-sm);
     font-weight: var(--font-semibold);
     line-height: 1.4;
     text-decoration: none;
     transition:
       filter var(--t-color),
-      transform var(--dur-1) var(--ease);
+      transform var(--dur-press) var(--ease-enter);
   }
 
   .social-preview__cta:hover,
@@ -484,7 +485,7 @@ function iconPath(link: SocialLink): string {
   }
 
   .social-preview__cta--linkedin {
-    background: #0a66c2;
+    background: var(--brand-linkedin);
   }
 
   .social-preview__cta--github,
@@ -503,19 +504,19 @@ function iconPath(link: SocialLink): string {
 
   .social-preview__x-mark {
     position: absolute;
-    inset-block-start: var(--space-3);
-    inset-inline-end: var(--space-3);
+    inset-block-start: var(--step-3);
+    inset-inline-end: var(--step-3);
     width: 1.25rem;
     height: 1.25rem;
     color: #f5f5f4;
-    filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.55));
+    filter: drop-shadow(0 1px 2px color-mix(in oklch, var(--color-9) 55%, transparent));
     opacity: 0.92;
   }
 
   .social-preview__x-body {
     display: grid;
-    gap: var(--space-1);
-    padding: var(--space-3);
+    gap: var(--step-1);
+    padding: var(--step-3);
   }
 
   .social-preview__x-action-row {
@@ -528,7 +529,7 @@ function iconPath(link: SocialLink): string {
   .social-preview__x-name-row {
     width: max-content;
     max-width: 100%;
-    margin-block-start: var(--space-1);
+    margin-block-start: var(--step-1);
   }
 
   .social-preview__profile-body .social-preview__meta,
@@ -545,7 +546,7 @@ function iconPath(link: SocialLink): string {
     }
 
     .social-preview__panel {
-      transition: opacity var(--dur-2) linear;
+      transition: opacity var(--dur-tint) linear;
     }
 
     .social-preview__cta:active {
@@ -581,11 +582,15 @@ function iconPath(link: SocialLink): string {
       let hideTimer: number | undefined;
       let settleTimer: number | undefined;
       let openFrame: number | undefined;
+      let resizeFrame: number | undefined;
       let lastInputWasKeyboard = false;
       let suppressFocusOpen = false;
 
       const cardFor = new Map(cards.map((card) => [card.dataset.previewId, card]));
-      const easing = () => getComputedStyle(root).getPropertyValue("--ease").trim() || "cubic-bezier(0.2, 0, 0, 1)";
+      /* A card's size only changes with the viewport (its max-width is in vw)
+         or with font loading, so it is measured once and dropped on those. */
+      const cardSizes = new Map<HTMLElement, { width: number; height: number }>();
+      const easing = () => getComputedStyle(root).getPropertyValue("--ease-enter").trim() || "cubic-bezier(0.2, 0, 0, 1)";
 
       function clearLeaveTimer() {
         if (leaveTimer !== undefined) window.clearTimeout(leaveTimer);
@@ -618,6 +623,8 @@ function iconPath(link: SocialLink): string {
       }
 
       function measureCard(card: HTMLElement) {
+        const cached = cardSizes.get(card);
+        if (cached) return cached;
         ensureContributionGrid(card);
         const wasHidden = card.hidden;
         const wasInert = card.inert;
@@ -628,13 +635,15 @@ function iconPath(link: SocialLink): string {
         card.hidden = wasHidden;
         card.inert = wasInert;
         card.classList.remove("is-measuring");
+        if (size.width > 0 && size.height > 0) cardSizes.set(card, size);
         return size;
       }
 
       function positionPanel(trigger: HTMLElement, card: HTMLElement) {
-        const { width, height } = measureCard(card);
+        // geometry reads first: measuring a card toggles it, which dirties layout
         const rootBox = root.getBoundingClientRect();
         const triggerBox = trigger.getBoundingClientRect();
+        const { width, height } = measureCard(card);
         const desiredCenter = triggerBox.left + triggerBox.width / 2;
         const gutter = 12;
         const minimumCenter = gutter + width / 2;
@@ -860,14 +869,21 @@ function iconPath(link: SocialLink): string {
       graph?.addEventListener("pointerover", showContributionTooltip, { signal });
       graph?.addEventListener("pointerleave", hideTooltip, { signal });
       window.addEventListener("resize", () => {
-        if (!panel.hidden && activeTrigger && activeCard) positionPanel(activeTrigger, activeCard);
+        cardSizes.clear();
+        if (resizeFrame !== undefined) return;
+        resizeFrame = window.requestAnimationFrame(() => {
+          resizeFrame = undefined;
+          if (!panel.hidden && activeTrigger && activeCard) positionPanel(activeTrigger, activeCard);
+        });
       }, { signal });
+      ownerDocument.fonts?.addEventListener("loadingdone", () => cardSizes.clear(), { signal });
 
       signal.addEventListener("abort", () => {
         clearLeaveTimer();
         clearHideTimer();
         if (settleTimer !== undefined) window.clearTimeout(settleTimer);
         if (openFrame !== undefined) window.cancelAnimationFrame(openFrame);
+        if (resizeFrame !== undefined) window.cancelAnimationFrame(resizeFrame);
         panel.hidden = true;
         panel.classList.remove("is-open", "is-instant", "is-animating");
         hideCards();
@@ -877,5 +893,4 @@ function iconPath(link: SocialLink): string {
   }
 
   initSocialProfilePreviews();
-  document.addEventListener("astro:page-load", initSocialProfilePreviews);
 </script>

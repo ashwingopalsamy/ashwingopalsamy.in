@@ -17,7 +17,6 @@ import {
 } from "../_site-data";
 import type { RuntimeEnv } from "../_site-data";
 import { applySecurityHeaders } from "../../src/lib/security-headers";
-import { applyRateLimitHeaders } from "../_unavailable";
 import { MAX_BODY_BYTES } from "../_ingress";
 
 interface PagesContext {
@@ -227,7 +226,6 @@ function createServer(env: RuntimeEnv, requestUrl: string) {
 
 function methodNotAllowed(): Response {
   let headers = applySecurityHeaders(new Headers(), "json-api-public");
-  headers = applyRateLimitHeaders(headers);
   headers = applyMcpCors(appendMcpDiscoveryLinks(headers));
   headers.set("Allow", "POST, OPTIONS");
   return new Response(null, { status: 405, headers });
@@ -336,7 +334,6 @@ export const onRequest = async (context: PagesContext): Promise<Response> => {
 
   const response = await handler.fetch(boundedRequest);
   let headers = applySecurityHeaders(new Headers(response.headers), "json-api-public");
-  headers = applyRateLimitHeaders(headers);
   headers = applyMcpCors(appendMcpDiscoveryLinks(headers), true);
   return new Response(response.body, {
     status: response.status,

@@ -47,9 +47,9 @@ const endpoints = [
     <li><span class="col-k">Astro</span>, statically generated. No client framework, just a little vanilla JavaScript for progressive enhancement. With scripts off, the whole site still reads.</li>
     <li><span class="col-k">TypeScript</span> for the data and components.</li>
     <li>Hand-written <span class="col-k">CSS</span> on an OKLCH token system. One neutral value ramp, with semantic accents held in reserve.</li>
-    <li>View transitions via Astro's <span class="col-k">ClientRouter</span>, tuned so navigation never flashes.</li>
-    <li>The map is <span class="col-k">MapLibre GL</span> on keyless <span class="col-k">OpenFreeMap</span> tiles. No token, no vendor lock.</li>
-    <li>The music card is a <span class="col-k">Spotify</span> embed with a loading skeleton so the slot doesn't jump while the player arrives.</li>
+    <li>Native cross-document <span class="col-k">View Transitions</span>, tuned so navigation never flashes.</li>
+    <li>The map is a pre-rendered <span class="col-k">OpenStreetMap</span> image. No tiles, no token, no vendor at runtime.</li>
+    <li>The music card is a static stand-in; the <span class="col-k">Spotify</span> player loads only when you reach for it, in the same slot.</li>
     <li>A typed, shared <span class="col-k">Lucide</span> registry gives site chrome, Markdown, and the command palette the same visual language.</li>
     <li>The notes engine: build-time <span class="col-k">KaTeX</span> for math, dual-theme <span class="col-k">Shiki</span> syntax highlighting, lazy <span class="col-k">Mermaid</span> diagrams that re-render on theme toggle. All built on Astro's satteri markdown processor with custom plugins. No client framework.</li>
   </ul>
@@ -151,7 +151,7 @@ const endpoints = [
     If an agent is reading, start at <a href="/ai/">/ai</a>. Everything is meant to be
     parsed, not just read:
   </p>
-  <ul class="col-endpoints">
+  <ul class="col-endpoints surface-stack">
     {
       endpoints.map(([href, note]) => {
         const ext = href.endsWith(".json") ? "JSON" : href.endsWith(".xml") ? "XML" : href.endsWith(".txt") ? "TXT" : href.endsWith(".md") ? "MD" : "HTML";
@@ -192,7 +192,7 @@ const endpoints = [
 <style>
   .col-p {
     max-width: 100%;
-    margin-bottom: 1.1rem;
+    margin-bottom: var(--step-4);
     color: var(--ghost);
     transition: color var(--t-color);
   }
@@ -224,7 +224,7 @@ const endpoints = [
     transition:
       color var(--t-color),
       font-weight var(--t-color),
-      background-size 320ms var(--ease-out);
+      background-size var(--dur-enter) var(--ease-enter);
   }
   .col-p a:hover,
   .col-p a:focus-visible {
@@ -245,7 +245,7 @@ const endpoints = [
   }
 
   .col-h {
-    font-size: 0.95rem;
+    font-size: var(--text-ui);
     font-weight: 600;
     color: var(--ink);
     margin: 2.25rem 0 0.75rem;
@@ -257,12 +257,12 @@ const endpoints = [
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
+    gap: var(--step-3);
     color: var(--muted);
     max-width: 100%;
   }
   .col-list li {
-    padding-left: 1.1rem;
+    padding-left: var(--step-4);
     position: relative;
     line-height: var(--leading-relaxed);
   }
@@ -271,8 +271,8 @@ const endpoints = [
     position: absolute;
     left: 0;
     top: 0.65em;
-    width: 5px;
-    height: 5px;
+    width: var(--dot-5);
+    height: var(--dot-5);
     background: var(--rule-strong);
     transform: rotate(45deg);
   }
@@ -282,32 +282,14 @@ const endpoints = [
   }
 
   .col-endpoints {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    list-style: none;
+    --surface-row-gap: 0.15rem;
     margin: 0.5rem 0 2.25rem;
-    padding: 0;
     max-width: 100%;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .col-endpoints:hover .col-endpoint-item {
-      opacity: var(--dim-opacity);
-      filter: blur(var(--dim-blur));
-      transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
-    }
-    .col-endpoints:hover .col-endpoint-item:hover,
-    .col-endpoints:hover .col-endpoint-item:focus-within {
-      opacity: 1;
-      filter: none;
-    }
   }
 
   .col-endpoint-item {
     min-inline-size: 0;
     max-inline-size: 100%;
-    transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
   }
 
   .col-endpoint-link {
@@ -315,8 +297,8 @@ const endpoints = [
     align-items: baseline;
     justify-content: space-between;
     gap: 1rem;
-    padding: 0.65rem 0.85rem;
-    margin-inline: -0.85rem;
+    padding: var(--step-3) var(--step-3);
+    margin-inline: calc(var(--step-3) * -1);
     border-radius: var(--r-3);
     background: transparent;
     border: none;
@@ -326,20 +308,20 @@ const endpoints = [
     min-inline-size: 0;
     transition:
       background-color var(--t-color),
-      transform var(--dur-1) var(--ease-out);
+      transform var(--dur-press) var(--ease-enter);
   }
 
   .col-endpoint-left {
     display: flex;
     align-items: baseline;
-    gap: 0.65rem;
+    gap: var(--step-3);
     min-inline-size: 0;
   }
 
   .col-format-pill {
-    font-size: 0.625rem;
+    font-size: var(--text-2xs);
     font-weight: var(--font-semibold);
-    padding: 0.15rem 0.45rem;
+    padding: 0.15rem var(--step-2);
     border-radius: var(--r-pill);
     background: var(--canvas);
     border: 1px solid var(--chrome-surface-border);
@@ -373,12 +355,12 @@ const endpoints = [
 
   .col-arrow {
     color: var(--ghost);
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     opacity: 0.6;
     transition:
       color var(--t-color),
       opacity var(--t-color),
-      transform var(--dur-2) var(--ease-out);
+      transform var(--dur-tint) var(--ease-enter);
   }
 
   .col-endpoint-link:focus-visible {
@@ -414,7 +396,7 @@ const endpoints = [
   /* ------------------------------------------------------------------ */
   .carbon-specimen {
     margin: 1.5rem 0 2.5rem;
-    padding: 1.5rem 1.65rem;
+    padding: var(--step-5) calc(var(--step) * 7);
     border-radius: var(--r-4);
     background: var(--canvas);
     border: 1px solid var(--rule);
@@ -449,7 +431,7 @@ const endpoints = [
     background: color-mix(in oklch, var(--acc-green) 16%, transparent);
     border: 1.5px solid color-mix(in oklch, var(--acc-green) 35%, transparent);
     color: var(--acc-green);
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 700;
     letter-spacing: -0.02em;
     flex-shrink: 0;
@@ -465,11 +447,11 @@ const endpoints = [
   .carbon-val-row {
     display: flex;
     align-items: baseline;
-    gap: 0.45rem;
+    gap: var(--step-2);
   }
 
   .carbon-hero-val {
-    font-size: 1.75rem;
+    font-size: var(--text-display);
     font-weight: 700;
     letter-spacing: -0.03em;
     color: var(--ink);
@@ -490,8 +472,8 @@ const endpoints = [
   .carbon-pill-tag {
     display: inline-flex;
     align-items: center;
-    gap: 0.45rem;
-    padding: 0.35rem 0.85rem;
+    gap: var(--step-2);
+    padding: var(--step-1) var(--step-3);
     border-radius: var(--r-pill);
     background: var(--canvas);
     border: 1px solid var(--chrome-surface-border);
@@ -500,8 +482,8 @@ const endpoints = [
   }
 
   .carbon-dot {
-    width: 6px;
-    height: 6px;
+    width: var(--dot-6);
+    height: var(--dot-6);
     border-radius: 50%;
     background: var(--acc-green);
     flex-shrink: 0;
@@ -510,7 +492,7 @@ const endpoints = [
   .carbon-efficiency {
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
+    gap: var(--step-2);
   }
 
   .carbon-efficiency-labels {
@@ -527,7 +509,7 @@ const endpoints = [
 
   .carbon-bar-track {
     width: 100%;
-    height: 5px;
+    height: var(--dot-5);
     border-radius: var(--r-pill);
     background: color-mix(in oklch, var(--ink) 6%, transparent);
     overflow: hidden;
@@ -548,21 +530,21 @@ const endpoints = [
   .carbon-stat {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: var(--step-1);
     padding: 0;
     background: transparent;
     border: none;
   }
 
   .carbon-stat-lbl {
-    font-size: 0.6875rem;
+    font-size: var(--text-xs);
     color: var(--ghost);
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
 
   .carbon-stat-val {
-    font-size: 1.15rem;
+    font-size: var(--text-md);
     font-weight: 600;
     color: var(--ink);
     letter-spacing: -0.02em;
@@ -589,7 +571,7 @@ const endpoints = [
   .carbon-link-pill {
     display: inline-flex;
     align-items: center;
-    padding: 0.3rem 0.75rem;
+    padding: var(--step-1) var(--step-3);
     border-radius: var(--r-pill);
     background: var(--canvas);
     border: 1px solid var(--chrome-surface-border);
@@ -616,7 +598,7 @@ const endpoints = [
     }
 
     .carbon-specimen {
-      padding: 1.15rem;
+      padding: calc(var(--step) * 5);
     }
 
     .carbon-grid {

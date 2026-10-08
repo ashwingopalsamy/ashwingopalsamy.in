@@ -93,6 +93,9 @@
 
   .intro p {
     text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+    text-wrap: pretty;
   }
 
   .lede {
@@ -146,7 +149,7 @@
     padding-bottom: 2px;
     transition:
       font-weight var(--t-color),
-      background-size 320ms var(--ease-out),
+      background-size var(--dur-enter) var(--ease-enter),
       color var(--t-color);
   }
   .link:hover,
@@ -157,15 +160,15 @@
 
   @media (max-width: 38rem) {
     .intro {
-      margin-top: var(--space-4);
-      padding-bottom: var(--space-4);
+      margin-top: var(--step-4);
+      padding-bottom: var(--step-4);
     }
 
     .intro p {
       text-align: justify;
       text-justify: inter-word;
-      hyphens: none;
-      -webkit-hyphens: none;
+      hyphens: auto;
+      -webkit-hyphens: auto;
       text-wrap: pretty;
     }
 
@@ -181,13 +184,14 @@
   :root[data-motion="on"]:not([data-intro-animated="true"]) .intro .line {
     opacity: 0;
     transform: translateY(12px);
-    animation: line-in 620ms var(--ease-spring) both;
+    animation: line-in var(--dur-hero) var(--ease-spring-pop) both;
+    animation-delay: var(--line-delay, 0ms);
   }
-  :root[data-motion="on"]:not([data-intro-animated="true"]) .intro .line:nth-of-type(1) { animation-delay: 40ms; }
-  :root[data-motion="on"]:not([data-intro-animated="true"]) .intro .line:nth-of-type(2) { animation-delay: 100ms; }
-  :root[data-motion="on"]:not([data-intro-animated="true"]) .intro .line:nth-of-type(3) { animation-delay: 155ms; }
-  :root[data-motion="on"]:not([data-intro-animated="true"]) .intro .line:nth-of-type(4) { animation-delay: 205ms; }
-  :root[data-motion="on"]:not([data-intro-animated="true"]) .intro .line:nth-of-type(5) { animation-delay: 250ms; }
+  :root[data-motion="on"]:not([data-intro-animated="true"]) .intro .line:nth-of-type(1) { --line-delay: 40ms; }
+  :root[data-motion="on"]:not([data-intro-animated="true"]) .intro .line:nth-of-type(2) { --line-delay: 100ms; }
+  :root[data-motion="on"]:not([data-intro-animated="true"]) .intro .line:nth-of-type(3) { --line-delay: 155ms; }
+  :root[data-motion="on"]:not([data-intro-animated="true"]) .intro .line:nth-of-type(4) { --line-delay: 205ms; }
+  :root[data-motion="on"]:not([data-intro-animated="true"]) .intro .line:nth-of-type(5) { --line-delay: 250ms; }
 
   :root[data-intro-animated="true"] .intro .line {
     opacity: 1;

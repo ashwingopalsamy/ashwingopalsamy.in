@@ -248,6 +248,11 @@ function flushPageDwell(): void {
 
 export function initTelemetry(): void {
   if (typeof window === "undefined" || isInitialized) return;
+  // A prerendered page may never be opened: start counting when it is.
+  if ((document as Document & { prerendering?: boolean }).prerendering) {
+    document.addEventListener("prerenderingchange", () => initTelemetry(), { once: true });
+    return;
+  }
   isInitialized = true;
 
   lastVisibilityChange = Date.now();
@@ -276,15 +281,12 @@ export function initTelemetry(): void {
     flushPageDwell();
   });
 
-  // null signal: telemetry outlives client-side navigations, so it must
-  // not be torn down by the per-page cleanup registry.
   onScrollFrame(updateScrollDepth, null);
 
-  document.addEventListener("astro:before-swap", () => {
-    flushPageDwell();
-  });
-
-  document.addEventListener("astro:page-load", () => {
+  // Back/forward cache restores are a fresh view of the page.
+  window.addEventListener("pageshow", (event) => {
+    if (!event.persisted) return;
+    lastVisibilityChange = Date.now();
     activeDwellMs = 0;
     maxScrollPercent = 0;
     trackPageView(currentRoute());

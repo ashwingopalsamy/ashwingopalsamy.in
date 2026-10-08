@@ -67,7 +67,13 @@ function readStored(): boolean {
   }
 }
 
-function ensureContext(): AudioContext | null {
+/** Bumped by test resets so deferred work never plays into a replaced context. */
+let contextEpoch = 0;
+
+/** Resume (cheap, gesture-bound) and, when `create`, build the context first.
+ *  Construction is a synchronous audio-device lookup, so callers on an
+ *  interaction path pass `create: false` and build after the next paint. */
+function ensureContext(create = true): AudioContext | null {
   const globalObj = typeof window !== "undefined" ? window : globalThis;
   const Ctor =
     globalObj.AudioContext ??
@@ -75,6 +81,7 @@ function ensureContext(): AudioContext | null {
   if (!Ctor) return null;
 
   if (!ctx) {
+    if (!create) return null;
     ctx = new Ctor();
     master = ctx.createGain();
     master.gain.value = MASTER_GAIN;
@@ -141,6 +148,9 @@ function blip(ac: AudioContext, out: GainNode, spec: BlipSpec): void {
 let lastPlayTime = 0;
 let lastPlayAccent: Accent | null = null;
 
+/** Longer than any rAF + task delay on a visible page; shorter than a tab switch. */
+const STALE_ACCENT_MS = 250;
+
 export function playAccent(accent: Accent): void {
   if (!enabled) return;
   if (!userGestured) return;
@@ -153,10 +163,30 @@ export function playAccent(accent: Accent): void {
   lastPlayAccent = accent;
   lastSoundTime = now;
 
-  const ac = ensureContext();
-  if (!ac || !master) return;
-  const out = master;
+  // Resuming an existing context is the only gesture-bound step and is cheap,
+  // so it happens here. Building the context (first sound only) and scheduling
+  // the nodes wait until after the next paint, so the click's visual update is
+  // never held up by audio work. Chromium and Firefox honour the page's sticky
+  // activation for a context built then.
+  ensureContext(false);
+  const epoch = contextEpoch;
+  const requestedAt = performance.now();
+  const run = () => {
+    // A test reset in the meantime must not play into a replaced context;
+    // `enabled` is deliberately not re-read so the toggle-off confirm still plays.
+    // rAF waits while the tab is hidden; a sound that late belongs to nothing.
+    if (epoch !== contextEpoch || performance.now() - requestedAt >= STALE_ACCENT_MS) return;
+    const ac = ensureContext();
+    if (ac && master) renderAccent(accent, ac, master);
+  };
+  if (typeof requestAnimationFrame === "function") {
+    requestAnimationFrame(() => setTimeout(run, 0));
+  } else {
+    setTimeout(run, 0);
+  }
+}
 
+function renderAccent(accent: Accent, ac: AudioContext, out: GainNode): void {
   switch (accent) {
     case "tap": {
       // soft velvet tactile micro-click with subtle organic variation
@@ -564,7 +594,7 @@ export function setSoundEnabled(next: boolean): void {
   userGestured = true;
   if (next) {
     enabled = true;
-    ensureContext();
+    ensureContext(false);
     playAccent("toggle-on");
   } else {
     playAccent("toggle-off");
@@ -602,6 +632,7 @@ export function __resetAudioContextForTesting(): void {
   }
   ctx = null;
   master = null;
+  contextEpoch += 1;
   userGestured = false;
   lastPlayTime = 0;
   lastPlayAccent = null;
@@ -610,6 +641,15 @@ export function __resetAudioContextForTesting(): void {
 }
 
 if (typeof window !== "undefined") {
+  // Restored from the back/forward cache: the preference may have changed on
+  // a later page, and storage events are not replayed.
+  window.addEventListener("pageshow", (e) => {
+    if (!e.persisted) return;
+    const next = readStored();
+    if (next === enabled) return;
+    enabled = next;
+    notify();
+  });
   window.addEventListener("storage", (e) => {
     if (e.key === STORAGE_KEY) {
       enabled = e.newValue === "on";
@@ -620,11 +660,14 @@ if (typeof window !== "undefined") {
   const markGesture = () => {
     if (userGestured) return;
     userGestured = true;
-    if (ctx && ctx.state === "suspended") void ctx.resume();
+    // Resume inside the gesture if a context already exists; building one here
+    // would put its construction cost on this very interaction.
+    if (enabled) ensureContext(false);
   };
-  window.addEventListener("pointerdown", markGesture, { capture: true, once: true });
-  window.addEventListener("keydown", markGesture, { capture: true, once: true });
-  window.addEventListener("click", markGesture, { capture: true, once: true });
+  const gestureOpts = { capture: true, once: true, passive: true };
+  window.addEventListener("pointerdown", markGesture, gestureOpts);
+  window.addEventListener("keydown", markGesture, gestureOpts);
+  window.addEventListener("click", markGesture, gestureOpts);
 
   initSoundInteractions();
 }

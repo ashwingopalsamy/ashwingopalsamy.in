@@ -15,7 +15,7 @@ Commands:
   search <query>       Search technical notes, projects, and reading list
   content [kind]       List published content (note, craft, book, watch, all)
   note <slug>          Retrieve raw Markdown for a published note
-  status               Check API operational status, rate limits, and capabilities
+  status               Check API operational status and capabilities
   openapi              Output the OpenAPI 3.1.0 specification
   mcp                  Display Model Context Protocol server configuration
   help, --help, -h     Show this help message
@@ -169,7 +169,6 @@ async function main() {
           console.log(`Service: ${data.service}`);
           console.log(`Status: ${data.status}`);
           console.log(`Version: ${data.version} (API-Version: ${data.apiVersion})`);
-          console.log(`Rate Limit: ${data.rateLimit?.policy || "120;w=60"}`);
           console.log(`Deprecation Policy: ${data.versioning?.deprecationPolicy || "Standard RFC 8594 Sunset notices."}`);
         }
         break;

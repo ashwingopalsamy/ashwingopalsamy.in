@@ -3,6 +3,7 @@ import { getImage, Picture } from "astro:assets";
 import Icon from "../../../components/Icon.astro";
 import { getPhotoEntries, photoHref, photoWidths, type PhotoEntry } from "../../../data/photos";
 import Page from "../../../layouts/Page.astro";
+import PhotoRouteReveal from "../../../components/PhotoRouteReveal.astro";
 import { getPhotoImageSources, PHOTO_DETAIL_SIZES } from "../../../lib/photo-image-sources";
 import { absUrl } from "../../../lib/urls";
 
@@ -63,6 +64,7 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
   pagefind={false}
   robots={robots}
 >
+  <PhotoRouteReveal slot="head" />
   <article class="photo-detail" data-photo-detail={photo.id}>
     <figure class="photo-detail-figure">
       <figcaption class="photo-detail-caption" data-photo-caption>
@@ -124,7 +126,7 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
         )}
       </nav>
       <div class="photo-stage">
-        <div class="photo-media" data-photo-media data-photo-id={photo.id} transition:persist={`photo-${photo.id}`}>
+        <div class="photo-media" data-photo-media data-photo-id={photo.id}>
           <Picture
             src={source}
             alt={alt}
@@ -153,7 +155,7 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
 <style>
   .photo-detail {
     display: grid;
-    gap: var(--space-4);
+    gap: var(--step-4);
   }
 
   .photo-navigation {
@@ -171,9 +173,9 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
 
   .photo-control {
     display: grid;
-    inline-size: 38px;
-    block-size: 38px;
-    flex: 0 0 38px;
+    inline-size: calc(var(--step) * 10);
+    block-size: calc(var(--step) * 10);
+    flex: 0 0 calc(var(--step) * 10);
     place-items: center;
     border: 0;
     border-radius: var(--r-pill);
@@ -206,7 +208,7 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
     border: 1px solid transparent;
     border-block-start-color: currentColor;
     border-radius: 50%;
-    animation: photo-control-spin 800ms linear infinite;
+    animation: photo-control-spin var(--dur-spin) linear infinite;
     content: "";
     opacity: 0.7;
   }
@@ -225,8 +227,8 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: auto minmax(0, 1fr);
-    column-gap: var(--space-3);
-    row-gap: var(--space-4);
+    column-gap: var(--step-3);
+    row-gap: var(--step-4);
     min-inline-size: 0;
     margin: 0;
   }
@@ -236,7 +238,7 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
     grid-row: 1;
     display: grid;
     align-content: start;
-    gap: var(--space-1);
+    gap: var(--step-1);
     min-inline-size: 0;
   }
 
@@ -289,7 +291,7 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
     display: flex;
     align-items: baseline;
     justify-content: flex-start;
-    gap: var(--space-3);
+    gap: var(--step-3);
     min-inline-size: 0;
   }
 

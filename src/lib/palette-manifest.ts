@@ -175,7 +175,7 @@ export async function buildPaletteManifest(): Promise<PaletteManifest> {
       { id: "mcp-status", label: "MCP status", href: "/mcp/status.json", description: "Non-sensitive stateless MCP transport status." },
       { id: "a2a-card", label: "A2A Agent Card", href: "/.well-known/agent-card.json", description: "Read-only A2A skills and AP2 status." },
       { id: "agent-skills", label: "Agent Skills", href: "/.well-known/agent-skills/index.json", description: "Agent Skills Discovery v0.2.0 index." },
-      { id: "auth-md", label: "auth.md", href: "/auth.md", description: "Discovery-only authentication guidance." },
+      { id: "auth-md", label: "auth.md", href: "/auth.md", description: "Authentication notes: public interfaces require none." },
     ],
   };
 }

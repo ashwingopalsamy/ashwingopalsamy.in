@@ -47,11 +47,6 @@ export interface ApiStatus {
   apiVersion: string;
   status: string;
   mode: string;
-  rateLimit: {
-    limit: number;
-    windowSeconds: number;
-    policy: string;
-  };
   versioning: {
     strategy: string;
     current: string;

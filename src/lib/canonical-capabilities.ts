@@ -26,7 +26,7 @@ export const FIRST_PARTY_TOOL_NAMES = [
 export type FirstPartyToolName = (typeof FIRST_PARTY_TOOL_NAMES)[number];
 
 export const searchSiteZodSchema = z.object({
-  query: z.string().describe("Search phrase"),
+  query: z.string().max(256).describe("Search phrase"),
   limit: z.number().int().min(1).max(25).optional(),
 });
 

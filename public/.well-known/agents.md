@@ -15,7 +15,7 @@ This is the public, read-only guide for agents using Ashwin Gopalsamy's website.
 - [Official CLI](https://ashwingopalsamy.in/cli.sh) via `npx ashwingopalsamy` or `curl -sSL https://ashwingopalsamy.in/cli.sh | sh -s -- <command>`.
 - [OpenAPI 3.1.0 specification](https://ashwingopalsamy.in/openapi.json) for typed JSON schemas and error definitions.
 - [Web Bot Auth Directory](https://ashwingopalsamy.in/.well-known/http-message-signatures-directory) for RFC 9421 bot authentication.
-- [Auth & Scopes guide](https://ashwingopalsamy.in/auth.md) for agent permission discovery.
+- [Auth guide](https://ashwingopalsamy.in/auth.md): public interfaces require no authentication.
 - [AI guide](https://ashwingopalsamy.in/ai/) for the maintained profile briefing.
 - [llms.txt](https://ashwingopalsamy.in/llms.txt) for concise context.
 - [Profile summary JSON](https://ashwingopalsamy.in/api/ai-summary.json) for one authoritative machine-readable object.
@@ -40,7 +40,7 @@ Direct Markdown aliases are available for the core pages: [home](https://ashwing
 - `GET /api/v1/search?query={q}&limit={n}`: Search public notes, craft projects, and library items.
 - `GET /api/v1/content?kind={kind}&limit={n}`: List items by kind.
 - `GET /api/v1/notes/{slug}`: Raw Markdown for published notes.
-- `GET /api/v1/status`: Operational status and rate limit limits.
+- `GET /api/v1/status`: Operational status and capability flags.
 
 ## MCP
 
@@ -61,4 +61,4 @@ When the site is loaded in a compatible browser, it registers equivalent read-on
 
 ## Boundaries
 
-All agent-facing surfaces on this personal site are read-only discovery or retrieval interfaces. Authentication metadata is discovery-only and unavailable for credential issuance. A2A and commerce compatibility documents do not accept mandates, payments, or checkout actions.
+All agent-facing surfaces on this personal site are read-only discovery or retrieval interfaces. No authentication is required or offered. A2A and commerce compatibility documents do not accept mandates, payments, or checkout actions.

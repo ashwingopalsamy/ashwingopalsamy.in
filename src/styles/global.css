@@ -13,7 +13,6 @@
   --color-9: oklch(0.2 0.003 240);
 
   --canvas: var(--color-1);
-  --canvas-hex: #ffffff;
   --ink: var(--color-9);
   --muted: var(--color-8);
   --faint: var(--color-8);
@@ -68,6 +67,10 @@
   /* ------------------------------------------------------------------ */
   /*  typography                                                         */
   /* ------------------------------------------------------------------ */
+  /* Static steps for chrome, not prose: micro badges and UI labels
+     (navigation, buttons, list rows) hold their size across viewports. */
+  --text-2xs: 0.625rem;
+  --text-ui: 0.9375rem;
   --text-xs: clamp(0.68rem, 0.66rem + 0.1vw, 0.75rem);
   --text-sm: clamp(0.8rem, 0.78rem + 0.12vw, 0.875rem);
   --text-base: clamp(1rem, 0.97rem + 0.18vw, 1.0625rem);
@@ -110,6 +113,7 @@
   --shadow-1: 0 6px 18px color-mix(in oklch, var(--ink) 12%, transparent);
   --shadow-2: 0 8px 30px color-mix(in oklch, var(--ink) 22%, transparent);
   --shadow-3: 0 20px 60px color-mix(in oklch, var(--ink) 22%, transparent);
+  --shadow-tooltip: 0 4px 14px color-mix(in oklch, oklch(0 0 0) 8%, transparent), 0 1px 3px color-mix(in oklch, oklch(0 0 0) 4%, transparent);
   --shadow-inset: inset 0 1px 0 color-mix(in oklch, var(--color-1) 35%, transparent);
 
   --surface-row-rest: transparent;
@@ -124,9 +128,10 @@
   --surface-row-gap: calc(var(--step) / 2);
 
   /* Row choreography: hovering a list recedes its siblings so the one
-     under the cursor is the only thing in focus. Seven lists across the
-     site implement this; these two values are the only place the depth
-     of the effect is decided, so they cannot drift apart per page. */
+     under the cursor is the only thing in focus. Every list gets it from
+     .surface-stack / .surface-stream below; these two values are the only
+     place the depth of the effect is decided, so they cannot drift apart
+     per page. */
   --dim-opacity: 0.45;
   --dim-blur: 0.2px;
 
@@ -180,7 +185,6 @@
 /* Dark ramp - explicit theme. No-JS OS-dark mirrors this block once below. */
 :root[data-theme="dark"] {
   --canvas: var(--color-9);
-  --canvas-hex: #151617;
   --ink: var(--color-1);
   --muted: var(--color-3);
   --faint: var(--color-4);
@@ -211,6 +215,7 @@
   --shadow-1: 0 6px 18px color-mix(in oklch, oklch(0 0 0) 40%, transparent);
   --shadow-2: 0 8px 30px color-mix(in oklch, oklch(0 0 0) 55%, transparent);
   --shadow-3: 0 20px 60px color-mix(in oklch, oklch(0 0 0) 65%, transparent);
+  --shadow-tooltip: 0 4px 20px color-mix(in oklch, oklch(0 0 0) 45%, transparent), 0 1px 3px color-mix(in oklch, oklch(0 0 0) 25%, transparent);
   --shadow-inset: inset 0 1px 0 color-mix(in oklch, var(--color-1) 12%, transparent);
 
   --surface-row-rest: transparent;
@@ -246,7 +251,6 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     --canvas: var(--color-9);
-    --canvas-hex: #151617;
     --ink: var(--color-1);
     --muted: var(--color-3);
     --faint: var(--color-4);
@@ -278,6 +282,7 @@
     --shadow-1: 0 6px 18px color-mix(in oklch, oklch(0 0 0) 40%, transparent);
     --shadow-2: 0 8px 30px color-mix(in oklch, oklch(0 0 0) 55%, transparent);
     --shadow-3: 0 20px 60px color-mix(in oklch, oklch(0 0 0) 65%, transparent);
+    --shadow-tooltip: 0 4px 20px color-mix(in oklch, oklch(0 0 0) 45%, transparent), 0 1px 3px color-mix(in oklch, oklch(0 0 0) 25%, transparent);
     --shadow-inset: inset 0 1px 0 color-mix(in oklch, var(--color-1) 12%, transparent);
     --surface-row-rest: transparent;
     --surface-row-border: transparent;
@@ -403,7 +408,7 @@
   font-weight: var(--font-medium);
   text-decoration: none;
   box-shadow: var(--shadow-3);
-  transition: transform var(--dur-2) var(--ease-out);
+  transition: transform var(--dur-tint) var(--ease-enter);
 }
 
 .skip-link:focus-visible,
@@ -707,7 +712,7 @@ button[aria-disabled="true"] {
     right: clamp(0.75rem, 2vw, 2rem);
     top: 50%;
     transform: translateY(-50%);
-    z-index: 40;
+    z-index: var(--z-toast);
     user-select: none;
     pointer-events: none;
   }
@@ -743,46 +748,49 @@ button[aria-disabled="true"] {
     outline-offset: 2px;
   }
 
+  /* The dash is laid out once at its largest size (26 x 2.5px, pinned to the
+     right edge of the button) and every state is a scale of that box, so
+     hover and scroll-spy never re-flow the rail. Rendered sizes:
+     rest 14 x 1.5, sub 9 x 1.5, hover 20 x 2, sub-hover 15 x 2,
+     active 26 x 2.5, sub-active 22 x 2.5. */
   .note-toc-dash {
     display: block;
     border-radius: var(--r-pill);
-    transition: width var(--dur-2) var(--ease-out), height var(--dur-2) var(--ease-out), background-color var(--t-color), opacity var(--t-color), box-shadow var(--t-color);
-    width: 14px;
-    height: 1.5px;
+    transition: transform var(--dur-tint) var(--ease-enter), background-color var(--t-color), opacity var(--t-color), box-shadow var(--t-color);
+    width: 26px;
+    height: 2.5px;
+    transform-origin: 100% 50%;
+    transform: scale(calc(14 / 26), 0.6);
     background: var(--muted);
     opacity: 0.35;
   }
 
   .note-toc-btn.is-sub .note-toc-dash {
-    width: 9px;
+    transform: scale(calc(9 / 26), 0.6);
     opacity: 0.25;
   }
 
   .note-toc-btn:hover .note-toc-dash {
-    width: 20px;
-    height: 2px;
+    transform: scale(calc(20 / 26), 0.8);
     opacity: 0.85;
     background: var(--ink);
   }
 
   .note-toc-btn.is-sub:hover .note-toc-dash {
-    width: 15px;
-    height: 2px;
+    transform: scale(calc(15 / 26), 0.8);
     opacity: 0.85;
     background: var(--ink);
   }
 
   .note-toc-btn.is-active .note-toc-dash {
-    width: 26px;
-    height: 2.5px;
+    transform: scale(1);
     opacity: 1;
     background: var(--ink);
     box-shadow: none;
   }
 
   .note-toc-btn.is-sub.is-active .note-toc-dash {
-    width: 22px;
-    height: 2.5px;
+    transform: scale(calc(22 / 26), 1);
     opacity: 1;
     background: var(--ink);
     box-shadow: none;
@@ -792,20 +800,22 @@ button[aria-disabled="true"] {
     position: absolute;
     right: calc(100% + 0.75rem);
     top: 0;
-    transform: translateY(-50%);
-    padding: 0.32rem 0.8rem;
+    /* floating-toc.ts writes the hovered button's centre as --toc-tip-y;
+       gliding between buttons is a transform, not a `top` animation */
+    transform: translateY(calc(var(--toc-tip-y, 0px) - 50%));
+    padding: var(--step-1) var(--step-3);
     border-radius: var(--r-pill);
     background: var(--chrome-surface-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--chrome-surface-border);
     color: var(--ink);
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     font-weight: var(--font-medium);
     white-space: nowrap;
     pointer-events: none;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
-    transition: top 0.12s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: var(--shadow-tooltip);
+    transition: transform var(--dur-exit) var(--ease-enter), opacity var(--dur-nudge) var(--ease-travel);
     opacity: 0;
     visibility: hidden;
   }
@@ -813,7 +823,6 @@ button[aria-disabled="true"] {
   :root[data-theme="dark"] .note-toc-tooltip {
     background: var(--chrome-surface-bg);
     border-color: var(--chrome-surface-border);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.25);
   }
 
   .note-toc-rail-track.is-hovered .note-toc-tooltip {
@@ -834,7 +843,7 @@ button[aria-disabled="true"] {
   z-index: var(--z-toast);
   max-inline-size: min(22rem, calc(100vw - var(--mobile-gutter-start) - var(--mobile-gutter-end)));
   min-inline-size: 0;
-  padding: 0.65rem 1.25rem;
+  padding: var(--step-3) calc(var(--step) * 5);
   border-radius: var(--r-pill);
   background: var(--ink);
   color: var(--canvas);
@@ -847,9 +856,9 @@ button[aria-disabled="true"] {
   filter: blur(2px);
   will-change: transform, opacity, filter;
   transition:
-    opacity 250ms var(--ease),
-    transform 250ms var(--ease),
-    filter 250ms var(--ease);
+    opacity var(--dur-exit) var(--ease-enter),
+    transform var(--dur-exit) var(--ease-enter),
+    filter var(--dur-exit) var(--ease-enter);
 }
 .toast-corner {
   right: var(--mobile-gutter-end);
@@ -863,9 +872,9 @@ button[aria-disabled="true"] {
   opacity: 1;
   filter: blur(0);
   transition:
-    opacity 350ms var(--ease),
-    transform 350ms var(--ease),
-    filter 350ms var(--ease);
+    opacity var(--dur-enter) var(--ease-enter),
+    transform var(--dur-enter) var(--ease-enter),
+    filter var(--dur-enter) var(--ease-enter);
 }
 .toast-corner.is-in {
   transform: translateY(0) scale(1);
@@ -875,7 +884,7 @@ button[aria-disabled="true"] {
 }
 @media (prefers-reduced-motion: reduce) {
   .toast {
-    transition: opacity var(--dur-2) ease;
+    transition: opacity var(--dur-tint) var(--ease-travel);
     transform: none !important;
     filter: none !important;
   }
@@ -902,7 +911,7 @@ button[aria-disabled="true"] {
   }
 
   .toast-corner {
-    bottom: calc(var(--mobile-chrome-clearance) + var(--space-3) + (var(--toast-stack, 0) * 3.25rem));
+    bottom: calc(var(--mobile-chrome-clearance) + var(--step-3) + (var(--toast-stack, 0) * 3.25rem));
   }
 }
 
@@ -917,7 +926,7 @@ main {
 
 @media (max-width: 38rem) {
   main {
-    padding-top: calc(4.15rem + env(safe-area-inset-top, 0px) + var(--space-5));
+    padding-top: calc(4.15rem + env(safe-area-inset-top, 0px) + var(--step-5));
   }
 }
 
@@ -929,19 +938,23 @@ main {
   --route-fallback-dir: 1;
 }
 
-@supports not (view-transition-name: none) {
-  [data-route-content][data-navigation-phase="entering"] {
-    opacity: 0;
-    transform: translate3d(0, calc(var(--route-fallback-dir) * var(--travel-step)), 0);
-  }
+/* Set by the head script only where cross-document view transitions are
+   unsupported. */
+:root[data-route-dir="back"] [data-route-content] {
+  --route-fallback-dir: -1;
+}
 
-  [data-route-content][data-navigation-phase="idle"] {
-    opacity: 1;
-    transform: none;
-    transition:
-      opacity var(--dur-route-in) var(--ease-enter),
-      transform var(--dur-route-in) var(--ease-enter);
-  }
+:root[data-route-fallback="entering"] [data-route-content] {
+  opacity: 0;
+  transform: translate3d(0, calc(var(--route-fallback-dir) * var(--travel-step)), 0);
+}
+
+:root[data-route-fallback="idle"] [data-route-content] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--dur-route-in) var(--ease-enter),
+    transform var(--dur-route-in) var(--ease-enter);
 }
 
 .column-body > *,
@@ -961,16 +974,28 @@ main > *,
   list-style: none;
 }
 
+/* A stack's direct children are its rows, so lists whose rows carry their
+   own look (li.row, li.tag-row, ...) join the choreography by taking the
+   class; they do not also need .surface-row. Only opacity interpolates:
+   the blur is a constant 0.2px that switches on and off with the dim, so
+   no frame re-rasterises a changing blur radius. */
+.surface-stack > * {
+  transition: opacity var(--dur-tint) var(--ease-enter);
+}
+
 @media (hover: hover) and (pointer: fine) {
+  .surface-stack:hover > *,
   .surface-stack:hover .surface-row,
   .surface-stream:hover .surface-row,
   .surface-stack:hover .surface-item,
   .surface-stream:hover .surface-item {
     opacity: var(--dim-opacity);
     filter: blur(var(--dim-blur));
-    transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
+    transition: opacity var(--dur-tint) var(--ease-enter);
   }
 
+  .surface-stack:hover > *:hover,
+  .surface-stack:hover > *:focus-within,
   .surface-stack:hover .surface-row:hover,
   .surface-stream:hover .surface-row:hover,
   .surface-stack:hover .surface-item:hover,
@@ -995,9 +1020,8 @@ main > *,
   transition:
     background-color var(--t-color),
     color var(--t-color),
-    opacity var(--dur-2) var(--ease),
-    filter var(--dur-2) var(--ease),
-    transform var(--dur-1) var(--ease-out);
+    opacity var(--dur-tint) var(--ease-enter),
+    transform var(--dur-press) var(--ease-enter);
 }
 
 .surface-row[aria-current="page"],
@@ -1193,7 +1217,6 @@ a {
   :root,
   :root[data-theme="dark"] {
     --canvas: var(--color-1);
-    --canvas-hex: #ffffff;
     --ink: var(--color-9);
     --muted: var(--color-8);
     --faint: var(--color-8);
@@ -1332,14 +1355,21 @@ a {
     -webkit-backdrop-filter: none !important;
   }
 
-  .nav-pill,
-  .tab-dot,
-  .row-dot,
+  .nav-selection,
+  .library-selection,
   .prose .callout-icon {
     forced-color-adjust: none;
     background: Highlight !important;
     color: HighlightText !important;
     border-color: ButtonText !important;
+    box-shadow: none !important;
+  }
+
+  /* the label sitting on the selection pill */
+  .site-nav .quiet-link.active,
+  .site-nav-bottom .tab.active {
+    forced-color-adjust: none;
+    color: HighlightText !important;
   }
 
   :focus-visible {

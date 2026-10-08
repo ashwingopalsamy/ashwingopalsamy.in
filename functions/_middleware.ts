@@ -8,8 +8,13 @@
  * preview and pure-static deploys stay unsigned.
  */
 
-import { applySecurityHeaders } from "../src/lib/security-headers";
-import { applyRateLimitHeaders } from "./_unavailable";
+import {
+  applySecurityHeaders,
+  CSP_REPORT_PATH,
+  STRICT_CSP_REPORT_ONLY,
+  strictCspDirectives,
+} from "../src/lib/security-headers";
+import coreMarkdownMirrors from "../src/data/core-markdown-mirrors.json";
 import { API_VERSION } from "./_api-response";
 import {
   emitEdgeTelemetry,
@@ -29,7 +34,7 @@ interface Env extends TelemetryEnv {
 
 interface PagesContext {
   request: Request;
-  next: () => Promise<Response>;
+  next: (input?: Request | string, init?: RequestInit) => Promise<Response>;
   env: Env;
   waitUntil?: (promise: Promise<unknown>) => void;
 }
@@ -127,7 +132,7 @@ function acceptsJson(header: string | null): boolean {
   });
 }
 
-function jsonProblemResponse(status: number, requestUrl: string): Response {
+function jsonProblemResponse(status: number, requestUrl: string, correlationId: string): Response {
   const is404 = status === 404;
   const title = is404 ? "Resource Not Found" : "Request Error";
   const detail = is404
@@ -139,10 +144,11 @@ function jsonProblemResponse(status: number, requestUrl: string): Response {
     : "Review request parameters and ensure they match the OpenAPI specification at /openapi.json.";
 
   let headers = applySecurityHeaders(new Headers(), "json-api-public");
-  headers = applyRateLimitHeaders(headers);
   headers.set("Content-Type", "application/problem+json; charset=utf-8");
   headers.set("API-Version", API_VERSION);
+  headers.set("Access-Control-Expose-Headers", "API-Version");
   headers.set("X-Robots-Tag", "noindex");
+  headers.set("X-Request-Id", correlationId);
   if (status === 429) headers.set("Retry-After", "60");
 
   const problem = {
@@ -161,6 +167,9 @@ function jsonProblemResponse(status: number, requestUrl: string): Response {
   });
 }
 
+const CORE_MARKDOWN_MIRRORS: Record<string, string> = coreMarkdownMirrors;
+const NOTE_PATH = /^\/blog\/([a-z0-9][a-z0-9-]*)\/$/i;
+
 function markdownAssetPath(pathname: string): string | null {
   let decoded: string;
   try {
@@ -169,9 +178,12 @@ function markdownAssetPath(pathname: string): string | null {
     return null;
   }
   if (decoded.includes("..")) return null;
-  let clean = decoded.replace(/^\/+|\/+$/g, "");
-  if (clean.endsWith(".html")) clean = clean.slice(0, -5);
-  return clean ? `/__agent-markdown/${clean}/index.md` : "/__agent-markdown/index.md";
+  let path = decoded.endsWith(".html") ? decoded.slice(0, -5) : decoded;
+  if (!path.endsWith("/")) path += "/";
+  const core = CORE_MARKDOWN_MIRRORS[path];
+  if (core) return core;
+  const note = NOTE_PATH.exec(path);
+  return note ? `/blog/${note[1]}.md` : null;
 }
 
 function appendVary(headers: Headers, value: string): void {
@@ -184,29 +196,24 @@ function appendVary(headers: Headers, value: string): void {
   if (!values.includes(value.toLowerCase())) headers.set("Vary", `${current}, ${value}`);
 }
 
-function applyContentSignals(response: Response, request: Request): Response {
-  const headers = new Headers(response.headers);
+function applyContentSignal(headers: Headers, request: Request): void {
   const userAgent = request.headers.get("User-Agent") ?? "";
   const blocked = /bytespider|ccbot/i.test(userAgent);
   headers.set(
     "Content-Signal",
     blocked ? "ai-train=no, search=no, ai-input=no" : "ai-train=yes, search=yes, ai-input=yes",
   );
-  return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers,
-  });
 }
 
 async function markdownResponse(
-  response: Response,
+  source: Response,
+  htmlHeaders: Headers,
   context: PagesContext,
-): Promise<Response> {
+): Promise<Response | null> {
   const assetPath = markdownAssetPath(new URL(context.request.url).pathname);
-  const assets = context.env.ASSETS;
-  if (!assetPath) return response;
+  if (!assetPath) return null;
 
+  const assets = context.env.ASSETS;
   let mirror: Response;
   try {
     const assetUrl = new URL(assetPath, context.request.url);
@@ -214,29 +221,13 @@ async function markdownResponse(
       ? await assets.fetch(assetUrl)
       : await fetch(assetUrl);
   } catch {
-    return response;
+    return null;
   }
-  if (!mirror.ok) {
-    if (response.status === 404) {
-      try {
-        const notFoundUrl = new URL("/__agent-markdown/404/index.md", context.request.url);
-        const notFoundMirror = assets ? await assets.fetch(notFoundUrl) : await fetch(notFoundUrl);
-        if (notFoundMirror.ok) {
-          mirror = notFoundMirror;
-        } else {
-          return response;
-        }
-      } catch {
-        return response;
-      }
-    } else {
-      return response;
-    }
-  }
+  if (!mirror.ok) return null;
 
   const body = await mirror.arrayBuffer();
   const text = new TextDecoder().decode(body);
-  let headers = applySecurityHeaders(new Headers(response.headers), "markdown");
+  let headers = applySecurityHeaders(new Headers(htmlHeaders), "markdown");
   const canonical = new URL(context.request.url);
   canonical.search = "";
   canonical.hash = "";
@@ -259,8 +250,98 @@ async function markdownResponse(
   }
 
   return new Response(context.request.method === "HEAD" ? null : body, {
-    status: response.status,
-    statusText: response.statusText,
+    status: source.status,
+    statusText: source.statusText,
+    headers,
+  });
+}
+
+/** Document requests drop their validators: every HTML body carries a fresh
+ *  nonce, so a 304 must never pair a cached body with a new policy. */
+function withoutValidators(req: Request): Request {
+  if (!req.headers.has("If-None-Match") && !req.headers.has("If-Modified-Since")) return req;
+  const isDocument = req.headers.get("Sec-Fetch-Dest") === "document" ||
+    (req.headers.get("Accept") ?? "").includes("text/html");
+  if (!isDocument) return req;
+  const headers = new Headers(req.headers);
+  headers.delete("If-None-Match");
+  headers.delete("If-Modified-Since");
+  return new Request(req, { headers });
+}
+
+function cspNonce(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return bytesToBase64(bytes);
+}
+
+/** The strict policy plus one nonce stamped on every script and style
+ *  element, streamed through HTMLRewriter (no buffering). */
+function stampNonce(raw: Response, headers: Headers): Response {
+  const nonce = cspNonce();
+  headers.set(
+    STRICT_CSP_REPORT_ONLY ? "Content-Security-Policy-Report-Only" : "Content-Security-Policy",
+    strictCspDirectives(nonce),
+  );
+  headers.set("Reporting-Endpoints", `csp="${CSP_REPORT_PATH}"`);
+  for (const name of ["ETag", "Last-Modified", "Content-Length"]) headers.delete(name);
+  headers.set("Cache-Control", "private, no-cache");
+  return new HTMLRewriter()
+    .on("script, style", {
+      element(element) {
+        element.setAttribute("nonce", nonce);
+      },
+    })
+    .transform(raw);
+}
+
+async function resolveResponse(context: PagesContext, correlationId: string): Promise<Response> {
+  const req = context.request;
+  const raw = await context.next(withoutValidators(req));
+  const isHtml = (raw.headers.get("content-type") ?? "").toLowerCase().includes("text/html");
+  const accept = req.headers.get("Accept");
+  const wantsMarkdown = isHtml && acceptsMarkdown(accept);
+  const methodSupportsNegotiation = req.method === "GET" || req.method === "HEAD";
+
+  if (isHtml && raw.status >= 400 && !wantsMarkdown) {
+    const { pathname } = new URL(req.url);
+    if (pathname.startsWith("/api/") || pathname === "/api" || acceptsJson(accept)) {
+      return jsonProblemResponse(raw.status, req.url, correlationId);
+    }
+  }
+
+  // One mutable header set, one Response construction per request.
+  const headers = new Headers(raw.headers);
+  applyContentSignal(headers, req);
+  const negotiated = isHtml && (methodSupportsNegotiation || (raw.status >= 400 && wantsMarkdown));
+  if (negotiated) {
+    applySecurityHeaders(headers, "html");
+    appendVary(headers, "Accept");
+  }
+  // Content-Signal differs by User-Agent, so shared caches must key on it.
+  if (isHtml) appendVary(headers, "User-Agent");
+  if (!headers.has("X-Request-Id")) headers.set("X-Request-Id", correlationId);
+
+  if (negotiated) {
+    if (wantsMarkdown) {
+      const markdown = await markdownResponse(raw, headers, context);
+      if (markdown) return markdown;
+    }
+    const stamped = stampNonce(raw, headers);
+    if (context.env.SIGNATURE_PRIVATE_KEY) {
+      const signed = await signHtmlResponse(stamped, headers, context);
+      if (signed) return signed;
+    }
+    return new Response(stamped.body, {
+      status: raw.status,
+      statusText: raw.statusText,
+      headers,
+    });
+  }
+
+  return new Response(raw.body, {
+    status: raw.status,
+    statusText: raw.statusText,
     headers,
   });
 }
@@ -270,81 +351,33 @@ export const onRequest = async (context: PagesContext): Promise<Response> => {
   const req = context.request;
   const correlationId = generateCorrelationId(req);
 
-  const resolveResponse = async (): Promise<Response> => {
-    const rawResponse = await context.next();
-    const response = applyContentSignals(rawResponse, req);
-    const responseType = response.headers.get("content-type") ?? "";
-    const isHtml = responseType.toLowerCase().includes("text/html");
-    const methodSupportsNegotiation = req.method === "GET" || req.method === "HEAD";
-    const url = new URL(req.url);
-    const isApiRoute = url.pathname.startsWith("/api/") || url.pathname === "/api";
+  const finalResponse = await resolveResponse(context, correlationId);
 
-    if (response.status >= 400 && isHtml) {
-      if (acceptsMarkdown(req.headers.get("Accept"))) {
-        let headers = applySecurityHeaders(new Headers(response.headers), "html");
-        const varied = new Response(response.body, {
-          status: response.status,
-          statusText: response.statusText,
-          headers,
-        });
-        appendVary(varied.headers, "Accept");
-        return markdownResponse(varied, context);
-      }
-      if (isApiRoute || acceptsJson(req.headers.get("Accept"))) {
-        return jsonProblemResponse(response.status, req.url);
-      }
-    }
-
-    if (methodSupportsNegotiation && isHtml) {
-      let headers = applySecurityHeaders(new Headers(response.headers), "html");
-      const varied = new Response(response.body, {
-        status: response.status,
-        statusText: response.statusText,
-        headers,
-      });
-      appendVary(varied.headers, "Accept");
-      if (acceptsMarkdown(req.headers.get("Accept"))) {
-        return markdownResponse(varied, context);
-      }
-      if (!context.env.SIGNATURE_PRIVATE_KEY) return varied;
-      return signHtmlResponse(varied, context);
-    }
-
-    return response;
-  };
-
-  let finalResponse = await resolveResponse();
-  if (!finalResponse.headers.has("X-Request-Id")) {
-    const headers = new Headers(finalResponse.headers);
-    headers.set("X-Request-Id", correlationId);
-    finalResponse = new Response(finalResponse.body, {
-      status: finalResponse.status,
-      statusText: finalResponse.statusText,
-      headers,
-    });
-  }
-
-  emitEdgeTelemetry(req, finalResponse, startTime, context.env, correlationId);
+  const emit = () => emitEdgeTelemetry(req, finalResponse, startTime, context.env, correlationId);
+  if (context.waitUntil) context.waitUntil(Promise.resolve().then(emit));
+  else emit();
   return finalResponse;
 };
 
+/** Returns null (body untouched) when the response is not signable. */
 async function signHtmlResponse(
-  response: Response,
+  source: Response,
+  headers: Headers,
   context: PagesContext,
-): Promise<Response> {
+): Promise<Response | null> {
   const keyMaterial = context.env.SIGNATURE_PRIVATE_KEY;
-  if (!keyMaterial) return response;
+  if (!keyMaterial) return null;
 
   const req = context.request;
-  if (req.method !== "GET") return response;
+  if (req.method !== "GET") return null;
 
-  const ct = response.headers.get("content-type") ?? "";
-  if (!ct.toLowerCase().includes("text/html")) return response;
+  const ct = headers.get("content-type") ?? "";
+  if (!ct.toLowerCase().includes("text/html")) return null;
 
   const key = await getOrCreateSigningKey(keyMaterial);
-  if (!key) return response;
+  if (!key) return null;
 
-  const body = await response.arrayBuffer();
+  const body = await source.arrayBuffer();
   const digest = await sha256(body);
   const contentDigest = `sha-256=${sfByteSequence(digest)}`;
 
@@ -360,14 +393,13 @@ async function signHtmlResponse(
     new TextEncoder().encode(base),
   );
 
-  const headers = new Headers(response.headers);
   headers.set("Content-Digest", contentDigest);
   headers.set("Signature-Input", `sig=${params}`);
   headers.set("Signature", `sig=${sfByteSequence(sig)}`);
 
   return new Response(body, {
-    status: response.status,
-    statusText: response.statusText,
+    status: source.status,
+    statusText: source.statusText,
     headers,
   });
 }

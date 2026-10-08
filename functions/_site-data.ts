@@ -47,13 +47,19 @@ async function getJson<T>(path: string, env: RuntimeEnv, requestUrl?: string): P
   }
 }
 
+const PALETTE_TTL_MS = 5 * 60 * 1000;
+const paletteCache = new Map<string, { at: number; manifest: PaletteManifest }>();
+
+// Caches the parsed manifest (plain data), not the in-flight promise: a shared pending promise
+// would tie other requests to the first request's I/O context. Failures are never cached.
 export async function getPalette(env: RuntimeEnv, requestUrl?: string): Promise<PaletteManifest> {
-  return (
-    (await getJson<PaletteManifest>("/api/palette.json", env, requestUrl)) ?? {
-      profile: {},
-      content: [],
-    }
-  );
+  const key = new URL(requestUrl ?? ORIGIN).origin;
+  const cached = paletteCache.get(key);
+  if (cached && Date.now() - cached.at < PALETTE_TTL_MS) return cached.manifest;
+  const manifest = await getJson<PaletteManifest>("/api/palette.json", env, requestUrl);
+  if (!manifest) return { profile: {}, content: [] };
+  paletteCache.set(key, { at: Date.now(), manifest });
+  return manifest;
 }
 
 export async function getProfile(env: RuntimeEnv, requestUrl?: string): Promise<Record<string, unknown>> {

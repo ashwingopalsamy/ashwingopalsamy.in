@@ -3,6 +3,7 @@ import { getImage, Picture } from "astro:assets";
 import ComingSoon from "../../components/ComingSoon.astro";
 import PageIntro from "../../components/PageIntro.astro";
 import Page from "../../layouts/Page.astro";
+import PhotoRouteReveal from "../../components/PhotoRouteReveal.astro";
 import { getPhotoEntries, photoHref, photoWidths } from "../../data/photos";
 import { getPhotoImageSources } from "../../lib/photo-image-sources";
 import { ogPath } from "../../lib/og-url";
@@ -53,6 +54,7 @@ const photoCards = await Promise.all(photos.map(async (photo) => ({
   pagefind={hasPublishedPhotos && !import.meta.env.DEV}
   robots={robots}
 >
+  {photos.length > 0 && <PhotoRouteReveal slot="head" />}
   {photos.length === 0 ? (
     <ComingSoon title="Photos" description={comingSoonDescription} />
   ) : (
@@ -79,7 +81,7 @@ const photoCards = await Promise.all(photos.map(async (photo) => ({
                 data-photo-jpeg-src={detailSources.jpegSrc}
                 data-photo-sizes={detailSources.sizes}
               >
-                <div class="photo-media" data-photo-media data-photo-id={photo.id} transition:persist={`photo-${photo.id}`}>
+                <div class="photo-media" data-photo-media data-photo-id={photo.id}>
                   <Picture
                     src={photo.data.source}
                     alt={photo.data.alt}
@@ -128,14 +130,14 @@ const photoCards = await Promise.all(photos.map(async (photo) => ({
   }
 
   .photo-draft-note {
-    margin: 0 0 var(--space-4);
+    margin: 0 0 var(--step-4);
     color: var(--muted);
     font-size: var(--text-xs);
   }
 
   .photo-wall {
     columns: 2;
-    column-gap: var(--space-5);
+    column-gap: var(--step-5);
     column-fill: balance;
     margin: 0;
     padding: 0;
@@ -146,7 +148,7 @@ const photoCards = await Promise.all(photos.map(async (photo) => ({
     display: inline-block;
     inline-size: 100%;
     break-inside: avoid;
-    padding-block-end: var(--space-6);
+    padding-block-end: var(--step-6);
   }
 
   .photo-figure {
@@ -198,7 +200,7 @@ const photoCards = await Promise.all(photos.map(async (photo) => ({
   }
 
   .photo-caption-area {
-    padding-block-start: var(--space-2);
+    padding-block-start: var(--step-2);
   }
 
   .photo-caption,
@@ -216,7 +218,7 @@ const photoCards = await Promise.all(photos.map(async (photo) => ({
   }
 
   .photo-meta {
-    margin-block-start: var(--space-1);
+    margin-block-start: var(--step-1);
     color: var(--muted);
     font-size: var(--text-xs);
   }

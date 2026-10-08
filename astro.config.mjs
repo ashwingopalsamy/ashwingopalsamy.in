@@ -1,23 +1,6 @@
 import { defineConfig } from "astro/config";
-import { fileURLToPath } from "node:url";
 import { markdownProcessor } from "./src/lib/markdown/index.js";
 import { codeMetaTransformers } from "./src/lib/markdown/shiki-transformers.js";
-
-const designMarkdownPath = fileURLToPath(new URL("./DESIGN.md", import.meta.url));
-
-const designMarkdownDevFallback = {
-  name: "design-markdown-dev-fallback",
-  configureServer(server) {
-    server.httpServer?.prependListener("request", (request) => {
-      const pathname = new URL(request.url ?? "/", "http://localhost").pathname;
-      if (request.method !== "GET" || (pathname !== "/design.md" && pathname !== "/DESIGN.md" && pathname !== "/design.md/")) {
-        return;
-      }
-
-      request.url = `/@fs${designMarkdownPath}`;
-    });
-  },
-};
 
 export default defineConfig({
   site: "https://ashwingopalsamy.in",
@@ -35,7 +18,13 @@ export default defineConfig({
   },
   prefetch: {
     // Astro owns hover prefetch; touch intent uses the same prefetch API.
+    // Every same-origin link opts in; Chromium prerenders it (clientPrerender)
+    // so the cross-document view transition activates an already-rendered page.
+    prefetchAll: true,
     defaultStrategy: "hover",
+  },
+  experimental: {
+    clientPrerender: true,
   },
   markdown: {
     // Satteri (Astro 7's Rust markdown engine) extended with the notes-engine
@@ -51,9 +40,20 @@ export default defineConfig({
     },
   },
   vite: {
-    plugins: [designMarkdownDevFallback],
     build: {
       cssMinify: "lightningcss",
+      rolldownOptions: {
+        output: {
+          codeSplitting: {
+            // Mermaid's d3/dayjs stack otherwise lands in the same automatic
+            // chunk as rolldown's shared runtime helpers, which sound and
+            // telemetry import on every route (~13 KB br per page).
+            groups: [
+              { name: "diagram-vendor", test: /node_modules[\\/](?:d3|d3-[^\\/]+|dayjs)[\\/]/ },
+            ],
+          },
+        },
+      },
     },
   },
 });

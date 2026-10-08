@@ -1,14 +1,18 @@
 
 # Cloudflare Pages HTTP response headers for ashwingopalsamy.in
 #
-# Static SSG site (Astro, no server, no SSR, no user input). This file is
-# copied verbatim into dist/ by Astro and read by Cloudflare Pages from the
-# build output root.
+# Static SSG site (Astro, no SSR) with Pages Functions for the agent and API
+# endpoints. This file is copied verbatim into dist/ by Astro and read by
+# Cloudflare Pages from the build output root. Keep the CSP and
+# Permissions-Policy below in sync with src/lib/security-headers.ts.
+#
+# The CSP here is the permissive fallback for anything served without the
+# middleware. HTML pages also get a strict per-response nonce policy from
+# functions/_middleware.ts (report-only until STRICT_CSP_REPORT_ONLY flips in
+# src/lib/security-headers.ts). 'wasm-unsafe-eval' is required for Pagefind.
 #
 # Deliberately rejected headers (do not add without revisiting these notes):
 #   Cross-Origin-Resource-Policy - breaks chat-client OG image embeds
-#   Content-Security-Policy - broke rendering of inline scripts and
-#     third-party embeds; removed 2026-08
 #   Trusted-Types - breaks Astro inline scripts (theme boot, redirects)
 #   Reporting-Endpoints / report-uri - no collector operated for this site
 
@@ -21,7 +25,8 @@
   Permissions-Policy: accelerometer=(), autoplay=(self "https://open.spotify.com"), camera=(), clipboard-write=(self "https://open.spotify.com"), encrypted-media=(self "https://open.spotify.com"), fullscreen=(self "https://open.spotify.com"), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), picture-in-picture=(self "https://open.spotify.com"), usb=(), interest-cohort=()
   Content-Signal: ai-train=yes, search=yes, ai-input=yes
   Cross-Origin-Opener-Policy: same-origin
-  Content-Security-Policy: default-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://cloudflareinsights.com https://*.cloudflareinsights.com; frame-src 'self' https://open.spotify.com; worker-src 'self' blob:;
+  Origin-Agent-Cluster: ?1
+  Content-Security-Policy: default-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://cloudflareinsights.com https://*.cloudflareinsights.com; frame-src 'self' https://open.spotify.com; worker-src 'self' blob:;
 
 # ---- Hashed Astro assets: immutable forever ----
 /_astro/*
@@ -31,12 +36,11 @@
 /pagefind/*
   Cache-Control: public, max-age=0, must-revalidate
 
-# ---- Versioned map style and sprite assets: immutable forever ----
-/map/v1/*
-  Cache-Control: public, max-age=31536000, immutable
-
 # ---- Generated / brand images: short cache ----
 /og.png
+  Cache-Control: public, max-age=86400
+
+/og/*
   Cache-Control: public, max-age=86400
 
 /favicon.ico
@@ -124,22 +128,6 @@
   Content-Type: text/plain; charset=utf-8
   X-Robots-Tag: noindex
 
-/.well-known/oauth-authorization-server
-  Content-Type: application/json; charset=utf-8
-  X-Robots-Tag: noindex
-
-/.well-known/openid-configuration
-  Content-Type: application/json; charset=utf-8
-  X-Robots-Tag: noindex
-
-/.well-known/oauth-protected-resource
-  Content-Type: application/json; charset=utf-8
-  X-Robots-Tag: noindex
-
-/.well-known/jwks.json
-  Content-Type: application/json; charset=utf-8
-  X-Robots-Tag: noindex
-
 /.well-known/mcp/server-card.json
   Content-Type: application/json; charset=utf-8
   Access-Control-Allow-Origin: *
@@ -194,9 +182,6 @@
 
 /auth.md
   Content-Type: text/markdown; charset=utf-8
-  X-Robots-Tag: noindex
-
-/__agent-markdown/*
   X-Robots-Tag: noindex
 
 # ---- Keep AI-instruction and machine files out of search indexes ----

@@ -97,7 +97,7 @@ Base URL: `https://ashwingopalsamy.in/api/v1`
 - `GET /api/v1/search?query={q}&limit={n}`: Search published notes, projects, and reading list entries.
 - `GET /api/v1/content?kind={k}&limit={n}`: List catalog items filtered by kind (`note`, `craft`, `book`, `watch`, `all`).
 - `GET /api/v1/notes/{slug}`: Retrieve raw Markdown body and metadata for a note.
-- `GET /api/v1/status`: Operational status, rate limits, and capability flags.
+- `GET /api/v1/status`: Operational status and capability flags.
 
 ## Protocol Interfaces (MCP & A2A)
 
@@ -110,18 +110,11 @@ Legitimate automated agents and bots can sign HTTP requests according to RFC 942
 
 Ashwin Gopalsamy's public signing directory is published at `https://ashwingopalsamy.in/.well-known/http-message-signatures-directory` exposing Ed25519 JWKs with `kid`, `nbf`, and `exp` timestamps to cryptographically distinguish genuine bot agents from spoofers.
 
-## Headers & Rate Limiting
+## Headers
 
-All endpoints return standard RFC rate limiting headers and API versioning metadata:
+API responses carry versioning metadata:
 
-- `RateLimit-Limit`: Maximum requests per window (120 per minute).
-- `RateLimit-Remaining`: Remaining request quota.
-- `RateLimit-Reset`: Seconds remaining until reset (60s window).
-- `RateLimit-Policy`: Active rate limit policy window (`120;w=60`).
-- `X-RateLimit-Limit / Remaining / Reset`: Legacy compatibility headers.
 - `API-Version`: API release contract timestamp (e.g. `2026-08-22`).
-
-Clients exceeding quota receive HTTP `429 Too Many Requests` with a `Retry-After` header.
 
 ## API Versioning & Deprecation Policy
 
@@ -146,7 +139,7 @@ All error responses return structured `application/problem+json`:
 
 ## Security & Authentication
 
-OAuth 2.0 protected resource metadata is published at `/.well-known/oauth-protected-resource` and `/auth.md`. All discovery endpoints allow unauthenticated read-only access.
+All public interfaces are unauthenticated and read-only. See `/auth.md`.
 
 ## Machine Discovery Reference
 

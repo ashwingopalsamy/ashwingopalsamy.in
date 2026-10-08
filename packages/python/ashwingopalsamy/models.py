@@ -100,7 +100,6 @@ class ApiStatus:
     api_version: str
     status: str
     mode: str
-    rate_limit: Dict[str, Any]
     versioning: Dict[str, Any]
     capabilities: Dict[str, bool]
     links: Dict[str, str]
@@ -113,7 +112,6 @@ class ApiStatus:
             api_version=data.get("apiVersion", ""),
             status=data["status"],
             mode=data["mode"],
-            rate_limit=data.get("rateLimit", {}),
             versioning=data.get("versioning", {}),
             capabilities=data.get("capabilities", {}),
             links=data.get("links", {}),

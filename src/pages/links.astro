@@ -31,7 +31,7 @@ const sections = profileLinkSections.map((sec) => ({
       sections.map((section) => (
         <section class="links-group" data-enter>
           <SectionHeading title={section.title} />
-          <ul class="links-grid">
+          <ul class="links-grid surface-stack">
             {
               section.links.map((l) => (
                 <li class="link-item">
@@ -80,29 +80,13 @@ const sections = profileLinkSections.map((sec) => ({
   }
 
   .links-group :global(.section-heading) {
-    margin-bottom: 0.45rem;
+    margin-bottom: var(--step-2);
   }
 
   .links-grid {
-    list-style: none;
-    margin: 0;
-    padding: 0;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.2rem 1.5rem;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .links-grid:hover .link-item {
-      opacity: var(--dim-opacity);
-      filter: blur(var(--dim-blur));
-      transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
-    }
-    .links-grid:hover .link-item:hover,
-    .links-grid:hover .link-item:focus-within {
-      opacity: 1;
-      filter: none;
-    }
+    gap: var(--step-1) var(--step-5);
   }
 
   @media (max-width: 32rem) {
@@ -113,17 +97,16 @@ const sections = profileLinkSections.map((sec) => ({
 
   .link-item {
     min-width: 0;
-    transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
   }
 
   .link-row {
     display: grid;
     grid-template-columns: 1.45rem auto minmax(0, 1fr) 1.25rem;
-    min-height: 42px;
+    min-height: var(--control-hit);
     align-items: center;
     gap: 0.75rem;
     min-width: 0;
-    padding: 0.45rem 0.75rem;
+    padding: var(--step-2) var(--step-3);
     margin-inline: -0.75rem;
     border-radius: var(--r-3);
     background: transparent;
@@ -133,7 +116,7 @@ const sections = profileLinkSections.map((sec) => ({
     text-decoration: none;
     transition:
       background-color var(--t-color),
-      transform var(--dur-1) var(--ease-out);
+      transform var(--dur-press) var(--ease-enter);
   }
 
   .link-row:active {
@@ -142,8 +125,8 @@ const sections = profileLinkSections.map((sec) => ({
   }
 
   .link-icon {
-    width: 19px;
-    height: 19px;
+    width: calc(var(--step) * 5);
+    height: calc(var(--step) * 5);
     flex-shrink: 0;
     color: var(--ghost);
     transition: color var(--t-color);
@@ -212,16 +195,16 @@ const sections = profileLinkSections.map((sec) => ({
 
   @media (max-width: 38rem) {
     .links-group + .links-group {
-      padding-top: 1.85rem;
-      margin-top: 1.85rem;
+      padding-top: calc(var(--step) * 7);
+      margin-top: calc(var(--step) * 7);
     }
 
     .link-row {
       grid-template-columns: 1.45rem minmax(0, 1fr) 1.25rem;
-      gap: 0.15rem 0.75rem;
+      gap: 0.15rem var(--step-3);
       border-radius: var(--r-3);
       padding: 0.5rem 0.75rem;
-      min-height: 40px;
+      min-height: var(--control-hit);
     }
 
     .link-platform,

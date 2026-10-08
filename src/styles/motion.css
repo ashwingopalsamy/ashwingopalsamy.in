@@ -44,6 +44,21 @@
   /* Decisive: the "no argument" curve for state that flips. */
   --ease-snap: cubic-bezier(0.2, 0, 0, 1);
 
+  /* Overshoot: runs past the mark and settles back. Authored for the
+     theme toggle's sun/moon morph; anything else that wants to bounce
+     should use a spring. */
+  --ease-overshoot: cubic-bezier(0, 0, 0, 1.25);
+
+  /* Morph: decelerates into place without overshoot. The same toggle's
+     clip-path travel while the overshoot curve drives the disc and rays. */
+  --ease-morph: cubic-bezier(0, 0, 0.5, 1);
+
+  /* Pulse: a slow symmetric swell for looping presence signals. */
+  --ease-pulse: cubic-bezier(0.4, 0, 0.6, 1);
+  /* ambient loops on /more (shelf, frame, steam, avatars): the plain
+     ease-in-out they were drawn with, kept exact */
+  --ease-sway: cubic-bezier(0.42, 0, 0.58, 1);
+
   /* Damped springs, sampled at 20 stops. Comments record the physics so
      these can be regenerated rather than guessed at.
      see: mass 1, position curve of a damped harmonic oscillator */
@@ -69,13 +84,6 @@
     0.9874, 0.9898, 0.993, 1
   );
 
-  /* names the rest of the codebase already speaks */
-  --ease: var(--ease-enter);
-  --ease-out: var(--ease-enter);
-  --ease-in-out: var(--ease-travel);
-  --ease-drawer: var(--ease-enter);
-  --ease-spring: var(--ease-spring-pop);
-
   /* ---------------------------------------------------------------- */
   /*  durations — named for the size of the change, not a step index   */
   /* ---------------------------------------------------------------- */
@@ -92,18 +100,26 @@
      the longer of the pair, not the sum */
   --dur-route-out: 90ms;
   --dur-route-in: 200ms;
+  --dur-route-delay: 40ms; /* the incoming layer starts before the outgoing one is gone */
 
-  /* legacy scale, retuned rather than removed so existing components
-     inherit the new rhythm without being touched one by one */
-  --dur-1: var(--dur-press);
-  --dur-2: var(--dur-tint);
-  --dur-3: var(--dur-shift);
-  --dur-4: var(--dur-enter);
-  --dur-5: var(--dur-overlay);
+  /* collapse for reduced motion: not zero, so transitionend and
+     animationend still fire for anything waiting on them */
+  --dur-instant: 1ms;
+
+  /* long and looping — ambient motion, not interaction. These never
+     answer an input, so the interaction scale above does not apply. */
+  --dur-hero: 620ms;      /* hero line cascade: a spring stretched over its slot */
+  --dur-spin: 800ms;      /* indeterminate spinner, one full turn */
+  --dur-blink: 1.1s;      /* caret on/off cycle */
+  --dur-beacon: 2s;       /* location ring, one expansion (plays twice) */
+  --dur-breathe: 2.2s;    /* placeholder dots fading in and out */
+  --dur-rise: 3s;         /* steam wisps rising */
+  --dur-bob: 3.2s;        /* avatars bobbing */
+  --dur-pulse: 3.6s;      /* presence halo, shelf-spine sway: the slow breath */
+  --dur-drift: 4.2s;      /* picture frames tilting */
 
   --t-move: var(--dur-nudge) var(--ease-enter);
   --t-color: var(--dur-tint) linear;
-  --t-draw: var(--dur-enter) var(--ease-enter);
   --t-press: transform var(--dur-press) var(--ease-snap);
 
   /* ---------------------------------------------------------------- */
@@ -135,6 +151,23 @@
    canvas sits behind them, so opacity and blur cannot expose an unpainted
    viewport. The chrome keeps its existing leaf names.
    ------------------------------------------------------------------ */
+
+/* Same-origin navigations are full document loads; the browser runs the
+   transition between them (Chrome 126+, Safari 18.2+). Reduced motion opts
+   out entirely: the new page simply appears. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+}
+
+/* Set by the head script while a speculatively prerendered page waits for
+   activation, so entrances play when it is shown rather than unseen. */
+:root[data-prerendering] *,
+:root[data-prerendering] *::before,
+:root[data-prerendering] *::after {
+  animation-play-state: paused !important;
+}
 
 /* The pseudo tree must never eat clicks. */
 ::view-transition {
@@ -175,8 +208,9 @@
 }
 
 /* Back navigation reverses the axis, so the site has a sense of
-   direction rather than one generic transition in both directions. */
-:root[data-astro-transition="back"] {
+   direction rather than one generic transition in both directions.
+   The head script sets data-route-dir on pagereveal. */
+:root[data-route-dir="back"] {
   --route-dir: -1;
 }
 
@@ -189,7 +223,7 @@
     animation: route-in var(--dur-route-in) var(--ease-enter) both;
     /* start fractionally before the outgoing layer is gone so the two
        overlap instead of handing off through an empty frame */
-    animation-delay: 40ms;
+    animation-delay: var(--dur-route-delay);
   }
 }
 
@@ -239,6 +273,65 @@
   opacity: 1;
 }
 
+/* Logo glyphs: the home mark and the back arrow trade places with the same
+   blur and scale as the in-page swap, but only when the route changes the
+   logo's state (the head script sets data-logo-swap). Otherwise they hold
+   still with the rest of the chrome. */
+::view-transition-group(chrome-logo-mark),
+::view-transition-group(chrome-logo-back) {
+  animation: none;
+}
+
+::view-transition-old(chrome-logo-mark),
+::view-transition-old(chrome-logo-back) {
+  display: none;
+}
+
+::view-transition-new(chrome-logo-mark),
+::view-transition-new(chrome-logo-back) {
+  animation: none;
+}
+
+@keyframes logo-glyph-out {
+  from { opacity: 1; filter: blur(0); transform: scale(1); }
+  to { opacity: 0; filter: blur(4px); transform: scale(0.75); }
+}
+
+@keyframes logo-glyph-in {
+  from { opacity: 0; filter: blur(4px); transform: scale(0.75); }
+  to { opacity: 1; filter: blur(0); transform: scale(1); }
+}
+
+:root[data-logo-swap]::view-transition-old(chrome-logo-mark),
+:root[data-logo-swap]::view-transition-old(chrome-logo-back) {
+  display: block;
+  animation: logo-glyph-out var(--dur-tint) var(--ease-enter) both;
+}
+
+:root[data-logo-swap]::view-transition-new(chrome-logo-mark),
+:root[data-logo-swap]::view-transition-new(chrome-logo-back) {
+  animation: logo-glyph-in var(--dur-tint) var(--ease-enter) both;
+}
+
+/* The selection pill is the one piece of chrome that moves: it slides from
+   the old route's tab to the new one on the same spring as an in-page tap.
+   The two pills are identical, so the old copy is dropped, not cross-faded. */
+::view-transition-group(nav-selection),
+::view-transition-group(nav-selection-bottom) {
+  animation-duration: var(--dur-shift);
+  animation-timing-function: var(--ease-spring-snap);
+}
+
+::view-transition-old(nav-selection),
+::view-transition-old(nav-selection-bottom) {
+  display: none;
+}
+
+::view-transition-new(nav-selection),
+::view-transition-new(nav-selection-bottom) {
+  animation: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root),
   ::view-transition-new(root) {
@@ -246,7 +339,7 @@
   }
 
   ::view-transition-group(*) {
-    animation-duration: 1ms;
+    animation-duration: var(--dur-instant);
   }
 }
 
@@ -340,12 +433,10 @@
   animation: photo-fade-in var(--dur-shift) var(--ease-enter) both;
 }
 
-@supports not (view-transition-name: none) {
-  .column-body.photo-page > main[data-route-content][data-navigation-phase="entering"] {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
+:root[data-route-fallback] .column-body.photo-page > main[data-route-content] {
+  opacity: 1;
+  transform: none;
+  transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

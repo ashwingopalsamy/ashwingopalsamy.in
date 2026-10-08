@@ -34,7 +34,7 @@ const jsonLd = collectionPageJsonLd({
 >
   <PageIntro title="tags" lede="Topics that appear often enough to browse across the library." />
 
-  <ul class="tag-list" data-enter>
+  <ul class="tag-list surface-stack" data-enter>
     {buckets.map((b) => (
       <li class="tag-row">
         <a class="tag-link" href={tagHref(b.tag)}>
@@ -49,40 +49,21 @@ const jsonLd = collectionPageJsonLd({
 
 <style>
   .tag-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
+    --surface-row-gap: 0.15rem;
     max-width: 100%;
   }
 
-  @media (hover: hover) and (pointer: fine) {
-    .tag-list:hover .tag-row {
-      opacity: var(--dim-opacity);
-      filter: blur(var(--dim-blur));
-      transition: opacity var(--dur-2) var(--ease), filter var(--dur-2) var(--ease);
-    }
-    .tag-list:hover .tag-row:hover,
-    .tag-list:hover .tag-row:focus-within {
-      opacity: 1;
-      filter: none;
-    }
-  }
-
   .tag-row {
-    padding: 0.75rem 0.85rem;
-    margin-inline: -0.85rem;
+    padding: var(--step-3) var(--step-3);
+    margin-inline: calc(var(--step-3) * -1);
     border-radius: var(--r-3);
     background: transparent;
     border: none;
     box-shadow: none;
     transition:
       background-color var(--t-color),
-      opacity var(--dur-2) var(--ease),
-      filter var(--dur-2) var(--ease),
-      transform var(--dur-1) var(--ease-out);
+      opacity var(--dur-tint) var(--ease-enter),
+      transform var(--dur-press) var(--ease-enter);
   }
 
   @media (hover: hover) and (pointer: fine) {

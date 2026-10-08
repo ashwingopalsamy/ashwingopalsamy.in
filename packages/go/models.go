@@ -49,13 +49,6 @@ type NoteMarkdown struct {
 	Markdown string `json:"markdown"`
 }
 
-// RateLimitInfo describes current rate limit parameters.
-type RateLimitInfo struct {
-	Limit         int    `json:"limit"`
-	WindowSeconds int    `json:"windowSeconds"`
-	Policy        string `json:"policy"`
-}
-
 // VersioningInfo describes API versioning policy.
 type VersioningInfo struct {
 	Strategy          string `json:"strategy"`
@@ -72,7 +65,6 @@ type ApiStatus struct {
 	ApiVersion   string            `json:"apiVersion"`
 	Status       string            `json:"status"`
 	Mode         string            `json:"mode"`
-	RateLimit    RateLimitInfo     `json:"rateLimit"`
 	Versioning   VersioningInfo    `json:"versioning"`
 	Capabilities map[string]bool   `json:"capabilities"`
 	Links        map[string]string `json:"links"`

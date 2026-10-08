@@ -1,5 +1,3 @@
-import { DateTime } from "luxon";
-
 export interface TimeZoneChoice {
   id: string;
   label: string;
@@ -7,14 +5,106 @@ export interface TimeZoneChoice {
   keywords: string[];
 }
 
+/** An instant (epoch ms) viewed in a zone: an IANA name, "UTC", or "UTC+h[:mm]". */
+export interface ZonedTime {
+  ts: number;
+  zone: string;
+}
+
 export interface TimeConversion {
   sourceZone: string;
   sourceLabel: string;
   targetZone: string;
   targetLabel: string;
-  source: DateTime;
-  target: DateTime;
+  source: ZonedTime;
+  target: ZonedTime;
   nextDay?: boolean;
+}
+
+type ZoneSpec = number | Intl.DateTimeFormat;
+
+const zoneCache = new Map<string, ZoneSpec | null>();
+
+function signedOffset(hours: string | undefined, minutes: string | undefined): number {
+  let h = parseInt(hours ?? "", 10);
+  if (Number.isNaN(h)) h = 0;
+  const m = parseInt(minutes ?? "", 10) || 0;
+  return h * 60 + (h < 0 || Object.is(h, -0) ? -m : m);
+}
+
+/** A fixed offset in minutes, a wall-clock formatter for an IANA zone, or null when the zone is unknown. */
+function zoneSpec(zone: string): ZoneSpec | null {
+  const cached = zoneCache.get(zone);
+  if (cached !== undefined) return cached;
+  let spec: ZoneSpec | null = null;
+  const lowered = zone.toLowerCase();
+  const fixed = lowered.match(/^utc(?:([+-]\d{1,2})(?::(\d{2}))?)?$/);
+  if (lowered === "gmt") spec = 0;
+  else if (fixed) spec = signedOffset(fixed[1], fixed[2]);
+  else {
+    try {
+      spec = new Intl.DateTimeFormat("en-US", {
+        timeZone: /^(?:local|system|default)$/.test(lowered) ? undefined : zone,
+        hourCycle: "h23",
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric",
+      });
+    } catch {
+      spec = null;
+    }
+  }
+  zoneCache.set(zone, spec);
+  return spec;
+}
+
+/** Wall-clock [year, month, day, hour, minute, second] of an instant in a zone. */
+function wall(zone: string, ts: number): [number, number, number, number, number, number] {
+  const spec = zoneSpec(zone);
+  if (spec === null) throw new RangeError(`Invalid time zone: ${zone}`);
+  if (typeof spec === "number") {
+    const d = new Date(ts + spec * 60000);
+    return [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()];
+  }
+  const v: Record<string, number> = {};
+  for (const part of spec.formatToParts(ts)) if (part.type !== "literal") v[part.type] = Number(part.value);
+  return [v.year, v.month, v.day, v.hour % 24, v.minute, v.second];
+}
+
+/** UTC offset of a zone at an instant, in minutes. */
+function offsetMinutes(zone: string, ts: number): number {
+  const spec = zoneSpec(zone);
+  if (typeof spec === "number") return spec;
+  const [y, mo, d, h, mi, s] = wall(zone, ts);
+  return (Date.UTC(y, mo - 1, d, h, mi, s) - Math.floor(ts / 1000) * 1000) / 60000;
+}
+
+/** The instant at which a zone's wall clock reads the given time; a skipped (DST gap) time resolves forward. */
+function fromWall(zone: string, y: number, mo: number, d: number, h: number, mi: number): ZonedTime {
+  const local = Date.UTC(y, mo - 1, d, h, mi);
+  const guess = offsetMinutes(zone, Date.now());
+  let ts = local - guess * 60000;
+  const o2 = offsetMinutes(zone, ts);
+  if (o2 !== guess) {
+    ts -= (o2 - guess) * 60000;
+    const o3 = offsetMinutes(zone, ts);
+    if (o3 !== o2) ts = local - Math.min(o2, o3) * 60000;
+  }
+  return { ts, zone };
+}
+
+function inZone(value: ZonedTime, zone: string): ZonedTime {
+  return { ts: value.ts, zone };
+}
+
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function pad(value: number): string {
+  return String(value).padStart(2, "0");
 }
 
 export const FAVORITE_ZONES: TimeZoneChoice[] = [
@@ -51,8 +141,7 @@ export function zoneChoice(input: string | undefined, visitorZone: string): Time
   const alias = aliases.get(normalized);
   if (alias) return alias.zone === "local" ? { ...alias, zone: visitorZone } : alias;
   const candidate = input.trim();
-  const probe = DateTime.now().setZone(candidate);
-  if (!probe.isValid) return null;
+  if (!zoneSpec(candidate)) return null;
   return { id: candidate.toLowerCase(), label: candidate.replace(/_/g, " "), zone: candidate, keywords: [] };
 }
 
@@ -79,7 +168,7 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-export function parseClock(input: string, zone: string, dayOffset = 0): DateTime | null {
+export function parseClock(input: string, zone: string, dayOffset = 0): ZonedTime | null {
   const match = input.trim().match(/^(today\s+|tomorrow\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i);
   if (!match) return null;
   let hour = Number(match[2]);
@@ -93,17 +182,14 @@ export function parseClock(input: string, zone: string, dayOffset = 0): DateTime
   } else if (hour > 23) {
     return null;
   }
-  const now = DateTime.now().setZone(zone).plus({ days: dayOffset });
-  const value = DateTime.fromObject(
-    { year: now.year, month: now.month, day: now.day, hour, minute, second: 0, millisecond: 0 },
-    { zone },
-  );
-  return value.isValid ? value : null;
+  if (!zoneSpec(zone)) return null;
+  const [year, month, day] = wall(zone, Date.now());
+  const date = new Date(Date.UTC(year, month - 1, day + dayOffset));
+  return fromWall(zone, date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), hour, minute);
 }
 
 export function currentTimeRows(siteZone: string, visitorZone: string): TimeConversion[] {
-  const now = DateTime.now();
-  const source = now.setZone(siteZone);
+  const now = { ts: Date.now(), zone: siteZone };
   return FAVORITE_ZONES.map((choice) => {
     const targetZone = resolvedZone(choice.zone, visitorZone);
     return {
@@ -111,18 +197,21 @@ export function currentTimeRows(siteZone: string, visitorZone: string): TimeConv
       sourceLabel: "Now",
       targetZone,
       targetLabel: choice.label,
-      source,
-      target: now.setZone(targetZone),
+      source: now,
+      target: inZone(now, targetZone),
     };
   });
 }
 
-export function formatTime(value: DateTime, includeSeconds = true): string {
-  return value.toFormat(includeSeconds ? "ccc, dd LLL · HH:mm:ss" : "ccc, dd LLL · HH:mm");
+export function formatTime(value: ZonedTime, includeSeconds = true): string {
+  const [year, month, day, hour, minute, second] = wall(value.zone, value.ts);
+  const weekday = WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
+  return `${weekday}, ${pad(day)} ${MONTHS[month - 1]} · ${pad(hour)}:${pad(minute)}${includeSeconds ? `:${pad(second)}` : ""}`;
 }
 
-export function formatClock(value: DateTime): string {
-  return value.toFormat("h:mm a");
+export function formatClock(value: ZonedTime): string {
+  const [, , , hour, minute] = wall(value.zone, value.ts);
+  return `${hour % 12 || 12}:${pad(minute)} ${hour < 12 ? "AM" : "PM"}`;
 }
 
 export function isClockQuery(query: string): boolean {
@@ -142,7 +231,7 @@ export function timeConversionRows(query: string, siteZone: string, visitorZone:
       targetZone,
       targetLabel: choice.label,
       source,
-      target: source.setZone(targetZone),
+      target: inZone(source, targetZone),
       nextDay: dayOffset === 1,
     };
   });
@@ -167,7 +256,7 @@ export function parseTimeQuery(query: string, siteZone: string, visitorZone: str
   if (!targetZone) return null;
   const source = parseClock(clockText, resolvedZone(sourceZone.zone, visitorZone), dayOffset);
   if (!source) return null;
-  const target = source.setZone(resolvedZone(targetZone.zone, visitorZone));
+  const target = inZone(source, resolvedZone(targetZone.zone, visitorZone));
   return {
     sourceZone: resolvedZone(sourceZone.zone, visitorZone),
     sourceLabel: sourceZone.label,
@@ -180,13 +269,14 @@ export function parseTimeQuery(query: string, siteZone: string, visitorZone: str
 }
 
 export function conversionLabel(conversion: TimeConversion): string {
-  const targetDay = conversion.target.toISODate() !== conversion.source.toISODate();
+  const dayOf = (value: ZonedTime) => wall(value.zone, value.ts).slice(0, 3).join("-");
+  const targetDay = dayOf(conversion.target) !== dayOf(conversion.source);
   const day = conversion.nextDay ? "tomorrow" : targetDay ? "next day" : "today";
   return `${formatClock(conversion.source)} in ${conversion.sourceLabel} is ${formatClock(conversion.target)} in ${conversion.targetLabel} · ${day}`;
 }
 
-export function offsetLabel(source: DateTime, target: DateTime): string {
-  const minutes = target.offset - source.offset;
+export function offsetLabel(source: ZonedTime, target: ZonedTime): string {
+  const minutes = offsetMinutes(target.zone, target.ts) - offsetMinutes(source.zone, source.ts);
   if (minutes === 0) return "same offset";
   const absolute = Math.abs(minutes);
   const hours = Math.floor(absolute / 60);
