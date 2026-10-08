@@ -101,6 +101,7 @@ zIndex:
   z-progress: 30
   z-toast: 40
   z-overlay: 60
+  z-frame: 70
 motion:
   ease-enter: cubic-bezier(0.16, 1, 0.3, 1)
   ease-exit: cubic-bezier(0.55, 0, 1, 0.45)
@@ -186,7 +187,7 @@ Light and dark themes receive equal attention. A mechanical inversion is not eno
 
 ## Typography
 
-Inter carries navigation and prose. Newsreader Italic is used sparingly for literary interruptions. JetBrains Mono is limited to code, tokens, times, hashes, and measurements.
+Inter carries navigation and prose on desktop; compact viewports (38rem and below) set the same roles in Geist, each preloading only its own face. Newsreader Italic is used sparingly for literary interruptions. JetBrains Mono is limited to code, tokens, times, hashes, and measurements.
 
 Body copy uses a readable 65 to 75 character measure. Headings are balanced, tracking never goes below `-0.04em`, and long editorial paragraphs may use deliberate justification. The one-pixel mono offset is an optical correction, not layout spacing.
 
@@ -217,6 +218,8 @@ Header, main content, and footer share the same centered rail. Space above a sec
 Mobile has its own physical constraints. Home, Work, AI, More, and Links stay in five fixed tracks above the safe area, while desktop keeps the quieter Home, Work, and More set. Content reserves space beneath the mobile bar, and horizontal tab lists contain their own overscroll.
 
 ## Elevation & Depth
+
+The whole page sits on a rounded tile above a darker base (the viewport frame): the base shows only at the corners, a soft shadow lines the outer edge, and the radius tracks the viewport between 12 and 24 pixels. It is one fixed, static layer held still through route transitions.
 
 Depth is used to separate persistent chrome, overlays, and feedback. A surface gets either a border or a shadow strong enough to explain its elevation. Blur is reserved for stationary chrome and overlays: the desktop header, the mobile bottom navigation (a short, fixed strip, so its blur stays cheap while content scrolls beneath it), the command palette, and floating tooltips.
 

@@ -248,6 +248,7 @@
    still is correct in both cases.
    ------------------------------------------------------------------ */
 
+::view-transition-group(chrome-frame),
 ::view-transition-group(chrome-logo),
 ::view-transition-group(chrome-nav),
 ::view-transition-group(chrome-action),
@@ -258,6 +259,7 @@
 /* Dropping the outgoing copy rather than cross-fading it: two stacked
    translucent glass snapshots double the tint and ghost the old pill
    through the new one. */
+::view-transition-old(chrome-frame),
 ::view-transition-old(chrome-logo),
 ::view-transition-old(chrome-nav),
 ::view-transition-old(chrome-action),
@@ -265,6 +267,7 @@
   display: none;
 }
 
+::view-transition-new(chrome-frame),
 ::view-transition-new(chrome-logo),
 ::view-transition-new(chrome-nav),
 ::view-transition-new(chrome-action),
@@ -330,6 +333,20 @@
 ::view-transition-new(nav-selection),
 ::view-transition-new(nav-selection-bottom) {
   animation: none;
+}
+
+/* Labels ride above the pill. Position holds still; the old and new label
+   (ink to canvas on the tab gaining the pill, and back on the one losing it)
+   cross-fade on the pill's own timing, so text never disappears under it. */
+::view-transition-group(*.nav-label) {
+  animation-duration: var(--dur-shift);
+  animation-timing-function: var(--ease-spring-snap);
+}
+
+::view-transition-old(*.nav-label),
+::view-transition-new(*.nav-label) {
+  animation-duration: var(--dur-shift);
+  animation-timing-function: var(--ease-enter);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -132,6 +132,12 @@
      .surface-stack / .surface-stream below; these two values are the only
      place the depth of the effect is decided, so they cannot drift apart
      per page. */
+  /* Viewport frame: corner radius tracks the viewport (12px to 24px), the
+     base shows only at the corners, the shadow lines the outer edge. */
+  --frame-radius: clamp(var(--step-3), 1.75vmin, var(--step-5));
+  --frame-base: color-mix(in oklch, var(--ink) 14%, var(--canvas));
+  --frame-shadow: color-mix(in oklch, var(--ink) 10%, transparent);
+  --frame-shadow-blur: var(--step-6);
   --dim-opacity: 0.45;
   --dim-blur: 0.2px;
 
@@ -142,6 +148,7 @@
   --z-progress: 30;
   --z-toast: 40;
   --z-overlay: 60;
+  --z-frame: 70;
 
   --focus-ring: 2px solid var(--ink);
   --focus-offset: 3px;
@@ -184,6 +191,8 @@
 
 /* Dark ramp - explicit theme. No-JS OS-dark mirrors this block once below. */
 :root[data-theme="dark"] {
+  --frame-base: color-mix(in oklch, var(--canvas) 55%, oklch(0 0 0));
+  --frame-shadow: color-mix(in oklch, oklch(0 0 0) 45%, transparent);
   --canvas: var(--color-9);
   --ink: var(--color-1);
   --muted: var(--color-3);
@@ -250,6 +259,8 @@
    components read the surface vars above and need no second copy. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
+    --frame-base: color-mix(in oklch, var(--canvas) 55%, oklch(0 0 0));
+    --frame-shadow: color-mix(in oklch, oklch(0 0 0) 45%, transparent);
     --canvas: var(--color-9);
     --ink: var(--color-1);
     --muted: var(--color-3);
@@ -1390,3 +1401,33 @@ a {
 .tok-punct { color: var(--muted); }
 .tok-op { color: var(--code-kw); }
 
+/* Compact viewports set in Geist; desktop keeps Inter. Inter's cv05/cv08
+   alternates don't exist in Geist, so only the shared features stay on. */
+@media (max-width: 38rem) {
+  body {
+    font-family: "Geist Variable", "Geist Fallback", system-ui, -apple-system, sans-serif;
+    font-feature-settings: "calt", "liga";
+  }
+}
+
+/* Viewport frame (experiment). The page reads as a rounded tile resting on a
+   darker base: the base shows only at the corners and a soft shadow lines
+   the outer edge. One fixed, static layer, rasterised once; it never takes
+   input and holds still through route transitions (chrome-frame). */
+.viewport-frame {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-frame);
+  pointer-events: none;
+  border-radius: var(--frame-radius);
+  box-shadow:
+    0 0 0 var(--frame-radius) var(--frame-base),
+    inset 0 0 var(--frame-shadow-blur) var(--frame-shadow);
+  view-transition-name: chrome-frame;
+}
+
+@media print, (forced-colors: active) {
+  .viewport-frame {
+    display: none;
+  }
+}
