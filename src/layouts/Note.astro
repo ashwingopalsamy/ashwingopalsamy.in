@@ -136,13 +136,13 @@ const jsonLd = [
           {(prev || next) && (
             <nav class="note-pager" aria-label="More notes">
               {prev ? (
-                <a class="note-page note-prev" href={`/blog/${prev.id}`} rel="prev" title="Previous note" data-note-nav="prev">
+                <a class="note-page note-prev" href={slashPath(`/blog/${prev.id}`)} rel="prev" title="Previous note" data-note-nav="prev">
                   <span class="note-page-dir"><span class="note-page-icon"><Icon name="arrow-left" size={15} /></span>Previous note</span>
                   <span class="note-page-title">{prev.title}</span>
                 </a>
               ) : <span class="note-page note-prev is-empty" aria-hidden="true"></span>}
               {next ? (
-                <a class="note-page note-next" href={`/blog/${next.id}`} rel="next" title="Next note" data-note-nav="next">
+                <a class="note-page note-next" href={slashPath(`/blog/${next.id}`)} rel="next" title="Next note" data-note-nav="next">
                   <span class="note-page-dir">Next note<span class="note-page-icon"><Icon name="arrow-right" size={15} /></span></span>
                   <span class="note-page-title">{next.title}</span>
                 </a>
@@ -156,7 +156,7 @@ const jsonLd = [
               <ul class="note-related-list surface-stack">
                 {related.map((r) => (
                   <li>
-                    <a href={`/blog/${r.id}`}><span>{r.title}</span><Icon name="chevron-right" size={15} /></a>
+                    <a href={slashPath(`/blog/${r.id}`)}><span>{r.title}</span><Icon name="chevron-right" size={15} /></a>
                   </li>
                 ))}
               </ul>

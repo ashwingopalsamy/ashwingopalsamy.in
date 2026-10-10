@@ -6,7 +6,7 @@
     "strict": true,
     "noEmit": true,
     "lib": ["ESNext"],
-    "types": ["@cloudflare/workers-types", "node"],
+    "types": ["@cloudflare/workers-types"],
     "skipLibCheck": true
   },
   "include": ["functions/**/*.ts"]
