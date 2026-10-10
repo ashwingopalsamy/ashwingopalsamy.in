@@ -10,6 +10,7 @@
 import { prefetch } from "astro:prefetch";
 import { iconMarkup } from "../lib/ui-icons";
 import { playAccent } from "./sound";
+import { onScrollFrame } from "./scroll-scheduler";
 
 interface Target {
   href: string;
@@ -70,6 +71,17 @@ if (targets.start || targets.end) {
   let armed = false;
   let frame = 0;
 
+  /* Edge state comes from the shared scroll frame, whose document height is
+     cached until something resizes. Reading scrollHeight here instead ran
+     on every touchmove of every ordinary scroll and forced a synchronous
+     layout whenever anything had dirtied it. */
+  let atStart = false;
+  let atEnd = false;
+  onScrollFrame(({ y, viewport, docHeight }) => {
+    atStart = y <= 0;
+    atEnd = y + viewport >= docHeight - 2;
+  }, null);
+
   const paint = () => {
     frame = 0;
     const el = edge ? indicators[edge] : undefined;
@@ -102,9 +114,8 @@ if (targets.start || targets.end) {
     if (event.touches.length !== 1) return;
     const y = event.touches[0].clientY;
     if (!edge) {
-      const bottom = window.scrollY + window.innerHeight >= root.scrollHeight - 2;
-      if (targets.end && y < startY && bottom) edge = "end";
-      else if (targets.start && y > startY && window.scrollY <= 0) edge = "start";
+      if (targets.end && y < startY && atEnd) edge = "end";
+      else if (targets.start && y > startY && atStart) edge = "start";
       if (!edge) return;
       anchor = y;
       indicators[edge] ??= createIndicator(edge, targets[edge]!);

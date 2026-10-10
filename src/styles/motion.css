@@ -182,29 +182,49 @@
   pointer-events: none;
 }
 
+/* Motion and blur are separate animations on purpose. Chromium cannot run
+   a pixel-moving filter on the compositor, and a keyframe effect is
+   composited all or nothing, so one combined @keyframes put the opacity
+   and travel on the main thread as well — exactly while the incoming page
+   parses and runs its scripts. Split, the travel and fade stay on the
+   compositor and only the blur radius depends on the main thread. */
 @keyframes route-out {
   from {
     opacity: 1;
-    filter: blur(0);
     transform: translate3d(0, 0, 0);
   }
   to {
     opacity: 0;
-    filter: blur(3px);
     transform: translate3d(0, calc(var(--route-dir, 1) * -4px), 0);
+  }
+}
+
+@keyframes route-out-blur {
+  from {
+    filter: blur(0);
+  }
+  to {
+    filter: blur(3px);
   }
 }
 
 @keyframes route-in {
   from {
     opacity: 0;
-    filter: blur(5px);
     transform: translate3d(0, calc(var(--route-dir, 1) * 8px), 0);
   }
   to {
     opacity: 1;
-    filter: blur(0);
     transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes route-in-blur {
+  from {
+    filter: blur(5px);
+  }
+  to {
+    filter: blur(0);
   }
 }
 
@@ -217,11 +237,15 @@
 
 @media (prefers-reduced-motion: no-preference) {
   ::view-transition-old(root) {
-    animation: route-out var(--dur-route-out) var(--ease-exit) both;
+    animation:
+      route-out var(--dur-route-out) var(--ease-exit) both,
+      route-out-blur var(--dur-route-out) var(--ease-exit) both;
   }
 
   ::view-transition-new(root) {
-    animation: route-in var(--dur-route-in) var(--ease-enter) both;
+    animation:
+      route-in var(--dur-route-in) var(--ease-enter) both,
+      route-in-blur var(--dur-route-in) var(--ease-enter) both;
     /* start fractionally before the outgoing layer is gone so the two
        overlap instead of handing off through an empty frame */
     animation-delay: var(--dur-route-delay);

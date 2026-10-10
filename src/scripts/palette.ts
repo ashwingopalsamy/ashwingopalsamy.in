@@ -463,7 +463,9 @@ function unlockPageForPalette(restoreScroll = true) {
       restoreScrollFrame = 0;
       pendingScrollRestore = null;
       if (session === paletteSession && !lock.signal.aborted && document.body === body && !pageLock) {
-        window.scrollTo(lock.scrollX, lock.scrollY);
+        // html is scroll-behavior: smooth; restoring must not animate down
+        // from the top the fixed-body lock collapsed the page to.
+        window.scrollTo({ left: lock.scrollX, top: lock.scrollY, behavior: "instant" });
       }
     });
   }
@@ -1539,7 +1541,7 @@ export function openPalette(nextMode: PaletteOpenMode = "search", instant = fals
   const pendingRestore = pendingScrollRestore;
   pendingScrollRestore = null;
   if (pendingRestore && !pendingRestore.signal.aborted && document.body === pendingRestore.body) {
-    window.scrollTo(pendingRestore.scrollX, pendingRestore.scrollY);
+    window.scrollTo({ left: pendingRestore.scrollX, top: pendingRestore.scrollY, behavior: "instant" });
   }
   cancelAnimationFrame(openFrame);
   const session = ++paletteSession;

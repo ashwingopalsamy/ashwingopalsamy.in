@@ -466,6 +466,9 @@ html {
   overflow-x: clip;
   background: var(--canvas);
   -webkit-tap-highlight-color: transparent;
+  /* Pan and pinch-zoom stay; double-tap zoom goes, so no tap ever waits
+     to find out whether a second one is coming. */
+  touch-action: manipulation;
   /* Mobile browsers inflate text per block unless told not to (iOS Safari,
      Chrome Android font boosting); sizes must come only from the type tokens. */
   -webkit-text-size-adjust: 100%;
@@ -506,7 +509,11 @@ html {
 
 body {
   margin: 0;
-  min-height: 100dvh;
+  /* svh, not dvh: dvh changes whenever a phone's URL bar collapses or
+     returns mid-scroll, re-laying-out the whole document each time. A page
+     shorter than the screen cannot scroll the bar away, so short pages
+     still fill the screen exactly as before. */
+  min-height: 100svh;
   min-inline-size: 0;
   display: flex;
   flex-direction: column;
