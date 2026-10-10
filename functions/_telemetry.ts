@@ -413,10 +413,14 @@ export function emitEdgeTelemetry(
   }
 
   recordToAnalyticsEngine(env?.SITE_TELEMETRY, {
-    // Speculative prefetch/prerender fetches are not page views.
+    // Speculative prefetch/prerender fetches are not page views. Chromium
+    // sends Sec-Purpose; the WebKit warm-ups in public/sw.js cannot set a
+    // Sec- header and send the legacy Purpose instead.
     eventType: protocolMeta
       ? `${protocolMeta.name}_${protocolMeta.op}`
-      : /prefetch/i.test(request.headers.get("Sec-Purpose") ?? "") ? "edge_prefetch" : "edge_request",
+      : /prefetch/i.test(request.headers.get("Sec-Purpose") ?? request.headers.get("Purpose") ?? "")
+        ? "edge_prefetch"
+        : "edge_request",
     surface,
     route,
     method: request.method,

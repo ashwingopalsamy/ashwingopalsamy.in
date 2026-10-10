@@ -15,6 +15,7 @@
     "/icon-512.png",
     "/portrait.webp",
     "/site.webmanifest",
+    "/sw.js",
     "/og.png",
     "/og/*",
     "/*.woff2",
