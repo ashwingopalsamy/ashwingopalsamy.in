@@ -300,6 +300,10 @@ const pickIndex = quoteIndexOfTheDayServer();
   #quote-viewport {
     display: grid;
     overflow: hidden;
+    /* Vertical scrolling and zoom stay native; a horizontal drag is left to
+       the swipe handler instead of being claimed as a pan, which cancelled
+       the pointer stream before pointerup could ever see the swipe. */
+    touch-action: pan-y pinch-zoom;
   }
 
   .quote-card {

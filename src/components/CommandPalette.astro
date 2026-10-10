@@ -882,6 +882,14 @@ import Icon from "./Icon.astro";
       border-radius: var(--r-5) var(--r-5) 0 0;
       transform: translateY(100%);
       padding-bottom: 0;
+      /* On a phone the sheet covers nearly the whole screen, so its 24px
+         backdrop blur re-ran over almost every pixel on each frame of the
+         slide and of every list scroll. Through a 94% canvas the blurred,
+         dimmed page contributed about 1.4% ink, which is now baked into
+         an opaque fill instead: the same pixels without the blur pass. */
+      background: color-mix(in oklch, var(--ink) 1.4%, var(--canvas));
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
     }
     .palette.is-open .palette-panel {
       transform: none;
@@ -977,8 +985,8 @@ import Icon from "./Icon.astro";
       border-radius: var(--r-pill);
       background: var(--chrome-surface-bg);
       box-shadow: var(--shadow-2), var(--shadow-inset);
-      -webkit-backdrop-filter: blur(20px) saturate(170%);
-      backdrop-filter: blur(20px) saturate(170%);
+      /* No backdrop blur: the stage sits inside the dock's opaque canvas
+         band, where blurring flat canvas produced identical pixels. */
       box-sizing: border-box;
       overflow: hidden;
       transition:
