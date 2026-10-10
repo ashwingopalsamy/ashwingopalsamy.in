@@ -6,6 +6,12 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    ignore:
+      # @astrojs/check 0.9.x peers typescript ^5 || ^6, so a TypeScript major
+      # breaks `npm ci` (and the Cloudflare Pages build). Lift this once
+      # @astrojs/check accepts the next major.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
     groups:
       # Majors are excluded from the group, so each opens its own PR.
       npm-minor-patch:
