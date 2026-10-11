@@ -475,6 +475,13 @@ html {
   text-size-adjust: 100%;
 }
 
+/* The router restores scroll with a plain scrollTo(), which would animate under
+   smooth; keep it instant until the first page-load and through every swap. */
+:root[data-astro-transition],
+:root:not([data-nav-ready]) {
+  scroll-behavior: auto;
+}
+
 @supports not selector(::-webkit-scrollbar) {
   html {
     scrollbar-width: thin;

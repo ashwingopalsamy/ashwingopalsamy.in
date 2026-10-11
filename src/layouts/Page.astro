@@ -202,7 +202,7 @@ const documentTitle = isHome
         }
         // Root attributes other code sets at runtime. The router rebuilds <html>
         // from the incoming document, which would wipe them mid-visit.
-        var CARRIED_ROOT_ATTRS = ["data-page-flow", "data-palette", "data-theme-switching", "data-accent"];
+        var CARRIED_ROOT_ATTRS = ["data-page-flow", "data-palette", "data-theme-switching", "data-accent", "data-nav-ready"];
         document.addEventListener("astro:before-swap", function (event) {
           var next = event.newDocument;
           sync(next);

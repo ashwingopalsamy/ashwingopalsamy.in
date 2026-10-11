@@ -23,6 +23,8 @@ const ROUTER_META = '[name="astro-view-transitions-enabled"]';
 const RECHECK_MS = 10 * 60 * 1000;
 const DECODE_BUDGET_MS = 120;
 const HEADER_BYTES = 8;
+const MAX_LOAD_ATTEMPTS = 3;
+const PREPARSE_DELAY_MS = 60;
 
 const decoder = new TextDecoder();
 const parser = new DOMParser();
@@ -45,8 +47,12 @@ function connectionAllowsBundle(): boolean {
   return !/^(slow-2g|2g|3g)$/.test(connection?.effectiveType ?? "");
 }
 
+let loadAttempts = 0;
+
 async function loadBundle(): Promise<void> {
-  if (!BUILD || !connectionAllowsBundle()) return;
+  if (bytes || !BUILD || loadAttempts >= MAX_LOAD_ATTEMPTS) return;
+  if (!connectionAllowsBundle()) return;
+  loadAttempts++;
   try {
     const response = await fetch(`/_pages/${BUILD}.txt`);
     if (!response.ok) return;
@@ -81,10 +87,17 @@ async function decodeLeadImage(doc: Document, signal: AbortSignal): Promise<void
   if (!lead || signal.aborted) return;
   let timer: number | undefined;
   try {
-    const image = new Image();
-    for (const name of ["sizes", "srcset", "src"]) {
-      const value = lead.getAttribute(name);
-      if (value) image.setAttribute(name, value);
+    let image: HTMLImageElement;
+    const picture = lead.closest("picture");
+    if (picture) {
+      // Clone the <source>s too so the decoded candidate is the one the real render picks.
+      image = picture.cloneNode(true).querySelector("img") as HTMLImageElement;
+    } else {
+      image = new Image();
+      for (const name of ["sizes", "srcset", "src"]) {
+        const value = lead.getAttribute(name);
+        if (value) image.setAttribute(name, value);
+      }
     }
     await Promise.race([
       image.decode(),
@@ -104,6 +117,8 @@ document.addEventListener("astro:before-preparation", (event) => {
   // At most one pre-parsed document, consumed or dropped by the navigation that follows it.
   const warm = pending;
   pending = null;
+  cancelPreparse();
+  void checkForNewBuild();
   if (prep.formData) return;
   if (stale) {
     prep.preventDefault();
@@ -136,7 +151,14 @@ document.addEventListener("astro:before-preparation", (event) => {
   };
 });
 
-// Parse the likely next page while the finger is still down (or the mouse button is).
+// Parse the likely next page once a press is held, not on every touch that starts a scroll.
+let preparseTimer: number | undefined;
+
+function cancelPreparse(): void {
+  clearTimeout(preparseTimer);
+  preparseTimer = undefined;
+}
+
 function preparse(event: Event): void {
   if (!bytes || stale) return;
   if (event instanceof PointerEvent && event.pointerType !== "mouse") return;
@@ -144,15 +166,20 @@ function preparse(event: Event): void {
   if (!link || link.target || link.hasAttribute("download") || link.origin !== location.origin) return;
   const key = canonical(link.pathname);
   if (!pages[key] || key === canonical(location.pathname) || pending?.key === key) return;
-  setTimeout(() => {
+  cancelPreparse();
+  preparseTimer = window.setTimeout(() => {
+    preparseTimer = undefined;
     if (pending?.key === key) return;
     const doc = parse(key);
     if (doc) pending = { key, doc };
-  }, 0);
+  }, PREPARSE_DELAY_MS);
 }
 
 document.addEventListener("touchstart", preparse, { capture: true, passive: true });
 document.addEventListener("pointerdown", preparse, { capture: true, passive: true });
+for (const type of ["touchmove", "touchcancel", "pointercancel"]) {
+  document.addEventListener(type, cancelPreparse, { capture: true, passive: true });
+}
 
 async function checkForNewBuild(): Promise<void> {
   if (stale || import.meta.env.DEV || Date.now() - checkedAt < RECHECK_MS) return;
@@ -170,8 +197,27 @@ async function checkForNewBuild(): Promise<void> {
 }
 
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") void checkForNewBuild();
+  if (document.visibilityState !== "visible") return;
+  void checkForNewBuild();
+  void loadBundle();
 });
+window.addEventListener("online", () => void loadBundle());
+
+// A hashed /_astro/ asset that 404s means the deployed build moved on under this document.
+window.addEventListener(
+  "error",
+  (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLScriptElement || target instanceof HTMLImageElement)) return;
+    if (target.src.startsWith(`${location.origin}/_astro/`)) stale = true;
+  },
+  true,
+);
+
+// Unlock smooth scrolling only after the router's initial scroll restore.
+document.addEventListener("astro:page-load", () => {
+  document.documentElement.dataset.navReady = "";
+}, { once: true });
 
 // The navigation service worker from earlier releases cannot help a router; remove it.
 async function removeLegacyWorker(): Promise<void> {
