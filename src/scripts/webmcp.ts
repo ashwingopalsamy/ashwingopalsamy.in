@@ -293,3 +293,9 @@ export async function initWebMcp(): Promise<void> {
     if (signal.aborted) break;
   }
 }
+
+if (typeof document !== "undefined") {
+  document.addEventListener("astro:page-load", () => {
+    void initWebMcp().catch(() => undefined);
+  });
+}

@@ -351,4 +351,5 @@ export function initUniversalFloatingToc() {
 
 if (typeof document !== "undefined") {
   initUniversalFloatingToc();
+  document.addEventListener("astro:page-load", initUniversalFloatingToc);
 }

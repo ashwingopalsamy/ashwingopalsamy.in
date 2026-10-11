@@ -7,7 +7,8 @@
  * these lines, that is a bug in the layout, not in the overlay.
  *
  * Costs nothing until first use: the element is created on the first
- * press and the key listener is the only thing bound up front.
+ * press and the key listener is the only thing bound up front. Listeners
+ * are bound once; the pinned state is re-read on every page.
  */
 
 import { pageSignal } from "./lifecycle";
@@ -50,8 +51,12 @@ export function initGridOverlay(): void {
   if (typeof document === "undefined") return;
 
   // ?grid pins it on, for screenshots and for checking a page at rest.
-  pinned = new URLSearchParams(location.search).has("grid");
-  if (pinned) show();
+  const pin = () => {
+    pinned = new URLSearchParams(location.search).has("grid");
+    if (pinned) show();
+  };
+  pin();
+  document.addEventListener("astro:page-load", pin);
 
   document.addEventListener("keydown", (event) => {
     if (event.key !== "g" && event.key !== "G") return;
@@ -70,6 +75,12 @@ export function initGridOverlay(): void {
   // leave it stuck on, including when the page returns from the bfcache.
   window.addEventListener("blur", hide);
   window.addEventListener("pagehide", hide);
+
+  // The overlay lives in <body>, which a swap replaces.
+  document.addEventListener("astro:before-swap", () => {
+    overlay?.remove();
+    overlay = null;
+  });
 }
 
 if (typeof document !== "undefined") {

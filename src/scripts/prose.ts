@@ -11,10 +11,10 @@
  *   4. TOC scroll-spy maps IntersectionObserver state to aria-current
  *   5. reading-progress hairline (rAF scroll listener)
  *
- * Everything is idempotent and runs once per document. Reduced motion is
- * respected (no animated transitions, the progress bar is hidden by CSS).
- * No-JS: the page still reads - diagrams show their source, no dead buttons
- * are rendered.
+ * Everything is idempotent and re-runs on `astro:page-load` so view transitions
+ * are safe. Reduced motion is respected (no animated transitions, the progress
+ * bar is hidden by CSS). No-JS: the page still reads - diagrams show their
+ * source, no dead buttons are rendered.
  */
 import { showToast } from "./toast";
 import { playAccent, isSoundEnabled } from "./sound";
@@ -739,3 +739,4 @@ function init() {
 }
 
 init();
+document.addEventListener("astro:page-load", init);

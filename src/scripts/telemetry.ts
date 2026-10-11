@@ -281,7 +281,25 @@ export function initTelemetry(): void {
     flushPageDwell();
   });
 
+  // null signal: telemetry outlives client-side navigations, so it must
+  // not be torn down by the per-page cleanup registry.
   onScrollFrame(updateScrollDepth, null);
+
+  // The first view is tracked below; each later swap flushes the page it
+  // leaves (still on the old route) and counts the one it lands on.
+  let swapped = false;
+  document.addEventListener("astro:before-swap", () => {
+    swapped = true;
+    flushPageDwell();
+  });
+
+  document.addEventListener("astro:page-load", () => {
+    if (!swapped) return;
+    swapped = false;
+    activeDwellMs = 0;
+    maxScrollPercent = 0;
+    trackPageView(currentRoute());
+  });
 
   // Back/forward cache restores are a fresh view of the page.
   window.addEventListener("pageshow", (event) => {
