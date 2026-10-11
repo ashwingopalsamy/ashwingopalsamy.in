@@ -612,7 +612,7 @@ const pickIndex = quoteIndexOfTheDayServer();
     onPageCleanup(() => io.disconnect(), signal);
   }
 
-  initSpotifyEmbed();
+  document.addEventListener("astro:page-load", initSpotifyEmbed);
 </script>
 
 <script>
@@ -869,5 +869,5 @@ const pickIndex = quoteIndexOfTheDayServer();
     }
   }
 
-  init();
+  document.addEventListener("astro:page-load", init);
 </script>
