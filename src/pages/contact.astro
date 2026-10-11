@@ -3,9 +3,19 @@ import Page from "../layouts/Page.astro";
 import PageIntro from "../components/PageIntro.astro";
 import Icon from "../components/Icon.astro";
 import { CANONICAL_KNOWLEDGE } from "../data/canonical-knowledge";
+import { profileLinks } from "../data/profile-links";
+import { profileIconPaths } from "../lib/profile-icons";
 import { ogPath } from "../lib/og-url";
 
 const ogImage = ogPath("contact");
+const { email, canonicalLinks } = CANONICAL_KNOWLEDGE;
+
+// Name and handle come from the shared profile data; the href stays the
+// canonical one so this page and knowledge.json can never disagree.
+const profiles = (["github", "linkedin", "x", "scholar", "researchgate"] as const).flatMap((id) => {
+  const link = profileLinks.find((item) => item.id === id);
+  return link ? [{ id, name: link.platform, handle: link.handle, href: canonicalLinks[id] }] : [];
+});
 ---
 
 <Page
@@ -14,70 +24,80 @@ const ogImage = ogPath("contact");
   ogImage={ogImage}
   ogImageAlt="Contact · Ashwin Gopalsamy"
 >
-  <PageIntro
-    title="contact"
-    lede="Direct channels to reach Ashwin Gopalsamy for engineering conversations, collaborations, or questions."
-  />
+  <PageIntro title="contact" lede="The quickest ways to reach me." />
 
   <div class="page-prose" data-enter>
     <section class="contact-section">
-      <h2 class="contact-h">Email and Messaging</h2>
-      <p class="contact-p">
-        The best way to reach me directly is by email at
-        <a class="contact-link mono" href={CANONICAL_KNOWLEDGE.canonicalLinks.email}>
-          {CANONICAL_KNOWLEDGE.email}
-        </a>.
-        I read every email and typically reply within 24 to 48 hours for engineering inquiries,
-        technical discussions, and professional correspondence.
-      </p>
+      <h2 class="contact-h">Email</h2>
+      <p class="contact-p">Email is best. I reply within two days.</p>
+      <div class="contact-mail">
+        <a class="ui-link contact-addr mono" href={canonicalLinks.email}>{email}</a>
+        <button
+          type="button"
+          class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead"
+          data-fx="spot"
+          data-copy={email}
+          data-state="idle"
+          aria-label="Copy email address"
+        >
+          <span class="ui-stk ui-stk--icon">
+            <span data-when="idle"><Icon name="copy" size={14} strokeWidth={2} /></span>
+            <span data-when="done"><Icon name="check" size={14} strokeWidth={2} class="ui-draw" /></span>
+            <span data-when="error"><Icon name="alert" size={14} strokeWidth={2} /></span>
+          </span>
+          <span class="ui-cap__label ui-stk">
+            <span data-when="idle">Copy</span>
+            <span data-when="done">Copied</span>
+            <span data-when="error">Retry</span>
+          </span>
+        </button>
+      </div>
     </section>
 
     <section class="contact-section">
-      <h2 class="contact-h">Calendar and Meetings</h2>
+      <h2 class="contact-h">Calls</h2>
       <p class="contact-p">
-        If you want to talk about payment infrastructure, card network protocols, AI agent systems,
-        or collaborative projects, you can book a flexible conversation slot directly via
-        <a class="contact-link" href={CANONICAL_KNOWLEDGE.canonicalLinks.cal} target="_blank" rel="noopener noreferrer">
-          Cal.com scheduling
-        </a>.
+        Payment infrastructure, card networks, agent systems or a collaboration: pick a slot that suits you.
       </p>
+      <a
+        class="ui-cap ui-cap--glass ui-cap--48 ui-cap--trail"
+        data-fx="spot"
+        href={canonicalLinks.cal}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <span class="ui-cap__label">Book a call</span>
+        <span class="ui-arw ui-arw--ext">
+          <Icon name="arrow-up-right" size={16} />
+          <Icon name="arrow-up-right" size={16} />
+        </span>
+      </a>
     </section>
 
     <section class="contact-section">
-      <h2 class="contact-h">Verified Profiles</h2>
-      <ul class="contact-list">
-        <li>
-          <a class="contact-link" href={CANONICAL_KNOWLEDGE.canonicalLinks.github} target="_blank" rel="noopener noreferrer">
-            GitHub <Icon name="arrow-up-right" size={13} />
-          </a>: open-source projects, tooling, and code repositories.
-        </li>
-        <li>
-          <a class="contact-link" href={CANONICAL_KNOWLEDGE.canonicalLinks.linkedin} target="_blank" rel="noopener noreferrer">
-            LinkedIn <Icon name="arrow-up-right" size={13} />
-          </a>: career history and professional network.
-        </li>
-        <li>
-          <a class="contact-link" href={CANONICAL_KNOWLEDGE.canonicalLinks.x} target="_blank" rel="noopener noreferrer">
-            X (@ashwin2125) <Icon name="arrow-up-right" size={13} />
-          </a>: engineering notes and short updates.
-        </li>
-        <li>
-          <a class="contact-link" href={CANONICAL_KNOWLEDGE.canonicalLinks.scholar} target="_blank" rel="noopener noreferrer">
-            Google Scholar <Icon name="arrow-up-right" size={13} />
-          </a>: academic citations and research publications.
-        </li>
-        <li>
-          <a class="contact-link" href={CANONICAL_KNOWLEDGE.canonicalLinks.researchgate} target="_blank" rel="noopener noreferrer">
-            ResearchGate <Icon name="arrow-up-right" size={13} />
-          </a>: academic profile and scientific publications.
-        </li>
+      <h2 class="contact-h">Elsewhere</h2>
+      <ul class="contact-profiles surface-stack" role="list">
+        {
+          profiles.map((profile) => (
+            <li>
+              <a class="ui-row" data-fx="spot" href={profile.href} target="_blank" rel="noopener noreferrer">
+                <svg class="contact-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor">
+                  <path d={profileIconPaths[profile.id]} />
+                </svg>
+                <span class="ui-row__title">{profile.name}</span>
+                <span class="ui-row__meta contact-handle">{profile.handle}</span>
+                <span class="ui-row__glyph ui-row__glyph--ext" aria-hidden="true"><Icon name="arrow-up-right" size={16} /></span>
+              </a>
+            </li>
+          ))
+        }
       </ul>
     </section>
 
     <section class="contact-section">
       <h2 class="contact-h">Location and Time Zone</h2>
       <p class="contact-p">
-        I am based in <span class="contact-k">Pollachi, Tamil Nadu</span> operating in the
+        I am based in <span class="contact-k">Pollachi, Tamil Nadu</span> operating in the{" "}
         <span class="contact-k">IST (UTC+05:30)</span> timezone.
         For international discussions, I accommodate flexible scheduling across European and US time zones.
       </p>
@@ -87,12 +107,16 @@ const ogImage = ogPath("contact");
       <h2 class="contact-h">Security and Vulnerability Disclosure</h2>
       <p class="contact-p">
         To report security vulnerabilities or technical issues regarding this website and its endpoints,
-        refer to our RFC 9116 security disclosure guidelines at
-        <a class="contact-link mono" href="/.well-known/security.txt">/.well-known/security.txt</a>.
+        refer to our RFC 9116 security disclosure guidelines at{" "}
+        <a class="ui-link mono" href="/.well-known/security.txt">/.well-known/security.txt</a>.
       </p>
     </section>
   </div>
 </Page>
+
+<script>
+  import "../scripts/clipboard";
+</script>
 
 <style>
   .contact-section {
@@ -114,69 +138,48 @@ const ogImage = ogPath("contact");
     transition: color var(--t-color);
   }
 
-  .contact-link {
-    color: var(--ink);
-    text-decoration: none;
-    display: inline;
-    background-image: linear-gradient(
-      90deg,
-      transparent 0%,
-      color-mix(in oklch, currentColor 55%, transparent) 5%,
-      color-mix(in oklch, currentColor 55%, transparent) 95%,
-      transparent 100%
-    );
-    background-position: 0 100%;
-    background-repeat: no-repeat;
-    background-size: 0% 0.75px;
-    padding-bottom: 2px;
-    transition:
-      color var(--t-color),
-      font-weight var(--t-color),
-      background-size var(--dur-enter) var(--ease-enter);
+  /* the address and its Copy capsule share a line, and wrap together */
+  .contact-mail {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--step-2) var(--step-4);
   }
 
-  .contact-link:hover,
-  .contact-link:focus-visible {
-    font-weight: var(--font-hover-lift);
-    background-size: 100% 0.75px;
-  }
-
-  .contact-link svg {
-    display: inline-block;
-    vertical-align: middle;
-    color: var(--faint);
+  .contact-addr {
+    overflow-wrap: anywhere;
   }
 
   .contact-k {
     color: var(--ink);
-    transition: font-weight var(--t-color);
   }
 
-  .contact-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--step-2);
-    color: var(--muted);
+  .contact-profiles {
     max-width: 100%;
   }
 
-  .contact-list li {
-    padding-left: var(--step-4);
-    position: relative;
+  .contact-icon {
+    flex: none;
+    inline-size: calc(var(--step) * 5);
+    block-size: calc(var(--step) * 5);
+    color: var(--ghost);
+    transition: color var(--t-color);
   }
 
-  .contact-list li::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0.65em;
-    width: 4px;
-    height: 4px;
-    background: var(--ghost);
-    transform: rotate(45deg);
+  .contact-handle {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ui-row:hover > .contact-icon {
+      color: var(--ink);
+    }
+  }
+
+  .ui-row:focus-visible > .contact-icon {
+    color: var(--ink);
   }
 
   .mono {
@@ -187,12 +190,6 @@ const ogImage = ogPath("contact");
   @media (hover: hover) and (pointer: fine) {
     .contact-p:hover {
       color: color-mix(in oklch, var(--ink) 80%, var(--muted));
-    }
-
-    .contact-p:hover .contact-k,
-    .contact-p:hover .contact-link {
-      font-weight: var(--font-hover-lift);
-      background-size: 100% 0.75px;
     }
   }
 
