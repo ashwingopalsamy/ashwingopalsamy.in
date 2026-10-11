@@ -36,6 +36,15 @@ function getLockfileSha256(): string | null {
   }
 }
 
+function getAstroVersion(): string {
+  try {
+    const manifest = JSON.parse(readFileSync(resolve("node_modules/astro/package.json"), "utf8"));
+    return typeof manifest.version === "string" ? manifest.version : "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
 const { full: fullCommit, short: commit } = getGitCommit();
 const lockfileSha256 = getLockfileSha256();
 
@@ -56,10 +65,16 @@ export const buildManifest: BuildManifest = Object.freeze({
   gitCommitShort: commit,
   lockfileSha256,
   nodeVersion: process.version,
-  astroVersion: "7.1.1",
+  astroVersion: getAstroVersion(),
 });
 
+// Identifies one deploy: the client page store and the version-skew guard
+// compare it with the id baked into each page. builtAt is the fallback so a
+// build without a commit still gets an id that is stable within that build.
+export const buildId = commit ?? builtAt;
+
 export const buildMeta = Object.freeze({
+  buildId,
   builtAt,
   commit,
   fullCommit,
