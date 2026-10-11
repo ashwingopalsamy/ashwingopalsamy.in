@@ -46,12 +46,8 @@ export default defineConfig({
   build: {
     inlineStylesheets: "always",
   },
-  prefetch: {
-    // Astro owns hover prefetch; touch intent uses the same prefetch API.
-    // Every same-origin link opts in.
-    prefetchAll: true,
-    defaultStrategy: "hover",
-  },
+  // Navigations are served by the client page store (src/scripts/page-store.ts).
+  prefetch: false,
   markdown: {
     // Satteri (Astro 7's Rust markdown engine) extended with the notes-engine
     // plugins: mermaid at mdast, KaTeX + callouts + anchors at hast. See
