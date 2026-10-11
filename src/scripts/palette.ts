@@ -1134,6 +1134,28 @@ function escapeHtml(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;");
 }
 
+/* Keys are drawn as keycaps. ⌘ and ↑↓ come from the icon registry, never the
+   Unicode glyphs; "⌘K" and "g h" are two keys, and "·" separates alternatives. */
+const KEY_ICONS: Record<string, { key: PaletteIconKey; label: string }> = {
+  "⌘": { key: "command", label: "Command" },
+  "↑↓": { key: "navigate", label: "Up and down" },
+};
+
+function keycap(token: string): string {
+  const icon = KEY_ICONS[token];
+  if (icon) return `<kbd class="ui-kbd" aria-label="${icon.label}">${iconMarkup(icon.key, { size: 12, className: "" })}</kbd>`;
+  return `<kbd class="ui-kbd">${escapeHtml(token)}</kbd>`;
+}
+
+function keycaps(hint: string): string {
+  const keys = hint.split(/\s+/).filter(Boolean).flatMap((token) => {
+    if (token === "·") return ['<span aria-hidden="true">·</span>'];
+    if (token.length > 1 && token.startsWith("⌘")) return [keycap("⌘"), keycap(token.slice(1))];
+    return [keycap(token)];
+  });
+  return `<span class="palette-keys">${keys.join("")}</span>`;
+}
+
 function renderList() {
   const { list, status, input } = els();
   if (!list) return;
@@ -1155,14 +1177,14 @@ function renderList() {
     }
     const selected = index === activeIndex ? "true" : "false";
     const icon = iconMarkup(item.icon ?? paletteFallbackIcon(item.kind));
-    const subtitle = item.live ? `<span class="palette-subtitle palette-live" data-live-id="${escapeHtml(item.id)}">${escapeHtml(item.live())}</span>` : item.subtitle ? `<span class="palette-subtitle">${escapeHtml(item.subtitle)}</span>` : "";
-    const excerpt = item.excerptHtml ? `<span class="palette-excerpt">${item.excerptHtml}</span>` : item.value && !item.live ? `<span class="palette-subtitle palette-value">${escapeHtml(item.value)}</span>` : "";
-    const label = item.badge ? `<span class="palette-label"><span class="palette-label-text">${escapeHtml(item.label)}</span><span class="palette-badge">${escapeHtml(item.badge)}</span></span>` : `<span class="palette-label"><span class="palette-label-text">${escapeHtml(item.label)}</span></span>`;
-    const hint = item.hint ? `<kbd class="palette-kbd">${escapeHtml(item.hint)}</kbd>` : "";
-    const context = item.context ? `<span class="palette-meta">${escapeHtml(item.context)}</span>` : "";
-    const external = item.external ? `<span class="palette-meta palette-external" aria-label="External link">${iconMarkup("external")}</span>` : "";
+    const subtitle = item.live ? `<span class="palette-subtitle ui-row__sub palette-live" data-live-id="${escapeHtml(item.id)}">${escapeHtml(item.live())}</span>` : item.subtitle ? `<span class="palette-subtitle ui-row__sub">${escapeHtml(item.subtitle)}</span>` : "";
+    const excerpt = item.excerptHtml ? `<span class="palette-excerpt">${item.excerptHtml}</span>` : item.value && !item.live ? `<span class="palette-subtitle ui-row__sub palette-value">${escapeHtml(item.value)}</span>` : "";
+    const label = item.badge ? `<span class="palette-label"><span class="palette-label-text">${escapeHtml(item.label)}</span><span class="ui-badge">${escapeHtml(item.badge)}</span></span>` : `<span class="palette-label"><span class="palette-label-text">${escapeHtml(item.label)}</span></span>`;
+    const hint = item.hint ? keycaps(item.hint) : "";
+    const context = item.context ? `<span class="palette-meta ui-row__meta">${escapeHtml(item.context)}</span>` : "";
+    const external = item.external ? `<span class="ui-row__glyph ui-row__glyph--ext" role="img" aria-label="External link">${iconMarkup("external")}</span>` : "";
     const disabled = item.disabled ? ' aria-disabled="true"' : "";
-    html += `<div class="palette-item" role="option" id="palette-opt-${index}" data-index="${index}" aria-selected="${selected}"${disabled}><span class="palette-icon">${icon}</span><span class="palette-item-main">${label}${subtitle}${excerpt}</span>${context}${external}${hint}</div>`;
+    html += `<div class="palette-item ui-row" data-fx="spot" role="option" id="palette-opt-${index}" data-index="${index}" aria-selected="${selected}"${disabled}><span class="palette-icon">${icon}</span><span class="palette-item-main ui-row__title">${label}${subtitle}${excerpt}</span>${context}${external}${hint}</div>`;
   });
   list.innerHTML = html;
   hydratePaletteIcons(list);
@@ -1334,19 +1356,23 @@ function setFooter(currentMode: PaletteMode) {
   const resultNoun = currentMode === "help" ? "shortcut" : currentMode === "actions" ? "action" : currentMode === "browse" ? "item" : currentMode === "directory" ? "command" : "result";
   if (count) count.textContent = resultSummary && currentMode === "search" ? `${resultSummary.shown} of ${resultSummary.total} matches` : items.length ? `${items.length} ${resultNoun}${items.length === 1 ? "" : "s"}` : "No results";
   if (currentMode === "directory") {
-    footerHints.innerHTML = '<span><kbd>↑↓</kbd> Navigate</span><span><kbd>↵</kbd> Open</span><span><kbd>Esc</kbd> Close</span>';
+    footerHints.innerHTML = footerHint("↑↓", "Navigate") + footerHint("↵", "Open") + footerHint("Esc", "Close");
     return;
   }
   if (currentMode === "help") {
-    footerHints.innerHTML = '<span><kbd>↑↓</kbd> Navigate</span><span><kbd>↵</kbd> Open</span><span><kbd>Esc</kbd> Back</span>';
+    footerHints.innerHTML = footerHint("↑↓", "Navigate") + footerHint("↵", "Open") + footerHint("Esc", "Back");
     return;
   }
   if (currentMode === "actions" || currentMode === "browse") {
-    footerHints.innerHTML = `<span><kbd>↑↓</kbd> Navigate</span><span><kbd>↵</kbd> ${currentMode === "actions" ? "Run" : "Open"}</span><span><kbd>Esc</kbd> Back</span>`;
+    footerHints.innerHTML = footerHint("↑↓", "Navigate") + footerHint("↵", currentMode === "actions" ? "Run" : "Open") + footerHint("Esc", "Back");
     return;
   }
   const actions = items[activeIndex]?.actions?.length || items[activeIndex]?.href;
-  footerHints.innerHTML = `<span><kbd>↑↓</kbd> Navigate</span><span><kbd>↵</kbd> Open</span>${actions ? '<span><kbd>⌘K</kbd> Actions</span>' : ""}`;
+  footerHints.innerHTML = footerHint("↑↓", "Navigate") + footerHint("↵", "Open") + (actions ? footerHint("⌘K", "Actions") : "");
+}
+
+function footerHint(keys: string, label: string): string {
+  return `<span>${keycaps(keys)}${label}</span>`;
 }
 
 function focusNestedList() {

@@ -1,5 +1,6 @@
 ---
 import Connect from "./Connect.astro";
+import Icon from "./Icon.astro";
 import SocialProfilePreviews from "./SocialProfilePreviews.astro";
 import { resumeUrl, site, socials } from "../data/home";
 import { getGithubContributions } from "../lib/github-contributions";
@@ -14,13 +15,13 @@ const contributions = await getGithubContributions();
   <section class="refined-intro" aria-label="Introduction">
     <h1 class="visually-hidden">{site.name} · Staff Software Engineer, Payments Infrastructure</h1>
     <p class="refined-lede">
-      Hey! I'm <a href="/more/" aria-label="More about Ashwin">Ashwin</a>. I build the infrastructure behind global payments.
+      Hey! I'm <a class="ui-link" href="/more/" aria-label="More about Ashwin">Ashwin</a>. I build the infrastructure behind global payments.
     </p>
     <p class="refined-context">
-      I work remotely as a Staff Software Engineer at <a href="https://developers.pismo.io/pismo-docs" target="_blank" rel="noopener noreferrer">Pismo, a Visa company</a>, and study AI at <a href="https://cdso.utexas.edu/msai" target="_blank" rel="noopener noreferrer">UT Austin</a> alongside work.
+      I work remotely as a Staff Software Engineer at <a class="ui-link" href="https://developers.pismo.io/pismo-docs" target="_blank" rel="noopener noreferrer">Pismo, a Visa company<Icon name="arrow-up-right" /></a>, and study AI at <a class="ui-link" href="https://cdso.utexas.edu/msai" target="_blank" rel="noopener noreferrer">UT Austin<Icon name="arrow-up-right" /></a> alongside work.
     </p>
     <p class="refined-context">
-      Off the clock, I'm happiest around good machinery and cars, or lost in anthropology, history, and long-form craft. Here’s my <a href="/library/">library</a>, <a href="/more/photos/">photos I take</a>, and <a href="/more/cafe/">cafes I try</a>.
+      Off the clock, I'm happiest around good machinery and cars, or lost in anthropology, history, and long-form craft. Here’s my <a class="ui-link" href="/library/">library</a>, <a class="ui-link" href="/more/photos/">photos I take</a>, and <a class="ui-link" href="/more/cafe/">cafes I try</a>.
     </p>
   </section>
 
@@ -28,8 +29,8 @@ const contributions = await getGithubContributions();
     <h2 class="visually-hidden">Contact and profiles</h2>
     <div class="refined-contact__row">
       <div class="refined-cta-row">
-        <a class="refined-cta refined-cta--primary" href={site.cal} target="_blank" rel="noopener noreferrer">Let's talk</a>
-        {resumeUrl && <a class="refined-cta refined-cta--secondary" href={resumeUrl} download="AshwinGopalsamy_Resume.pdf" data-astro-prefetch="false">Resume</a>}
+        <a class="ui-cap ui-cap--ink ui-cap--48" data-fx="magnet" href={site.cal} target="_blank" rel="noopener noreferrer"><span class="ui-cap__label">Let's talk</span></a>
+        {resumeUrl && <a class="ui-cap ui-cap--glass ui-cap--48" data-fx="spot" href={resumeUrl} download="AshwinGopalsamy_Resume.pdf" data-astro-prefetch="false"><span class="ui-cap__label">Resume</span></a>}
       </div>
       <span class="refined-row-sep" aria-hidden="true"></span>
       <div class="refined-socials">
@@ -70,19 +71,6 @@ const contributions = await getGithubContributions();
     text-wrap: pretty;
   }
 
-  .refined-intro a {
-    color: var(--ink);
-    text-decoration: none;
-    text-decoration-color: color-mix(in oklch, var(--ink) 55%, transparent);
-    text-decoration-thickness: 0.75px;
-    text-underline-offset: 0.2em;
-  }
-
-  .refined-intro a:hover,
-  .refined-intro a:focus-visible {
-    text-decoration-line: underline;
-  }
-
   .refined-home > .page-rule {
     margin-block: var(--space-rule);
   }
@@ -115,62 +103,11 @@ const contributions = await getGithubContributions();
     gap: var(--step-2);
   }
 
-  .refined-cta {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 2.75rem;
-    padding: var(--step-3) calc(var(--step) * 5);
-    border-radius: var(--r-pill);
-    font-size: var(--text-ui);
-    font-weight: 500;
-    text-decoration: none;
-    transition: transform var(--dur-tint) var(--ease-enter), box-shadow var(--t-move), background-color var(--t-color), border-color var(--t-color), color var(--t-color);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .refined-cta:hover,
-    .refined-cta:focus-visible {
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-1);
-    }
-  }
-
-  .refined-cta:active {
-    transform: scale(var(--press-scale, .978));
-    transition: transform var(--dur-press) var(--ease-snap);
-  }
-
-  .refined-cta--primary {
-    background: var(--ink);
-    color: var(--canvas);
-  }
-
-  .refined-cta--secondary {
-    border: 1px solid var(--cta-secondary-border);
-    background: var(--cta-secondary-bg);
-    color: var(--ink);
-  }
-
   .refined-row-sep {
     width: 1px;
     height: var(--step-4);
     flex-shrink: 0;
     background: var(--rule-strong);
-  }
-
-  .refined-socials {
-    gap: 1rem;
-  }
-
-  .refined-socials :global(.social-preview__avatar) {
-    display: none !important;
-  }
-
-  .refined-socials :global(.social-preview__panel) {
-    background: var(--canvas);
-    border-color: var(--rule-strong);
-    box-shadow: var(--shadow-2);
   }
 
   @media (min-width: 42.5rem) {
@@ -197,17 +134,12 @@ const contributions = await getGithubContributions();
       max-width: 21rem;
     }
 
-    .refined-cta {
-      flex: 1;
+    .refined-cta-row > .ui-cap {
+      flex: 1 1 0;
     }
 
     .refined-row-sep {
       display: none;
-    }
-
-    .refined-socials {
-      flex-wrap: wrap;
-      gap: var(--step-3) var(--step-4);
     }
 
     .refined-home :global(.connect-grid) {
@@ -219,18 +151,6 @@ const contributions = await getGithubContributions();
     .refined-home :global(.connect-grid .loc-card) {
       min-height: 200px;
       height: 200px;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .refined-cta {
-      transition: none;
-    }
-
-    .refined-cta:hover,
-    .refined-cta:focus-visible,
-    .refined-cta:active {
-      transform: none;
     }
   }
 </style>
