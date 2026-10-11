@@ -3,7 +3,6 @@ import { getImage, Picture } from "astro:assets";
 import Icon from "../../../components/Icon.astro";
 import { getPhotoEntries, photoHref, photoWidths, type PhotoEntry } from "../../../data/photos";
 import Page from "../../../layouts/Page.astro";
-import PhotoRouteReveal from "../../../components/PhotoRouteReveal.astro";
 import { getPhotoImageSources, PHOTO_DETAIL_SIZES } from "../../../lib/photo-image-sources";
 import { absUrl } from "../../../lib/urls";
 
@@ -64,7 +63,6 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
   pagefind={false}
   robots={robots}
 >
-  <PhotoRouteReveal slot="head" />
   <article class="photo-detail" data-photo-detail={photo.id}>
     <figure class="photo-detail-figure">
       <figcaption class="photo-detail-caption" data-photo-caption>

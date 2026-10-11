@@ -3,12 +3,14 @@
  * the next one and pulling past the top returns to the previous one, so the
  * site reads as one continuous column. Sections follow the bottom navigation
  * order; notes follow their own previous/next links. A pill fills as the
- * pull nears its threshold, the destination starts prerendering on the way,
- * and releasing past the threshold navigates with the route transition
- * running in the direction of travel. Short or partial pulls simply retract.
+ * pull nears its threshold, and releasing past the threshold navigates with
+ * the route transition running in the direction of travel. Short or partial
+ * pulls simply retract. Gesture listeners are bound once; the targets and
+ * indicators are rebuilt for every page the router lands on.
  */
-import { prefetch } from "astro:prefetch";
+import { navigate } from "astro:transitions/client";
 import { iconMarkup } from "../lib/ui-icons";
+import { onPageCleanup, pageSignal } from "./lifecycle";
 import { playAccent } from "./sound";
 import { onScrollFrame } from "./scroll-scheduler";
 
@@ -58,100 +60,116 @@ function createIndicator(edge: Edge, target: Target): HTMLElement {
   return el;
 }
 
-const targets = findTargets();
-if (targets.start || targets.end) {
-  root.toggleAttribute("data-page-flow", true);
-  const indicators: Partial<Record<Edge, HTMLElement>> = {};
-  const prefetched = new Set<string>();
+let targets: Partial<Record<Edge, Target>> = {};
+let indicators: Partial<Record<Edge, HTMLElement>> = {};
 
-  let startY = 0;
-  let anchor: number | null = null;
-  let edge: Edge | null = null;
-  let progress = 0;
-  let armed = false;
-  let frame = 0;
+let startY = 0;
+let anchor: number | null = null;
+let edge: Edge | null = null;
+let progress = 0;
+let armed = false;
+let frame = 0;
 
-  /* Edge state comes from the shared scroll frame, whose document height is
-     cached until something resizes. Reading scrollHeight here instead ran
-     on every touchmove of every ordinary scroll and forced a synchronous
-     layout whenever anything had dirtied it. */
-  let atStart = false;
-  let atEnd = false;
-  onScrollFrame(({ y, viewport, docHeight }) => {
-    atStart = y <= 0;
-    atEnd = y + viewport >= docHeight - 2;
-  }, null);
+/* Edge state comes from the shared scroll frame, whose document height is
+   cached until something resizes. Reading scrollHeight here instead ran
+   on every touchmove of every ordinary scroll and forced a synchronous
+   layout whenever anything had dirtied it. */
+let atStart = false;
+let atEnd = false;
+onScrollFrame(({ y, viewport, docHeight }) => {
+  atStart = y <= 0;
+  atEnd = y + viewport >= docHeight - 2;
+}, null);
 
-  const paint = () => {
-    frame = 0;
-    const el = edge ? indicators[edge] : undefined;
-    if (!el) return;
-    el.style.setProperty("--flow", progress.toFixed(3));
-    el.toggleAttribute("data-active", progress > 0);
-    el.toggleAttribute("data-armed", armed);
-  };
+const paint = () => {
+  frame = 0;
+  const el = edge ? indicators[edge] : undefined;
+  if (!el) return;
+  el.style.setProperty("--flow", progress.toFixed(3));
+  el.toggleAttribute("data-active", progress > 0);
+  el.toggleAttribute("data-armed", armed);
+};
 
-  const reset = () => {
-    for (const el of Object.values(indicators)) {
-      el.style.setProperty("--flow", "0");
-      el.removeAttribute("data-active");
-      el.removeAttribute("data-armed");
-    }
-    edge = null;
-    anchor = null;
-    progress = 0;
-    armed = false;
-  };
+const reset = () => {
+  for (const el of Object.values(indicators)) {
+    el.style.setProperty("--flow", "0");
+    el.removeAttribute("data-active");
+    el.removeAttribute("data-armed");
+  }
+  edge = null;
+  anchor = null;
+  progress = 0;
+  armed = false;
+};
 
-  window.addEventListener("touchstart", (event) => {
-    if (event.touches.length !== 1) return;
-    startY = event.touches[0].clientY;
-    anchor = null;
-    edge = null;
-  }, { passive: true });
+window.addEventListener("touchstart", (event) => {
+  if (event.touches.length !== 1) return;
+  startY = event.touches[0].clientY;
+  anchor = null;
+  edge = null;
+}, { passive: true });
 
-  window.addEventListener("touchmove", (event) => {
-    if (event.touches.length !== 1) return;
-    const y = event.touches[0].clientY;
-    if (!edge) {
-      if (targets.end && y < startY && atEnd) edge = "end";
-      else if (targets.start && y > startY && atStart) edge = "start";
-      if (!edge) return;
-      anchor = y;
-      indicators[edge] ??= createIndicator(edge, targets[edge]!);
-    }
-    const pull = (edge === "end" ? anchor! - y : y - anchor!) * RESISTANCE;
-    progress = Math.min(1, Math.max(0, pull / THRESHOLD));
+window.addEventListener("touchmove", (event) => {
+  if (event.touches.length !== 1) return;
+  const y = event.touches[0].clientY;
+  if (!edge) {
+    if (targets.end && y < startY && atEnd) edge = "end";
+    else if (targets.start && y > startY && atStart) edge = "start";
+    if (!edge) return;
+    anchor = y;
+    indicators[edge] ??= createIndicator(edge, targets[edge]!);
+  }
+  const pull = (edge === "end" ? anchor! - y : y - anchor!) * RESISTANCE;
+  progress = Math.min(1, Math.max(0, pull / THRESHOLD));
+  const nowArmed = progress >= 1;
+  if (nowArmed && !armed) {
+    playAccent("select");
+    (navigator as Navigator & { vibrate?: (ms: number) => boolean }).vibrate?.(8);
+  }
+  armed = nowArmed;
+  if (!frame) frame = requestAnimationFrame(paint);
+}, { passive: true });
+
+const release = () => {
+  if (edge && armed) {
     const target = targets[edge]!;
-    if (progress > 0.2 && !prefetched.has(target.href)) {
-      prefetched.add(target.href);
-      prefetch(target.href, { ignoreSlowConnection: false });
-    }
-    const nowArmed = progress >= 1;
-    if (nowArmed && !armed) {
-      playAccent("select");
-      (navigator as Navigator & { vibrate?: (ms: number) => boolean }).vibrate?.(8);
-    }
-    armed = nowArmed;
-    if (!frame) frame = requestAnimationFrame(paint);
-  }, { passive: true });
+    // before-preparation (below) turns this into the transition's direction.
+    void navigate(target.href, { info: { direction: edge === "start" ? "back" : "forward" } });
+    return;
+  }
+  reset();
+};
+window.addEventListener("touchend", release, { passive: true });
+window.addEventListener("touchcancel", reset, { passive: true });
+// Back/forward cache restores must not come back mid-pull.
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) reset();
+});
 
-  const release = () => {
-    if (edge && armed) {
-      const target = targets[edge]!;
-      // The route transition reads this to travel in the gesture's direction.
-      try {
-        sessionStorage.setItem("route-dir", edge === "start" ? "back" : "forward");
-      } catch {}
-      location.assign(target.href);
-      return;
-    }
-    reset();
-  };
-  window.addEventListener("touchend", release, { passive: true });
-  window.addEventListener("touchcancel", reset, { passive: true });
-  // Back/forward cache restores must not come back mid-pull.
-  window.addEventListener("pageshow", (event) => {
-    if (event.persisted) reset();
-  });
+// The route transition travels the way the gesture did, not the way history did.
+document.addEventListener("astro:before-preparation", (event) => {
+  const direction = (event as Event & { info?: { direction?: unknown } }).info?.direction;
+  if (direction === "back" || direction === "forward") {
+    (event as Event & { direction: string }).direction = direction;
+  }
+});
+
+let initializedSignal: AbortSignal | undefined;
+
+function setup() {
+  const signal = pageSignal();
+  if (initializedSignal === signal || signal.aborted) return;
+  initializedSignal = signal;
+  reset();
+  targets = findTargets();
+  indicators = {};
+  root.toggleAttribute("data-page-flow", Boolean(targets.start || targets.end));
+  // The indicators live in <body>, which the next swap replaces.
+  onPageCleanup(() => {
+    for (const el of Object.values(indicators)) el.remove();
+    indicators = {};
+  }, signal);
 }
+
+setup();
+document.addEventListener("astro:page-load", setup);
