@@ -446,22 +446,6 @@ const backTarget = resolveBackTarget(path);
     display: none;
   }
 
-  /* The primitive shows a tooltip on its parent's hover; keyboard focus
-     lands on the chip, one level down. */
-  .header-actions:has(> .header-palette-trigger:focus-visible) {
-    z-index: var(--z-raised);
-  }
-
-  .header-actions:has(> .header-palette-trigger:focus-visible) > :global(.ui-tip) {
-    visibility: visible;
-    opacity: 1;
-    transform: none;
-    transition:
-      opacity var(--dur-nudge) var(--ease-spring-soft),
-      transform var(--dur-nudge) var(--ease-spring-soft),
-      visibility 0s;
-  }
-
   /* The veil: content dissolves under the chrome instead of sliding
      visibly between the floating chips. One fixed band at a constant
      radius, shown only once the page has scrolled (the script below). */

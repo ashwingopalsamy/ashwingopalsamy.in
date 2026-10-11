@@ -148,7 +148,7 @@
   --cap-gap-lg: var(--step-2);
   --cap-gap-sm: var(--step-1);
 
-  /* The 44px touch target that 28/32 capsules extend to with ::before. */
+  /* The 44px touch target that 40/32/28 capsules extend to with ::before. */
   --hit: var(--control-hit);
 
   /* Track rim (1px) plus padding (3px). Segments are concentric with their

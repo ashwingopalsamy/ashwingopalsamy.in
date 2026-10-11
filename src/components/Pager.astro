@@ -62,31 +62,3 @@ const { prev, next, label = "Previous and next", noteNav = false } = Astro.props
     )}
   </nav>
 )}
-
-<style>
-  .ui-pager__card {
-    min-inline-size: 0;
-  }
-
-  .ui-pager__title {
-    overflow-wrap: anywhere;
-  }
-
-  /* Two columns are too narrow for a title on a phone: stack the cards. */
-  @media (max-width: 38rem) {
-    .ui-pager {
-      grid-template-columns: minmax(0, 1fr);
-      gap: var(--step-3);
-    }
-
-    .ui-pager__card,
-    .ui-pager__card--next {
-      grid-column: 1;
-    }
-
-    .ui-pager__card--next {
-      align-items: flex-start;
-      text-align: start;
-    }
-  }
-</style>

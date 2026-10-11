@@ -33,7 +33,7 @@ const shortSha = buildMeta.commit;
     <span class="ui-tip ui-tip--above" role="tooltip">Pollachi time</span>
   </button>
 
-  <div class="footer-dock" role="group" aria-label="Footer controls">
+  <div class="footer-dock ui-dock" role="group" aria-label="Footer controls">
     <a
       class="repo-btn ui-cap ui-cap--quiet ui-cap--40 ui-cap--icon"
       href={shortSha ? `${site.repoUrl}/commit/${shortSha}` : site.repoUrl}
@@ -79,14 +79,10 @@ const shortSha = buildMeta.commit;
     min-inline-size: 0;
   }
 
-  /* 40 is below the touch minimum; the hit area is not. Only above and
-     below: sideways the neighbours already touch. */
-  .footer-link::before,
-  .clock::before,
-  .repo-btn::before {
-    content: "";
-    position: absolute;
-    inset: calc((var(--cap-h) - var(--hit)) / 2) 0;
+  /* the links' hit areas grow only above and below: sideways the
+     neighbours already touch */
+  .footer-link::before {
+    inset-inline: 0;
   }
 
   /* the dock holds its circles at muted, ink on hover and press */
@@ -224,24 +220,11 @@ const shortSha = buildMeta.commit;
     }
   }
 
-  /* The dock is a glass 48 track: three 40 circles inside a 3px pad and the
-     1px rim. Same recipe as the glass capsules, but it is a surface, not a
-     control, so it neither lifts nor presses. */
+  /* the dock (.ui-dock): three 40 circles in a glass 48 track */
   .footer-dock {
-    display: inline-flex;
     grid-column: 3;
     grid-row: 1;
-    align-items: center;
     justify-self: end;
-    gap: var(--step-1);
-    padding: calc(var(--track-inset) - 1px);
-    border: 1px solid transparent;
-    border-radius: var(--r-pill);
-    background:
-      var(--glass-sheen) padding-box,
-      linear-gradient(var(--glass-fill), var(--glass-fill)) padding-box,
-      var(--glass-rim) border-box;
-    box-shadow: var(--glass-spec), var(--lift-0);
   }
 
   /* The last circle sits at the rail's edge: its tooltip is flush with the

@@ -430,7 +430,6 @@ export function classifyElementSound(target: Element): Accent | null {
     interactive.classList.contains("code-copy") ||
     interactive.classList.contains("quote-copy") ||
     interactive.hasAttribute("data-copy") ||
-    interactive.hasAttribute("data-copy-link") ||
     /copy/i.test(interactive.getAttribute("aria-label") ?? "") ||
     /copy/i.test(interactive.getAttribute("title") ?? "")
   ) {

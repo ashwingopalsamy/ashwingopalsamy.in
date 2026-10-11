@@ -24,6 +24,7 @@
    .ui-row  --static --multiline      __title __sub __meta __glyph(--ext --back)
    .ui-disc  __chev __body            <details>; its <summary> is a .ui-row
    .ui-seg  --sm --bare               __track __item __ind __ov (glass track)
+   .ui-dock                           glass track of 40px icon circles
    .ui-tip  --above  .ui-kbd          tooltip inside its trigger; keycap
    .ui-toast  .solo .ti .msg .act .ring   built by scripts/toast.ts
    .ui-pager  __card(--next) __key __title
@@ -143,14 +144,21 @@
   padding-inline: 0;
 }
 
-/* 28 and 32 are below the touch minimum; the hit area is not. */
-.ui-cap--32::before,
-.ui-cap--28::before,
-.ui-chip::before {
+/* 40, 32 and 28 are below the touch minimum; the hit area is not. The
+   ::before is placed against the padding box, inside the 1px border, so
+   the block inset gives that pixel back or the target is 42. A text
+   capsule reaches 4px past each side; an icon circle grows square, which
+   in a dock's 4px gap meets its neighbour's area without overlapping. */
+:is(.ui-cap--40, .ui-cap--32, .ui-cap--28, .ui-chip)::before {
   content: "";
   position: absolute;
-  inset: calc((var(--cap-h) - var(--hit)) / 2) calc(var(--step-1) * -1);
+  inset-block: calc((var(--cap-h) - var(--hit)) / 2 - 1px);
+  inset-inline: calc(var(--step-1) * -1);
   border-radius: var(--r-pill);
+}
+
+:is(.ui-cap--40, .ui-cap--32, .ui-cap--28).ui-cap--icon::before {
+  inset-inline: calc((var(--cap-h) - var(--hit)) / 2 - 1px);
 }
 
 /* Caps carry no descender, so a centred label reads low. */
@@ -216,7 +224,7 @@
 /* Glass: sheen, opaque fill and spec over a border-box gradient rim. The
    fill must be opaque or the rim shows through it. No backdrop-filter:
    the canvas behind in-flow glass is flat. */
-:is(.ui-cap--glass, .ui-seg, .ui-pager__card, .ui-tile, .ui-tile__go) {
+:is(.ui-cap--glass, .ui-seg, .ui-dock, .ui-pager__card, .ui-tile, .ui-tile__go) {
   border: 1px solid transparent;
   background:
     var(--glass-sheen) padding-box,
@@ -497,13 +505,18 @@
   letter-spacing: 0;
 }
 
+/* A meta too long for the row (a handle, a hostname) ellipsises rather
+   than overflowing it. */
 .ui-row__meta {
+  min-inline-size: 0;
+  overflow: hidden;
   color: var(--ghost);
   font-size: var(--text-ui-sm);
   font-weight: var(--font-normal);
   line-height: var(--leading-snug);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /* fixed 16px slot, so meta columns align across rows with and without one */
@@ -522,7 +535,14 @@
   opacity: 1;
 }
 
-.ui-row:focus-visible .ui-row__glyph {
+/* a listbox option (the palette): the active option is the puddle,
+   whether the pointer or the arrow keys put it there */
+.ui-row[aria-selected="true"]::before {
+  opacity: 1;
+  transition: opacity var(--t-color);
+}
+
+.ui-row:is(:focus-visible, [aria-selected="true"]) .ui-row__glyph {
   color: var(--ink);
 }
 
@@ -531,7 +551,9 @@
   align-items: flex-start;
 }
 
-.ui-row--multiline .ui-row__glyph {
+/* both sit on the title's first line: a 13px meta shares its baseline,
+   a 16px glyph its centre */
+.ui-row--multiline :is(.ui-row__meta, .ui-row__glyph) {
   margin-block-start: calc(var(--step) / 2);
 }
 
@@ -673,6 +695,16 @@
   font-size: var(--text-ui-sm);
 }
 
+/* 32 to look at, 44 to hit. Items have no border, so no pixel to give
+   back; sideways the area stops at the middle of the 4px gap. */
+.ui-seg--sm .ui-seg__item::before {
+  content: "";
+  position: absolute;
+  inset-block: calc((var(--cap-32) - var(--hit)) / 2);
+  inset-inline: calc(var(--step-1) / -2);
+  border-radius: var(--r-pill);
+}
+
 /* a parent surface is the track (the code card header) */
 .ui-seg--bare {
   border: 0;
@@ -758,6 +790,20 @@
 }
 
 /* ------------------------------------------------------------------
+   dock: a glass 48 track holding 40px icon circles (footer, quote). A
+   surface, not a control: it neither lifts nor presses.
+   ------------------------------------------------------------------ */
+
+.ui-dock {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--step-1);
+  /* the rim is the dock's 1px border: 1 + 3 = --track-inset */
+  padding: calc(var(--track-inset) - 1px);
+  border-radius: var(--r-pill);
+}
+
+/* ------------------------------------------------------------------
    tooltip: a <span class="ui-tip" role="tooltip"> inside its positioned
    trigger, shown on hover (fine pointer) and keyboard focus without
    script. No arrow. Below the trigger by default.
@@ -803,11 +849,17 @@
 }
 
 /* the open tooltip's trigger rises above its neighbours */
-:has(> .ui-tip):is(:focus-visible, [data-tip-open]) {
+:has(> .ui-tip):is(:focus-visible, [data-tip-open]),
+:has(> .ui-tip):has(> :focus-visible) {
   z-index: var(--z-raised);
 }
 
+/* A frosted trigger is a backdrop root (its own backdrop-filter and
+   transition name), so a tooltip inside it has nothing to blur. That
+   tooltip is the trigger's sibling instead: hover already reaches it
+   through the shared parent, and keyboard focus is the second selector. */
 :focus-visible > .ui-tip,
+:has(> :focus-visible) > .ui-tip,
 [data-tip-open] > .ui-tip {
   visibility: visible;
   opacity: 1;
@@ -970,9 +1022,10 @@
    pager: previous / next cards. A missing side leaves an empty cell.
    ------------------------------------------------------------------ */
 
+/* minmax(0, 1fr): a long title wraps inside its column, never widens it */
 .ui-pager {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--step-4);
 }
 
@@ -1023,6 +1076,7 @@
   line-height: var(--leading-snug);
   letter-spacing: -0.012em;
   text-wrap: balance;
+  overflow-wrap: anywhere;
 }
 
 /* ------------------------------------------------------------------
@@ -1184,6 +1238,13 @@
   .ui-row:not(.ui-row--static):hover .ui-row__glyph,
   .ui-disc > summary:hover .ui-disc__chev {
     color: var(--ink);
+  }
+
+  /* a static row is not a target: pointing at one neither lights it nor
+     dims its neighbours (global.css .surface-stack) */
+  .surface-stack:has(.ui-row--static:hover) > * {
+    opacity: 1;
+    filter: none;
   }
 
   .ui-seg__item:not(:is([aria-selected="true"], [aria-current="page"], [aria-pressed="true"])):hover {
@@ -1650,6 +1711,19 @@
   .ui-toast {
     inset-block-end: calc(var(--mobile-chrome-clearance) + var(--step-3));
   }
+
+  /* two columns are too narrow for a title: the cards stack, both
+     start-aligned */
+  .ui-pager {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--step-3);
+  }
+
+  .ui-pager__card--next {
+    grid-column: 1;
+    align-items: flex-start;
+    text-align: start;
+  }
 }
 
 /* ------------------------------------------------------------------
@@ -1657,7 +1731,7 @@
    ------------------------------------------------------------------ */
 
 @media (forced-colors: active) {
-  :is(.ui-cap, .ui-chip, .ui-seg) {
+  :is(.ui-cap, .ui-chip, .ui-seg, .ui-dock) {
     border-color: ButtonText;
   }
 

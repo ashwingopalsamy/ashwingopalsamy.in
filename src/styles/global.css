@@ -141,7 +141,6 @@
   --font-semibold: 550;
   --font-bold: 600;
   --font-hover-lift: 550;
-  --font-hover-bold: 680;
   /* --mono-optical-shift and the other optical corrections: geometry.css */
 
   --leading-tight: 1.3;
@@ -177,7 +176,6 @@
   --surface-row-border: transparent;
   --surface-row-shadow: none;
   --surface-row-hover: color-mix(in oklch, var(--ink) 3.5%, transparent);
-  --surface-row-press: color-mix(in oklch, var(--ink) 6.5%, transparent);
   --surface-row-current: color-mix(in oklch, var(--ink) 4%, transparent);
   --surface-row-disabled: color-mix(in oklch, var(--ink) 1.5%, transparent);
   --surface-raised: color-mix(in oklch, var(--ink) 4%, var(--canvas));
@@ -308,7 +306,6 @@
   --surface-row-border: transparent;
   --surface-row-shadow: none;
   --surface-row-hover: color-mix(in oklch, var(--color-1) 5%, transparent);
-  --surface-row-press: color-mix(in oklch, var(--color-1) 8%, transparent);
   --surface-row-current: color-mix(in oklch, var(--color-1) 6%, transparent);
   --surface-row-disabled: color-mix(in oklch, var(--color-1) 2%, transparent);
   --shiki-fg: var(--color-1);
@@ -425,7 +422,6 @@
     --surface-row-border: transparent;
     --surface-row-shadow: none;
     --surface-row-hover: color-mix(in oklch, var(--color-1) 5%, transparent);
-    --surface-row-press: color-mix(in oklch, var(--color-1) 8%, transparent);
     --surface-row-current: color-mix(in oklch, var(--color-1) 6%, transparent);
     --surface-row-disabled: color-mix(in oklch, var(--color-1) 2%, transparent);
     --shiki-fg: var(--color-1);
@@ -752,24 +748,13 @@ button[aria-disabled="true"] {
 /* ------------------------------------------------------------------ */
 
 :where(
-  button:not(.surface-row):not(.surface-item):not(.note-toc-btn),
-  .btn,
-  .btn-pill,
+  button:not(.surface-row):not(.note-toc-btn),
   .cta-secondary,
   .dev-cta:not(.cta-primary),
-  .chip,
   .chip-all,
-  .dev-chip,
-  .design-link,
-  .text-btn,
-  .mono-toggle,
-  .focus-demo-btn,
   .footer-link,
-  .quiet-btn,
-  .note-copy-link,
   .detail-meta-actions a,
   .detail-meta-actions button,
-  .quote-btn,
   .action-btn,
   .sdk-nav-btn
 ) {
@@ -784,22 +769,12 @@ button[aria-disabled="true"] {
 
 @media (hover: hover) and (pointer: fine) {
   :where(
-    button:not(.surface-row):not(.surface-item):not(.note-toc-btn):not(.cta-primary):not(.is-active):not([aria-pressed="true"]),
-    .btn:not(.btn-primary):not(.is-active),
-    .btn-pill:not(.is-active),
+    button:not(.surface-row):not(.note-toc-btn):not(.cta-primary):not(.is-active):not([aria-pressed="true"]),
     .cta-secondary,
     .dev-cta:not(.cta-primary):not(.is-active),
-    .dev-chip:not(.is-active),
-    .design-link,
-    .text-btn,
-    .mono-toggle,
-    .focus-demo-btn,
     .footer-link,
-    .quiet-btn,
-    .note-copy-link,
     .detail-meta-actions a,
     .detail-meta-actions button,
-    .quote-btn,
     .action-btn,
     .sdk-nav-btn:not(.is-active)
   ):hover {
@@ -812,13 +787,7 @@ button[aria-disabled="true"] {
 @supports (text-box-trim: trim-both) {
   .cta,
   .dev-cta,
-  .chip,
   .chip-all,
-  .dev-chip,
-  .design-link,
-  .text-btn,
-  .mono-toggle,
-  .focus-demo-btn,
   .site-nav .quiet-link,
   .site-nav-bottom .tab-label,
   .clock,
@@ -1039,58 +1008,6 @@ button[aria-disabled="true"] {
   }
 }
 
-.toast {
-  position: fixed;
-  z-index: var(--z-toast);
-  max-inline-size: min(22rem, calc(100vw - var(--mobile-gutter-start) - var(--mobile-gutter-end)));
-  min-inline-size: 0;
-  padding: var(--step-3) calc(var(--step) * 5);
-  border-radius: var(--r-pill);
-  background: var(--ink);
-  color: var(--canvas);
-  font-size: var(--text-sm);
-  line-height: var(--leading-snug);
-  overflow-wrap: anywhere;
-  box-shadow: var(--shadow-2);
-  opacity: 0;
-  pointer-events: none;
-  filter: blur(2px);
-  will-change: transform, opacity, filter;
-  transition:
-    opacity var(--dur-exit) var(--ease-enter),
-    transform var(--dur-exit) var(--ease-enter),
-    filter var(--dur-exit) var(--ease-enter);
-}
-.toast-corner {
-  right: var(--mobile-gutter-end);
-  bottom: calc(var(--gutter) + (var(--toast-stack, 0) * 3.25rem));
-  transform: translateY(10px) scale(0.97);
-}
-.toast-anchored {
-  transform: translate(-50%, calc(-100% - 10px)) translateY(6px) scale(0.97);
-}
-.toast.is-in {
-  opacity: 1;
-  filter: blur(0);
-  transition:
-    opacity var(--dur-enter) var(--ease-enter),
-    transform var(--dur-enter) var(--ease-enter),
-    filter var(--dur-enter) var(--ease-enter);
-}
-.toast-corner.is-in {
-  transform: translateY(0) scale(1);
-}
-.toast-anchored.is-in {
-  transform: translate(-50%, calc(-100% - 10px)) scale(1);
-}
-@media (prefers-reduced-motion: reduce) {
-  .toast {
-    transition: opacity var(--dur-tint) var(--ease-travel);
-    transform: none !important;
-    filter: none !important;
-  }
-}
-
 .column-body {
   flex: 1 0 auto;
   display: flex;
@@ -1109,10 +1026,6 @@ button[aria-disabled="true"] {
 
   .column-body {
     padding-bottom: var(--mobile-chrome-clearance);
-  }
-
-  .toast-corner {
-    bottom: calc(var(--mobile-chrome-clearance) + var(--step-3) + (var(--toast-stack, 0) * 3.25rem));
   }
 }
 
@@ -1177,9 +1090,7 @@ main > *,
 @media (hover: hover) and (pointer: fine) {
   .surface-stack:hover > *,
   .surface-stack:hover .surface-row,
-  .surface-stream:hover .surface-row,
-  .surface-stack:hover .surface-item,
-  .surface-stream:hover .surface-item {
+  .surface-stream:hover .surface-row {
     opacity: var(--dim-opacity);
     filter: blur(var(--dim-blur));
     transition: opacity var(--dur-tint) var(--ease-enter);
@@ -1189,19 +1100,14 @@ main > *,
   .surface-stack:hover > *:focus-within,
   .surface-stack:hover .surface-row:hover,
   .surface-stream:hover .surface-row:hover,
-  .surface-stack:hover .surface-item:hover,
-  .surface-stream:hover .surface-item:hover,
   .surface-stack:hover .surface-row:focus-within,
-  .surface-stream:hover .surface-row:focus-within,
-  .surface-stack:hover .surface-item:focus-within,
-  .surface-stream:hover .surface-item:focus-within {
+  .surface-stream:hover .surface-row:focus-within {
     opacity: 1;
     filter: none;
   }
 }
 
-.surface-row,
-.surface-item {
+.surface-row {
   min-inline-size: 0;
   max-inline-size: 100%;
   border-radius: var(--surface-row-radius);
@@ -1215,32 +1121,13 @@ main > *,
     transform var(--dur-press) var(--ease-enter);
 }
 
-.surface-row[aria-current="page"],
-.surface-item[aria-current="page"] {
+.surface-row[aria-current="page"] {
   background: var(--surface-row-current);
 }
 
-.surface-row[aria-disabled="true"],
-.surface-row.is-disabled,
-.surface-item[aria-disabled="true"],
-.surface-item.is-disabled {
+.surface-row[aria-disabled="true"] {
   background: var(--surface-row-disabled);
   opacity: 0.35;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .surface-row.is-interactive:hover,
-  .surface-row.is-interactive:focus-within,
-  .surface-item.is-interactive:hover,
-  .surface-item.is-interactive:focus-within {
-    background: var(--surface-row-hover);
-  }
-}
-
-.surface-row.is-interactive:active,
-.surface-item.is-interactive:active {
-  background: var(--surface-row-press);
-  transform: scale(0.98);
 }
 
 main :where(article, section, header, footer, nav, ul, ol, dl, figure, form, fieldset, details, blockquote, pre) {
@@ -1424,15 +1311,12 @@ a {
 
   .site-nav-bottom,
   .scroll-veil,
-  .quote-controls,
-  .toast,
+  .quote-dock,
+  .ui-toast,
   .spotify-wrap,
   .loc-map,
   .loc-attrib,
-  .header-theme-toggle,
   .header-palette-trigger,
-  .logo-tip,
-  .share-btn,
   .command-palette,
   .note-progress,
   .code-copy,
@@ -1518,25 +1402,16 @@ a {
   }
 
   .nav-glass,
-  .quote-controls,
   .loc-pill,
   .loc-card,
-  .toast,
+  .ui-toast,
   .cta,
   .dev-cta,
-  .chip,
   .chip-all,
-  .dev-chip,
-  .design-link,
-  .text-btn,
-  .mono-toggle,
-  .focus-demo-btn,
-  .tab-pill,
   .prose .callout,
   .prose .code-figure,
   .prose .diagram,
-  .prose .diagram-overlay-stage,
-  .note-toc {
+  .prose .diagram-overlay-stage {
     forced-color-adjust: none;
     background: Canvas !important;
     color: CanvasText !important;
@@ -1547,7 +1422,6 @@ a {
   }
 
   .nav-selection,
-  .library-selection,
   .prose .callout-icon {
     forced-color-adjust: none;
     background: Highlight !important;
