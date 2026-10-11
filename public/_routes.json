@@ -16,6 +16,7 @@
     "/portrait.webp",
     "/site.webmanifest",
     "/sw.js",
+    "/_pages/*",
     "/og.png",
     "/og/*",
     "/*.woff2",

@@ -36,6 +36,13 @@
 /sw.js
   Cache-Control: no-cache
 
+# ---- Whole-site page bundle: one immutable file per build id ----
+# Written by scripts/page-bundle.mjs; the filename changes every deploy, so it
+# can be cached forever. Pages infers text/plain from .txt.
+/_pages/*
+  Cache-Control: public, max-age=31536000, immutable
+  X-Robots-Tag: noindex
+
 # ---- Search entrypoints and indexes: revalidate between deployments ----
 /pagefind/*
   Cache-Control: public, max-age=0, must-revalidate
