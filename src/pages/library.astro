@@ -94,7 +94,7 @@ const collectionPage = libraryCollectionPageJsonLd([
         aria-controls={`library-panel-${tab.id}`}
       />
     ))}
-    <script is:inline>
+    <script is:inline data-astro-rerun>
       {`(() => {
         const view = new URLSearchParams(location.search).get("view");
         if (!["notes", "books", "articles", "watch"].includes(view ?? "")) return;
@@ -255,7 +255,7 @@ const collectionPage = libraryCollectionPageJsonLd([
     syncLocation();
   }
 
-  enhanceLibrary();
+  document.addEventListener("astro:page-load", enhanceLibrary);
 </script>
 
 <style>

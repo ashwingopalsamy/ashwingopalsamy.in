@@ -265,5 +265,5 @@
     window.__siteThemeController?.sync(document);
   }
 
-  init();
+  document.addEventListener("astro:page-load", init);
 </script>

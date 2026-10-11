@@ -892,5 +892,5 @@ function iconPath(link: SocialLink): string {
     });
   }
 
-  initSocialProfilePreviews();
+  document.addEventListener("astro:page-load", initSocialProfilePreviews);
 </script>

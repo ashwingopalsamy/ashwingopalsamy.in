@@ -13,7 +13,7 @@ const absolute = `${site.url}/ai/`;
     <link rel="canonical" href={absolute} />
     <meta name="robots" content="noindex" />
     <title>Redirecting to {target}</title>
-    <script is:inline>
+    <script is:inline data-astro-rerun>
       location.replace("/ai/");
     </script>
   </head>
