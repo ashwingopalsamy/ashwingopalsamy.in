@@ -1,10 +1,12 @@
 /**
  * external-links - harden and mark off-site links.
  *
- * Adds `target="_blank"` + `rel="noopener noreferrer"` (security) and an
- * `external` class. CSS gives external links within `.prose` an external-link icon
- * so readers know they're leaving the site - quiet, the underline stays the
- * real signal. Internal and `#anchor` links are left alone.
+ * Adds `target="_blank"` + `rel="noopener noreferrer"` (security), an
+ * `external` class, and a trailing registry `arrow-up-right` in an
+ * `.external-icon` span, so readers know they're leaving the site. prose.css
+ * sizes it (0.72em, ghost) and nudges it on hover; the link itself is ink and
+ * weight with a wash, never an underline. Same-origin links (pages, `.md` and
+ * other files, `#anchors`) are left alone and carry no glyph.
  */
 import type { Element } from "hast";
 import type { HastVisitorContext } from "satteri";
@@ -43,7 +45,7 @@ export const externalLinks = {
       if (!arr.includes("external")) arr.push("external");
       ctx.setProperty(node, "className", arr);
       ctx.appendChild(node, h("span", { className: ["external-icon"] }, [
-        rawNode(iconMarkup("arrow-up-right", { size: 12 })),
+        rawNode(iconMarkup("arrow-up-right", { size: 12, strokeWidth: 2.2 })),
       ]));
     },
   },

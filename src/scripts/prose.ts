@@ -3,24 +3,26 @@
  *
  * Wires up every interactive piece the note engine promises:
  *
- *   1. code-figure copy buttons (clipboard + toast + sound, execCommand fallback)
+ *   1. code-figure copy: a glass Copy capsule that confirms itself in place
+ *      (no toast; clipboard.ts owns the state machine and the sound)
  *   2. Mermaid diagrams: lazy-loaded, theme-aware, cached per theme, re-rendered
  *      on theme toggle, with an expand-to-overlay lightbox and a graceful
  *      keep-the-source fallback on parse failure or no-JS
- *   3. heading-anchor click copies the section URL and shows a toast
+ *   3. heading-anchor click copies the section URL and shows the "Link copied"
+ *      toast (a copy with no visible control is what the toast is for)
  *   4. TOC scroll-spy maps IntersectionObserver state to aria-current
  *   5. reading-progress hairline (rAF scroll listener)
  *
  * Everything is idempotent and re-runs on `astro:page-load` so view transitions
- * are safe. Reduced motion is respected (no animated transitions, the progress
- * bar is hidden by CSS). No-JS: the page still reads - diagrams show their
- * source, no dead buttons are rendered.
+ * are safe; listeners and injected nodes are torn down through the page signal.
+ * Reduced motion is respected (no animated transitions, the progress bar is
+ * hidden by CSS). No-JS: the page still reads - diagrams show their source, no
+ * dead buttons are rendered.
  */
-import { showToast } from "./toast";
-import { playAccent, isSoundEnabled } from "./sound";
+import { playAccent } from "./sound";
 import { pageSignal, onPageCleanup } from "./lifecycle";
 import { invalidateScrollMetrics, onScrollFrame } from "./scroll-scheduler";
-import { copyToClipboard } from "./clipboard";
+import { copyControl, copyWithToast } from "./clipboard";
 import { mermaidFallbacks, STEEL_9 } from "../lib/theme";
 import { iconMarkup } from "../lib/ui-icons";
 import { track, trackCopy } from "./telemetry";
@@ -29,8 +31,31 @@ import { track, trackCopy } from "./telemetry";
 /*  code-figure copy                                                   */
 /* ------------------------------------------------------------------ */
 
-const COPY_ICON = iconMarkup("copy", { size: 13, strokeWidth: 1.8 });
-const DONE_ICON = iconMarkup("check", { size: 13, strokeWidth: 2.2 });
+/** The ui-cap glass-32 action capsule (Note.astro's markup contract). It
+ *  carries data-state but no data-copy: the value is the live code text,
+ *  read at click, and a data-copy attribute would also hand the click to
+ *  clipboard.ts's delegated listener, which copies the page URL. */
+function copyCapsule(): HTMLButtonElement {
+  const icon = (name: "copy" | "check" | "alert", className?: string) =>
+    iconMarkup(name, { size: 14, strokeWidth: 2, className });
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "ui-cap ui-cap--glass ui-cap--32 ui-cap--lead code-copy";
+  btn.dataset.fx = "spot";
+  btn.dataset.state = "idle";
+  btn.innerHTML =
+    '<span class="ui-stk ui-stk--icon">' +
+    `<span data-when="idle">${icon("copy")}</span>` +
+    `<span data-when="done">${icon("check", "ui-draw")}</span>` +
+    `<span data-when="error">${icon("alert")}</span>` +
+    "</span>" +
+    '<span class="ui-cap__label ui-stk">' +
+    '<span data-when="idle">Copy<span class="visually-hidden"> code</span></span>' +
+    '<span data-when="done">Copied</span>' +
+    '<span data-when="error">Retry</span>' +
+    "</span>";
+  return btn;
+}
 
 function initCodeCopy(signal: AbortSignal) {
   document.querySelectorAll<HTMLElement>(".prose .code-figure").forEach((fig) => {
@@ -41,45 +66,19 @@ function initCodeCopy(signal: AbortSignal) {
     const toolbar = document.createElement("div");
     toolbar.className = "code-actions";
 
-    // Copy button
-    const copyBtn = document.createElement("button");
-    copyBtn.type = "button";
-    copyBtn.className = "code-btn code-copy";
-    copyBtn.title = "Copy code";
-    copyBtn.setAttribute("aria-label", "Copy code");
-    copyBtn.innerHTML = COPY_ICON;
-    let resetTimer = 0;
-
+    const copyBtn = copyCapsule();
     copyBtn.addEventListener(
       "click",
       async () => {
         const text = pre.innerText.replace(/\n$/, "");
-        const ok = await copyToClipboard(text, signal);
-        if (signal.aborted || !copyBtn.isConnected) return;
-        if (ok) {
-          copyBtn.classList.add("is-done");
-          copyBtn.innerHTML = DONE_ICON;
-          if (isSoundEnabled()) playAccent("copy");
-          trackCopy("code");
-          showToast({ message: "Copied to clipboard", duration: 1600 });
-          window.clearTimeout(resetTimer);
-          resetTimer = window.setTimeout(() => {
-            copyBtn.classList.remove("is-done");
-            copyBtn.innerHTML = COPY_ICON;
-          }, 1400);
-        } else {
-          showToast({ message: "Copy failed", tone: "err", duration: 2600 });
-        }
+        if (await copyControl(copyBtn, text, signal) && !signal.aborted) trackCopy("code");
       },
       { signal },
     );
 
     toolbar.appendChild(copyBtn);
     fig.appendChild(toolbar);
-    onPageCleanup(() => {
-      window.clearTimeout(resetTimer);
-      toolbar.remove();
-    }, signal);
+    onPageCleanup(() => toolbar.remove(), signal);
   });
 }
 
@@ -98,40 +97,8 @@ function initHeadingAnchors(signal: AbortSignal) {
         // let the default hash navigation happen, but also copy the link
         const href = a.getAttribute("href") ?? "";
         const url = location.origin + location.pathname + href;
-        const ok = await copyToClipboard(url, signal);
-        if (signal.aborted || !a.isConnected) return;
-        if (ok) {
-          if (isSoundEnabled()) playAccent("copy");
+        if (await copyWithToast(url, "Link copied", signal) && !signal.aborted) {
           trackCopy("heading_anchor");
-          showToast({ message: "Link copied", duration: 1600 });
-        }
-      },
-      { signal },
-    );
-  });
-}
-
-/* ------------------------------------------------------------------ */
-/*  Copy page link                                                     */
-/* ------------------------------------------------------------------ */
-
-function initCopyLink(signal: AbortSignal) {
-  document.querySelectorAll<HTMLButtonElement>("[data-copy-link]").forEach((btn) => {
-    if (btn.dataset.enhanced === "true") return;
-    btn.dataset.enhanced = "true";
-    signal.addEventListener("abort", () => delete btn.dataset.enhanced, { once: true });
-    btn.addEventListener(
-      "click",
-      async () => {
-        const url = location.href.split("#")[0];
-        const ok = await copyToClipboard(url, signal);
-        if (signal.aborted || !btn.isConnected) return;
-        if (ok) {
-          if (isSoundEnabled()) playAccent("copy");
-          trackCopy("page_link");
-          showToast({ message: "Link copied", duration: 1600 });
-        } else {
-          showToast({ message: "Copy failed", tone: "err", duration: 2600 });
         }
       },
       { signal },
@@ -537,10 +504,15 @@ function renderDiagram(fig: HTMLElement, theme: string, signal: AbortSignal, lat
   return mermaidWork;
 }
 
+const ICON_CIRCLE_32 = ["ui-cap", "ui-cap--glass", "ui-cap--32", "ui-cap--icon"];
+
 function addExpandButton(fig: HTMLElement, signal: AbortSignal) {
-  // Prerendered figures ship the toolbar; only wire it.
+  // Prerendered figures ship the toolbar; only wire it. The button is
+  // dressed as a glass-32 icon circle here, so nothing is styled until it works.
   const shipped = fig.querySelector<HTMLButtonElement>(".diagram-expand[data-pending]");
   if (shipped) {
+    shipped.classList.add(...ICON_CIRCLE_32);
+    shipped.dataset.fx = "spot";
     shipped.removeAttribute("data-pending");
     shipped.addEventListener("click", () => openOverlay(fig, signal), { signal });
     onPageCleanup(() => shipped.setAttribute("data-pending", ""), signal);
@@ -551,9 +523,10 @@ function addExpandButton(fig: HTMLElement, signal: AbortSignal) {
   toolbar.className = "diagram-toolbar";
   const btn = document.createElement("button");
   btn.type = "button";
-  btn.className = "diagram-expand";
+  btn.className = ["diagram-expand", ...ICON_CIRCLE_32].join(" ");
+  btn.dataset.fx = "spot";
   btn.setAttribute("aria-label", "Expand diagram");
-  btn.innerHTML = iconMarkup("expand", { size: 15, strokeWidth: 1.8 });
+  btn.innerHTML = iconMarkup("expand", { size: 14, strokeWidth: 2 });
   btn.addEventListener("click", () => openOverlay(fig, signal), { signal });
   toolbar.appendChild(btn);
   fig.appendChild(toolbar);
@@ -608,15 +581,16 @@ function openOverlay(fig: HTMLElement, signal: AbortSignal) {
   stage.className = "diagram-overlay-stage";
   stage.appendChild(svg);
 
+  // A glass-40 circle on the overlay itself: the stage scrolls and clips.
   const close = document.createElement("button");
   close.type = "button";
-  close.className = "diagram-overlay-close";
+  close.className = "diagram-overlay-close ui-cap ui-cap--glass ui-cap--40 ui-cap--icon";
+  close.dataset.fx = "spot";
   close.setAttribute("aria-label", "Close");
-  close.innerHTML = iconMarkup("close", { size: 16, strokeWidth: 2 });
+  close.innerHTML = iconMarkup("close", { size: 16, strokeWidth: 1.8 });
   close.addEventListener("click", () => closeOverlay(), { signal });
 
-  stage.appendChild(close);
-  ov.appendChild(stage);
+  ov.append(stage, close);
 
   ov.addEventListener(
     "click",
@@ -725,13 +699,12 @@ function initNotePagerKeys(signal: AbortSignal) {
 let initializedSignal: AbortSignal | null = null;
 
 function init() {
-  if (!document.querySelector(".prose, .note[data-note], [data-copy-link]")) return;
+  if (!document.querySelector(".prose, .note[data-note]")) return;
   const signal = pageSignal();
   if (initializedSignal === signal || signal.aborted) return;
   initializedSignal = signal;
   initCodeCopy(signal);
   initHeadingAnchors(signal);
-  initCopyLink(signal);
   initFootnotePreviews(signal);
   initProgress(signal);
   initDiagrams(signal);

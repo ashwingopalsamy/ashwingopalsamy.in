@@ -4,7 +4,8 @@
  * Runs after Shiki (hast plugins run after the highlighter), so fenced code is
  * already `<pre class="astro-code" data-language="go">…`. We wrap it in a
  * `.code-figure` whose `data-language` drives a quiet language label drawn by
- * CSS, and acts as the anchor for the client-injected copy button. Optional
+ * CSS, and acts as the anchor for the client-injected glass Copy capsule
+ * (prose.ts; it needs JS, so no dead button ships). Optional
  * `data-title` (from fence meta via shiki transformers) becomes a real caption
  * element. Mermaid and math blocks never reach here.
  */
