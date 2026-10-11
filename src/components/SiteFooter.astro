@@ -561,6 +561,7 @@ const shortSha = buildMeta.commit;
 </style>
 
 <script>
+  import type { TransitionBeforeSwapEvent } from "astro:transitions/client";
   import { onPageCleanup, pageSignal } from "../scripts/lifecycle";
   import { playAccent } from "../scripts/sound";
   import { tickPresence } from "../scripts/presence";
@@ -666,6 +667,16 @@ const shortSha = buildMeta.commit;
     const m = (parts.minute || "00").padStart(2, "0");
     const s = (parts.second || "00").padStart(2, "0");
     return [h[0]!, h[1]!, m[0]!, m[1]!, s[0]!, s[1]!];
+  }
+
+  /* The incoming footer is swapped in with the live time already showing,
+     so the digits do not flash 00:00:00 before the clock initialises. */
+  function prepareClock(event: Event) {
+    const incoming = (event as TransitionBeforeSwapEvent).newDocument;
+    const digits = getAshwinTimeDigits(new Date());
+    incoming.querySelectorAll<HTMLElement>(".site-footer .digit-face").forEach((face, index) => {
+      if (digits[index] !== undefined) face.textContent = digits[index]!;
+    });
   }
 
   function clearSnap(context: ClockContext, index: number) {
@@ -822,7 +833,9 @@ const shortSha = buildMeta.commit;
     render(context, true, false);
   }
 
+  document.addEventListener("astro:before-swap", prepareClock);
   init();
+  document.addEventListener("astro:page-load", init);
 </script>
 
 <script>
@@ -865,4 +878,5 @@ const shortSha = buildMeta.commit;
   }
 
   initRepoBtn();
+  document.addEventListener("astro:page-load", initRepoBtn);
 </script>

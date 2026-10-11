@@ -132,13 +132,19 @@ function startListening() {
     });
     observer.observe(document.documentElement);
   }
+
+  document.addEventListener("astro:after-swap", () => {
+    invalidateDocHeight();
+    lastY = window.scrollY;
+    schedule();
+  });
 }
 
 /**
  * Subscribe to coalesced scroll frames.
  *
- * Unsubscribes automatically when the page signal aborts. Pass `null` for a
- * subscriber that should outlive it (telemetry), in which case
+ * Unsubscribes automatically on client-side navigation. Pass `null` for a
+ * subscriber that should outlive navigations (telemetry), in which case
  * the returned function is the only way to detach.
  * `measure` may read layout, but must not mutate it. `fn` may write DOM,
  * but must not read layout. Existing subscribers need no extra callback.

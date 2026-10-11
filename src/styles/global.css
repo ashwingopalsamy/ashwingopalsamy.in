@@ -475,6 +475,13 @@ html {
   text-size-adjust: 100%;
 }
 
+/* The router restores scroll with a plain scrollTo(), which would animate under
+   smooth; keep it instant until the first page-load and through every swap. */
+:root[data-astro-transition],
+:root:not([data-nav-ready]) {
+  scroll-behavior: auto;
+}
+
 @supports not selector(::-webkit-scrollbar) {
   html {
     scrollbar-width: thin;
@@ -975,31 +982,21 @@ main {
   }
 }
 
-/* The route blur now lives on the view-transition snapshot layers
-   (motion.css), not on this element. What remains here is the no-View-
-   Transitions fallback: same gesture, opacity only, because without a
-   snapshot to blur there is no cheap way to blur live text. */
-[data-route-content] {
-  --route-fallback-dir: 1;
-}
+/* The route blur lives on the view-transition snapshot layers (motion.css),
+   not on this element. What remains here is the no-View-Transitions
+   fallback (the router sets data-astro-transition-fallback): same gesture,
+   opacity and travel only, because without a snapshot there is no cheap
+   way to blur live text. "old" fades the outgoing page; "new" plays the
+   incoming one in from the same direction as the snapshot route-in. */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-astro-transition-fallback="old"] [data-route-content] {
+    opacity: 0;
+    transition: opacity var(--dur-route-out) var(--ease-exit);
+  }
 
-/* Set by the head script only where cross-document view transitions are
-   unsupported. */
-:root[data-route-dir="back"] [data-route-content] {
-  --route-fallback-dir: -1;
-}
-
-:root[data-route-fallback="entering"] [data-route-content] {
-  opacity: 0;
-  transform: translate3d(0, calc(var(--route-fallback-dir) * var(--travel-step)), 0);
-}
-
-:root[data-route-fallback="idle"] [data-route-content] {
-  opacity: 1;
-  transform: none;
-  transition:
-    opacity var(--dur-route-in) var(--ease-enter),
-    transform var(--dur-route-in) var(--ease-enter);
+  :root[data-astro-transition-fallback="new"] [data-route-content] {
+    animation: route-in var(--dur-route-in) var(--ease-enter) both;
+  }
 }
 
 .column-body > *,

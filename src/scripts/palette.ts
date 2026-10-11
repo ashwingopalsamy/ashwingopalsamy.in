@@ -486,9 +486,16 @@ function keepActiveRowInView(list: HTMLElement, row: HTMLElement) {
 
 function navigate(href: string) {
   closePalette(false, true);
+  const signal = pageSignal();
+  const session = paletteSession;
   playAccent("tap");
-  // A same-origin document navigation; the browser runs the route transition.
-  location.assign(href);
+  void import("astro:transitions/client")
+    .then(({ navigate: astroNavigate }) => {
+      if (!signal.aborted && session === paletteSession) return astroNavigate(href);
+    })
+    .catch(() => {
+      if (!signal.aborted && session === paletteSession) location.assign(href);
+    });
 }
 
 function openExternal(href: string) {
@@ -1723,5 +1730,8 @@ document.addEventListener(
 
 document.addEventListener("keydown", globalKeys);
 init();
+document.addEventListener("astro:page-load", init);
+document.addEventListener("astro:before-preparation", () => closePalette(false, true));
+document.addEventListener("astro:before-swap", () => closePalette(false, true));
 // A page kept in the back/forward cache must come back with the palette shut.
 window.addEventListener("pagehide", () => closePalette(false, true));

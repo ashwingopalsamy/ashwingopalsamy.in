@@ -311,6 +311,22 @@ const backTarget = resolveBackTarget(path);
     opacity: 0;
   }
 
+  /* The header persists across routes, so a CSS transition on the pill (or
+     the logo glyphs) would start at the old state while the view-transition
+     group captures the new one: the morph then has nothing to travel. During
+     a view transition the group does the moving (motion.css). */
+  @supports (view-transition-name: none) {
+    :root[data-astro-transition] .nav-selection {
+      transition: background-color var(--t-color), opacity var(--t-color);
+    }
+
+    :root[data-astro-transition] .logo-mark,
+    :root[data-astro-transition] .logo-back,
+    :root[data-astro-transition] .logo-back :global(.ui-icon) {
+      transition: none;
+    }
+  }
+
   .site-nav .quiet-link {
     position: relative;
     z-index: 1;

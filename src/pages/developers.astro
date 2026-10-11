@@ -630,9 +630,8 @@ const developersJsonLd = [
     });
   }
 
-  if (typeof document !== "undefined") {
-    initDeveloperPage();
-  }
+  initDeveloperPage();
+  document.addEventListener("astro:page-load", initDeveloperPage);
 </script>
 
 <style>

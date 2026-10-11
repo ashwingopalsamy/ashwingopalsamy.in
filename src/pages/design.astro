@@ -904,6 +904,7 @@ const jsonLd = {
   }
 
   enhanceDesignGuide();
+  document.addEventListener("astro:page-load", enhanceDesignGuide);
 </script>
 
 <style>

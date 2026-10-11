@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from "astro:transitions";
 import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 import geistLatin from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import fontStyles from "../styles/fonts.css?inline";
@@ -88,6 +89,7 @@ const documentTitle = isHome
 <!doctype html>
 <html
   lang="en"
+  data-build-id={buildMeta.buildId}
   data-build-at={buildMeta.builtAt}
   data-build-commit={buildMeta.commit ?? undefined}
 >
@@ -95,8 +97,9 @@ const documentTitle = isHome
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
-    <!-- Font faces ship first, before any route stylesheet. -->
-    <style is:inline set:html={fontStyles} />
+    <!-- Font faces ship first, before any route stylesheet. Persisted so the
+         head merge never re-parses them on a swap. -->
+    <style is:inline data-astro-transition-persist="site-fonts" set:html={fontStyles} />
 
     <!-- Each viewport preloads only the face it sets body text in. -->
     <link
@@ -186,54 +189,54 @@ const documentTitle = isHome
         try {
           if (sessionStorage.getItem("intro-animated") === "true") document.documentElement.dataset.introAnimated = "true";
         } catch (e) {}
-        // A prerendered page (speculation rules) may be activated long after it
-        // was built; hold its CSS animations until someone is looking.
-        if (document.prerendering) {
-          document.documentElement.dataset.prerendering = "";
-          document.addEventListener("prerenderingchange", function () {
-            delete document.documentElement.dataset.prerendering;
-          }, { once: true });
+        // The document outlives every navigation, so the router's swap events
+        // do what a fresh load used to: theme, motion and intro state are
+        // re-applied to the incoming document before it is adopted.
+        var NONCE = (document.currentScript && document.currentScript.nonce) || "";
+        function liveNonce() {
+          if (!NONCE) {
+            var el = document.querySelector("script[nonce], style[nonce]");
+            NONCE = (el && el.nonce) || "";
+          }
+          return NONCE;
         }
-        // Route direction for the cross-document view transition: motion.css
-        // reverses the axis for history traversals back. pagereveal fires
-        // before the first frame, so it has to be registered in the head.
-        window.addEventListener("pagereveal", function (event) {
-          if (!event.viewTransition) return;
-          var activation = window.navigation && window.navigation.activation;
-          var back = Boolean(activation && activation.navigationType === "traverse" &&
-            activation.from && activation.entry && activation.entry.index < activation.from.index);
-          var root = document.documentElement;
-          // A page-flow pull names its own direction (page-flow.ts).
-          var forced = null;
-          try { forced = sessionStorage.getItem("route-dir"); sessionStorage.removeItem("route-dir"); } catch (e) {}
-          root.dataset.routeDir = forced === "back" || forced === "forward" ? forced : (back ? "back" : "forward");
+        // Root attributes other code sets at runtime. The router rebuilds <html>
+        // from the incoming document, which would wipe them mid-visit.
+        var CARRIED_ROOT_ATTRS = ["data-page-flow", "data-palette", "data-theme-switching", "data-accent", "data-nav-ready"];
+        document.addEventListener("astro:before-swap", function (event) {
+          var next = event.newDocument;
+          sync(next);
+          var root = next.documentElement;
+          CARRIED_ROOT_ATTRS.forEach(function (name) {
+            var live = document.documentElement.getAttribute(name);
+            if (live !== null) root.setAttribute(name, live);
+          });
+          // The incoming page was served under its own CSP nonce; the live
+          // document only trusts the first one. Re-stamp every script and style.
+          var nonce = liveNonce();
+          if (nonce) {
+            next.querySelectorAll("script, style").forEach(function (el) {
+              el.setAttribute("nonce", nonce);
+              el.nonce = nonce;
+            });
+          }
           // The logo swaps between the home mark and the back arrow only when
           // one side of the navigation is the home page.
-          var fromPath = null;
-          try { fromPath = activation && activation.from && activation.from.url ? new URL(activation.from.url).pathname : null; } catch (e) {}
-          if (fromPath !== null && (fromPath === "/") !== (location.pathname === "/")) root.dataset.logoSwap = "";
+          if ((event.from.pathname === "/") !== (event.to.pathname === "/")) root.dataset.logoSwap = "";
           else delete root.dataset.logoSwap;
-        });
-        // Without cross-document view transitions (Firefox today) an internal
-        // navigation still arrives with the same gesture: opacity and travel
-        // on the content, settled two frames after the DOM is parsed.
-        if (!("CSSViewTransitionRule" in window) && document.documentElement.dataset.motion === "on") {
-          var internal = false;
-          try { internal = Boolean(document.referrer) && new URL(document.referrer).origin === location.origin; } catch (e) {}
-          var navEntry = performance.getEntriesByType ? performance.getEntriesByType("navigation")[0] : null;
-          if (internal && (!navEntry || navEntry.type !== "reload")) {
-            var root = document.documentElement;
-            root.dataset.routeFallback = "entering";
-            if (navEntry && navEntry.type === "back_forward") root.dataset.routeDir = "back";
-            var settle = function () {
-              requestAnimationFrame(function () {
-                requestAnimationFrame(function () { root.dataset.routeFallback = "idle"; });
-              });
-            };
-            if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", settle, { once: true });
-            else settle();
+          if (reducedMotion.matches && event.viewTransition) event.viewTransition.skipTransition();
+        }, { capture: true });
+        document.addEventListener("astro:after-swap", function () {
+          sync(document);
+          // The router recreates incoming scripts from their attributes, and
+          // the browser blanks a connected element's nonce attribute.
+          var nonce = liveNonce();
+          if (nonce) {
+            document.querySelectorAll("script:not([data-astro-exec])").forEach(function (el) {
+              el.setAttribute("nonce", nonce);
+            });
           }
-        }
+        }, { capture: true });
         colorScheme.addEventListener("change", function (event) {
           if (!explicitTheme) apply(event.matches ? "dark" : "light", false, document);
         });
@@ -331,11 +334,12 @@ const documentTitle = isHome
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content={CANVAS_LIGHT} media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content={CANVAS_DARK} media="(prefers-color-scheme: dark)" />
+    <ClientRouter />
     <slot name="head" />
   </head>
   <body>
     <a href="#main" class="skip-link">Skip to content</a>
-    <div class="site-chrome" data-pagefind-ignore>
+    <div class="site-chrome" transition:persist="site-chrome" data-pagefind-ignore>
       <div class="column column-header">
         <SiteHeader />
       </div>
@@ -345,6 +349,7 @@ const documentTitle = isHome
       <main
         id="main"
         data-route-content
+        data-navigation-phase="idle"
         data-pagefind-body={pagefind ? "" : undefined}
         data-pagefind-ignore={pagefind ? undefined : "true"}
       >
@@ -353,14 +358,14 @@ const documentTitle = isHome
       </main>
       <SiteFooter />
     </div>
-    <div class="viewport-frame" aria-hidden="true"></div>
-    <div class="page-scrollbar" aria-hidden="true"><div class="page-scrollbar-thumb"></div></div>
+    <div class="viewport-frame" transition:persist="viewport-frame" aria-hidden="true"></div>
+    <div class="page-scrollbar" transition:persist="page-scrollbar" aria-hidden="true"><div class="page-scrollbar-thumb"></div></div>
     {import.meta.env.DEV && <DevTuner />}
 
     <script>
       import { onPageCleanup, pageSignal } from "../scripts/lifecycle";
       import "../scripts/navigation-shell";
-      import "../scripts/navigation-prefetch";
+      import "../scripts/page-store";
       import "../scripts/floating-toc";
       import "../scripts/grid-overlay";
       import "../scripts/page-scrollbar";
@@ -399,11 +404,14 @@ const documentTitle = isHome
       }
 
       let enhancedPage: AbortSignal | null = null;
+      let documentEnhanced = false;
 
       function enhance() {
         const signal = pageSignal();
         if (enhancedPage === signal) return;
         enhancedPage = signal;
+        const firstPage = !documentEnhanced;
+        documentEnhanced = true;
         const isHomePage = Boolean(document.querySelector(".column-body.home"));
         if (isHomePage) {
           window.__siteIntroAnimated = true;
@@ -414,8 +422,13 @@ const documentTitle = isHome
 
         const items = document.querySelectorAll<HTMLElement>("[data-enter]:not(.entered)");
         // Entrances belong to the first page of a visit, not to every
-        // navigation inside it: skip them when this document was reached from
-        // another page of the site or from history.
+        // navigation inside it. A swapped-in page is by definition not the
+        // first; only the document's own page asks the navigation entry and
+        // referrer whether it was reached from elsewhere on the site.
+        if (!firstPage) {
+          items.forEach((el) => el.classList.add("entered"));
+          return;
+        }
         const navEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
         let internal = false;
         try {
@@ -513,7 +526,11 @@ const documentTitle = isHome
         }
       }
 
+      // Astro fires the first astro:page-load on window load, after every
+      // image has finished: the first page enhances now and the event is a
+      // no-op for it. Swapped-in pages only ever arrive through the event.
       enhance();
+      document.addEventListener("astro:page-load", enhance);
 
       const chord = (e: KeyboardEvent) =>
         e.altKey && e.shiftKey && (e.key === "v" || e.key === "V");

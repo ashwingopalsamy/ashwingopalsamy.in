@@ -3,7 +3,6 @@ import { getImage, Picture } from "astro:assets";
 import ComingSoon from "../../components/ComingSoon.astro";
 import PageIntro from "../../components/PageIntro.astro";
 import Page from "../../layouts/Page.astro";
-import PhotoRouteReveal from "../../components/PhotoRouteReveal.astro";
 import { getPhotoEntries, photoHref, photoWidths } from "../../data/photos";
 import { getPhotoImageSources } from "../../lib/photo-image-sources";
 import { ogPath } from "../../lib/og-url";
@@ -54,7 +53,6 @@ const photoCards = await Promise.all(photos.map(async (photo) => ({
   pagefind={hasPublishedPhotos && !import.meta.env.DEV}
   robots={robots}
 >
-  {photos.length > 0 && <PhotoRouteReveal slot="head" />}
   {photos.length === 0 ? (
     <ComingSoon title="Photos" description={comingSoonDescription} />
   ) : (

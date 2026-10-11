@@ -106,6 +106,9 @@ import Icon from "./Icon.astro";
   }
 
   // Leaving the page cancels an open that is still waiting for the module.
+  document.addEventListener("astro:before-preparation", () => {
+    paletteOpenIntent += 1;
+  });
   window.addEventListener("pagehide", () => {
     paletteOpenIntent += 1;
   });

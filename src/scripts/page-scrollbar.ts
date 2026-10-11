@@ -3,22 +3,57 @@
  * draggable. Its position needs no script: a scroll-driven animation moves it
  * on the compositor (global.css). Geometry is re-measured only when the
  * viewport or document height changes, through the shared scroll scheduler.
+ * The bar persists across navigations, so it is bound once and re-measured
+ * when a page swap changes the document height.
  */
-import { onScrollFrame } from "./scroll-scheduler";
+import { invalidateScrollMetrics, onScrollFrame } from "./scroll-scheduler";
 
 const MIN_THUMB = 32;
-const bar = document.querySelector<HTMLElement>(".page-scrollbar");
-const thumb = bar?.querySelector<HTMLElement>(".page-scrollbar-thumb");
 
-if (bar && thumb && CSS.supports("animation-timeline: scroll()")) {
+if (CSS.supports("animation-timeline: scroll()")) {
+  let bar: HTMLElement | null = null;
   let view = -1;
   let doc = -1;
   let track = 0;
   let travel = 0;
 
+  const bind = () => {
+    const next = document.querySelector<HTMLElement>(".page-scrollbar");
+    if (next === bar) return;
+    bar = next;
+    view = -1;
+    doc = -1;
+    track = 0;
+    travel = 0;
+    const thumb = next?.querySelector<HTMLElement>(".page-scrollbar-thumb");
+    if (!next || !thumb) return;
+
+    thumb.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      thumb.setPointerCapture(event.pointerId);
+      next.toggleAttribute("data-dragging", true);
+      const startY = event.clientY;
+      const startScroll = window.scrollY;
+      const ratio = (doc - view) / Math.max(1, travel);
+      const move = (e: PointerEvent) => {
+        window.scrollTo({ top: startScroll + (e.clientY - startY) * ratio, behavior: "instant" });
+      };
+      const end = () => {
+        next.toggleAttribute("data-dragging", false);
+        thumb.removeEventListener("pointermove", move);
+      };
+      thumb.addEventListener("pointermove", move);
+      thumb.addEventListener("pointerup", end, { once: true });
+      thumb.addEventListener("pointercancel", end, { once: true });
+    });
+  };
+  bind();
+
+  // The node outlives any one page, so the subscription does too (null signal).
   onScrollFrame(
     ({ viewport, docHeight }) => {
-      if (viewport === view && docHeight === doc) return;
+      if (!bar || (viewport === view && docHeight === doc)) return;
       view = viewport;
       doc = docHeight;
       const scrollable = docHeight > viewport + 1;
@@ -29,29 +64,14 @@ if (bar && thumb && CSS.supports("animation-timeline: scroll()")) {
       bar.style.setProperty("--thumb-size", `${size}px`);
       bar.style.setProperty("--thumb-travel", `${travel}px`);
     },
-    undefined,
+    null,
     ({ viewport, docHeight }) => {
-      if (viewport !== view || docHeight !== doc) track = bar.clientHeight;
+      if (bar && (viewport !== view || docHeight !== doc)) track = bar.clientHeight;
     },
   );
 
-  thumb.addEventListener("pointerdown", (event) => {
-    if (event.button !== 0) return;
-    event.preventDefault();
-    thumb.setPointerCapture(event.pointerId);
-    bar.toggleAttribute("data-dragging", true);
-    const startY = event.clientY;
-    const startScroll = window.scrollY;
-    const ratio = (doc - view) / Math.max(1, travel);
-    const move = (e: PointerEvent) => {
-      window.scrollTo({ top: startScroll + (e.clientY - startY) * ratio, behavior: "instant" });
-    };
-    const end = () => {
-      bar.toggleAttribute("data-dragging", false);
-      thumb.removeEventListener("pointermove", move);
-    };
-    thumb.addEventListener("pointermove", move);
-    thumb.addEventListener("pointerup", end, { once: true });
-    thumb.addEventListener("pointercancel", end, { once: true });
+  document.addEventListener("astro:page-load", () => {
+    bind();
+    invalidateScrollMetrics();
   });
 }
