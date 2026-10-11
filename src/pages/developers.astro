@@ -7,18 +7,21 @@ import { ogPath } from "../lib/og-url";
 
 const ogImage = ogPath("developers");
 
-// The Copy capsule's cells, written once (the markup contract is contact.astro's).
-// Icon and label each stack idle / done / error in one grid cell, so the
-// capsule keeps its width through Copy, Copied and Retry.
-const copyCells =
+// The Copy capsule's cells (the markup contract is contact.astro's). Icon and
+// label each stack idle / done / error in one grid cell, so the capsule keeps
+// its width through Copy, Copied and Retry.
+const copyCellsFor = (idle: string) =>
   '<span class="ui-stk ui-stk--icon">' +
   `<span data-when="idle">${iconMarkup("copy", { size: 14, strokeWidth: 2 })}</span>` +
   `<span data-when="done">${iconMarkup("check", { size: 14, strokeWidth: 2, className: "ui-draw" })}</span>` +
   `<span data-when="error">${iconMarkup("alert", { size: 14, strokeWidth: 2 })}</span>` +
   "</span>" +
   '<span class="ui-cap__label ui-stk">' +
-  '<span data-when="idle">Copy</span><span data-when="done">Copied</span><span data-when="error">Retry</span>' +
+  `<span data-when="idle">${idle}</span><span data-when="done">Copied</span><span data-when="error">Retry</span>` +
   "</span>";
+const copyCells = copyCellsFor("Copy");
+// the card header's capsule copies the whole example, so it says so
+const headCopyCells = copyCellsFor("Copy code");
 
 const sdks = [
   {
@@ -312,7 +315,7 @@ const developersJsonLd = [
       </div>
 
       <div class="sdk-stream" data-sdk-widget>
-        <div class="code-card">
+        <div class="ui-card code-card">
           <div class="code-head">
             <div class="ui-seg ui-seg--sm ui-seg--bare">
               <div class="ui-seg__track" role="tablist" aria-label="Language">
@@ -339,13 +342,13 @@ const developersJsonLd = [
             <!-- copies the open tab's example; the script swaps data-copy and the label on seg:change -->
             <button
               type="button"
-              class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead"
+              class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead sdk-copy"
               data-fx="spot"
               data-sdk-copy
               data-copy={sdks[0].rawCode}
               data-state="idle"
-              aria-label={`Copy ${sdks[0].name} code example`}
-              set:html={copyCells}
+              aria-label={`Copy code, ${sdks[0].name} example`}
+              set:html={headCopyCells}
             />
           </div>
 
@@ -372,7 +375,7 @@ const developersJsonLd = [
                   <span class="prompt-glyph" aria-hidden="true">$</span>
                   <code class="install-text mono">{sdk.install}</code>
                   <span
-                    class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead inst-cap"
+                    class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead"
                     data-fx="spot"
                     data-state="idle"
                     aria-hidden="true"
@@ -407,7 +410,7 @@ const developersJsonLd = [
                 <span class="ui-badge">{cli.runtime}</span>
                 <span class="cli-desc p-grey">{cli.description}</span>
               </div>
-              <div class="code-card">
+              <div class="ui-card code-card">
                 <div class="code-view code-view--copy">
                   <pre><code class="mono" set:html={cli.highlightedSnippet} /></pre>
                   <button
@@ -527,7 +530,7 @@ const developersJsonLd = [
       <p class="editorial-p p-grey">
         Explicit path versioning (<code>/api/v1</code>) paired with RFC 9457 Problem Details for typed error responses:
       </p>
-      <div class="code-card">
+      <div class="ui-card code-card">
         <div class="code-view code-view--copy">
           <pre><code class="mono" set:html={highlightedErrorPayload} /></pre>
           <button
@@ -579,7 +582,7 @@ const developersJsonLd = [
 <script>
   import "../scripts/clipboard";
   import { playAccent } from "../scripts/sound";
-  import { onPageCleanup, pageSignal } from "../scripts/lifecycle";
+  import { pageSignal } from "../scripts/lifecycle";
   import { initSegmented } from "../scripts/segmented";
 
   let initializedSignal: AbortSignal | undefined;
@@ -590,20 +593,6 @@ const developersJsonLd = [
     const signal = pageSignal();
     if (initializedSignal === signal) return;
     initializedSignal = signal;
-
-    // The install row is one button. Its capsule is the affordance, and the
-    // capsule's Copy / Copied / Retry cells read data-state from their own
-    // parent, while the delegated copy handler writes it on the button. So the
-    // state is mirrored down.
-    widget.querySelectorAll<HTMLElement>(".inst").forEach((row) => {
-      const cap = row.querySelector<HTMLElement>(":scope > .inst-cap");
-      if (!cap) return;
-      const mirror = new MutationObserver(() => {
-        cap.dataset.state = row.dataset.state ?? "idle";
-      });
-      mirror.observe(row, { attributes: true, attributeFilter: ["data-state"] });
-      onPageCleanup(() => mirror.disconnect(), signal);
-    });
 
     // SDK tabs: segmented.ts owns selection, roving focus and the panels
     // (aria-controls). The header Copy follows the open tab.
@@ -617,7 +606,7 @@ const developersJsonLd = [
         if (!panel || !headCopy) return;
         headCopy.dataset.copy = panel.dataset.code ?? "";
         headCopy.dataset.state = "idle";
-        headCopy.setAttribute("aria-label", `Copy ${panel.dataset.name ?? ""} code example`);
+        headCopy.setAttribute("aria-label", `Copy code, ${panel.dataset.name ?? ""} example`);
       },
       { signal },
     );
@@ -721,16 +710,10 @@ const developersJsonLd = [
     margin-top: 1rem;
   }
 
-  /* Glass family at --code-r. In-flow, so no backdrop blur; the 4px header
-     inset makes the 32px segments concentric with the 20px card (20 - 4). */
+  /* .ui-card is the glass; this is its radius (--code-r) and clip. The 4px
+     header inset makes the 32px segments concentric with the 20px card. */
   .code-card {
-    border: 1px solid transparent;
     border-radius: var(--code-r);
-    background:
-      var(--glass-sheen) padding-box,
-      linear-gradient(var(--glass-fill), var(--glass-fill)) padding-box,
-      var(--glass-rim) border-box;
-    box-shadow: var(--glass-spec), var(--lift-0);
     overflow: hidden;
   }
 
@@ -1084,11 +1067,28 @@ const developersJsonLd = [
 
     /* The track scrolls inside itself under a 16px edge fade. A bare track
        has no padding of its own, so the first and last tab would rest under
-       the fade; this keeps them clear of it. The segments' 44px hit areas
-       overflow the 32px track, so it must not also scroll vertically. */
+       the fade; this keeps them clear of it. */
     .code-head :global(.ui-seg--bare > .ui-seg__track) {
       padding-inline: var(--step-4);
-      overflow-y: hidden;
+    }
+
+    /* Copy collapses to a 32px icon circle so the tabs keep the row. The
+       header's inset grows from 4px to 6px to hold its 44px hit area. */
+    .code-head {
+      padding: calc((var(--hit) - var(--cap-32)) / 2);
+    }
+
+    .sdk-copy {
+      inline-size: var(--cap-h);
+      padding-inline: 0;
+    }
+
+    .sdk-copy > :global(.ui-cap__label) {
+      display: none;
+    }
+
+    .sdk-copy::before {
+      inset-inline: calc((var(--cap-h) - var(--hit)) / 2 - 1px);
     }
   }
 </style>

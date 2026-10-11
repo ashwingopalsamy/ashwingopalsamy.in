@@ -86,6 +86,11 @@ export function initSegmented(scope: ParentNode = document, options: SegmentedOp
   return wired;
 }
 
+/** The controller wired onto `root`, once initSegmented has run on it. */
+export function getSegmented(root: HTMLElement | null): Segmented | undefined {
+  return root ? instances.get(root) : undefined;
+}
+
 /* Canvas-ink copies of the items, laid out exactly like them (controls.css
    gives the overlay the track's padding and gap). Nothing in it is
    reachable: no ids, no roles, no transition names, inert. */
@@ -136,7 +141,12 @@ function wire(root: HTMLElement, signal: AbortSignal): Segmented | null {
     // where the ink is actually drawn, so a slide interrupted mid-flight restarts from there
     const drawn = slot ? new DOMMatrixReadOnly(getComputedStyle(indicator).transform) : null;
     const view = track.clientWidth;
-    const max = track.scrollWidth - view;
+    // The content's own extent, not scrollWidth: an item's 44px hit area
+    // overhangs its box and would make a track that fits look scrollable.
+    let last = items.length - 1;
+    while (last > 0 && !items[last].offsetWidth) last--;
+    const end = items[last].offsetLeft + items[last].offsetWidth + parseFloat(getComputedStyle(track).paddingInlineEnd);
+    const max = Math.max(0, end - view);
     return { next, drawn, overflow: max > 1, scroll: track.scrollLeft, view, max };
   };
 

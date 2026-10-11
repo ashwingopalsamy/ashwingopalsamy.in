@@ -37,7 +37,7 @@ const head = cut > 0 ? item.title.slice(0, cut + 1) : "";
 const tail = cut > 0 ? item.title.slice(cut + 1) : item.title;
 ---
 
-<li class:list={["library-row", `is-${item.kind}`, { "is-linked": isLinked, "is-static": !isLinked, "is-overview": density === "overview" }]}>
+<li class:list={["library-row", `is-${item.kind}`, { "is-linked": isLinked, "is-overview": density === "overview" }]}>
   {isLinked ? (
     <a
       class="ui-row"

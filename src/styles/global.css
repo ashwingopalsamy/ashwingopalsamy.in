@@ -57,8 +57,6 @@
   --code-str: #16a34a;
   --code-const: #ea580c;
   --code-comment: #8e8e93;
-  --cta-secondary-bg: var(--chrome-surface-bg);
-  --cta-secondary-border: var(--chrome-surface-border);
   --loc-map-filter: grayscale(1) contrast(1.02);
   --loc-map-opacity: 0.92;
   --media-monochrome-filter: grayscale(1);
@@ -140,7 +138,6 @@
   --font-medium: 500;
   --font-semibold: 550;
   --font-bold: 600;
-  --font-hover-lift: 550;
   /* --mono-optical-shift and the other optical corrections: geometry.css */
 
   --leading-tight: 1.3;
@@ -315,8 +312,6 @@
   --code-str: #4ade80;
   --code-const: #fb923c;
   --code-comment: #71717a;
-  --cta-secondary-bg: var(--chrome-surface-bg);
-  --cta-secondary-border: var(--chrome-surface-border);
   --loc-map-filter: grayscale(1) invert(1) brightness(1.45) contrast(0.9);
   --loc-map-opacity: 0.94;
   --media-monochrome-filter: grayscale(1);
@@ -431,8 +426,6 @@
     --code-str: #4ade80;
     --code-const: #fb923c;
     --code-comment: #71717a;
-    --cta-secondary-bg: var(--chrome-surface-bg);
-    --cta-secondary-border: var(--chrome-surface-border);
     --loc-map-filter: grayscale(1) invert(1) brightness(1.45) contrast(0.9);
     --loc-map-opacity: 0.94;
     --media-monochrome-filter: grayscale(1);
@@ -749,9 +742,6 @@ button[aria-disabled="true"] {
 
 :where(
   button:not(.surface-row):not(.note-toc-btn),
-  .cta-secondary,
-  .dev-cta:not(.cta-primary),
-  .chip-all,
   .footer-link,
   .detail-meta-actions a,
   .detail-meta-actions button,
@@ -769,9 +759,7 @@ button[aria-disabled="true"] {
 
 @media (hover: hover) and (pointer: fine) {
   :where(
-    button:not(.surface-row):not(.note-toc-btn):not(.cta-primary):not(.is-active):not([aria-pressed="true"]),
-    .cta-secondary,
-    .dev-cta:not(.cta-primary):not(.is-active),
+    button:not(.surface-row):not(.note-toc-btn):not(.is-active):not([aria-pressed="true"]),
     .footer-link,
     .detail-meta-actions a,
     .detail-meta-actions button,
@@ -785,9 +773,6 @@ button[aria-disabled="true"] {
 }
 
 @supports (text-box-trim: trim-both) {
-  .cta,
-  .dev-cta,
-  .chip-all,
   .site-nav .quiet-link,
   .site-nav-bottom .tab-label,
   .clock,
@@ -1405,9 +1390,6 @@ a {
   .loc-pill,
   .loc-card,
   .ui-toast,
-  .cta,
-  .dev-cta,
-  .chip-all,
   .prose .callout,
   .prose .code-figure,
   .prose .diagram,

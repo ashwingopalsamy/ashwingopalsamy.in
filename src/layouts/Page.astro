@@ -164,10 +164,6 @@ const documentTitle = isHome
             target.head.appendChild(tc);
           }
           if (tc.getAttribute("content") !== canvas(theme)) tc.setAttribute("content", canvas(theme));
-          target.querySelectorAll(".theme-toggle").forEach(function (button) {
-            var pressed = String(theme === "dark");
-            if (button.getAttribute("aria-pressed") !== pressed) button.setAttribute("aria-pressed", pressed);
-          });
         }
         function introHasAnimated() {
           if (window.__siteIntroAnimated || document.documentElement.dataset.introAnimated === "true") return true;

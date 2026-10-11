@@ -71,7 +71,7 @@ function formatDate(iso: string): string {
           );
 
           return (
-            <li class:list={{ "is-static": !item.href }}>
+            <li>
               {item.href ? (
                 <a class:list={["ui-row", { "ui-row--multiline": Boolean(sub) }]} data-fx="spot" href={item.href}>
                   {inner}
@@ -101,13 +101,6 @@ function formatDate(iso: string): string {
     letter-spacing: -0.015em;
     color: var(--ink);
     line-height: var(--leading-tight);
-  }
-
-  /* a static row is not a target: pointing at one neither lights it nor
-     dims its neighbours */
-  .rows:has(> .is-static:hover) > * {
-    opacity: 1;
-    filter: none;
   }
 
   .row-main {

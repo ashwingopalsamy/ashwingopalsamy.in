@@ -15,7 +15,8 @@
      --lead --trail --icon            icon side gives 4px back; icon-only circle
      __label                          every capsule label (lift, magnet parallax)
    .ui-count                          mono tabular count in a cap or segment
-   .ui-chip  __hash                   28px tag chip, "#" in ghost
+   .ui-chip  __hash                   28px tag chip, "#" in ghost; .go-spec-pill
+                                      is the same recipe for markdown-authored links
    .ui-arw  --ext --back              conveyor: two identical registry icons
    .ui-stk  --icon                    one grid cell, children carry data-when
    .ui-draw                           stroke icon (check) that draws itself
@@ -25,6 +26,7 @@
    .ui-disc  __chev __body            <details>; its <summary> is a .ui-row
    .ui-seg  --sm --bare               __track __item __ind __ov (glass track)
    .ui-dock                           glass track of 40px icon circles
+   .ui-card                           in-flow glass surface; radius, clip, padding are the page's
    .ui-tip  --above  .ui-kbd          tooltip inside its trigger; keycap
    .ui-toast  .solo .ti .msg .act .ring   built by scripts/toast.ts
    .ui-pager  __card(--next) __key __title
@@ -53,7 +55,8 @@
    ------------------------------------------------------------------ */
 
 .ui-cap,
-.ui-chip {
+.ui-chip,
+.go-spec-pill {
   --cap-h: var(--cap-48);
   --cap-px: var(--cap-px-48);
   --cap-gap: var(--cap-gap-lg);
@@ -114,7 +117,8 @@
 }
 
 .ui-cap--28,
-.ui-chip {
+.ui-chip,
+.go-spec-pill {
   --cap-h: var(--cap-28);
   --cap-px: var(--cap-px-28);
   --cap-gap: var(--cap-gap-sm);
@@ -149,7 +153,7 @@
    the block inset gives that pixel back or the target is 42. A text
    capsule reaches 4px past each side; an icon circle grows square, which
    in a dock's 4px gap meets its neighbour's area without overlapping. */
-:is(.ui-cap--40, .ui-cap--32, .ui-cap--28, .ui-chip)::before {
+:is(.ui-cap--40, .ui-cap--32, .ui-cap--28, .ui-chip, .go-spec-pill)::before {
   content: "";
   position: absolute;
   inset-block: calc((var(--cap-h) - var(--hit)) / 2 - 1px);
@@ -196,7 +200,8 @@
 
 /* Translucent fill, so a solid border-color, never the gradient rim. */
 .ui-cap--chip,
-.ui-chip {
+.ui-chip,
+.go-spec-pill {
   color: var(--muted);
   background-color: var(--wash);
   background-clip: padding-box;
@@ -224,7 +229,7 @@
 /* Glass: sheen, opaque fill and spec over a border-box gradient rim. The
    fill must be opaque or the rim shows through it. No backdrop-filter:
    the canvas behind in-flow glass is flat. */
-:is(.ui-cap--glass, .ui-seg, .ui-dock, .ui-pager__card, .ui-tile, .ui-tile__go) {
+:is(.ui-cap--glass, .ui-seg, .ui-dock, .ui-card, .ui-pager__card, .ui-tile, .ui-tile__go) {
   border: 1px solid transparent;
   background:
     var(--glass-sheen) padding-box,
@@ -1194,7 +1199,7 @@
     background-color: var(--wash);
   }
 
-  :is(.ui-cap--chip, .ui-chip):hover {
+  :is(.ui-cap--chip, .ui-chip, .go-spec-pill):hover {
     color: var(--ink);
     background-color: var(--wash-press);
     border-color: var(--edge);
@@ -1308,7 +1313,7 @@
    press: every pointer, touch included
    ------------------------------------------------------------------ */
 
-:is(.ui-cap, .ui-chip, .ui-row, .ui-seg__item, .ui-pager__card, .ui-tile):active,
+:is(.ui-cap, .ui-chip, .go-spec-pill, .ui-row, .ui-seg__item, .ui-pager__card, .ui-tile):active,
 .ui-toast > .act:active {
   --ui-move: var(--dur-press) var(--ease-snap);
 }
@@ -1330,7 +1335,7 @@
   background-color: var(--wash-press);
 }
 
-:is(.ui-cap--chip, .ui-chip):active {
+:is(.ui-cap--chip, .ui-chip, .go-spec-pill):active {
   color: var(--ink);
   background-color: color-mix(in oklch, var(--ink) 13%, transparent);
   border-color: var(--edge);
@@ -1370,7 +1375,7 @@
 @media (prefers-reduced-motion: no-preference) {
   /* Every press springs: 70ms down on --ease-snap, back up on a spring
      (pop for capsules, soft for wide targets). */
-  :is(.ui-cap, .ui-chip, .ui-seg__item):active,
+  :is(.ui-cap, .ui-chip, .go-spec-pill, .ui-seg__item):active,
   .ui-toast > .act:active {
     transform: scale(var(--press-scale));
   }
@@ -1464,7 +1469,7 @@
   }
 
   /* pressing while hovered drops the lift */
-  :is(.ui-cap, .ui-chip):active {
+  :is(.ui-cap, .ui-chip, .go-spec-pill):active {
     transform: scale(var(--press-scale));
   }
 
@@ -1692,15 +1697,23 @@
 
 @media (max-width: 38rem) {
   /* the track scrolls inside itself; the indicator scrolls with it.
-     segmented.ts flags data-overflow so a track that fits never fades. */
+     segmented.ts flags data-overflow so a track that fits never fades.
+     overflow-y clips: the items' 44px hit areas reach past the track and
+     must not give it a vertical pan. */
   .ui-seg__track {
     overflow-x: auto;
+    overflow-y: clip;
     overscroll-behavior-x: contain;
     scrollbar-width: none;
   }
 
   .ui-seg__track::-webkit-scrollbar {
     display: none;
+  }
+
+  /* a track that fits has nothing to pan; the hit areas overhang its box */
+  .ui-seg[data-ready] > .ui-seg__track:not([data-overflow]) {
+    overflow-x: hidden;
   }
 
   .ui-seg__track[data-overflow] {
@@ -1731,7 +1744,7 @@
    ------------------------------------------------------------------ */
 
 @media (forced-colors: active) {
-  :is(.ui-cap, .ui-chip, .ui-seg, .ui-dock) {
+  :is(.ui-cap, .ui-chip, .go-spec-pill, .ui-seg, .ui-dock, .ui-card) {
     border-color: ButtonText;
   }
 

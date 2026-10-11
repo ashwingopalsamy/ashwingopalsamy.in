@@ -309,15 +309,6 @@ import Icon from "./Icon.astro";
     display: none;
   }
 
-  /* 40 is under the touch minimum; the hit area is not. */
-  .palette-back::before,
-  .palette-close::before,
-  .palette-mobile-close::before {
-    content: "";
-    position: absolute;
-    inset: calc((var(--cap-h) - var(--hit)) / 2);
-  }
-
   .palette-back[hidden],
   .palette-context-shell[hidden] {
     display: none;
@@ -519,7 +510,6 @@ import Icon from "./Icon.astro";
     height: var(--step-4);
   }
 
-  .palette-lucide,
   .palette-svg {
     display: inline-block;
     width: var(--step-4);
@@ -532,16 +522,6 @@ import Icon from "./Icon.astro";
     width: 16px;
     height: 16px;
     flex: 0 0 auto;
-  }
-
-  .palette-icon .palette-brand-icon {
-    width: 16px;
-    height: 16px;
-  }
-
-  .palette-search-ico {
-    width: calc(var(--step) * 5);
-    height: calc(var(--step) * 5);
   }
 
   /* size and weight come from .ui-row__title */

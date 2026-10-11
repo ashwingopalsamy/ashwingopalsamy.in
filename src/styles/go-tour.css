@@ -5,8 +5,8 @@
  * Controls are the shared primitives (controls.css) that go-tour.ts builds:
  * .ui-seg for the version tabs, .ui-cap for Copy / Edit / Reset / Run,
  * .ui-badge for the benchmark. This file places them and adds nothing to
- * their look. Only .go-spec-pill is styled here, because the note's markdown
- * authors it without classes the primitives could be named by.
+ * their look. .go-spec-pill, which the note's markdown authors without
+ * primitive classes, is named in controls.css's .ui-chip lists instead.
  */
 
 /* Code well. The syntax colours (--code-kw ...) are global.css's, shared
@@ -121,16 +121,6 @@
 /* On a phone the capsules are icon circles, so the bar stays on one row.
    Their aria-labels carry the names. */
 @media (max-width: 38rem) {
-  /* Two tabs never need to scroll. controls.css lets a track scroll inside
-     itself on phones, and counts the segments' 44px hit areas as overflow, so
-     it would fade and nudge them; this keeps the tabs still and clear. */
-  .go-tour-left .ui-seg__track,
-  .go-tour-left .ui-seg__track[data-overflow] {
-    overflow: hidden;
-    -webkit-mask-image: none;
-    mask-image: none;
-  }
-
   .go-tour-actions > .go-tour-btn {
     inline-size: var(--cap-h);
     padding-inline: 0;
@@ -313,9 +303,9 @@
   font-weight: 500 !important;
 }
 
-/* Spec & Citation Pills. Markdown authors these as bare <a class="go-spec-pill">,
-   and go-tour.ts rebuilds them with icons, so the chip recipe (the 28px
-   .ui-chip: wash, edge, hover, press, hit area) is written here by token. */
+/* Spec & Citation Pills. Markdown authors these as bare <a class="go-spec-pill">
+   and go-tour.ts rebuilds them with icons; controls.css gives the class the
+   28px .ui-chip recipe, so only the icons are placed here. */
 .go-spec-row {
   display: flex;
   align-items: center;
@@ -336,42 +326,7 @@
   flex-wrap: wrap;
 }
 
-.go-spec-pill {
-  --ui-move: var(--dur-spring-pop) var(--ease-spring-pop);
-  position: relative;
-  isolation: isolate;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--cap-gap-sm);
-  block-size: var(--cap-28);
-  padding-inline: var(--cap-px-28);
-  border: 1px solid var(--edge-soft);
-  border-radius: var(--r-pill);
-  background-color: var(--wash);
-  background-clip: padding-box;
-  color: var(--muted);
-  font-size: var(--text-ui-sm);
-  font-weight: 450;
-  line-height: 1;
-  letter-spacing: -0.006em;
-  white-space: nowrap;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    color var(--t-color),
-    background-color var(--t-color),
-    border-color var(--t-color),
-    transform var(--ui-move);
-}
-
-/* 28 is below the touch minimum; the hit area is not. */
-.go-spec-pill::before {
-  content: "";
-  position: absolute;
-  inset: calc((var(--cap-28) - var(--hit)) / 2) calc(var(--step-1) * -1);
-  border-radius: var(--r-pill);
-}
-
+/* the icons sit a step quieter than the label and follow it on hover */
 .go-spec-pill .ui-icon {
   color: var(--ghost);
   transition:
@@ -379,40 +334,13 @@
     translate var(--dur-nudge) var(--ease-enter);
 }
 
-.go-spec-pill:focus-visible {
-  color: var(--ink);
-  background-color: var(--wash-press);
-  border-color: var(--edge);
-}
-
-.go-spec-pill:focus-visible .ui-icon {
-  color: var(--ink);
-}
-
 @media (hover: hover) and (pointer: fine) {
-  .go-spec-pill:hover {
-    color: var(--ink);
-    background-color: var(--wash-press);
-    border-color: var(--edge);
-  }
-
   .go-spec-pill:hover .ui-icon {
     color: var(--ink);
   }
 }
 
-.go-spec-pill:active {
-  --ui-move: var(--dur-press) var(--ease-snap);
-  color: var(--ink);
-  background-color: var(--link-wash-press);
-  border-color: var(--edge);
-}
-
 @media (prefers-reduced-motion: no-preference) {
-  .go-spec-pill:active {
-    transform: scale(var(--press-scale));
-  }
-
   /* the arrow leaves along its own vector, as .ui-link's does */
   .go-spec-pill:hover .go-spec-ext {
     translate: 1px -1px;

@@ -5,7 +5,6 @@
   type="button"
   class="theme-toggle ui-cap ui-cap--quiet ui-cap--40 ui-cap--icon"
   aria-label="Switch theme"
-  aria-pressed="false"
 >
   <svg
     class="tt-icon"
@@ -33,14 +32,6 @@
 </button>
 
 <style>
-  /* 40 is below the touch minimum; the hit area is not. Sideways it stops
-     at the dock's 4px gap, so neighbours' areas meet and never overlap. */
-  .theme-toggle::before {
-    content: "";
-    position: absolute;
-    inset: calc((var(--cap-h) - var(--hit)) / 2);
-  }
-
   /* muted at rest, ink when hovered or pressed */
   .theme-toggle.ui-cap--quiet {
     color: var(--muted);

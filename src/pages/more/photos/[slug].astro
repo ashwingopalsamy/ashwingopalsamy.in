@@ -179,14 +179,6 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
     gap: var(--step-2);
   }
 
-  /* 40 to look at, 44 to hit */
-  .photo-control::before {
-    content: "";
-    position: absolute;
-    inset: calc((var(--cap-h) - var(--hit)) / 2);
-    border-radius: 50%;
-  }
-
   .photo-detail-figure {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;

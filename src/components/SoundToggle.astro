@@ -48,14 +48,6 @@ import { SOUND_DEFAULT } from "../scripts/sound";
     --wave-stagger: 40ms;
   }
 
-  /* 40 is below the touch minimum; the hit area is not. Sideways it stops
-     at the dock's 4px gap, so neighbours' areas meet and never overlap. */
-  .sound-toggle::before {
-    content: "";
-    position: absolute;
-    inset: calc((var(--cap-h) - var(--hit)) / 2);
-  }
-
   /* muted at rest, ink while sound is on, hovered or pressed */
   .sound-toggle.ui-cap--quiet {
     color: var(--muted);

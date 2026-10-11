@@ -54,6 +54,15 @@ function liveSibling(control: HTMLElement): HTMLElement {
   return live;
 }
 
+/* The control's state, mirrored onto a capsule nested inside it (a button-like
+   row whose capsule is the affordance): the capsule's cells read data-state
+   from their own parent. */
+function setState(control: HTMLElement, state: "idle" | "done" | "error") {
+  control.dataset.state = state;
+  const nested = control.querySelector<HTMLElement>("[data-state]:not([data-copy])");
+  if (nested) nested.dataset.state = state;
+}
+
 /** Copy `value` and confirm on `control` itself (data-state + live sibling). */
 export async function copyControl(
   control: HTMLElement,
@@ -69,7 +78,7 @@ export async function copyControl(
 
   const ok = await copyToClipboard(value, signal);
   if (signal.aborted || !control.isConnected) return ok;
-  control.dataset.state = ok ? "done" : "error";
+  setState(control, ok ? "done" : "error");
   live.textContent = ok ? "Copied" : "Couldn’t copy";
   if (ok) playAccent("copy");
 
@@ -82,7 +91,7 @@ export async function copyControl(
   }
   holds.set(control, window.setTimeout(() => {
     holds.delete(control);
-    control.dataset.state = "idle";
+    setState(control, "idle");
     live.textContent = "";
   }, tokenMs("--dur-hold", 1600)));
   return ok;
