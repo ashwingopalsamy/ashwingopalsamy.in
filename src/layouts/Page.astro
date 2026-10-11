@@ -8,6 +8,7 @@ import DevTuner from "../components/DevTuner.astro";
 // retuned duration and easing tokens win over the legacy values.
 import "../styles/geometry.css";
 import "../styles/global.css";
+import "../styles/controls.css";
 import "../styles/motion.css";
 import { site } from "../data/home";
 import { buildMeta } from "../lib/build";
@@ -369,6 +370,7 @@ const documentTitle = isHome
       import "../scripts/floating-toc";
       import "../scripts/grid-overlay";
       import "../scripts/page-scrollbar";
+      import "../scripts/pointer-fx";
 
       /* Nothing below affects the first interaction: the devtools console
          art, the telemetry queue, the web-vitals observers and the WebMCP

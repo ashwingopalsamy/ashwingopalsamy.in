@@ -136,8 +136,35 @@
 
   /* press physics — one scale for the whole site so every control
      answers with the same weight */
-  --press-scale: 0.978;
+  --press-scale: 0.96;        /* every control 48px and under */
   --press-scale-inline: 0.99; /* wide targets need less, or they wobble */
+
+  /* ---------------------------------------------------------------- */
+  /*  controls (controls.css)                                         */
+  /* ---------------------------------------------------------------- */
+
+  /* Each spring's own settle time, from the physics noted beside it
+     above. A linear() spring played over any other duration is a
+     different spring, so the controls pair each curve with its own. */
+  --dur-spring-snap: 247ms;
+  --dur-spring-soft: 189ms;
+  --dur-spring-pop: 313ms;
+
+  /* A hover trail is not an exit, so it may outlast --dur-tint: a row's
+     wash arrives in 110ms and leaves in 220ms. */
+  --dur-afterglow: 220ms;
+  --dur-dwell: 400ms;   /* hover before a cold tooltip appears */
+  --dur-hold: 1.6s;     /* how long Copied / Retry holds before reverting */
+  --dur-toast: 4s;      /* undoable toast lifetime; its ring drains over it */
+
+  /* Magnetic primary: the capsule drifts this far toward the pointer, and
+     its label this much further. Plain lengths: pointer-fx.ts reads them. */
+  --magnet-max: 3px;
+  --magnet-label: 1.5px;
+
+  /* Pointer-led specular on glass: the radius of its radial gradient
+     (tiles, pager cards). Capsules derive theirs from their height. */
+  --spot-size: calc(var(--step) * 50);
 }
 
 /* ------------------------------------------------------------------

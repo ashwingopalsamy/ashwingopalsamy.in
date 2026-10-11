@@ -61,14 +61,14 @@ function initCodeCopy(signal: AbortSignal) {
           copyBtn.innerHTML = DONE_ICON;
           if (isSoundEnabled()) playAccent("copy");
           trackCopy("code");
-          showToast({ message: "Copied to clipboard", anchor: copyBtn, duration: 1600 });
+          showToast({ message: "Copied to clipboard", duration: 1600 });
           window.clearTimeout(resetTimer);
           resetTimer = window.setTimeout(() => {
             copyBtn.classList.remove("is-done");
             copyBtn.innerHTML = COPY_ICON;
           }, 1400);
         } else {
-          showToast({ message: "Copy failed", anchor: copyBtn, duration: 2600 });
+          showToast({ message: "Copy failed", tone: "err", duration: 2600 });
         }
       },
       { signal },
@@ -103,7 +103,7 @@ function initHeadingAnchors(signal: AbortSignal) {
         if (ok) {
           if (isSoundEnabled()) playAccent("copy");
           trackCopy("heading_anchor");
-          showToast({ message: "Section link copied", duration: 1600 });
+          showToast({ message: "Link copied", duration: 1600 });
         }
       },
       { signal },
@@ -129,9 +129,9 @@ function initCopyLink(signal: AbortSignal) {
         if (ok) {
           if (isSoundEnabled()) playAccent("copy");
           trackCopy("page_link");
-          showToast({ message: "Link copied", anchor: btn, duration: 1600 });
+          showToast({ message: "Link copied", duration: 1600 });
         } else {
-          showToast({ message: "Copy failed", anchor: btn, duration: 2600 });
+          showToast({ message: "Copy failed", tone: "err", duration: 2600 });
         }
       },
       { signal },

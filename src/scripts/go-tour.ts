@@ -1082,7 +1082,7 @@ function enhanceSnippet(sectionEl: HTMLElement, data: TourModuleData) {
       copyBtn.classList.add("is-done");
       copyBtn.innerHTML = CHECK_ICON;
       if (isSoundEnabled()) playAccent("copy");
-      showToast({ message: "Copied to clipboard", anchor: copyBtn, duration: 1600 });
+      showToast({ message: "Copied to clipboard", duration: 1600 });
       schedule(() => {
         copyBtn.classList.remove("is-done");
         copyBtn.innerHTML = COPY_ICON;

@@ -64,6 +64,63 @@
   --media-monochrome-filter: grayscale(1);
   --cx-label-warning: oklch(0.52 0.14 55);
 
+  /* Controls (controls.css). Glass is a recipe of layers; only the
+     overlays add a backdrop blur. --glass-fill is opaque on purpose: the
+     gradient rim is a border-box layer under a padding-box fill, which only
+     works when the fill hides it. Translucent fills (wash, ok, err, chips)
+     use a solid border-color instead. The dark theme and its no-JS mirror
+     restate every one of these. */
+  --glass-fill: color-mix(in oklch, var(--ink) 2.5%, var(--canvas));
+  --glass-fill-hover: color-mix(in oklch, var(--ink) 4%, var(--canvas));
+  --glass-fill-press: color-mix(in oklch, var(--ink) 7%, var(--canvas));
+  --glass-sheen: linear-gradient(180deg, color-mix(in oklch, var(--color-1) 90%, transparent), transparent 70%);
+  --glass-rim: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--ink) 7%, transparent),
+    color-mix(in oklch, var(--ink) 11%, transparent) 50%,
+    color-mix(in oklch, var(--ink) 21%, transparent)
+  );
+  --glass-rim-hover: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--ink) 12%, transparent),
+    color-mix(in oklch, var(--ink) 18%, transparent) 50%,
+    color-mix(in oklch, var(--ink) 32%, transparent)
+  );
+  --glass-spec: inset 0 1px 0 color-mix(in oklch, var(--color-1) 90%, transparent);
+  --lift-0: 0 1px 2px color-mix(in oklch, var(--ink) 6%, transparent);
+  --lift-1:
+    0 1px 2px color-mix(in oklch, var(--ink) 7%, transparent),
+    0 10px 24px -12px color-mix(in oklch, var(--ink) 24%, transparent);
+  --lift-2:
+    0 2px 6px color-mix(in oklch, var(--ink) 6%, transparent),
+    0 22px 44px -18px color-mix(in oklch, var(--ink) 32%, transparent);
+  --ink-fill: linear-gradient(180deg, oklch(0.33 0.004 240), oklch(0.2 0.003 240));
+  --ink-fill-press: linear-gradient(180deg, oklch(0.27 0.004 240), oklch(0.16 0.003 240));
+  --ink-edge:
+    inset 0 1px 0 color-mix(in oklch, var(--color-1) 16%, transparent),
+    inset 0 -1px 0 color-mix(in oklch, oklch(0 0 0) 25%, transparent);
+  --ink-bloom: 0 10px 24px -10px color-mix(in oklch, var(--ink) 60%, transparent);
+  --wash: color-mix(in oklch, var(--ink) 4.5%, transparent);
+  --wash-press: color-mix(in oklch, var(--ink) 8%, transparent);
+  --edge-soft: color-mix(in oklch, var(--ink) 8%, transparent);
+  --edge: color-mix(in oklch, var(--ink) 11%, transparent);
+  --edge-strong: color-mix(in oklch, var(--ink) 20%, transparent);
+  --spot: color-mix(in oklch, var(--color-1) 95%, transparent);
+  --ok-ink: oklch(0.47 0.12 155);
+  --ok-wash: color-mix(in oklch, var(--acc-green) 13%, transparent);
+  --ok-edge: color-mix(in oklch, var(--acc-green) 42%, transparent);
+  --err-ink: oklch(0.5 0.18 25);
+  --err-wash: color-mix(in oklch, var(--acc-red) 11%, transparent);
+  --err-edge: color-mix(in oklch, var(--acc-red) 38%, transparent);
+  /* the toast is inverted in both themes */
+  --toast-bg: color-mix(in oklch, var(--color-9) 90%, transparent);
+  --toast-ink: var(--color-1);
+  /* light needs the heavier link: body grey (--muted, L .30) sits close
+     to ink (L .20) */
+  --link-weight: 560;
+  --link-wash: color-mix(in oklch, var(--ink) 9%, transparent);
+  --link-wash-press: color-mix(in oklch, var(--ink) 14%, transparent);
+
   /* ------------------------------------------------------------------ */
   /*  typography                                                         */
   /* ------------------------------------------------------------------ */
@@ -268,6 +325,52 @@
   --media-monochrome-filter: grayscale(1);
   --cx-label-warning: oklch(0.82 0.12 65);
 
+  --glass-fill: color-mix(in oklch, var(--ink) 5%, var(--canvas));
+  --glass-fill-hover: color-mix(in oklch, var(--ink) 8%, var(--canvas));
+  --glass-fill-press: color-mix(in oklch, var(--ink) 11%, var(--canvas));
+  --glass-sheen: linear-gradient(180deg, color-mix(in oklch, var(--ink) 5%, transparent), transparent 62%);
+  --glass-rim: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--ink) 26%, transparent),
+    color-mix(in oklch, var(--ink) 9%, transparent) 42%,
+    color-mix(in oklch, var(--ink) 12%, transparent)
+  );
+  --glass-rim-hover: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--ink) 42%, transparent),
+    color-mix(in oklch, var(--ink) 15%, transparent) 42%,
+    color-mix(in oklch, var(--ink) 19%, transparent)
+  );
+  --glass-spec: inset 0 1px 0 color-mix(in oklch, var(--ink) 11%, transparent);
+  --lift-0: 0 1px 2px color-mix(in oklch, oklch(0 0 0) 30%, transparent);
+  --lift-1:
+    0 1px 2px color-mix(in oklch, oklch(0 0 0) 35%, transparent),
+    0 10px 24px -10px color-mix(in oklch, oklch(0 0 0) 75%, transparent);
+  --lift-2:
+    0 2px 6px color-mix(in oklch, oklch(0 0 0) 30%, transparent),
+    0 22px 44px -16px color-mix(in oklch, oklch(0 0 0) 85%, transparent);
+  --ink-fill: linear-gradient(180deg, oklch(1 0 0), oklch(0.925 0.002 240));
+  --ink-fill-press: linear-gradient(180deg, oklch(0.9 0.002 240), oklch(0.85 0.003 240));
+  --ink-edge: inset 0 -1px 0 color-mix(in oklch, oklch(0 0 0) 12%, transparent);
+  --ink-bloom: 0 10px 30px -10px color-mix(in oklch, var(--color-1) 34%, transparent);
+  --wash: color-mix(in oklch, var(--ink) 6%, transparent);
+  --wash-press: color-mix(in oklch, var(--ink) 10%, transparent);
+  --edge-soft: color-mix(in oklch, var(--ink) 8%, transparent);
+  --edge: color-mix(in oklch, var(--ink) 13%, transparent);
+  --edge-strong: color-mix(in oklch, var(--ink) 24%, transparent);
+  --spot: color-mix(in oklch, var(--ink) 15%, transparent);
+  --ok-ink: oklch(0.83 0.13 155);
+  --ok-wash: color-mix(in oklch, var(--acc-green) 17%, transparent);
+  --ok-edge: color-mix(in oklch, var(--acc-green) 38%, transparent);
+  --err-ink: oklch(0.81 0.12 25);
+  --err-wash: color-mix(in oklch, var(--acc-red) 17%, transparent);
+  --err-edge: color-mix(in oklch, var(--acc-red) 38%, transparent);
+  --toast-bg: color-mix(in oklch, oklch(0.97 0.002 240) 90%, transparent);
+  --toast-ink: var(--color-9);
+  --link-weight: 500;
+  --link-wash: color-mix(in oklch, var(--ink) 9%, transparent);
+  --link-wash-press: color-mix(in oklch, var(--ink) 14%, transparent);
+
   color-scheme: dark;
 }
 
@@ -338,6 +441,52 @@
     --loc-map-opacity: 0.94;
     --media-monochrome-filter: grayscale(1);
     --cx-label-warning: oklch(0.82 0.12 65);
+
+    --glass-fill: color-mix(in oklch, var(--ink) 5%, var(--canvas));
+    --glass-fill-hover: color-mix(in oklch, var(--ink) 8%, var(--canvas));
+    --glass-fill-press: color-mix(in oklch, var(--ink) 11%, var(--canvas));
+    --glass-sheen: linear-gradient(180deg, color-mix(in oklch, var(--ink) 5%, transparent), transparent 62%);
+    --glass-rim: linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--ink) 26%, transparent),
+      color-mix(in oklch, var(--ink) 9%, transparent) 42%,
+      color-mix(in oklch, var(--ink) 12%, transparent)
+    );
+    --glass-rim-hover: linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--ink) 42%, transparent),
+      color-mix(in oklch, var(--ink) 15%, transparent) 42%,
+      color-mix(in oklch, var(--ink) 19%, transparent)
+    );
+    --glass-spec: inset 0 1px 0 color-mix(in oklch, var(--ink) 11%, transparent);
+    --lift-0: 0 1px 2px color-mix(in oklch, oklch(0 0 0) 30%, transparent);
+    --lift-1:
+      0 1px 2px color-mix(in oklch, oklch(0 0 0) 35%, transparent),
+      0 10px 24px -10px color-mix(in oklch, oklch(0 0 0) 75%, transparent);
+    --lift-2:
+      0 2px 6px color-mix(in oklch, oklch(0 0 0) 30%, transparent),
+      0 22px 44px -16px color-mix(in oklch, oklch(0 0 0) 85%, transparent);
+    --ink-fill: linear-gradient(180deg, oklch(1 0 0), oklch(0.925 0.002 240));
+    --ink-fill-press: linear-gradient(180deg, oklch(0.9 0.002 240), oklch(0.85 0.003 240));
+    --ink-edge: inset 0 -1px 0 color-mix(in oklch, oklch(0 0 0) 12%, transparent);
+    --ink-bloom: 0 10px 30px -10px color-mix(in oklch, var(--color-1) 34%, transparent);
+    --wash: color-mix(in oklch, var(--ink) 6%, transparent);
+    --wash-press: color-mix(in oklch, var(--ink) 10%, transparent);
+    --edge-soft: color-mix(in oklch, var(--ink) 8%, transparent);
+    --edge: color-mix(in oklch, var(--ink) 13%, transparent);
+    --edge-strong: color-mix(in oklch, var(--ink) 24%, transparent);
+    --spot: color-mix(in oklch, var(--ink) 15%, transparent);
+    --ok-ink: oklch(0.83 0.13 155);
+    --ok-wash: color-mix(in oklch, var(--acc-green) 17%, transparent);
+    --ok-edge: color-mix(in oklch, var(--acc-green) 38%, transparent);
+    --err-ink: oklch(0.81 0.12 25);
+    --err-wash: color-mix(in oklch, var(--acc-red) 17%, transparent);
+    --err-edge: color-mix(in oklch, var(--acc-red) 38%, transparent);
+    --toast-bg: color-mix(in oklch, oklch(0.97 0.002 240) 90%, transparent);
+    --toast-ink: var(--color-9);
+    --link-weight: 500;
+    --link-wash: color-mix(in oklch, var(--ink) 9%, transparent);
+    --link-wash-press: color-mix(in oklch, var(--ink) 14%, transparent);
 
     color-scheme: dark;
   }

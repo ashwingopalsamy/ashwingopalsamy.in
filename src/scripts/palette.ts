@@ -1,6 +1,6 @@
 import { isSoundEnabled, playAccent, setSoundEnabled } from "./sound";
 import { showToast } from "./toast";
-import { copyToClipboard } from "./clipboard";
+import { copyWithToast } from "./clipboard";
 import { pageSignal } from "./lifecycle";
 import { calculate, convertQuery, formatCalculation, generatePassword, isCalculationQuery, randomChoice, roll, transformText } from "./palette-utils";
 import { hydratePaletteIcons, iconMarkup, paletteAiIcon, paletteContentIcon, paletteFallbackIcon, palettePageIcon, paletteRouteIcon, profileIconKey, type PaletteIconKey } from "./palette-icons";
@@ -281,12 +281,22 @@ function isPinned(id: string): boolean {
 function togglePin(id: string) {
   if (isPinned(id)) {
     storedState.pins = storedState.pins.filter((value) => value !== id);
-    showToast({ message: "Removed from pinned commands", duration: 1600 });
+    showToast({ message: "Unpinned", duration: 1600 });
   } else if (storedState.pins.length < PIN_CAP) {
     storedState.pins = [id, ...storedState.pins];
-    showToast({ message: "Pinned command", duration: 1600 });
+    showToast({
+      message: "Pinned",
+      action: {
+        kind: "undo",
+        run: () => {
+          storedState.pins = storedState.pins.filter((value) => value !== id);
+          saveState();
+          if (open && mode === "search") void refresh(els().input?.value ?? "");
+        },
+      },
+    });
   } else {
-    showToast({ message: "You can pin up to eight commands", duration: 1800 });
+    showToast({ message: "Eight pins max", tone: "err", duration: 1800 });
   }
   saveState();
 }
@@ -362,15 +372,8 @@ function formatNativeTime(zone: string): string {
 
 async function copyText(value: string, message = "Copied") {
   const signal = pageSignal();
-  const copied = await copyToClipboard(value, signal);
-  if (signal.aborted) return copied;
-  if (copied) {
-    playAccent("copy");
-    showToast({ message, duration: 1600 });
-    trackCopy("palette", message);
-  } else {
-    showToast({ message: "Copy failed", duration: 2200 });
-  }
+  const copied = await copyWithToast(value, message, signal);
+  if (copied && !signal.aborted) trackCopy("palette", message);
   return copied;
 }
 
@@ -763,7 +766,7 @@ async function copyRemoteText(href: string, message: string) {
     if (signal.aborted) return;
     await copyText(text, message);
   } catch {
-    if (!signal.aborted) showToast({ message: "That file could not be read", duration: 2200 });
+    if (!signal.aborted) showToast({ message: "That file could not be read", tone: "err", duration: 2200 });
   }
 }
 
@@ -784,7 +787,7 @@ function staticItems(value: PaletteManifest | null): Item[] {
     createItem({ id: "action:random-note", kind: "action", group: "Quick actions", label: "Random note", subtitle: "Open a note chosen from the library", icon: "random", keywords: ["random", "note", "surprise", "library"], action: () => randomNote(value) }),
     createItem({ id: "fun:coin", kind: "fun", group: "Surprises", label: "Flip a coin", subtitle: "A local random result", icon: "coin", keywords: ["coin", "random"], action: () => { showToast({ message: roll(2) === 1 ? "Heads" : "Tails", duration: 1600 }); } }),
     createItem({ id: "fun:dice", kind: "fun", group: "Surprises", label: "Roll a die", subtitle: "Roll d6, d20, or any dN", icon: "dice", keywords: ["dice", "random", "roll"], action: () => { showToast({ message: `You rolled ${roll(6)}`, duration: 1600 }); } }),
-    createItem({ id: "fun:quote", kind: "fun", group: "Surprises", label: "Copy a random quote", subtitle: "A line from the collection", icon: "quote", keywords: ["quote", "fortune", "inspire"], action: () => { const quote = randomChoice(value?.quotes ?? []); if (quote) void copyText(`“${quote.text}”\n - ${quote.author}`, "Quote copied"); else showToast({ message: "No quotes available", duration: 1800 }); } }),
+    createItem({ id: "fun:quote", kind: "fun", group: "Surprises", label: "Copy a random quote", subtitle: "A line from the collection", icon: "quote", keywords: ["quote", "fortune", "inspire"], action: () => { const quote = randomChoice(value?.quotes ?? []); if (quote) void copyText(`“${quote.text}”\n - ${quote.author}`, "Quote copied"); else showToast({ message: "No quotes available", tone: "err", duration: 1800 }); } }),
     createItem({ id: "fun:surprise", kind: "fun", group: "Surprises", label: "Surprise me", subtitle: "Open something unexpected", icon: "surprise", keywords: ["random", "surprise", "fun"], action: () => surprise(value) }),
     createItem({ id: "fun:uuid", kind: "utility", group: "Utilities", label: "Generate UUID", subtitle: "A local UUID v4", icon: "hash", keywords: ["uuid", "id", "random"], action: () => { const value = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`; void copyText(value, "UUID copied"); } }),
     createItem({ id: "fun:password", kind: "utility", group: "Utilities", label: "Generate password", subtitle: "A local 20-character password", icon: "password", keywords: ["password", "secret", "random"], action: () => void copyText(generatePassword(), "Password copied") }),
@@ -795,14 +798,14 @@ function randomNote(value: PaletteManifest | null) {
   const notes = (value?.content ?? []).filter((entry) => entry.kind === "note");
   const note = randomChoice(notes);
   if (note) navigate(note.href);
-  else showToast({ message: "No notes available yet", duration: 1800 });
+  else showToast({ message: "No notes available yet", tone: "err", duration: 1800 });
 }
 
 function surprise(value: PaletteManifest | null) {
   const choices = [...(value?.content ?? [])].filter((entry) => entry.kind !== "tag");
   const choice = randomChoice(choices);
   if (choice) navigate(choice.href);
-  else showToast({ message: "The site is still gathering surprises", duration: 1800 });
+  else showToast({ message: "The site is still gathering surprises", tone: "err", duration: 1800 });
 }
 
 function applyRecipe(query: string) {
@@ -859,7 +862,7 @@ function exploreItems(value: PaletteManifest | null, loading = false): Item[] {
 }
 
 function unavailableItems(category: BrowseCategory): Item[] {
-  return [createItem({ id: `browse:${category.id}:unavailable`, kind: "action", group: category.label, section: category.label, label: "Content is unavailable", subtitle: "Try again when the site manifest is reachable", icon: "alert", keywords: category.keywords, closeOnRun: false, trackRecent: false, action: () => showToast({ message: "Site content is unavailable right now", duration: 1800 }) })];
+  return [createItem({ id: `browse:${category.id}:unavailable`, kind: "action", group: category.label, section: category.label, label: "Content is unavailable", subtitle: "Try again when the site manifest is reachable", icon: "alert", keywords: category.keywords, closeOnRun: false, trackRecent: false, action: () => showToast({ message: "Site content is unavailable right now", tone: "err", duration: 1800 }) })];
 }
 
 function categoryItems(categoryId: string, value: PaletteManifest | null): Item[] {

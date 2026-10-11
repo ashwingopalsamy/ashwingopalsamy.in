@@ -823,7 +823,7 @@ const pickIndex = quoteIndexOfTheDayServer();
           window.clearTimeout(copiedTimer);
           copiedTimer = window.setTimeout(() => btn?.classList.remove("copied"), 1200);
         } else {
-          showToast({ message: "Couldn’t copy quote", duration: 2600 });
+          showToast({ message: "Couldn’t copy quote", tone: "err", duration: 2600 });
         }
       }, { signal });
 
