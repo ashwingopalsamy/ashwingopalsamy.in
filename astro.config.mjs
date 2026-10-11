@@ -48,13 +48,9 @@ export default defineConfig({
   },
   prefetch: {
     // Astro owns hover prefetch; touch intent uses the same prefetch API.
-    // Every same-origin link opts in; Chromium prerenders it (clientPrerender)
-    // so the cross-document view transition activates an already-rendered page.
+    // Every same-origin link opts in.
     prefetchAll: true,
     defaultStrategy: "hover",
-  },
-  experimental: {
-    clientPrerender: true,
   },
   markdown: {
     // Satteri (Astro 7's Rust markdown engine) extended with the notes-engine

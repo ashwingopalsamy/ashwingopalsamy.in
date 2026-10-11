@@ -153,22 +153,10 @@
    viewport. The chrome keeps its existing leaf names.
    ------------------------------------------------------------------ */
 
-/* Same-origin navigations are full document loads; the browser runs the
-   transition between them (Chrome 126+, Safari 18.2+). Reduced motion opts
-   out entirely: the new page simply appears. */
-@media (prefers-reduced-motion: no-preference) {
-  @view-transition {
-    navigation: auto;
-  }
-}
-
-/* Set by the head script while a speculatively prerendered page waits for
-   activation, so entrances play when it is shown rather than unseen. */
-:root[data-prerendering] *,
-:root[data-prerendering] *::before,
-:root[data-prerendering] *::after {
-  animation-play-state: paused !important;
-}
+/* Same-origin navigations are same-document view transitions started by the
+   router (document.startViewTransition), so there is no @view-transition
+   opt-in here. Reduced motion skips the transition in the before-swap
+   handler: the new page simply appears. */
 
 /* The pseudo tree must never eat clicks. */
 ::view-transition {
@@ -230,8 +218,8 @@
 
 /* Back navigation reverses the axis, so the site has a sense of
    direction rather than one generic transition in both directions.
-   The head script sets data-route-dir on pagereveal. */
-:root[data-route-dir="back"] {
+   The router names the direction on the root (data-astro-transition). */
+:root[data-astro-transition="back"] {
   --route-dir: -1;
 }
 
@@ -475,10 +463,11 @@
   animation: photo-fade-in var(--dur-shift) var(--ease-enter) both;
 }
 
-:root[data-route-fallback] .column-body.photo-page > main[data-route-content] {
+:root[data-astro-transition-fallback] .column-body.photo-page > main[data-route-content] {
   opacity: 1;
   transform: none;
   transition: none;
+  animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
