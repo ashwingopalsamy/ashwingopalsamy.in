@@ -1,22 +1,56 @@
 ---
+/**
+ * Tag chips (controls.css `.ui-chip`). A tag with a page links to it; one
+ * without is the same chip as a label, with no pointer behaviour. `active`
+ * is the tag currently filtering: selected, with a close icon, and pressing
+ * it clears the filter.
+ */
+import Icon from "./Icon.astro";
 import { isLinkedTag, tagHref } from "../lib/tags";
 
 interface Props {
   tags: string[];
   linked: Set<string>;
+  label?: string;
+  active?: string;
+  clearHref?: string;
 }
 
-const { tags, linked } = Astro.props;
+const { tags, linked, label = "Tags", active, clearHref = "/library/tags/" } = Astro.props;
 ---
 
 {tags.length > 0 && (
-  <span class="row-tags" aria-label="Tags">
-    {tags.map((tag, index) => (
-      isLinkedTag(tag, linked)
-        ? <a class:list={["row-tag", { "row-tag-secondary": index > 0, "row-tag-extra": index > 1 }]} href={tagHref(tag)}>#{tag}</a>
-        : <span class:list={["row-tag", { "row-tag-secondary": index > 0, "row-tag-extra": index > 1 }]}>#{tag}</span>
+  <span class="row-tags" role="group" aria-label={label}>
+    {tags.map((tag) => (
+      tag === active ? (
+        <a class="ui-chip ui-cap--trail" href={clearHref} aria-pressed="true" aria-label={`Remove filter #${tag}`}>
+          <span class="ui-cap__label"><span class="ui-chip__hash">#</span>{tag}</span>
+          <Icon name="close" size={12} strokeWidth={2.2} />
+        </a>
+      ) : isLinkedTag(tag, linked) ? (
+        <a class="ui-chip" href={tagHref(tag)}>
+          <span class="ui-cap__label"><span class="ui-chip__hash">#</span>{tag}</span>
+        </a>
+      ) : (
+        <span class="ui-chip row-tag-label">
+          <span class="ui-cap__label"><span class="ui-chip__hash">#</span>{tag}</span>
+        </span>
+      )
     ))}
-    {tags.length > 1 && <span class="row-tag-more row-tag-more-mobile" aria-label={`${tags.length - 1} more tags`}>+{tags.length - 1}</span>}
-    {tags.length > 2 && <span class="row-tag-more row-tag-more-desktop" aria-label={`${tags.length - 2} more tags`}>+{tags.length - 2}</span>}
   </span>
 )}
+
+<style>
+  .row-tag-label {
+    pointer-events: none;
+  }
+
+  .row-tags {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--step-2);
+    max-inline-size: 100%;
+    min-inline-size: 0;
+  }
+</style>

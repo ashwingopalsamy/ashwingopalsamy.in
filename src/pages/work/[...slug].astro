@@ -6,6 +6,7 @@ import { ogPath } from "../../lib/og-url";
 import { absUrl, slashPath } from "../../lib/urls";
 import Icon from "../../components/Icon.astro";
 import DetailHeader from "../../components/DetailHeader.astro";
+import RowTags from "../../components/RowTags.astro";
 import "../../styles/prose.css";
 
 export async function getStaticPaths() {
@@ -31,22 +32,19 @@ const url = slashPath(`/work/${entry.data.slug}`);
   ]}
 >
   <article>
-    <DetailHeader title={title} lede={description || note}>
+    <DetailHeader title={title} lede={description || note} back={{ href: "/work/", label: "Work" }}>
       <Fragment slot="meta">
         <time datetime={new Date(date).toISOString()}>{new Date(date).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" })}</time>
-        {tech.length > 0 && (
-          <>
-            <span class="detail-sep" aria-hidden="true">·</span>
-            <ul class="detail-tag-list">
-              {tech.map((t) => <li><span class="detail-tag">#{t}</span></li>)}
-            </ul>
-          </>
-        )}
+        <RowTags tags={tech} linked={new Set<string>()} label="Built with" />
       </Fragment>
       {github && (
         <Fragment slot="action">
-          <a href={github} target="_blank" rel="noopener noreferrer" aria-label="View on GitHub" title="View on GitHub">
-            <Icon name="arrow-up-right" size={14} />
+          <a class="ui-cap ui-cap--glass ui-cap--32 ui-cap--trail" data-fx="spot" href={github} target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+            <span class="ui-cap__label">GitHub</span>
+            <span class="ui-arw ui-arw--ext">
+              <Icon name="arrow-up-right" size={14} strokeWidth={2} />
+              <Icon name="arrow-up-right" size={14} strokeWidth={2} />
+            </span>
           </a>
         </Fragment>
       )}

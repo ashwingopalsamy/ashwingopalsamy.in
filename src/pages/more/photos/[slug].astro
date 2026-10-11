@@ -64,6 +64,13 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
   robots={robots}
 >
   <article class="photo-detail" data-photo-detail={photo.id}>
+    <a class="ui-cap ui-cap--quiet ui-cap--32 ui-cap--lead photo-back" href="/more/photos/">
+      <span class="ui-arw ui-arw--back">
+        <Icon name="arrow-left" size={14} strokeWidth={2} />
+        <Icon name="arrow-left" size={14} strokeWidth={2} />
+      </span>
+      <span class="ui-cap__label">Photos</span>
+    </a>
     <figure class="photo-detail-figure">
       <figcaption class="photo-detail-caption" data-photo-caption>
         <div class="photo-detail-heading">
@@ -84,7 +91,8 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
       <nav class="photo-navigation" aria-label="Photo navigation">
         {previous ? (
           <a
-            class="photo-control"
+            class="ui-cap ui-cap--glass ui-cap--icon ui-cap--40 photo-control"
+            data-fx="spot"
             href={photoHref(previous.id)}
             rel="prev"
             aria-label="Previous photo"
@@ -95,16 +103,17 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
             data-photo-jpeg-src={previousSources?.jpegSrc}
             data-photo-sizes={previousSources?.sizes}
           >
-            <span aria-hidden="true"><Icon name="arrow-left" size={18} strokeWidth={1.8} /></span>
+            <span class="ui-arw ui-arw--back"><Icon name="arrow-left" /><Icon name="arrow-left" /></span>
           </a>
         ) : (
-          <button class="photo-control" type="button" disabled aria-label="No previous photo">
-            <span aria-hidden="true"><Icon name="arrow-left" size={18} strokeWidth={1.8} /></span>
+          <button class="ui-cap ui-cap--glass ui-cap--icon ui-cap--40 photo-control" type="button" disabled aria-label="No previous photo">
+            <span class="ui-arw ui-arw--back"><Icon name="arrow-left" /><Icon name="arrow-left" /></span>
           </button>
         )}
         {next ? (
           <a
-            class="photo-control"
+            class="ui-cap ui-cap--glass ui-cap--icon ui-cap--40 photo-control"
+            data-fx="spot"
             href={photoHref(next.id)}
             rel="next"
             aria-label="Next photo"
@@ -115,11 +124,11 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
             data-photo-jpeg-src={nextSources?.jpegSrc}
             data-photo-sizes={nextSources?.sizes}
           >
-            <span aria-hidden="true"><Icon name="arrow-right" size={18} strokeWidth={1.8} /></span>
+            <span class="ui-arw"><Icon name="arrow-right" /><Icon name="arrow-right" /></span>
           </a>
         ) : (
-          <button class="photo-control" type="button" disabled aria-label="No next photo">
-            <span aria-hidden="true"><Icon name="arrow-right" size={18} strokeWidth={1.8} /></span>
+          <button class="ui-cap ui-cap--glass ui-cap--icon ui-cap--40 photo-control" type="button" disabled aria-label="No next photo">
+            <span class="ui-arw"><Icon name="arrow-right" /><Icon name="arrow-right" /></span>
           </button>
         )}
       </nav>
@@ -156,69 +165,26 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
     gap: var(--step-4);
   }
 
+  .photo-back {
+    justify-self: start;
+    margin-inline-start: calc(var(--step-2) * -1);
+  }
+
   .photo-navigation {
     grid-column: 2;
     grid-row: 1;
     display: flex;
     align-items: center;
     align-self: start;
-    gap: 0;
-    padding: 2px;
-    border: 1px solid var(--rule);
-    border-radius: var(--r-pill);
-    background: var(--surface-inline-bg);
+    gap: var(--step-2);
   }
 
-  .photo-control {
-    display: grid;
-    inline-size: calc(var(--step) * 10);
-    block-size: calc(var(--step) * 10);
-    flex: 0 0 calc(var(--step) * 10);
-    place-items: center;
-    border: 0;
-    border-radius: var(--r-pill);
-    background: transparent;
-    color: var(--ink);
-    text-decoration: none;
-    transition:
-      background-color var(--dur-tint) linear,
-      color var(--dur-tint) linear;
-  }
-
-  .photo-control:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-offset);
-  }
-
-  .photo-control:disabled {
-    color: var(--faint);
-    cursor: not-allowed;
-  }
-
-  .photo-control[aria-busy="true"] {
-    position: relative;
-    cursor: progress;
-  }
-
-  .photo-control[aria-busy="true"]::after {
-    position: absolute;
-    inset: 4px;
-    border: 1px solid transparent;
-    border-block-start-color: currentColor;
-    border-radius: 50%;
-    animation: photo-control-spin var(--dur-spin) linear infinite;
+  /* 40 to look at, 44 to hit */
+  .photo-control::before {
     content: "";
-    opacity: 0.7;
-  }
-
-  .photo-control[aria-busy="true"] > span {
-    opacity: 0.45;
-  }
-
-  @keyframes photo-control-spin {
-    to {
-      transform: rotate(1turn);
-    }
+    position: absolute;
+    inset: calc((var(--cap-h) - var(--hit)) / 2);
+    border-radius: 50%;
   }
 
   .photo-detail-figure {
@@ -326,23 +292,6 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
   .photo-origin,
   .photo-detail-meta {
     overflow-wrap: anywhere;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .photo-control:not(:disabled):hover {
-      background: color-mix(in oklch, var(--surface-inline-bg), var(--ink) 6%);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .photo-control {
-      transition: none;
-    }
-
-    .photo-control[aria-busy="true"]::after {
-      animation: none;
-    }
-
   }
 
   @media (max-width: 38rem) {
