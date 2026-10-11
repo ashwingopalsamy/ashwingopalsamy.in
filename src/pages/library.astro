@@ -53,11 +53,12 @@ const shelves = libraryShelves(catalogItems);
 const itemsByKind = Object.fromEntries(
   shelves.map((shelf) => [shelf.kind, filterLibraryCatalogItems(catalogItems, shelf.kind)]),
 ) as Record<LibraryCatalogItem["kind"], LibraryCatalogItem[]>;
-const overviewCount = shelves.reduce((total, shelf) => total + shelf.items.length, 0);
+// "All" counts what the library holds, not the rows the overview shows.
+const libraryTotal = shelves.reduce((total, shelf) => total + shelf.total, 0);
 const requestedView = Astro.url.searchParams.get("view");
 const initialView = isLibraryView(requestedView) ? requestedView : "all";
 const tabs = [
-  { id: "all", label: "All", count: overviewCount },
+  { id: "all", label: "All", count: libraryTotal },
   ...shelves.map((shelf) => ({ id: shelf.kind, label: libraryLabels[shelf.kind], count: shelf.total })),
 ] as const;
 const linkedTags = await linkedTagSet();
@@ -81,177 +82,160 @@ const collectionPage = libraryCollectionPageJsonLd([
     { href: absUrl("/library/feed.json"), title: "Library JSON Feed", type: "application/feed+json" },
   ]}
 >
-  <PageIntro title="library" lede="Things I keep close, ordered by when they arrived." />
-  <div class="library-tabs" data-library role="radiogroup" aria-label="Library sections">
-    {tabs.map((tab) => (
-      <input
-        class="library-view-input"
-        type="radio"
-        name="library-view"
-        id={`library-view-${tab.id}`}
-        value={tab.id}
-        checked={tab.id === initialView}
-        aria-controls={`library-panel-${tab.id}`}
-      />
-    ))}
-    <script is:inline data-astro-rerun>
-      {`(() => {
-        const view = new URLSearchParams(location.search).get("view");
-        if (!["notes", "books", "articles", "watch"].includes(view ?? "")) return;
-        document.getElementById("library-view-" + view)?.setAttribute("checked", "");
-        const input = document.getElementById("library-view-" + view);
-        if (input) input.checked = true;
-      })();`}
-    </script>
-    <div class="library-selector">
-      <span class="library-selection" aria-hidden="true"></span>
-      {tabs.map((tab) => (
-        <label for={`library-view-${tab.id}`} class="library-tab">
-          <span class="library-tab-label">{tab.label}</span>{" "}
-          <span class="library-tab-count">{tab.count}</span>
-        </label>
-      ))}
+  <PageIntro title="library" lede="Things I keep close, newest first." />
+  <div class="library-tabs" data-library>
+    <span class="library-sentinel" aria-hidden="true"></span>
+    <div class="library-veil" aria-hidden="true"></div>
+    <div class="ui-seg library-seg">
+      <div class="ui-seg__track" role="tablist" aria-label="Library sections">
+        <span class="ui-seg__ind" aria-hidden="true"></span>
+        {tabs.map((tab) => (
+          <button
+            type="button"
+            class="ui-seg__item"
+            role="tab"
+            id={`library-tab-${tab.id}`}
+            data-value={tab.id}
+            aria-selected={tab.id === initialView ? "true" : "false"}
+            aria-controls={`library-panel-${tab.id}`}
+            tabindex={tab.id === initialView ? 0 : -1}
+          >
+            <span class="ui-cap__label">{tab.label}{" "}<span class="ui-count">{tab.count}</span></span>
+          </button>
+        ))}
+      </div>
     </div>
 
     <div class="library-panels">
-      <section id="library-panel-all" class="library-panel" aria-label="Library overview">
+      <section id="library-panel-all" class="library-panel" role="tabpanel" aria-labelledby="library-tab-all" hidden={initialView !== "all"}>
         {shelves.map((shelf) => <LibraryShelf shelf={shelf} linkedTags={linkedTags} />)}
       </section>
-      <section id="library-panel-notes" class="library-panel" aria-label="Writings" tabindex="-1"><h2 class="visually-hidden">Writings</h2><LibraryRows items={itemsByKind.notes} linkedTags={linkedTags} empty="No writings published yet." /></section>
-      <section id="library-panel-books" class="library-panel" aria-label="Books" tabindex="-1"><h2 class="visually-hidden">Books</h2><LibraryRows items={itemsByKind.books} linkedTags={linkedTags} empty="No books here yet." /></section>
-      <section id="library-panel-articles" class="library-panel" aria-label="Bookmarks" tabindex="-1"><h2 class="visually-hidden">Bookmarks</h2><LibraryRows items={itemsByKind.articles} linkedTags={linkedTags} empty="No bookmarks here yet." /></section>
-      <section id="library-panel-watch" class="library-panel" aria-label="Watched" tabindex="-1"><h2 class="visually-hidden">Watched</h2><LibraryRows items={itemsByKind.watch} linkedTags={linkedTags} empty="Nothing watched here yet." /></section>
+      {shelves.map((shelf) => (
+        <section
+          id={`library-panel-${shelf.kind}`}
+          class="library-panel"
+          role="tabpanel"
+          aria-labelledby={`library-tab-${shelf.kind}`}
+          tabindex="-1"
+          hidden={initialView !== shelf.kind}
+        >
+          <h2 class="visually-hidden">{libraryLabels[shelf.kind]}</h2>
+          <LibraryRows items={itemsByKind[shelf.kind]} linkedTags={linkedTags} />
+        </section>
+      ))}
     </div>
+    {/* Before first paint: the page is static, so ?view= is applied here, not at build. */}
+    <script is:inline data-astro-rerun>
+      (() => {
+        const view = new URLSearchParams(location.search).get("view");
+        if (!["notes", "books", "articles", "watch"].includes(view ?? "")) return;
+        const root = document.querySelector("[data-library]");
+        root?.querySelectorAll("[role=tab]").forEach((tab) => {
+          const on = tab.getAttribute("data-value") === view;
+          tab.setAttribute("aria-selected", String(on));
+          tab.tabIndex = on ? 0 : -1;
+        });
+        root?.querySelectorAll("[role=tabpanel]").forEach((panel) => {
+          panel.hidden = panel.id !== "library-panel-" + view;
+        });
+      })();
+    </script>
   </div>
 </Page>
 
 <script>
   import { isLibraryView } from "../lib/library-list";
-  import { pageSignal } from "../scripts/lifecycle";
+  import { onPageCleanup, pageSignal } from "../scripts/lifecycle";
+  import { initSegmented } from "../scripts/segmented";
   import { playAccent } from "../scripts/sound";
+
+  // the breakpoint the tabs dock from (the sticky rule below)
+  const WIDE = "(min-width: 42.5rem)";
 
   function enhanceLibrary() {
     const root = document.querySelector<HTMLElement>("[data-library]");
     if (!root || root.dataset.enhanced === "true") return;
-    root.dataset.enhanced = "true";
     const signal = pageSignal();
-    const inputs = Array.from(root.querySelectorAll<HTMLInputElement>(".library-view-input"));
-    const selector = root.querySelector<HTMLElement>(".library-selector");
-    const indicator = root.querySelector<HTMLElement>(".library-selection");
-    const panels = new Map(inputs.map((input) => [input.value, document.getElementById(`library-panel-${input.value}`)]));
-    let resizeFrame = 0;
+    const [tabs] = initSegmented(root, { signal });
+    if (!tabs) return;
+    root.dataset.enhanced = "true";
+    const seg = tabs.element;
+    const sentinel = root.querySelector<HTMLElement>(".library-sentinel");
+    const wide = matchMedia(WIDE);
+    let above = false;
     let focusFrame = 0;
-    let slot: { x: number; y: number; w: number; h: number } | null = null;
 
-    const selectedView = () => inputs.find((input) => input.checked)?.value ?? "all";
-    const setPanels = (view: string) => {
-      panels.forEach((panel, id) => panel?.toggleAttribute("hidden", id !== view));
-    };
-    const labelFor = (view: string) => {
-      const input = inputs.find((item) => item.value === view);
-      return selector && input ? selector.querySelector<HTMLLabelElement>(`label[for="${input.id}"]`) : null;
-    };
-    /* Everything the indicator needs from layout, read before any DOM write
-       so the panel swap in select() can never be followed by a forced layout. */
-    const measureIndicator = (view: string, center: boolean) => {
-      const label = indicator ? labelFor(view) : null;
-      if (!selector || !indicator || !label) return null;
-      const next = { x: label.offsetLeft, y: label.offsetTop, w: label.offsetWidth, h: label.offsetHeight };
-      let clipped = false;
-      if (center) {
-        const selectorBox = selector.getBoundingClientRect();
-        const labelBox = label.getBoundingClientRect();
-        clipped = labelBox.left < selectorBox.left || labelBox.right > selectorBox.right;
-      }
-      // where the pill is actually drawn, so a slide interrupted mid-flight restarts from there
-      const drawn = slot ? new DOMMatrixReadOnly(getComputedStyle(indicator).transform) : null;
-      return { label, next, clipped, drawn };
-    };
-    const scrollLabelIntoView = (label: HTMLElement) => {
-      label.scrollIntoView({ block: "nearest", inline: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
-    };
-    /* The pill always sits at its tab's true size and position (inline
-       width/height/transform). Moving it is a FLIP: the CSS animation starts
-       from the previous box re-expressed against the new one and eases to the
-       resting transform, so the slide is transform-only and the pill is
-       pixel-identical at rest. */
-    const placeIndicator = (measured: NonNullable<ReturnType<typeof measureIndicator>>) => {
-      if (!indicator) return;
-      const { next, drawn } = measured;
-      if (!slot || slot.x !== next.x || slot.y !== next.y || slot.w !== next.w || slot.h !== next.h) {
-        if (slot && drawn) {
-          indicator.style.setProperty("--slide-x", `${drawn.e}px`);
-          indicator.style.setProperty("--slide-y", `${drawn.f}px`);
-          indicator.style.setProperty("--slide-sx", String((slot.w * drawn.a) / next.w));
-          indicator.style.setProperty("--slide-sy", String((slot.h * drawn.d) / next.h));
-          indicator.dataset.slide = indicator.dataset.slide === "a" ? "b" : "a";
-        }
-        indicator.style.transform = `translate3d(${next.x}px, ${next.y}px, 0)`;
-        indicator.style.width = `${next.w}px`;
-        indicator.style.height = `${next.h}px`;
-        slot = next;
-      }
-      indicator.style.opacity = "1";
-      root.dataset.indicatorReady = "true";
-    };
     const replaceView = (view: string) => {
       const url = new URL(location.href);
       if (view === "all") url.searchParams.delete("view");
       else url.searchParams.set("view", view);
       history.replaceState(history.state, "", `${url.pathname}${url.search}${url.hash}`);
     };
-    const select = (view: string, updateUrl: boolean, center = false, focusPanel = false) => {
-      const input = inputs.find((item) => item.value === view);
-      if (!input) return;
-      const measured = measureIndicator(view, center);
-      if (measured?.clipped) scrollLabelIntoView(measured.label);
-      input.checked = true;
-      setPanels(view);
-      if (measured) placeIndicator(measured);
-      if (updateUrl) replaceView(view);
-      if (focusPanel) {
-        cancelAnimationFrame(focusFrame);
-        focusFrame = requestAnimationFrame(() => {
-          if (!signal.aborted) panels.get(view)?.focus({ preventScroll: true });
-        });
-      }
-    };
-    const syncLocation = () => {
-      const requested = new URL(location.href).searchParams.get("view");
-      const view = isLibraryView(requested) ? requested : "all";
-      if (requested && !isLibraryView(requested)) replaceView("all");
-      select(view, false, false);
+
+    /* A switch made below the tabs starts the new panel right under them,
+       not wherever the old panel happened to be scrolled. The line is the
+       sticky offset where the tabs dock, and the header zone on phones,
+       where nothing docks. */
+    const dock = () => {
+      const sticky = parseFloat(getComputedStyle(seg).top);
+      const line = Number.isFinite(sticky)
+        ? sticky
+        : parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+      const top = root.getBoundingClientRect().top;
+      if (top < line) window.scrollTo({ top: window.scrollY + top - line, behavior: "instant" });
     };
 
-    inputs.forEach((input) => input.addEventListener("change", () => {
-      playAccent("tab");
-      select(input.value, true, true);
-    }, { signal }));
-    root.querySelectorAll<HTMLAnchorElement>("[data-library-show-all]").forEach((link) => link.addEventListener("click", (event) => {
-      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      const view = link.dataset.libraryView;
-      if (!view || !isLibraryView(view)) return;
-      event.preventDefault();
-      playAccent("tab");
-      select(view, true, true, true);
-    }, { signal }));
-    window.addEventListener("popstate", syncLocation, { signal });
-    const queueMeasure = () => {
-      cancelAnimationFrame(resizeFrame);
-      resizeFrame = requestAnimationFrame(() => {
-        if (signal.aborted) return;
-        const measured = measureIndicator(selectedView(), false);
-        if (measured) placeIndicator(measured);
-      });
+    const syncLocation = () => {
+      const requested = new URL(location.href).searchParams.get("view");
+      if (requested && !isLibraryView(requested)) replaceView("all");
+      tabs.select(isLibraryView(requested) ? requested : "all");
     };
-    const observer = selector ? new ResizeObserver(queueMeasure) : null;
-    if (selector) observer?.observe(selector);
-    signal.addEventListener("abort", () => {
-      cancelAnimationFrame(resizeFrame);
+
+    seg.addEventListener("seg:change", (event) => {
+      playAccent("tab");
+      replaceView(event.detail.value);
+      dock();
+    }, { signal });
+
+    // the shelves' "All N" capsules hand over to their tab
+    root.addEventListener("click", (event) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = (event.target as Element | null)?.closest<HTMLAnchorElement>("[data-library-show-all]");
+      if (!link) return;
+      const view = link.dataset.libraryView ?? new URL(link.href, location.href).searchParams.get("view");
+      if (!isLibraryView(view)) return;
+      event.preventDefault();
+      tabs.select(view, { emit: true });
       cancelAnimationFrame(focusFrame);
-      observer?.disconnect();
+      focusFrame = requestAnimationFrame(() => {
+        if (!signal.aborted) document.getElementById(`library-panel-${view}`)?.focus({ preventScroll: true });
+      });
+    }, { signal });
+
+    window.addEventListener("popstate", syncLocation, { signal });
+
+    /* Chrome glass only while docked. The sentinel sits one dock offset
+       above the tabs, so it leaves the viewport exactly when they stick:
+       no scroll listener, no per-frame reads. */
+    if (sentinel) {
+      const setStuck = () => {
+        const stuck = wide.matches && above;
+        if (seg.hasAttribute("data-stuck") !== stuck) seg.toggleAttribute("data-stuck", stuck);
+      };
+      const observer = new IntersectionObserver((entries) => {
+        const entry = entries[entries.length - 1];
+        above = !entry.isIntersecting && entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0);
+        setStuck();
+      });
+      observer.observe(sentinel);
+      wide.addEventListener("change", setStuck, { signal });
+      onPageCleanup(() => observer.disconnect(), signal);
+    }
+
+    onPageCleanup(() => {
+      cancelAnimationFrame(focusFrame);
       delete root.dataset.enhanced;
-    }, { once: true });
+    }, signal);
     syncLocation();
   }
 
@@ -261,199 +245,34 @@ const collectionPage = libraryCollectionPageJsonLd([
 
 <style>
   .library-tabs {
+    /* 16px under the header chips, as on the board */
+    --library-dock: calc(var(--header-zone) + var(--step-1));
     position: relative;
   }
 
-  .library-view-input {
+  /* zero-height, one dock offset above the tabs (see the script) */
+  .library-sentinel {
     position: absolute;
+    inset-block-start: calc(var(--library-dock) * -1);
+    inset-inline-start: 0;
     inline-size: 1px;
-    block-size: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-
-  .library-selector {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: var(--step-2);
-    max-inline-size: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding-block: 2px;
-  }
-
-  .library-selector::-webkit-scrollbar {
-    display: none;
-  }
-
-  .library-selection {
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform-origin: 0 0;
-    border-radius: var(--r-pill);
-    background: var(--ink);
-    box-shadow: var(--shadow-1);
-    opacity: 0;
+    block-size: 0;
     pointer-events: none;
-    transition:
-      opacity var(--t-color),
-      background-color var(--t-color);
   }
 
-  /* Same spring as the header's nav pill, deliberately: these are the
-     site's two segmented selectors and they should feel like one control
-     wearing two hats. The spring's 2.3% overshoot on width is what gives
-     this indicator the same momentum the nav pill gets from its stretch
-     keyframe, without needing a second mechanism.
-
-     The pill rests at its tab's real size; the script writes where it was
-     (--slide-*, relative to its new box) and the slide runs from there to
-     the resting transform. Two identical keyframes under alternating names
-     let a new slide restart without a forced reflow. */
-  .library-selection[data-slide] {
-    animation-duration: var(--dur-shift);
-    animation-timing-function: var(--ease-spring-snap);
+  /* The rim and padding hang outside the rail, so the first segment's ink
+     sits on it. */
+  .library-seg {
+    display: flex;
+    inline-size: fit-content;
+    margin-inline-start: calc(var(--track-inset) * -1);
   }
 
-  .library-selection[data-slide="a"] {
-    animation-name: library-slide-a;
-  }
-
-  .library-selection[data-slide="b"] {
-    animation-name: library-slide-b;
-  }
-
-  @keyframes library-slide-a {
-    from {
-      transform: translate3d(var(--slide-x), var(--slide-y), 0) scale(var(--slide-sx), var(--slide-sy));
-    }
-  }
-
-  @keyframes library-slide-b {
-    from {
-      transform: translate3d(var(--slide-x), var(--slide-y), 0) scale(var(--slide-sx), var(--slide-sy));
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .library-selection[data-slide] {
-      animation: none;
-    }
-  }
-
-  .library-tab {
-    position: relative;
-    z-index: 1;
-    display: inline-flex;
-    flex: 0 0 auto;
-    align-items: center;
-    gap: var(--step-2);
-    min-block-size: calc(var(--step) * 9);
-    padding: var(--step-1) var(--step-3);
-    border-radius: var(--r-pill);
-    color: var(--faint);
-    font-size: var(--text-sm);
-    font-weight: var(--font-medium);
-    cursor: pointer;
-    text-decoration: none;
-    user-select: none;
-    transition: color var(--t-color), background-color var(--t-color), transform var(--dur-press) var(--ease-enter);
-  }
-
-  .library-tab-label {
-    display: inline-block;
-    line-height: 1;
-  }
-
-  .library-tab-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-inline-size: 1.25rem;
-    height: calc(var(--step) * 5);
-    padding-inline: var(--step-1);
-    border-radius: var(--r-pill);
-    background: color-mix(in oklch, var(--ink) 6%, transparent);
-    color: var(--muted);
-    font-size: var(--text-xs);
-    font-weight: var(--font-medium);
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
-    transition: background-color var(--t-color), color var(--t-color);
-  }
-
-  .library-tab:active {
-    transform: scale(0.97);
-    transition-duration: var(--dur-press);
-  }
-
-  #library-view-all:checked ~ .library-selector label[for="library-view-all"],
-  #library-view-books:checked ~ .library-selector label[for="library-view-books"],
-  #library-view-watch:checked ~ .library-selector label[for="library-view-watch"],
-  #library-view-notes:checked ~ .library-selector label[for="library-view-notes"],
-  #library-view-articles:checked ~ .library-selector label[for="library-view-articles"] {
-    color: var(--canvas);
-  }
-
-  #library-view-all:checked ~ .library-selector label[for="library-view-all"] .library-tab-count,
-  #library-view-books:checked ~ .library-selector label[for="library-view-books"] .library-tab-count,
-  #library-view-watch:checked ~ .library-selector label[for="library-view-watch"] .library-tab-count,
-  #library-view-notes:checked ~ .library-selector label[for="library-view-notes"] .library-tab-count,
-  #library-view-articles:checked ~ .library-selector label[for="library-view-articles"] .library-tab-count {
-    background: color-mix(in oklch, var(--canvas) 20%, transparent);
-    color: var(--canvas);
-  }
-
-  [data-library]:not([data-enhanced="true"]) #library-view-all:checked ~ .library-selector label[for="library-view-all"],
-  [data-library]:not([data-enhanced="true"]) #library-view-books:checked ~ .library-selector label[for="library-view-books"],
-  [data-library]:not([data-enhanced="true"]) #library-view-watch:checked ~ .library-selector label[for="library-view-watch"],
-  [data-library]:not([data-enhanced="true"]) #library-view-notes:checked ~ .library-selector label[for="library-view-notes"],
-  [data-library]:not([data-enhanced="true"]) #library-view-articles:checked ~ .library-selector label[for="library-view-articles"] {
-    background: var(--ink);
-    color: var(--canvas);
-  }
-
-  #library-view-all:focus-visible ~ .library-selector label[for="library-view-all"],
-  #library-view-books:focus-visible ~ .library-selector label[for="library-view-books"],
-  #library-view-watch:focus-visible ~ .library-selector label[for="library-view-watch"],
-  #library-view-notes:focus-visible ~ .library-selector label[for="library-view-notes"],
-  #library-view-articles:focus-visible ~ .library-selector label[for="library-view-articles"] {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-offset);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .library-tab:hover {
-      color: var(--ink);
-      background-color: color-mix(in oklch, var(--ink) 4%, transparent);
-    }
-
-    .library-tab:hover .library-tab-count {
-      color: var(--muted);
-      background-color: color-mix(in oklch, var(--ink) 9%, transparent);
-    }
-
-    #library-view-all:checked ~ .library-selector label[for="library-view-all"]:hover,
-    #library-view-books:checked ~ .library-selector label[for="library-view-books"]:hover,
-    #library-view-watch:checked ~ .library-selector label[for="library-view-watch"]:hover,
-    #library-view-notes:checked ~ .library-selector label[for="library-view-notes"]:hover,
-    #library-view-articles:checked ~ .library-selector label[for="library-view-articles"]:hover {
-      background-color: transparent;
-      color: var(--canvas);
-    }
-
-    #library-view-all:checked ~ .library-selector label[for="library-view-all"]:hover .library-tab-count,
-    #library-view-books:checked ~ .library-selector label[for="library-view-books"]:hover .library-tab-count,
-    #library-view-watch:checked ~ .library-selector label[for="library-view-watch"]:hover .library-tab-count,
-    #library-view-notes:checked ~ .library-selector label[for="library-view-notes"]:hover .library-tab-count,
-    #library-view-articles:checked ~ .library-selector label[for="library-view-articles"]:hover .library-tab-count {
-      background: color-mix(in oklch, var(--canvas) 20%, transparent);
-      color: var(--canvas);
-    }
+  /* The count shares the label's line so the two meet on one baseline;
+     centred as separate flex items, the mono digits ride high. The space
+     keeps the tab's name "All 56"; this margin tops it up to the 8px gap. */
+  .library-seg .ui-count {
+    margin-inline-start: var(--step-1);
   }
 
   .library-panels {
@@ -461,57 +280,71 @@ const collectionPage = libraryCollectionPageJsonLd([
   }
 
   .library-panel {
-    display: none;
     margin-top: 0;
   }
 
-  #library-view-all:checked ~ .library-panels #library-panel-all,
-  #library-view-books:checked ~ .library-panels #library-panel-books,
-  #library-view-watch:checked ~ .library-panels #library-panel-watch,
-  #library-view-notes:checked ~ .library-panels #library-panel-notes,
-  #library-view-articles:checked ~ .library-panels #library-panel-articles {
-    display: block;
+  .library-veil {
+    display: none;
   }
 
-  @media (max-width: 38rem) {
-    .library-selector {
-      margin-inline: calc(-1 * var(--mobile-gutter-start)) calc(-1 * var(--mobile-gutter-end));
-      padding-inline: var(--mobile-gutter-start) var(--mobile-gutter-end);
-      scroll-padding-inline: var(--mobile-gutter-start) var(--mobile-gutter-end);
-      scroll-snap-type: x proximity;
-      overscroll-behavior-inline: contain;
-      mask-image: linear-gradient(to right, transparent, black var(--mobile-gutter-start), black calc(100% - var(--mobile-gutter-end)), transparent);
+  /* Docked under the header. The glass turns to chrome (blur and all) only
+     while stuck: segmented's data-stuck, set by the sentinel above. */
+  @media (min-width: 42.5rem) {
+    .library-seg {
+      position: sticky;
+      inset-block-start: var(--library-dock);
+      z-index: var(--z-raised);
     }
 
-    .library-tab {
-      scroll-snap-align: center;
+    /* Docked, the tabs are chrome too, so the header's veil carries on
+       under them: the same recipe at the same constant radius, fixed,
+       below the tabs and above the rows, on only while they are stuck. Its
+       top fades in where the header's veil fades out. The header's own
+       veil cannot reach this far: it sits in the header's layer, above
+       the tabs, and would blur them. */
+    .library-veil {
+      position: fixed;
+      inset-block-start: 0;
+      inset-inline: 0;
+      z-index: var(--z-veil);
+      display: block;
+      block-size: calc(var(--library-dock) + var(--cap-48) + var(--step-6));
+      background: linear-gradient(
+        180deg,
+        color-mix(in oklch, var(--canvas) 78%, transparent),
+        color-mix(in oklch, var(--canvas) 0%, transparent)
+      );
+      -webkit-backdrop-filter: blur(calc(var(--step) * 2.5));
+      backdrop-filter: blur(calc(var(--step) * 2.5));
+      -webkit-mask-image: linear-gradient(180deg, transparent calc(var(--header-zone) * 0.62), black var(--header-zone), black 62%, transparent);
+      mask-image: linear-gradient(180deg, transparent calc(var(--header-zone) * 0.62), black var(--header-zone), black 62%, transparent);
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition:
+        opacity var(--dur-shift) var(--ease-enter),
+        visibility 0s linear var(--dur-shift);
+    }
+
+    .library-tabs:has(> .library-seg[data-stuck]) > .library-veil {
+      visibility: visible;
+      opacity: 1;
+      transition:
+        opacity var(--dur-shift) var(--ease-enter),
+        visibility 0s;
     }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .library-selection,
-    [data-library][data-indicator-ready="true"] .library-selection {
-      transition: opacity var(--t-color), background-color var(--t-color) !important;
+  @media (prefers-reduced-transparency: reduce) {
+    .library-veil {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
     }
   }
 
-  /* The pill is Highlight (global.css), so the active tab and its count read
-     as HighlightText. Gated on the pill existing: without script the label
-     itself is the fill and keeps the forced-colors defaults. */
-  @media (forced-colors: active) {
-    [data-library][data-indicator-ready="true"] #library-view-all:checked ~ .library-selector label[for="library-view-all"],
-    [data-library][data-indicator-ready="true"] #library-view-books:checked ~ .library-selector label[for="library-view-books"],
-    [data-library][data-indicator-ready="true"] #library-view-watch:checked ~ .library-selector label[for="library-view-watch"],
-    [data-library][data-indicator-ready="true"] #library-view-notes:checked ~ .library-selector label[for="library-view-notes"],
-    [data-library][data-indicator-ready="true"] #library-view-articles:checked ~ .library-selector label[for="library-view-articles"],
-    [data-library][data-indicator-ready="true"] #library-view-all:checked ~ .library-selector label[for="library-view-all"] .library-tab-count,
-    [data-library][data-indicator-ready="true"] #library-view-books:checked ~ .library-selector label[for="library-view-books"] .library-tab-count,
-    [data-library][data-indicator-ready="true"] #library-view-watch:checked ~ .library-selector label[for="library-view-watch"] .library-tab-count,
-    [data-library][data-indicator-ready="true"] #library-view-notes:checked ~ .library-selector label[for="library-view-notes"] .library-tab-count,
-    [data-library][data-indicator-ready="true"] #library-view-articles:checked ~ .library-selector label[for="library-view-articles"] .library-tab-count {
-      forced-color-adjust: none;
-      background: transparent !important;
-      color: HighlightText !important;
+  @media print, (forced-colors: active) {
+    .library-veil {
+      display: none;
     }
   }
 </style>
