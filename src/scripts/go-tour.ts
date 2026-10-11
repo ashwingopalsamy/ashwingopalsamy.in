@@ -5,7 +5,7 @@
  *   - Pure-TS Go tokenizer & rich syntax highlighter
  *   - Go 1.27 vs Go 1.26 tab switching with instant syntax re-tokenization
  *   - In-place code editor with real-time tokenization on save and Reset capability
- *   - Circular round action buttons with icons, tooltips, and spring scale micro-interactions
+ *   - Copy / Edit / Reset / Run as the shared capsules (controls.css), version tabs as .ui-seg
  *   - Default soft-wrapping with per-block interactive wrap toggle
  *   - Collapsible terminal output drawer with execution timer & benchmark badge
  *   - Left floating segmented TOC rail with gliding tooltip & live scroll-spy
@@ -15,11 +15,11 @@
  *
  * Fully re-entrant and lifecycle-safe for Astro view transitions.
  */
-import { showToast } from "./toast";
 import { playAccent, isSoundEnabled } from "./sound";
 import { iconMarkup } from "../lib/ui-icons";
 import { onPageCleanup, pageSignal } from "./lifecycle";
-import { copyToClipboard } from "./clipboard";
+import { copyControl } from "./clipboard";
+import { initSegmented } from "./segmented";
 
 export interface Token {
   type: "keyword" | "type" | "func" | "string" | "comment" | "constant" | "text";
@@ -863,16 +863,32 @@ func main() {
   },
 };
 
-const COPY_ICON = iconMarkup("copy", { size: 13, strokeWidth: 1.8 });
-const CHECK_ICON = iconMarkup("check", { size: 13, strokeWidth: 2.2 });
-const PLAY_ICON = iconMarkup("play", { size: 12, strokeWidth: 2 });
-const EDIT_ICON = iconMarkup("edit", { size: 13, strokeWidth: 1.8 });
-const RESET_ICON = iconMarkup("rotate-ccw", { size: 13, strokeWidth: 1.8 });
+// 14px / stroke 2 in a 32 capsule, 12px / 2.2 in a 28 chip (spec 2.1)
+const COPY_ICON = iconMarkup("copy", { size: 14, strokeWidth: 2 });
+const CHECK_ICON = iconMarkup("check", { size: 14, strokeWidth: 2, className: "ui-draw" });
+const ALERT_ICON = iconMarkup("alert", { size: 14, strokeWidth: 2 });
+const SAVE_ICON = iconMarkup("check", { size: 14, strokeWidth: 2 });
+const PLAY_ICON = iconMarkup("play", { size: 14, strokeWidth: 2 });
+const EDIT_ICON = iconMarkup("edit", { size: 14, strokeWidth: 2 });
+const RESET_ICON = iconMarkup("rotate-ccw", { size: 14, strokeWidth: 2 });
 const TERM_ICON = iconMarkup("terminal", { size: 12, strokeWidth: 1.8 });
-const FILE_ICON = iconMarkup("file-text", { size: 12, strokeWidth: 1.8 });
-const GIT_ICON = iconMarkup("git-commit", { size: 12, strokeWidth: 1.8 });
+const FILE_ICON = iconMarkup("file-text", { size: 12, strokeWidth: 2.2 });
+const GIT_ICON = iconMarkup("git-commit", { size: 12, strokeWidth: 2.2 });
 const USERS_ICON = iconMarkup("people", { size: 12, strokeWidth: 1.8 });
-const EXT_ICON = iconMarkup("external", { size: 10, strokeWidth: 2 });
+const EXT_ICON = iconMarkup("arrow-up-right", { size: 12, strokeWidth: 2.2, className: "go-spec-ext" });
+
+let snippetSeq = 0;
+
+/** A glass-32 action capsule (the contract prose.ts and contact.astro use). */
+function capsule(tier: "glass" | "quiet" | "ink", label: string, name: string, icon: string): HTMLButtonElement {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = `go-tour-btn ui-cap ui-cap--${tier} ui-cap--32 ui-cap--lead`;
+  if (tier === "glass") btn.dataset.fx = "spot";
+  btn.setAttribute("aria-label", name);
+  btn.innerHTML = `<span class="go-tour-ico">${icon}</span><span class="ui-cap__label">${label}</span>`;
+  return btn;
+}
 
 function enhanceSnippet(sectionEl: HTMLElement, data: TourModuleData) {
   // If already enhanced in this exact DOM tree, skip
@@ -904,6 +920,10 @@ function enhanceSnippet(sectionEl: HTMLElement, data: TourModuleData) {
   let isEditing = false;
   let code = data.initialCode;
 
+  const seq = ++snippetSeq;
+  const tabId = (tab: "current" | "legacy") => `go-tour-${seq}-tab-${tab}`;
+  const panelId = `go-tour-${seq}-panel`;
+
   // 1. Control bar
   const bar = document.createElement("div");
   bar.className = "go-tour-bar";
@@ -911,28 +931,39 @@ function enhanceSnippet(sectionEl: HTMLElement, data: TourModuleData) {
   const leftGroup = document.createElement("div");
   leftGroup.className = "go-tour-left";
 
-  let tabCurrentBtn: HTMLButtonElement | null = null;
-  let tabLegacyBtn: HTMLButtonElement | null = null;
+  let versionTabs: HTMLElement | null = null;
 
   if (data.legacyCode) {
-    const tabs = document.createElement("div");
-    tabs.className = "go-tour-tabs";
+    // .ui-seg (controls.css): segmented.ts owns selection, roving focus and the
+    // ink. One shared panel (the editor) follows the tab, so no aria-controls:
+    // segmented.ts would hide a panel that two tabs both control.
+    const seg = document.createElement("div");
+    seg.className = "ui-seg ui-seg--sm ui-seg--bare";
+    const track = document.createElement("div");
+    track.className = "ui-seg__track";
+    track.setAttribute("role", "tablist");
+    track.setAttribute("aria-label", "Go version");
+    const ind = document.createElement("span");
+    ind.className = "ui-seg__ind";
+    ind.setAttribute("aria-hidden", "true");
+    track.appendChild(ind);
 
-    tabCurrentBtn = document.createElement("button");
-    tabCurrentBtn.type = "button";
-    tabCurrentBtn.className = "go-tour-tab";
-    tabCurrentBtn.setAttribute("aria-selected", "true");
-    tabCurrentBtn.textContent = "Go 1.27";
+    for (const [value, label] of [["current", "Go 1.27"], ["legacy", "Go 1.26"]] as const) {
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = "go-tour-tab ui-seg__item";
+      item.id = tabId(value);
+      item.dataset.value = value;
+      item.setAttribute("role", "tab");
+      item.setAttribute("aria-selected", String(value === "current"));
+      item.tabIndex = value === "current" ? 0 : -1;
+      item.innerHTML = `<span class="ui-cap__label">${label}</span>`;
+      track.appendChild(item);
+    }
 
-    tabLegacyBtn = document.createElement("button");
-    tabLegacyBtn.type = "button";
-    tabLegacyBtn.className = "go-tour-tab";
-    tabLegacyBtn.setAttribute("aria-selected", "false");
-    tabLegacyBtn.textContent = "Go 1.26";
-
-    tabs.appendChild(tabCurrentBtn);
-    tabs.appendChild(tabLegacyBtn);
-    leftGroup.appendChild(tabs);
+    seg.appendChild(track);
+    leftGroup.appendChild(seg);
+    versionTabs = seg;
   } else {
     const fn = document.createElement("span");
     fn.className = "go-tour-filename";
@@ -940,42 +971,39 @@ function enhanceSnippet(sectionEl: HTMLElement, data: TourModuleData) {
     leftGroup.appendChild(fn);
   }
 
-  // Right actions: circular round buttons
+  // Right actions: shared capsules
   const actions = document.createElement("div");
   actions.className = "go-tour-actions";
 
-  // Copy button
+  // Copy: the value is the live code (it changes with the tab and the editor),
+  // read at click. prose.ts's code capsule works the same way; a data-copy
+  // attribute would hand the click to the delegated handler instead.
   const copyBtn = document.createElement("button");
   copyBtn.type = "button";
-  copyBtn.className = "go-tour-btn";
-  copyBtn.innerHTML = COPY_ICON;
-  copyBtn.title = "Copy code";
+  copyBtn.className = "go-tour-btn ui-cap ui-cap--glass ui-cap--32 ui-cap--lead";
+  copyBtn.dataset.fx = "spot";
+  copyBtn.dataset.state = "idle";
   copyBtn.setAttribute("aria-label", "Copy code");
+  copyBtn.innerHTML =
+    `<span class="ui-stk ui-stk--icon"><span data-when="idle">${COPY_ICON}</span><span data-when="done">${CHECK_ICON}</span><span data-when="error">${ALERT_ICON}</span></span>` +
+    '<span class="ui-cap__label ui-stk"><span data-when="idle">Copy</span><span data-when="done">Copied</span><span data-when="error">Retry</span></span>';
 
-  // Edit button
-  const editBtn = document.createElement("button");
-  editBtn.type = "button";
-  editBtn.className = "go-tour-btn";
-  editBtn.innerHTML = EDIT_ICON;
-  editBtn.title = "Edit code";
-  editBtn.setAttribute("aria-label", "Edit code");
+  // Edit button: Edit while reading, Save while editing
+  const editBtn = capsule("glass", "Edit", "Edit code", EDIT_ICON);
+  const editIcon = editBtn.querySelector<HTMLElement>(".go-tour-ico")!;
+  const editLabel = editBtn.querySelector<HTMLElement>(".ui-cap__label")!;
+  const setEditing = (on: boolean) => {
+    editIcon.innerHTML = on ? SAVE_ICON : EDIT_ICON;
+    editLabel.textContent = on ? "Save" : "Edit";
+    editBtn.setAttribute("aria-label", on ? "Save and preview" : "Edit code");
+  };
 
   // Reset button
-  const resetBtn = document.createElement("button");
-  resetBtn.type = "button";
-  resetBtn.className = "go-tour-btn go-tour-btn-reset";
-  resetBtn.innerHTML = RESET_ICON;
-  resetBtn.title = "Reset code";
-  resetBtn.setAttribute("aria-label", "Reset code");
+  const resetBtn = capsule("quiet", "Reset", "Reset code", RESET_ICON);
   resetBtn.hidden = true;
 
-  // Run button
-  const runBtn = document.createElement("button");
-  runBtn.type = "button";
-  runBtn.className = "go-tour-btn go-tour-btn-run";
-  runBtn.innerHTML = PLAY_ICON;
-  runBtn.title = "Run code";
-  runBtn.setAttribute("aria-label", "Run code");
+  // Run button: the tour's one primary, so the ink tier
+  const runBtn = capsule("ink", "Run", "Run code", PLAY_ICON);
 
   actions.appendChild(copyBtn);
   actions.appendChild(editBtn);
@@ -989,6 +1017,11 @@ function enhanceSnippet(sectionEl: HTMLElement, data: TourModuleData) {
   // 2. Code container with rich syntax highlighting
   const editorWrap = document.createElement("div");
   editorWrap.className = "go-tour-editor";
+  if (versionTabs) {
+    editorWrap.id = panelId;
+    editorWrap.setAttribute("role", "tabpanel");
+    editorWrap.setAttribute("aria-labelledby", tabId("current"));
+  }
 
   const preBlock = document.createElement("pre");
   const codeBlock = document.createElement("code");
@@ -1025,7 +1058,7 @@ function enhanceSnippet(sectionEl: HTMLElement, data: TourModuleData) {
 
   const termBench = document.createElement("span");
   termBench.textContent = data.benchmark;
-  termBench.className = "go-tour-term-bench";
+  termBench.className = "ui-badge ui-badge--mono";
 
   termMeta.appendChild(termTime);
   termMeta.appendChild(termBench);
@@ -1041,22 +1074,21 @@ function enhanceSnippet(sectionEl: HTMLElement, data: TourModuleData) {
 
   figure.parentNode?.replaceChild(wrapper, figure);
 
+  // In the document now, so the ink can measure its tabs.
+  const [tabs] = versionTabs ? initSegmented(versionTabs, { signal }) : [];
+
   // Switch Tab Handler
   const switchTab = (tab: "current" | "legacy") => {
     if (activeTab === tab) return;
     if (isSoundEnabled()) playAccent("tab");
     activeTab = tab;
-    if (tabCurrentBtn && tabLegacyBtn) {
-      tabCurrentBtn.setAttribute("aria-selected", tab === "current" ? "true" : "false");
-      tabLegacyBtn.setAttribute("aria-selected", tab === "legacy" ? "true" : "false");
-    }
+    editorWrap.setAttribute("aria-labelledby", tabId(tab));
     termDrawer.hidden = true;
     if (isEditing) {
       isEditing = false;
       textarea.hidden = true;
       preBlock.hidden = false;
-      editBtn.innerHTML = EDIT_ICON;
-      editBtn.title = "Edit code";
+      setEditing(false);
     }
 
     if (tab === "legacy" && data.legacyCode) {
@@ -1068,26 +1100,17 @@ function enhanceSnippet(sectionEl: HTMLElement, data: TourModuleData) {
     }
   };
 
-  if (tabCurrentBtn && tabLegacyBtn) {
-    tabCurrentBtn.onclick = () => switchTab("current");
-    tabLegacyBtn.onclick = () => switchTab("legacy");
-  }
+  // click and arrow keys both arrive as seg:change
+  tabs?.element.addEventListener(
+    "seg:change",
+    (event) => switchTab(event.detail.value === "legacy" ? "legacy" : "current"),
+    { signal },
+  );
 
   // Copy Action
-  copyBtn.onclick = async () => {
-    const currentText = isEditing ? textarea.value : code;
-    const ok = await copyToClipboard(currentText, signal);
-    if (signal.aborted || !sectionEl.isConnected) return;
-    if (ok) {
-      copyBtn.classList.add("is-done");
-      copyBtn.innerHTML = CHECK_ICON;
-      if (isSoundEnabled()) playAccent("copy");
-      showToast({ message: "Copied to clipboard", duration: 1600 });
-      schedule(() => {
-        copyBtn.classList.remove("is-done");
-        copyBtn.innerHTML = COPY_ICON;
-      }, 1400);
-    }
+  // the capsule confirms itself (Copied / Retry, the sound): no toast
+  copyBtn.onclick = () => {
+    void copyControl(copyBtn, isEditing ? textarea.value : code, signal);
   };
 
   // Edit Action
@@ -1099,8 +1122,7 @@ function enhanceSnippet(sectionEl: HTMLElement, data: TourModuleData) {
       textarea.hidden = false;
       preBlock.hidden = true;
       resetBtn.hidden = false;
-      editBtn.innerHTML = CHECK_ICON;
-      editBtn.title = "Save and preview";
+      setEditing(true);
       textarea.focus();
     } else {
       if (isSoundEnabled()) playAccent("toggle-off");
@@ -1108,8 +1130,7 @@ function enhanceSnippet(sectionEl: HTMLElement, data: TourModuleData) {
       textarea.hidden = true;
       preBlock.hidden = false;
       codeBlock.innerHTML = highlightGo(code);
-      editBtn.innerHTML = EDIT_ICON;
-      editBtn.title = "Edit code";
+      setEditing(false);
     }
   };
 
@@ -1125,21 +1146,21 @@ function enhanceSnippet(sectionEl: HTMLElement, data: TourModuleData) {
       isEditing = false;
       textarea.hidden = true;
       preBlock.hidden = false;
-      editBtn.innerHTML = EDIT_ICON;
-      editBtn.title = "Edit code";
+      setEditing(false);
     }
   };
 
   // Run Action
   runBtn.onclick = () => {
-    runBtn.setAttribute("disabled", "true");
-    runBtn.innerHTML = `<span class="spinner" style="display:inline-block;width:10px;height:10px;border:1.5px solid currentColor;border-top-color:transparent;border-radius:50%;animation:diagram-spin 0.6s linear infinite"></span>`;
+    // aria-busy is the capsule's loading state: the label gives way to a
+    // spinner at the same width, and a second press is ignored
+    if (runBtn.getAttribute("aria-busy") === "true") return;
+    runBtn.setAttribute("aria-busy", "true");
 
     const start = performance.now();
     schedule(() => {
       const elapsed = Math.round((performance.now() - start + 80) * 10) / 10;
-      runBtn.removeAttribute("disabled");
-      runBtn.innerHTML = PLAY_ICON;
+      runBtn.removeAttribute("aria-busy");
 
       termTime.textContent = `${elapsed}ms virtual`;
       const expected = activeTab === "legacy" && data.legacyOutput ? data.legacyOutput : data.expectedOutput;
@@ -1170,7 +1191,7 @@ function enhanceSpecFooters() {
       specLink.target = "_blank";
       specLink.rel = "noreferrer";
       specLink.className = "go-spec-pill";
-      specLink.innerHTML = `${FILE_ICON}<span>${data.specName ?? "Language spec"}</span>${EXT_ICON}`;
+      specLink.innerHTML = `${FILE_ICON}<span class="ui-cap__label">${data.specName ?? "Language spec"}</span>${EXT_ICON}`;
       specLink.onclick = () => {
         if (isSoundEnabled()) playAccent("tick");
       };
@@ -1183,7 +1204,7 @@ function enhanceSpecFooters() {
       issueLink.target = "_blank";
       issueLink.rel = "noreferrer";
       issueLink.className = "go-spec-pill";
-      issueLink.innerHTML = `<span style="opacity:0.5;font-family:ui-monospace,monospace;font-size:11px;font-weight:600">#</span><span>${data.issueNumber}</span>${EXT_ICON}`;
+      issueLink.innerHTML = `<span class="ui-chip__hash">#</span><span class="ui-cap__label">${data.issueNumber}</span>${EXT_ICON}`;
       issueLink.onclick = () => {
         if (isSoundEnabled()) playAccent("tick");
       };
@@ -1196,7 +1217,7 @@ function enhanceSpecFooters() {
       clLink.target = "_blank";
       clLink.rel = "noreferrer";
       clLink.className = "go-spec-pill";
-      clLink.innerHTML = `${GIT_ICON}<span>CL ${data.clNumber}</span>${EXT_ICON}`;
+      clLink.innerHTML = `${GIT_ICON}<span class="ui-cap__label">CL ${data.clNumber}</span>${EXT_ICON}`;
       clLink.onclick = () => {
         if (isSoundEnabled()) playAccent("tick");
       };
