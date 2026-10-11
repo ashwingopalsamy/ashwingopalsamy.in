@@ -1,4 +1,4 @@
-// Phone navigation harness: node scripts/perf/nav.mjs --dist dist [--browser chromium|webkit]
+// Phone navigation harness: node scripts/perf/nav.mjs --dist dist [--browser chromium|webkit] [--latency <ms>]
 // Emulates Pixel 7 (chromium, 4x CPU throttle) or iPhone 14 (webkit). Taps tab bar links, a /work/ item, a note
 // and its next link, then history.back() twice. Per step: tap->painted ms, document/fetch/xhr requests issued,
 // whether a view-transition animation ran, scroll restoration on back, console errors. Prints a table + JSON.
@@ -12,6 +12,7 @@ const opt = (name, def) => {
 };
 const dist = opt("dist", "dist");
 const browserName = opt("browser", "chromium");
+const latency = Number(opt("latency", 0)); // ms RTT; chromium only, adds ~4 Mbit/s down / 1 Mbit/s up
 const NOTE = "/blog/consistent-hashing-distributed-caches/";
 
 // Runs in every document. Epoch times (timeOrigin + now) survive full document loads via sessionStorage.
@@ -64,7 +65,19 @@ const page = await ctx.newPage();
 if (!isWebkit) {
   const cdp = await ctx.newCDPSession(page);
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+  if (latency > 0) {
+    await cdp.send("Network.enable");
+    await cdp.send("Network.emulateNetworkConditions", { offline: false, latency, downloadThroughput: 4e6 / 8, uploadThroughput: 1e6 / 8 });
+  }
 }
+
+// Page-store bundle (/_pages/*.txt): track when it is requested and finished.
+let bundleSeen = false;
+let bundleDone = false;
+const isBundle = (r) => /\/_pages\/[^/]*\.txt$/.test(new URL(r.url()).pathname);
+page.on("request", (r) => isBundle(r) && (bundleSeen = true));
+page.on("requestfinished", (r) => isBundle(r) && (bundleDone = true));
+page.on("requestfailed", (r) => isBundle(r) && (bundleDone = true));
 
 let reqs = [];
 let errors = [];
@@ -149,7 +162,11 @@ async function tapHref(href) {
 }
 
 await page.goto(server.base + "/", { waitUntil: "load" });
-await page.waitForTimeout(3000);
+// Wait up to 6 s for a bundle request to be issued, then until it finishes (max 60 s), then settle.
+for (let t = 0; t < 6000 && !bundleSeen; t += 100) await page.waitForTimeout(100);
+for (let t = 0; t < 60000 && bundleSeen && !bundleDone; t += 100) await page.waitForTimeout(100);
+console.log(`bundle: requested=${bundleSeen} finished=${bundleDone}`);
+await page.waitForTimeout(1500);
 
 const tabs = await page.$$eval(".site-nav-bottom a", (as) => as.map((a) => a.getAttribute("href")));
 for (const href of tabs) {
@@ -179,7 +196,7 @@ await browser.close();
 await server.close();
 
 const pad = (s, n) => String(s ?? "").padEnd(n);
-console.log(`\nbrowser=${browserName} device=${isWebkit ? "iPhone 14" : "Pixel 7 (4x CPU)"}`);
+console.log(`\nbrowser=${browserName} device=${isWebkit ? "iPhone 14" : "Pixel 7 (4x CPU)"} latency=${latency}ms`);
 console.log(pad("step", 34) + pad("ms", 7) + pad("reqs", 6) + pad("VT", 5) + pad("scroll(exp/act)", 17) + "errors");
 for (const r of results)
   console.log(
@@ -191,4 +208,4 @@ for (const r of results)
       (r.errors?.length || 0) +
       (r.error ? `  ${r.error}` : ""),
   );
-console.log("\nJSON " + JSON.stringify({ browser: browserName, results }));
+console.log("\nJSON " + JSON.stringify({ browser: browserName, latency, bundleSeen, bundleDone, results }));
