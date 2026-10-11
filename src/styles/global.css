@@ -482,36 +482,41 @@ html {
   scroll-behavior: auto;
 }
 
-@supports not selector(::-webkit-scrollbar) {
-  html {
-    scrollbar-width: thin;
-    scrollbar-color: var(--scrollbar-thumb) transparent;
+/* Touch-first devices keep the platform's overlay indicator, which shows only
+   while scrolling. Any scrollbar styling turns it into a classic bar that takes
+   width and never goes away, so none is applied there. */
+@media not ((hover: none) and (pointer: coarse)) {
+  @supports not selector(::-webkit-scrollbar) {
+    html {
+      scrollbar-width: thin;
+      scrollbar-color: var(--scrollbar-thumb) transparent;
+    }
   }
-}
 
-::-webkit-scrollbar {
-  width: var(--scrollbar-size);
-  height: var(--scrollbar-size);
-}
+  ::-webkit-scrollbar {
+    width: var(--scrollbar-size);
+    height: var(--scrollbar-size);
+  }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
-::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  background-clip: padding-box;
-  border: 4px solid transparent;
-  border-radius: var(--r-pill);
-}
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    background-clip: padding-box;
+    border: 4px solid transparent;
+    border-radius: var(--r-pill);
+  }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
-  background-clip: padding-box;
-}
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+    background-clip: padding-box;
+  }
 
-::-webkit-scrollbar-corner {
-  background: transparent;
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
 }
 
 body {
@@ -1467,14 +1472,13 @@ a {
   }
 }
 
-/* Root scrollbar, drawn inside the page card. The native bar lives outside
-   the layout viewport, so however it is styled it cuts through the frame's
-   right edge, and the site's styled ::-webkit-scrollbar also turns it into a
-   classic bar that takes width on touch screens. It is hidden wherever
-   scroll-driven animations can drive this one: the thumb rides the page's
-   scroll on the compositor, sized by page-scrollbar.ts. It is draggable only
-   with a fine pointer; on touch it is a passive position indicator.
-   Elsewhere (Firefox today) the site's styled native bar stays. */
+/* Root scrollbar for fine pointers, drawn inside the page card. The native bar
+   lives outside the layout viewport, so however it is styled it cuts through
+   the frame's right edge. Where scroll-driven animations exist the native bar
+   is hidden and the thumb rides the page's scroll on the compositor, sized by
+   page-scrollbar.ts. It shows while scrolling, hovered or dragged, and fades
+   out after. Touch-first devices get no custom bar (see the scrollbar rules
+   above); elsewhere (Firefox today) the site's styled native bar stays. */
 .page-scrollbar {
   display: none;
 }
@@ -1485,40 +1489,59 @@ a {
 }
 
 @supports (animation-timeline: scroll()) {
-  html {
-    scrollbar-width: none;
-  }
-
-  html::-webkit-scrollbar {
-    display: none;
-  }
-
-  .page-scrollbar {
-    display: block;
-    position: fixed;
-    z-index: var(--z-frame);
-    inset-block: calc(var(--frame-gap) + var(--frame-radius));
-    inset-inline-end: calc(var(--frame-gap) + var(--step-1));
-    inline-size: var(--page-scrollbar-size);
-    pointer-events: none;
-  }
-
-  .page-scrollbar[data-idle] {
-    display: none;
-  }
-
-  .page-scrollbar-thumb {
-    position: relative;
-    block-size: var(--thumb-size, 0px);
-    border-radius: var(--r-pill);
-    background: var(--page-scrollbar-thumb);
-    transition: background-color var(--t-color);
-    animation: page-scroll-thumb linear both;
-    animation-timeline: scroll(root block);
-  }
-
   @media (hover: hover) and (pointer: fine) {
+    html {
+      scrollbar-width: none;
+    }
+
+    html::-webkit-scrollbar {
+      display: none;
+    }
+
+    .page-scrollbar {
+      display: block;
+      position: fixed;
+      z-index: var(--z-frame);
+      inset-block: calc(var(--frame-gap) + var(--frame-radius));
+      inset-inline-end: calc(var(--frame-gap) + var(--step-1));
+      inline-size: var(--page-scrollbar-size);
+      opacity: 0;
+      transition: opacity var(--dur-enter) var(--ease-exit);
+    }
+
+    .page-scrollbar:hover,
+    .page-scrollbar[data-scrolling],
+    .page-scrollbar[data-dragging] {
+      opacity: 1;
+      transition: opacity var(--dur-tint) var(--ease-enter);
+    }
+
+    /* Hidden, not removed: the track must keep its height for measuring. */
+    .page-scrollbar[data-idle] {
+      visibility: hidden;
+    }
+
+    /* The hover zone runs out to the window edge. */
+    .page-scrollbar::before {
+      content: "";
+      position: absolute;
+      inset-block: 0;
+      inset-inline: calc(var(--step-2) * -1) calc((var(--frame-gap) + var(--step-1)) * -1);
+    }
+
     .page-scrollbar-thumb {
+      position: relative;
+      block-size: var(--thumb-size, 0px);
+      border-radius: var(--r-pill);
+      background: var(--page-scrollbar-thumb);
+      transition: background-color var(--t-color);
+      /* Longhands, not the shorthand: the minifier folds shorthand plus
+         animation-timeline into `animation: ... scroll(root)`, which
+         browsers reject, so the thumb never moved. */
+      animation-name: page-scroll-thumb;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(root block);
       pointer-events: auto;
       touch-action: none;
     }
@@ -1534,6 +1557,12 @@ a {
     .page-scrollbar-thumb:hover,
     .page-scrollbar[data-dragging] .page-scrollbar-thumb {
       background: var(--page-scrollbar-thumb-hover);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .page-scrollbar {
+        transition: none;
+      }
     }
   }
 }
