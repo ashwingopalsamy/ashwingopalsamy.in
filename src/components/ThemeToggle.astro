@@ -3,8 +3,8 @@
 
 <button
   type="button"
-  class="theme-toggle"
-  aria-label="Toggle color theme"
+  class="theme-toggle ui-cap ui-cap--quiet ui-cap--40 ui-cap--icon"
+  aria-label="Switch theme"
   aria-pressed="false"
 >
   <svg
@@ -29,59 +29,31 @@
       />
     </g>
   </svg>
+  <span class="ui-tip ui-tip--above" role="tooltip">Theme</span>
 </button>
 
 <style>
-  .theme-toggle {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    margin: 0;
-    border: 0;
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    border-radius: 50%;
-    user-select: none;
-    transition:
-      color var(--t-color),
-      background-color var(--t-color),
-      transform var(--t-move);
-  }
-
+  /* 40 is below the touch minimum; the hit area is not. Sideways it stops
+     at the dock's 4px gap, so neighbours' areas meet and never overlap. */
   .theme-toggle::before {
     content: "";
     position: absolute;
-    inset: -4px;
-    border-radius: 50%;
+    inset: calc((var(--cap-h) - var(--hit)) / 2);
   }
 
-  .theme-toggle:hover,
-  .theme-toggle:focus-visible {
+  /* muted at rest, ink when hovered or pressed */
+  .theme-toggle.ui-cap--quiet {
+    color: var(--muted);
+  }
+
+  .theme-toggle.ui-cap--quiet:active {
     color: var(--ink);
-    background: color-mix(in oklch, var(--ink) 6%, transparent);
-  }
-
-  .theme-toggle:active {
-    transform: scale(0.94);
-    transition: transform var(--dur-press) var(--ease-enter);
-  }
-
-  :global(.tt-icon) {
-    transition: transform var(--dur-tint) var(--ease-enter);
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .theme-toggle:hover :global(.tt-icon) {
-      transform: scale(1.1);
+    .theme-toggle.ui-cap--quiet:hover {
+      color: var(--ink);
     }
-  }
-
-  .theme-toggle:active :global(.tt-icon) {
-    transform: scale(0.92);
   }
 
   :global(.tt-clip-path) {
@@ -125,12 +97,6 @@
 
   /* The sun/moon swap still lands; it just does not travel there. */
   @media (prefers-reduced-motion: reduce) {
-    .theme-toggle:active,
-    .theme-toggle:hover :global(.tt-icon),
-    .theme-toggle:active :global(.tt-icon) {
-      transform: none;
-    }
-
     :global(.tt-clip-path),
     :global([data-theme="dark"] .tt-clip-path),
     :global(.tt-circle),
@@ -250,6 +216,26 @@
     runVeil(oldHex, duration, easing);
   }
 
+  /* The label names the next state; the tooltip names the current one.
+     "System" holds until the visitor has chosen. */
+  function isExplicit(): boolean {
+    try {
+      const stored = localStorage.getItem("theme");
+      return stored === "light" || stored === "dark";
+    } catch {
+      return false;
+    }
+  }
+
+  function reflect(btn: HTMLButtonElement) {
+    const controller = window.__siteThemeController;
+    if (!controller) return;
+    const dark = controller.current() === "dark";
+    btn.setAttribute("aria-label", `Switch to ${dark ? "light" : "dark"} theme`);
+    const tip = btn.querySelector('[role="tooltip"]');
+    if (tip) tip.textContent = isExplicit() ? (dark ? "Dark theme" : "Light theme") : "System theme";
+  }
+
   function init() {
     const signal = pageSignal();
     if (enhancedPage === signal) return;
@@ -259,7 +245,12 @@
       btn.addEventListener("click", () => {
         setThemeFromClick(window.__siteThemeController?.current() === "dark" ? "light" : "dark");
         playAccent("theme");
+        reflect(btn);
       }, { signal });
+      // the system theme can change under an open page; read it when it is about to be shown
+      btn.addEventListener("pointerenter", () => reflect(btn), { signal });
+      btn.addEventListener("focus", () => reflect(btn), { signal });
+      reflect(btn);
     });
     onPageCleanup(stopVeil, signal);
     window.__siteThemeController?.sync(document);

@@ -3,115 +3,122 @@
  * SoundToggle
  *
  * Mutes or enables the interaction sound accents (sound.ts). Sound is on
- * by default. Multiple instances (footer + palette actions) stay in sync via
- * class query + onSoundChange. With no JS the button is inert; the default
- * (on) matches the SSR-rendered label below, and the client corrects the
- * state from the stored preference on load.
+ * by default. Multiple instances stay in sync via class query +
+ * onSoundChange. With no JS the button is inert; the default (on) matches
+ * the SSR-rendered label below, and the client corrects the state from the
+ * stored preference on load, and on the incoming document before a swap, so
+ * a muted visitor never sees the arcs play in.
+ *
+ * A quiet 40 circle that lives in the footer dock. The two wave arcs and
+ * the mute marks are one glyph; only opacity moves.
  */
 import { SOUND_DEFAULT } from "../scripts/sound";
-import Icon from "./Icon.astro";
 ---
 
 <button
   type="button"
-  class="sound-toggle"
+  class="sound-toggle ui-cap ui-cap--quiet ui-cap--40 ui-cap--icon"
   aria-label={SOUND_DEFAULT ? "Turn interaction sounds off" : "Turn interaction sounds on"}
   aria-pressed={SOUND_DEFAULT ? "true" : "false"}
 >
-  <span class="st-on" aria-hidden="true"><Icon name="sound-on" size={18} /></span>
-  <span class="st-off" aria-hidden="true"><Icon name="sound-off" size={18} /></span>
+  <svg
+    class="ui-icon"
+    viewBox="0 0 24 24"
+    width="16"
+    height="16"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"></path>
+    <path class="st-wave st-wave-1" d="M16 9a5 5 0 0 1 0 6"></path>
+    <path class="st-wave st-wave-2" d="M19.364 18.364a9 9 0 0 0 0-12.728"></path>
+    <path class="st-mute" d="m22 9-6 6"></path>
+    <path class="st-mute" d="m16 9 6 6"></path>
+  </svg>
+  <span class="ui-tip ui-tip--above" role="tooltip">{SOUND_DEFAULT ? "Sounds on" : "Sounds off"}</span>
 </button>
 
 <style>
   .sound-toggle {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    margin: 0;
-    border: 0;
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    border-radius: 50%;
-    user-select: none;
-    transition:
-      color var(--t-color),
-      background-color var(--t-color),
-      transform var(--t-move);
+    /* the second arc follows the first by this much when sound comes on */
+    --wave-stagger: 40ms;
   }
 
+  /* 40 is below the touch minimum; the hit area is not. Sideways it stops
+     at the dock's 4px gap, so neighbours' areas meet and never overlap. */
   .sound-toggle::before {
     content: "";
     position: absolute;
-    inset: -4px;
-    border-radius: 50%;
+    inset: calc((var(--cap-h) - var(--hit)) / 2);
   }
 
-  .sound-toggle:hover,
-  .sound-toggle:focus-visible {
+  /* muted at rest, ink while sound is on, hovered or pressed */
+  .sound-toggle.ui-cap--quiet {
+    color: var(--muted);
+  }
+
+  .sound-toggle.ui-cap--quiet[aria-pressed="true"],
+  .sound-toggle.ui-cap--quiet:active {
     color: var(--ink);
-    background: color-mix(in oklch, var(--ink) 6%, transparent);
-  }
-
-  .sound-toggle:active {
-    transform: scale(0.94);
-    transition: transform var(--dur-press) var(--ease-enter);
-  }
-
-  .st-on,
-  .st-off {
-    position: absolute;
-    display: grid;
-    place-items: center;
-    transition:
-      opacity var(--dur-shift) var(--ease-enter),
-      transform var(--dur-tint) var(--ease-enter);
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .sound-toggle:hover .st-on,
-    .sound-toggle:hover .st-off {
-      transform: scale(1.1);
+    .sound-toggle.ui-cap--quiet:hover {
+      color: var(--ink);
     }
   }
 
-  .st-on {
-    opacity: 1;
+  .st-wave,
+  .st-mute {
+    transition: opacity var(--dur-nudge) var(--ease-enter);
   }
-  .st-off {
+
+  .st-mute {
     opacity: 0;
   }
 
-  .sound-toggle[aria-pressed="false"] .st-on {
+  .sound-toggle[aria-pressed="false"] .st-wave {
     opacity: 0;
   }
-  .sound-toggle[aria-pressed="false"] .st-off {
+
+  .sound-toggle[aria-pressed="false"] .st-mute {
     opacity: 1;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .sound-toggle:active,
-    .sound-toggle:hover .st-on,
-    .sound-toggle:hover .st-off {
-      transform: none;
-    }
+  .sound-toggle[aria-pressed="true"] .st-wave-2 {
+    transition-delay: var(--wave-stagger);
   }
 </style>
 
 <script>
+  import type { TransitionBeforeSwapEvent } from "astro:transitions/client";
   import { isSoundEnabled, setSoundEnabled, onSoundChange } from "../scripts/sound";
 
+  function paint(btn: HTMLElement, enabled: boolean) {
+    btn.setAttribute("aria-pressed", String(enabled));
+    btn.setAttribute(
+      "aria-label",
+      enabled ? "Turn interaction sounds off" : "Turn interaction sounds on",
+    );
+    const tip = btn.querySelector('[role="tooltip"]');
+    if (tip) tip.textContent = enabled ? "Sounds on" : "Sounds off";
+  }
+
   function reflect(enabled: boolean) {
-    document.querySelectorAll<HTMLButtonElement>(".sound-toggle").forEach((btn) => {
-      btn.setAttribute("aria-pressed", String(enabled));
-      btn.setAttribute(
-        "aria-label",
-        enabled ? "Turn interaction sounds off" : "Turn interaction sounds on",
-      );
-    });
+    document.querySelectorAll<HTMLButtonElement>(".sound-toggle").forEach((btn) => paint(btn, enabled));
+  }
+
+  /* The incoming footer is swapped in already showing the stored state, so
+     a muted visitor never sees the arcs fade out after every navigation. */
+  function prepare(event: Event) {
+    const enabled = isSoundEnabled();
+    (event as TransitionBeforeSwapEvent).newDocument
+      .querySelectorAll<HTMLElement>(".sound-toggle")
+      .forEach((btn) => paint(btn, enabled));
   }
 
   function init() {
@@ -126,6 +133,7 @@ import Icon from "./Icon.astro";
   }
 
   onSoundChange(reflect);
+  document.addEventListener("astro:before-swap", prepare);
 
   init();
   document.addEventListener("astro:page-load", init);

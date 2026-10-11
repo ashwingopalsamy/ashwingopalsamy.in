@@ -1,7 +1,6 @@
 ---
 import { site } from "../data/home";
 import { buildMeta } from "../lib/build";
-import Icon from "./Icon.astro";
 import SoundToggle from "./SoundToggle.astro";
 import ThemeToggle from "./ThemeToggle.astro";
 
@@ -10,46 +9,42 @@ const shortSha = buildMeta.commit;
 
 <footer class="site-footer">
   <div class="footer-links">
-    <a class="footer-link" href="/design/" aria-label="Design: how I design this site">
-      <Icon name="palette" size={14} class="footer-link-icon" />
-      <span class="footer-link-label">Design</span>
+    <a class="footer-link ui-cap ui-cap--quiet ui-cap--40" href="/design/">
+      <span class="ui-cap__label">Design</span>
     </a>
-    <span class="footer-link-sep" aria-hidden="true"></span>
-    <a class="footer-link" href="/developers/" aria-label="Developers: resources and API">
-      <Icon name="terminal" size={14} class="footer-link-icon" />
-      <span class="footer-link-label">Developers</span>
+    <a class="footer-link ui-cap ui-cap--quiet ui-cap--40" href="/developers/">
+      <span class="ui-cap__label">Developers</span>
     </a>
-    <span class="footer-link-sep" aria-hidden="true"></span>
-    <a class="footer-link" href="/colophon/" aria-label="Colophon">
-      <Icon name="info" size={14} class="footer-link-icon" />
-      <span class="footer-link-label">Colophon</span>
+    <a class="footer-link ui-cap ui-cap--quiet ui-cap--40" href="/colophon/">
+      <span class="ui-cap__label">Colophon</span>
     </a>
   </div>
 
   <button
     id="local-time"
     type="button"
-    class="clock"
-    aria-label="Pollachi local time. Activate to toggle timezone."
+    class="clock ui-cap ui-cap--glass ui-cap--40 ui-cap--lead"
+    data-fx="spot"
+    aria-label="Pollachi time"
   >
     <span class="dot" aria-hidden="true"></span>
-    <span id="clock-time" class="clock-time" aria-hidden="true"><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-sep">:</span><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-sep">:</span><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-slot"><span class="digit-face">0</span></span></span>
-    <span id="clock-tooltip" class="clock-tooltip" role="tooltip" aria-hidden="true">Pollachi · Around right now</span>
+    <span id="clock-time" class="clock-time ui-cap__label" aria-hidden="true"><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-sep">:</span><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-slot"><span class="digit-face">0</span></span></span>
+    <span class="clock-place ui-cap__label" aria-hidden="true">Pollachi</span>
+    <span class="ui-tip ui-tip--above" role="tooltip">Pollachi time</span>
   </button>
 
-  <div class="footer-controls" aria-label="Footer controls">
+  <div class="footer-dock" role="group" aria-label="Footer controls">
     <a
-      id="repo-btn"
-      class="repo-btn"
+      class="repo-btn ui-cap ui-cap--quiet ui-cap--40 ui-cap--icon"
       href={shortSha ? `${site.repoUrl}/commit/${shortSha}` : site.repoUrl}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={shortSha ? `Source code at commit ${shortSha}` : "View source code on GitHub"}
     >
-      <svg class="repo-github-icon" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
+      <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true">
         <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
       </svg>
-      <span class="repo-tooltip" aria-hidden="true" id="repo-tooltip"></span>
+      <span class="ui-tip ui-tip--above" role="tooltip"><span>Source{shortSha && <> · <span class="repo-sha">{shortSha}</span></>}</span></span>
     </a>
     <SoundToggle />
     <ThemeToggle />
@@ -81,204 +76,75 @@ const shortSha = buildMeta.commit;
     grid-row: 1;
     align-items: center;
     justify-content: center;
-    gap: 0.25rem;
     min-inline-size: 0;
   }
 
-  .footer-link {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--step-1);
-    min-block-size: 2.75rem;
-    padding: var(--step-1) var(--step-2);
-    border-radius: var(--r-pill);
-    color: var(--muted);
-    font-weight: var(--font-normal);
-    text-decoration: none;
-    white-space: nowrap;
-    transition:
-      color var(--t-color),
-      background-color var(--t-color),
-      transform var(--dur-press) var(--ease-snap);
-  }
-
-  .footer-link:hover {
-    color: var(--ink);
-    background: color-mix(in oklch, var(--ink) 4%, transparent);
-    text-decoration: none;
-  }
-
-  .footer-link:active {
-    transform: scale(0.97);
-  }
-
-  .footer-link:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-offset);
-  }
-
-  .footer-link-sep {
-    inline-size: var(--dot-3);
-    block-size: var(--dot-3);
-    border-radius: 50%;
-    background: var(--faint);
-    flex-shrink: 0;
-    opacity: 0.5;
-  }
-
-  .repo-btn {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    inline-size: 2.75rem;
-    block-size: 2.75rem;
-    border-radius: var(--r-pill);
-    color: var(--muted);
-    text-decoration: none;
-    transition:
-      color var(--t-color),
-      background-color var(--t-color),
-      transform var(--dur-press) var(--ease-snap);
-  }
-
-  .repo-btn:hover {
-    color: var(--ink);
-    background: color-mix(in oklch, var(--ink) 4%, transparent);
-  }
-
-  .repo-btn:active {
-    transform: scale(0.97);
-  }
-
-  .repo-btn:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-offset);
-  }
-
-  .repo-github-icon {
-    display: block;
-    inline-size: 16px;
-    block-size: 16px;
-    flex-shrink: 0;
-    transition: transform var(--dur-tint) var(--ease-enter);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .repo-btn:hover .repo-github-icon {
-      transform: scale(1.1);
-    }
-  }
-
-  .repo-btn:active .repo-github-icon {
-    transform: scale(0.92);
-  }
-
-  .repo-tooltip {
-    position: absolute;
-    bottom: calc(100% + 8px);
-    right: 0;
-    transform: translateY(4px) scale(0.98);
-    transform-origin: 100% 100%;
-    inline-size: max-content;
-    max-inline-size: min(18rem, calc(100vw - var(--mobile-gutter-start) - var(--mobile-gutter-end)));
-    padding: var(--step-1) var(--step-3);
-    border-radius: var(--r-pill);
-    background: var(--ink);
-    color: var(--canvas);
-    font-size: var(--text-xs);
-    font-weight: var(--font-medium);
-    white-space: nowrap;
-    text-align: center;
-    line-height: 1.4;
-    box-shadow: var(--shadow-1);
-    opacity: 0;
-    pointer-events: none;
-    --tip-delay: 120ms;
-    transition:
-      opacity var(--dur-exit) var(--ease-enter),
-      transform var(--dur-exit) var(--ease-enter);
-  }
-
-  .repo-tooltip::after {
+  /* 40 is below the touch minimum; the hit area is not. Only above and
+     below: sideways the neighbours already touch. */
+  .footer-link::before,
+  .clock::before,
+  .repo-btn::before {
     content: "";
     position: absolute;
-    top: 100%;
-    right: var(--step-4);
-    border: 5px solid transparent;
-    border-top-color: var(--ink);
+    inset: calc((var(--cap-h) - var(--hit)) / 2) 0;
   }
 
-  .repo-btn:focus-visible .repo-tooltip,
-  .repo-btn:hover .repo-tooltip {
-    opacity: 1;
-    transition:
-      opacity var(--dur-nudge) var(--ease-enter),
-      transform var(--dur-nudge) var(--ease-enter);
-    transition-delay: var(--tip-delay);
+  /* the dock holds its circles at muted, ink on hover and press */
+  .repo-btn.ui-cap--quiet {
+    color: var(--muted);
+    -webkit-touch-callout: none;
+  }
+
+  .repo-btn.ui-cap--quiet:active {
+    color: var(--ink);
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .repo-btn:focus-visible .repo-tooltip,
-    .repo-btn:hover .repo-tooltip {
-      transform: translateY(0) scale(1);
+    .repo-btn.ui-cap--quiet:hover {
+      color: var(--ink);
     }
   }
+
+  .repo-sha {
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: calc(var(--text-xs) * 0.92);
+    color: var(--muted);
+  }
+
   .clock {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-self: start;
     grid-column: 1;
     grid-row: 1;
-    gap: var(--step-2);
-    min-block-size: 2.75rem;
-    padding: var(--step-1) var(--step-2);
-    margin-inline: calc(var(--step-1) * -1);
-    border: 0;
-    border-radius: var(--r-pill);
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    user-select: none;
+    justify-self: start;
     max-inline-size: 100%;
     min-inline-size: 0;
-    transition:
-      color var(--t-color),
-      background-color var(--t-color),
-      transform var(--dur-press) var(--ease-snap);
+    user-select: none;
   }
 
-  .clock:hover {
-    color: var(--ink);
-    background: color-mix(in oklch, var(--ink) 4%, transparent);
-  }
-
-  .clock:active {
-    transform: scale(0.97);
-  }
-
-  .clock:focus-visible,
-  .footer-controls :global(button:focus-visible) {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-offset);
+  /* wider than the capsule, and the capsule is at the rail's edge: flush
+     with its left edge rather than centred past the gutter */
+  .clock > .ui-tip {
+    inset-inline-start: 0;
+    translate: none;
+    transform-origin: 0 100%;
   }
 
   .clock-time {
     display: inline-flex;
     align-items: center;
-    position: relative;
-    top: 0;
     font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
-    font-size: var(--text-sm);
+    font-size: var(--text-ui-sm);
     font-weight: var(--font-normal);
     letter-spacing: 0;
     font-feature-settings: "tnum";
     font-variant-numeric: tabular-nums;
     color: var(--ink);
     line-height: 1;
-    user-select: none;
-    transition: color var(--t-color);
+  }
+
+  .clock-place {
+    font-size: var(--text-ui-sm);
+    font-weight: var(--font-normal);
+    color: var(--ghost);
   }
 
   .digit-slot {
@@ -317,27 +183,20 @@ const shortSha = buildMeta.commit;
     user-select: none;
   }
 
-  .footer-link :global(.footer-link-icon) {
-    display: none;
-  }
-
   .dot {
     --presence: var(--acc-green);
     position: relative;
-    top: 0;
-    width: var(--dot-7);
-    height: var(--dot-7);
-    flex: 0 0 var(--dot-7);
+    inline-size: calc(var(--step) * 2);
+    block-size: calc(var(--step) * 2);
+    flex: none;
     border-radius: 50%;
     background: var(--presence);
-    transition:
-      background-color var(--t-color),
-      transform var(--t-move);
+    transition: background-color var(--t-color);
   }
 
   /* The pulse ring is a same-colour disc concentric with the dot, so it is
-     invisible over the dot and reads as a ring outside it. Scaling 7px to
-     15px gives the 0 to 4px band the old box-shadow spread drew, on
+     invisible over the dot and reads as a ring outside it. Scaling 8px to
+     16px gives the 0 to 4px band a box-shadow spread would draw, on
      transform + opacity instead of paint. */
   .dot::after {
     content: "";
@@ -360,204 +219,75 @@ const shortSha = buildMeta.commit;
       opacity: 1;
     }
     50% {
-      transform: scale(2.142857);
+      transform: scale(2);
       opacity: 0;
     }
   }
 
-  .clock:active .dot {
-    transform: scale(0.75);
-  }
-
-  .clock-tooltip {
-    position: absolute;
-    bottom: calc(100% + 8px);
-    left: 0;
-    inline-size: max-content;
-    max-inline-size: min(18rem, calc(100vw - var(--mobile-gutter-start) - var(--mobile-gutter-end)));
-    padding: var(--step-1) var(--step-3);
-    border-radius: var(--r-pill);
-    background: var(--ink);
-    color: var(--canvas);
-    font-size: var(--text-xs);
-    font-weight: var(--font-medium);
-    white-space: nowrap;
-    text-align: center;
-    line-height: 1.4;
-    box-shadow: var(--shadow-1);
-    opacity: 0;
-    pointer-events: none;
-    z-index: calc(var(--z-overlay) + 10);
-    transform: translateY(4px) scale(0.98);
-    transform-origin: 0% 100%;
-    --tip-delay: 80ms;
-    transition:
-      opacity var(--dur-exit) var(--ease-enter),
-      transform var(--dur-exit) var(--ease-enter);
-  }
-
-  .clock-tooltip::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 1rem;
-    border: 5px solid transparent;
-    border-top-color: var(--ink);
-  }
-
-  .clock:focus-visible .clock-tooltip,
-  .clock:hover .clock-tooltip {
-    opacity: 1;
-    transition:
-      opacity var(--dur-nudge) var(--ease-enter),
-      transform var(--dur-nudge) var(--ease-enter);
-    transition-delay: var(--tip-delay);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .clock:focus-visible .clock-tooltip,
-    .clock:hover .clock-tooltip {
-      transform: translateY(0) scale(1);
-    }
-  }
-
-  .footer-controls {
-    display: flex;
+  /* The dock is a glass 48 track: three 40 circles inside a 3px pad and the
+     1px rim. Same recipe as the glass capsules, but it is a surface, not a
+     control, so it neither lifts nor presses. */
+  .footer-dock {
+    display: inline-flex;
     grid-column: 3;
     grid-row: 1;
     align-items: center;
-    justify-content: flex-end;
-    gap: 0.25rem;
-    min-block-size: 2.75rem;
+    justify-self: end;
+    gap: var(--step-1);
+    padding: calc(var(--track-inset) - 1px);
+    border: 1px solid transparent;
+    border-radius: var(--r-pill);
+    background:
+      var(--glass-sheen) padding-box,
+      linear-gradient(var(--glass-fill), var(--glass-fill)) padding-box,
+      var(--glass-rim) border-box;
+    box-shadow: var(--glass-spec), var(--lift-0);
   }
 
-  .footer-controls :global(.sound-toggle),
-  .footer-controls :global(.theme-toggle) {
-    width: 44px;
-    height: 44px;
-    margin: 0;
-  }
-
-  .footer-controls :global(.sound-toggle::before),
-  .footer-controls :global(.theme-toggle::before) {
-    inset: 0;
+  /* The last circle sits at the rail's edge: its tooltip is flush with the
+     dock's outer edge rather than centred past the gutter. */
+  .footer-dock :global(:last-child > .ui-tip) {
+    inset-inline-start: auto;
+    inset-inline-end: calc(var(--step-1) * -1);
+    translate: none;
+    transform-origin: 100% 100%;
   }
 
   @media (prefers-reduced-motion: reduce) {
     .dot::after {
       animation: none;
     }
-    .clock-tooltip {
-      transition: none !important;
-      transform: none !important;
-    }
   }
 
   @media (max-width: 38rem) {
     .site-footer {
-      display: grid;
       grid-template-columns: 1fr auto;
       grid-template-rows: auto auto;
-      row-gap: var(--step-3);
-      column-gap: 0.5rem;
-      align-items: center;
+      column-gap: var(--step-2);
       margin-top: clamp(1.75rem, 4vw, 2.5rem);
       padding: 1rem 0 calc(1.5rem + env(safe-area-inset-bottom, 0px));
-      border-top: 1px solid var(--rule);
     }
 
-    .clock {
-      grid-column: 1;
-      grid-row: 1;
-      justify-self: start;
-      min-width: 0;
-      gap: var(--step-2);
-      padding: var(--step-1) var(--step-2);
-      margin-inline: calc(var(--step-2) * -1);
-      background: transparent;
-      border: 0;
-      border-radius: var(--r-pill);
-      white-space: nowrap;
-    }
-
-    .footer-controls {
+    .footer-dock {
       grid-column: 2;
-      grid-row: 1;
-      justify-self: end;
-      min-block-size: 2.5rem;
-      min-inline-size: 0;
-      gap: 0.25rem;
     }
 
     .footer-links {
       grid-column: 1 / -1;
       grid-row: 2;
-      justify-content: center;
-      justify-self: center;
-      align-items: center;
-      gap: 0.25rem;
-      min-inline-size: 0;
-      white-space: nowrap;
-      padding: 0;
-      background: transparent;
-      border: 0;
     }
 
-    .footer-link {
-      min-block-size: 2rem;
-      font-size: var(--text-xs);
-      padding: var(--step-1) var(--step-2);
-    }
-
-    .clock-time {
-      font-size: var(--text-xs);
-      top: 0;
-    }
-
-    .clock-tooltip {
-      right: auto;
-      left: 0;
-      max-inline-size: calc(100vw - 2rem);
-    }
-
-    .clock-tooltip::after {
-      right: auto;
-      left: 1rem;
-    }
-
-    .repo-tooltip {
-      right: 0;
-      left: auto;
-      transform-origin: 100% 100%;
-    }
-
-    .repo-tooltip::after {
-      right: var(--step-4);
-      left: auto;
-    }
   }
 
   @media (max-width: 22rem) {
-    .footer-link-label {
+    .footer-link {
+      --cap-px: var(--cap-px-32);
+    }
+
+    .clock-place {
       display: none;
     }
-
-    .footer-links {
-      gap: 0.15rem;
-    }
-
-    .footer-link {
-      inline-size: 2rem;
-      min-block-size: 2rem;
-      justify-content: center;
-      padding: 0;
-    }
-
-    .footer-link :global(.footer-link-icon) {
-      display: block;
-    }
   }
-
 </style>
 
 <script>
@@ -565,25 +295,32 @@ const shortSha = buildMeta.commit;
   import { onPageCleanup, pageSignal } from "../scripts/lifecycle";
   import { playAccent } from "../scripts/sound";
   import { tickPresence } from "../scripts/presence";
+  import "../scripts/tooltip";
 
   const ASHWIN_TZ = "Asia/Kolkata";
-  type TooltipView = "presence" | "timezone";
-  let tooltipView: TooltipView = "presence";
+  const PLACE = "Pollachi";
+  const DIGITS = 4;
+  const MINUTE = 60_000;
   const visitorTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const offsetFormatters = new Map<string, Intl.DateTimeFormat>();
+  // "Asia/Calcutta" is the legacy name engines still report for Kolkata.
+  const sameZone = visitorTz === ASHWIN_TZ || visitorTz === "Asia/Calcutta";
+  const visitorPlace = visitorTz.split("/").pop()!.replace(/_/g, " ");
+  // The view outlives a page: the document does, and so does the visitor's choice.
+  let showYours = false;
 
   interface ClockContext {
     signal: AbortSignal;
     footer: HTMLElement;
     button: HTMLButtonElement;
     tooltip: HTMLElement | null;
+    place: HTMLElement | null;
     dot: HTMLElement | null;
     slots: HTMLElement[];
     faces: HTMLElement[];
     snaps: Array<{ ghost: HTMLElement; animations: Animation[] } | undefined>;
     timer?: ReturnType<typeof setTimeout>;
     inView: boolean;
-    lastSecond: number;
+    lastMinute: number;
   }
 
   let clock: ClockContext | null = null;
@@ -604,79 +341,49 @@ const shortSha = buildMeta.commit;
     return snapTiming;
   }
 
-  const fmtSec = new Intl.DateTimeFormat("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-    timeZone: ASHWIN_TZ,
-  });
+  const hhmm = (timeZone: string) =>
+    new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone,
+    });
+  const fmtAshwin = hhmm(ASHWIN_TZ);
+  const fmtYours = sameZone ? fmtAshwin : hhmm(visitorTz);
 
-  function offsetMinutes(tz: string, date: Date): number {
-    let formatter = offsetFormatters.get(tz);
-    if (!formatter) {
-      formatter = new Intl.DateTimeFormat("en-US", {
-        timeZone: tz,
-        hour12: false,
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
-      offsetFormatters.set(tz, formatter);
-    }
+  function getTimeDigits(now: Date): string[] {
     const parts: Record<string, string> = {};
-    for (const part of formatter.formatToParts(date)) {
-      parts[part.type] = part.value;
-    }
-    const asUTC = Date.UTC(
-      Number(parts.year),
-      Number(parts.month) - 1,
-      Number(parts.day),
-      Number(parts.hour),
-      Number(parts.minute),
-      Number(parts.second),
-    );
-    return (asUTC - date.getTime()) / 60000;
-  }
-
-  function getDeltaMinutes(now: Date): number {
-    return Math.round(offsetMinutes(ASHWIN_TZ, now) - offsetMinutes(visitorTz, now));
-  }
-
-  function getTimezoneRelation(now: Date): string {
-    const delta = getDeltaMinutes(now);
-    if (visitorTz === ASHWIN_TZ || Math.abs(delta) < 1) {
-      return "Same timezone as you";
-    }
-    const abs = Math.abs(delta);
-    const hours = Math.floor(abs / 60);
-    const minutes = abs % 60;
-    const span = minutes ? `${hours}h ${minutes}m` : `${hours}h`;
-    return delta > 0 ? `${span} ahead of you` : `${span} behind you`;
-  }
-
-  function getAshwinTimeDigits(now: Date): string[] {
-    const parts: Record<string, string> = {};
-    for (const part of fmtSec.formatToParts(now)) {
+    for (const part of (showYours ? fmtYours : fmtAshwin).formatToParts(now)) {
       parts[part.type] = part.value;
     }
     const h = (parts.hour || "00").padStart(2, "0");
     const m = (parts.minute || "00").padStart(2, "0");
-    const s = (parts.second || "00").padStart(2, "0");
-    return [h[0]!, h[1]!, m[0]!, m[1]!, s[0]!, s[1]!];
+    return [h[0]!, h[1]!, m[0]!, m[1]!];
   }
 
-  /* The incoming footer is swapped in with the live time already showing,
-     so the digits do not flash 00:00:00 before the clock initialises. */
+  /* One sentence per view. The tooltip promises the toggle only where there
+     is one: a visitor in Pollachi's own zone has nothing to switch to. */
+  function viewCopy(): { place: string; tip: string } {
+    if (sameZone) return { place: PLACE, tip: "Pollachi time" };
+    return showYours
+      ? { place: visitorPlace, tip: "Your time, tap for Pollachi" }
+      : { place: PLACE, tip: "Pollachi time, tap for yours" };
+  }
+
+  /* The incoming footer is swapped in with the live time and the visitor's
+     chosen view already showing, so the digits do not flash 00:00 and the
+     place does not snap back to Pollachi before the clock initialises. */
   function prepareClock(event: Event) {
     const incoming = (event as TransitionBeforeSwapEvent).newDocument;
-    const digits = getAshwinTimeDigits(new Date());
+    const digits = getTimeDigits(new Date());
+    const copy = viewCopy();
     incoming.querySelectorAll<HTMLElement>(".site-footer .digit-face").forEach((face, index) => {
       if (digits[index] !== undefined) face.textContent = digits[index]!;
     });
+    const place = incoming.querySelector<HTMLElement>(".site-footer .clock-place");
+    if (place) place.textContent = copy.place;
+    const tip = incoming.querySelector<HTMLElement>(".site-footer #local-time [role=\"tooltip\"]");
+    if (tip) tip.textContent = copy.tip;
   }
 
   function clearSnap(context: ClockContext, index: number) {
@@ -734,24 +441,25 @@ const shortSha = buildMeta.commit;
   function render(context: ClockContext, force = false, animate = true) {
     if (context.signal.aborted || !context.footer.isConnected) return;
     const now = new Date();
-    const second = Math.floor(now.getTime() / 1000);
-    if (!force && context.lastSecond === second) return;
-    context.lastSecond = second;
+    const minute = Math.floor(now.getTime() / MINUTE);
+    if (!force && context.lastMinute === minute) return;
+    context.lastMinute = minute;
     const presence = tickPresence(now);
-    const { dot, tooltip, button } = context;
+    const { dot, tooltip, place, button } = context;
     if (dot) {
       if (dot.style.getPropertyValue("--presence") !== presence.token) dot.style.setProperty("--presence", presence.token);
       if (dot.dataset.presence !== presence.state) dot.dataset.presence = presence.state;
     }
 
-    const digits = getAshwinTimeDigits(now);
-    if (tooltip) {
-      const text = tooltipView === "presence" ? presence.label : getTimezoneRelation(now);
-      if (tooltip.textContent !== text) tooltip.textContent = text;
-    }
-    const label = `${presence.label} · ${digits[0]}${digits[1]}:${digits[2]}${digits[3]}:${digits[4]}${digits[5]}`;
+    const digits = getTimeDigits(now);
+    const copy = viewCopy();
+    if (tooltip && tooltip.textContent !== copy.tip) tooltip.textContent = copy.tip;
+    if (place && place.textContent !== copy.place) place.textContent = copy.place;
+    const time = `${digits[0]}${digits[1]}:${digits[2]}${digits[3]}`;
+    const toggle = sameZone ? "" : showYours ? ". Show Pollachi time." : ". Show your time.";
+    const label = showYours ? `Your time · ${time}${toggle}` : `${presence.label} · ${time}${toggle}`;
     if (button.getAttribute("aria-label") !== label) button.setAttribute("aria-label", label);
-    if (context.faces.length === 6) updateDigits(context, digits, animate);
+    if (context.faces.length === DIGITS) updateDigits(context, digits, animate);
   }
 
   function stopClock(context: ClockContext) {
@@ -761,15 +469,15 @@ const shortSha = buildMeta.commit;
     }
   }
 
-  /* One timer per second, aimed at the next second boundary, so the digits
-     change when the second does instead of up to 250ms late. */
+  /* One timer per minute, aimed at the next minute boundary, so the digits
+     change when the minute does instead of up to a poll interval late. */
   function armClock(context: ClockContext) {
     context.timer = setTimeout(() => {
       context.timer = undefined;
       if (context.signal.aborted || !context.footer.isConnected) return;
       render(context);
       armClock(context);
-    }, 1000 - (Date.now() % 1000));
+    }, MINUTE - (Date.now() % MINUTE));
   }
 
   /* Ticks only while the clock is on screen and the tab is visible. Coming
@@ -800,18 +508,20 @@ const shortSha = buildMeta.commit;
       signal,
       footer,
       button: btn,
-      tooltip: footer.querySelector<HTMLElement>("#clock-tooltip"),
+      tooltip: btn.querySelector<HTMLElement>('[role="tooltip"]'),
+      place: footer.querySelector<HTMLElement>(".clock-place"),
       dot: footer.querySelector<HTMLElement>(".dot"),
       slots: Array.from(footer.querySelectorAll<HTMLElement>(".digit-slot")),
       faces: Array.from(footer.querySelectorAll<HTMLElement>(".digit-face")),
       snaps: [],
       inView: false,
-      lastSecond: -1,
+      lastMinute: -1,
     };
     clock = context;
     btn.dataset.enhanced = "true";
     btn.addEventListener("click", () => {
-      tooltipView = tooltipView === "presence" ? "timezone" : "presence";
+      if (sameZone) return;
+      showYours = !showYours;
       playAccent("tick");
       render(context, true);
     }, { signal });
@@ -836,47 +546,4 @@ const shortSha = buildMeta.commit;
   document.addEventListener("astro:before-swap", prepareClock);
   init();
   document.addEventListener("astro:page-load", init);
-</script>
-
-<script>
-  import { pageSignal } from "../scripts/lifecycle";
-
-  const REPO_BANTERS = [
-    "View source code",
-    "Wanna fork? Go for it.",
-    "Inspired? Steal freely.",
-    "Borrow. Remix. Ship.",
-    "Open source. Go wild.",
-    "Peek inside.",
-    "Read the code.",
-  ];
-
-  let repoBanterIndex = -1;
-  let repoPage: AbortSignal | null = null;
-
-  function nextBanter(): string {
-    const pool = REPO_BANTERS.filter((_, i) => i !== repoBanterIndex);
-    const pick = pool[Math.floor(Math.random() * pool.length)]!;
-    repoBanterIndex = REPO_BANTERS.indexOf(pick);
-    return pick;
-  }
-
-  function initRepoBtn() {
-    const signal = pageSignal();
-    if (repoPage === signal || signal.aborted) return;
-    const btn = document.getElementById("repo-btn");
-    const tooltip = document.getElementById("repo-tooltip");
-    if (!btn || !tooltip) return;
-    repoPage = signal;
-    btn.dataset.repoEnhanced = "true";
-
-    tooltip.textContent = nextBanter();
-
-    btn.addEventListener("pointerenter", () => {
-      tooltip.textContent = nextBanter();
-    }, { signal });
-  }
-
-  initRepoBtn();
-  document.addEventListener("astro:page-load", initRepoBtn);
 </script>
