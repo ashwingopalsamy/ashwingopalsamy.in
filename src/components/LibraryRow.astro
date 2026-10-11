@@ -15,9 +15,9 @@ const dateTime = item.date.toISOString().slice(0, 10);
 const isLinked = Boolean(item.href);
 const isExternal = item.kind === "articles";
 const status = item.kind === "books"
-  ? item.status === "reading" ? "Reading" : item.status === "dropped" ? "Dropped" : null
+  ? item.status === "reading" ? "reading" : item.status === "dropped" ? "dropped" : null
   : item.kind === "watch"
-    ? item.status === "watching" ? "Watching" : item.status === "dropped" ? "Dropped" : null
+    ? item.status === "watching" ? "watching" : item.status === "dropped" ? "dropped" : null
     : null;
 const trailingMeta = item.kind === "notes"
   ? date
@@ -29,219 +29,59 @@ const trailingMeta = item.kind === "notes"
         ? item.hostname || item.source
         : date;
 const label = isExternal ? `Open ${item.title}, external site` : `Open ${item.title}`;
+
+// The badge rides in the title's text flow, glued to the last word by a
+// non-breaking space, so it wraps with that word and never alone.
+const cut = item.title.lastIndexOf(" ");
+const head = cut > 0 ? item.title.slice(0, cut + 1) : "";
+const tail = cut > 0 ? item.title.slice(cut + 1) : item.title;
 ---
 
-<li class:list={["library-row", `is-${item.kind}`, { "is-linked": isLinked, "is-overview": density === "overview" }]}>
+<li class:list={["library-row", `is-${item.kind}`, { "is-linked": isLinked, "is-static": !isLinked, "is-overview": density === "overview" }]}>
   {isLinked ? (
     <a
-      class="library-row-shell is-link"
+      class="ui-row"
+      data-fx="spot"
       href={item.href!}
       aria-label={label}
       {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
     >
-      <div class="library-row-main">
-        <span class="library-row-title">{item.title}</span>
-        {status && <StatusPill label={status} class="library-row-status" />}
-      </div>
-      <div class="library-row-trailing">
-        {item.kind === "notes" ? (
-          <time class="library-row-meta is-date" datetime={dateTime}>{trailingMeta}</time>
-        ) : (
-          <span class="library-row-meta">{trailingMeta}</span>
-        )}
-        <span class:list={["library-row-direction", { "is-external": isExternal }]} aria-hidden="true">
-          <Icon name={isExternal ? "arrow-up-right" : "chevron-right"} size={14} />
-        </span>
-      </div>
+      <span class="ui-row__title">
+        {status ? <>{head}<span class="library-row-tail">{tail}&nbsp;<StatusPill label={status} /></span></> : item.title}
+      </span>
+      {item.kind === "notes" ? (
+        <time class="ui-row__meta library-row-meta" datetime={dateTime}>{trailingMeta}</time>
+      ) : (
+        <span class="ui-row__meta library-row-meta">{trailingMeta}</span>
+      )}
+      <span class:list={["ui-row__glyph", { "ui-row__glyph--ext": isExternal }]} aria-hidden="true">
+        <Icon name={isExternal ? "arrow-up-right" : "arrow-right"} size={16} />
+      </span>
     </a>
   ) : (
-    <div class="library-row-shell">
-      <div class="library-row-main">
-        <span class="library-row-title">{item.title}</span>
-        {status && <StatusPill label={status} class="library-row-status" />}
-      </div>
-      <div class="library-row-trailing">
-        {item.kind === "notes" ? (
-          <time class="library-row-meta is-date" datetime={dateTime}>{trailingMeta}</time>
-        ) : (
-          <span class="library-row-meta">{trailingMeta}</span>
-        )}
-        <span class="library-row-direction is-empty" aria-hidden="true" />
-      </div>
+    <div class="ui-row ui-row--static">
+      <span class="ui-row__title">
+        {status ? <>{head}<span class="library-row-tail">{tail}&nbsp;<StatusPill label={status} /></span></> : item.title}
+      </span>
+      {item.kind === "notes" ? (
+        <time class="ui-row__meta library-row-meta" datetime={dateTime}>{trailingMeta}</time>
+      ) : (
+        <span class="ui-row__meta library-row-meta">{trailingMeta}</span>
+      )}
+      <span class="ui-row__glyph" aria-hidden="true"></span>
     </div>
   )}
 </li>
 
 <style>
-  .library-row {
-    margin: 0;
-    transition: opacity var(--dur-tint) var(--ease-enter);
-  }
-
-  .library-row-shell {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-block-size: 2.25rem;
-    gap: var(--step-4);
-    padding: var(--step-3) var(--step-3);
-    margin-inline: calc(var(--step-3) * -1);
-    border-radius: var(--r-3);
-    background: var(--surface-row-rest);
-    border: none;
-    box-shadow: none;
-    text-decoration: none;
-    color: inherit;
-    transition:
-      background-color var(--t-color),
-      transform var(--dur-press) var(--ease-enter);
-  }
-
-  .library-row-shell:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: 2px;
-  }
-
-  .library-row-main {
-    display: flex;
-    align-items: center;
-    gap: var(--step-2);
-    min-inline-size: 0;
-    flex: 1 1 auto;
-    overflow: hidden;
-  }
-
-  .library-row-title {
-    color: var(--ink);
-    font-size: var(--text-sm);
-    font-weight: var(--font-medium);
-    letter-spacing: -0.01em;
-    line-height: var(--leading-snug);
+  .library-row-tail {
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    transition: color var(--t-color);
   }
 
-  .library-row-main :global(.library-row-status) {
-    min-block-size: calc(var(--step) * 5);
-    font-size: 0.5625rem;
-    padding-inline: var(--step-2);
-    flex-shrink: 0;
-  }
-
-  .library-row-trailing {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    flex-shrink: 0;
-    margin-left: auto;
-  }
-
+  /* a long hostname or author yields to the title rather than crushing it */
   .library-row-meta {
-    color: var(--ghost);
-    font-size: var(--text-xs);
-    font-family: var(--font-mono);
-    font-weight: 400;
-    white-space: nowrap;
-    line-height: 1;
-    max-width: clamp(7rem, 28vw, 15rem);
+    max-inline-size: clamp(calc(var(--step) * 28), 28vw, calc(var(--step) * 60));
     overflow: hidden;
     text-overflow: ellipsis;
-    transition: color var(--t-color);
-  }
-
-  .library-row-meta.is-date {
-    font-variant-numeric: tabular-nums;
-  }
-
-  .library-row.is-linked .library-row-shell::before {
-    content: "";
-    position: absolute;
-    inset-block: var(--step-2);
-    inset-inline-start: 0;
-    width: 2px;
-    border-radius: var(--r-pill);
-    background: var(--ink);
-    transform: scaleY(0);
-    transform-origin: center;
-    transition: transform var(--dur-shift) var(--ease-spring-snap);
-  }
-
-  .library-row-direction {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--ghost);
-    width: var(--step-4);
-    height: var(--step-4);
-    flex-shrink: 0;
-    transition:
-      color var(--dur-tint) linear,
-      transform var(--dur-shift) var(--ease-spring-pop);
-  }
-
-  .library-row-direction.is-empty {
-    visibility: hidden;
-    pointer-events: none;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .library-row.is-linked:hover .library-row-shell,
-    .library-row.is-linked:focus-within .library-row-shell {
-      background: var(--surface-row-hover);
-    }
-
-    .library-row.is-linked:hover .library-row-shell::before,
-    .library-row.is-linked:focus-within .library-row-shell::before {
-      transform: scaleY(1);
-    }
-
-    .library-row.is-linked:hover .library-row-meta,
-    .library-row.is-linked:focus-within .library-row-meta {
-      color: var(--muted);
-    }
-
-    .library-row.is-linked:hover .library-row-direction,
-    .library-row.is-linked:focus-within .library-row-direction {
-      color: var(--ink);
-    }
-
-    .library-row.is-linked:hover .library-row-direction:not(.is-external),
-    .library-row.is-linked:focus-within .library-row-direction:not(.is-external) {
-      transform: translate3d(var(--travel-nudge), 0, 0);
-    }
-
-    .library-row.is-linked:hover .library-row-direction.is-external,
-    .library-row.is-linked:focus-within .library-row-direction.is-external {
-      transform: translate(2px, -2px);
-    }
-  }
-
-  .library-row.is-linked:active .library-row-shell {
-    background: var(--surface-row-press);
-    transform: scale(var(--press-scale-inline));
-  }
-
-  @media (max-width: 38rem) {
-    .library-row-shell {
-      min-block-size: 2.25rem;
-      padding: var(--step-2) var(--step-3);
-      margin-inline: calc(var(--step-3) * -1);
-      gap: var(--step-2);
-    }
-
-    .library-row-main {
-      gap: var(--step-1);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .library-row-direction {
-      transform: none !important;
-    }
   }
 </style>
-

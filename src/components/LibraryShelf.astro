@@ -21,12 +21,24 @@ const accents = {
 ---
 
 <section class:list={["library-shelf", `is-${shelf.kind}`]} aria-labelledby={id}>
-  <SectionHeading id={id} title={label} count={shelf.total} accent={accents[shelf.kind]}>
-    <Fragment slot="action"><a class="library-show-all" href={`/library/?view=${shelf.kind}`} data-library-show-all data-library-view={shelf.kind} aria-label={`Show all ${label.toLowerCase()}`}>
-      <span>Show all</span><Icon name="chevron-right" size={15} />
-    </a></Fragment>
+  <SectionHeading id={id} title={label} accent={accents[shelf.kind]}>
+    <Fragment slot="action">
+      <a
+        class="library-all ui-cap ui-cap--quiet ui-cap--32 ui-cap--trail"
+        href={`/library/?view=${shelf.kind}`}
+        data-library-show-all
+        data-library-view={shelf.kind}
+        aria-label={`All ${shelf.total} ${label.toLowerCase()}`}
+      >
+        <span class="ui-cap__label">All <span class="ui-count">{shelf.total}</span></span>
+        <span class="ui-arw" aria-hidden="true">
+          <Icon name="arrow-right" size={14} strokeWidth={2} />
+          <Icon name="arrow-right" size={14} strokeWidth={2} />
+        </span>
+      </a>
+    </Fragment>
   </SectionHeading>
-  <LibraryRows items={shelf.items} linkedTags={linkedTags} density="overview" empty={`No ${label.toLowerCase()} here yet.`} />
+  <LibraryRows items={shelf.items} linkedTags={linkedTags} density="overview" />
 </section>
 
 <style>
@@ -38,35 +50,9 @@ const accents = {
     margin-top: clamp(2.75rem, 6vw, 3.5rem);
   }
 
-  .library-show-all {
-    display: inline-flex;
-    flex: 0 0 auto;
-    align-items: center;
-    gap: var(--step-1);
-    color: var(--faint);
-    font-size: var(--text-xs);
-    font-weight: var(--font-medium);
-    text-decoration: none;
-    transition: color var(--t-color);
+  /* the capsule's own trailing inset, so its arrow lands on the rail with
+     the rows' glyph column */
+  .library-all {
+    margin-inline-end: calc(var(--step-2) * -1);
   }
-
-  .library-show-all:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-offset);
-  }
-
-  .library-show-all :global(.ui-icon) {
-    transition: transform var(--dur-tint) var(--ease-enter);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .library-show-all:hover {
-      color: var(--ink);
-    }
-
-    .library-show-all:hover :global(.ui-icon) {
-      transform: translateX(1.5px);
-    }
-  }
-
 </style>
