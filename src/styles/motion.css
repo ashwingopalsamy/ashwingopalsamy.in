@@ -112,7 +112,7 @@
   --dur-spin: 800ms;      /* indeterminate spinner, one full turn */
   --dur-shimmer: 1.4s;    /* loading-skeleton sweep */
   --dur-blink: 1.1s;      /* caret on/off cycle */
-  --dur-beacon: 2s;       /* location ring, one expansion (loops) */
+  --dur-beacon: 3.6s;     /* location ring, one slow breath (loops), same cadence as the clock dot */
   --dur-breathe: 2.2s;    /* placeholder dots fading in and out */
   --dur-rise: 3s;         /* steam wisps rising */
   --dur-bob: 3.2s;        /* avatars bobbing */

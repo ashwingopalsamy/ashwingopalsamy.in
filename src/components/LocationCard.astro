@@ -161,7 +161,7 @@ const PIN_LON = 76.9558;
     background: var(--loc-beacon);
     border: 2.5px solid var(--canvas);
     transform: translate(-50%, -50%);
-    animation: loc-pulse var(--dur-beacon) var(--ease-enter) infinite;
+    animation: loc-pulse var(--dur-beacon) var(--ease-pulse) infinite;
   }
 
   .loc-dot::after {
@@ -172,7 +172,7 @@ const PIN_LON = 76.9558;
     background: var(--loc-beacon);
     opacity: 0.45;
     transform: scale(1);
-    animation: loc-pulse var(--dur-beacon) var(--ease-enter) infinite;
+    animation: loc-pulse var(--dur-beacon) var(--ease-pulse) infinite;
     pointer-events: none;
   }
 
@@ -185,9 +185,10 @@ const PIN_LON = 76.9558;
       transform: scale(1.75);
       opacity: 0;
     }
+    /* back to the start values, so the loop breathes instead of popping */
     100% {
       transform: scale(1);
-      opacity: 0;
+      opacity: 0.45;
     }
   }
 
