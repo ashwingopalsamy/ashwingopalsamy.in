@@ -306,8 +306,10 @@ const backTarget = resolveBackTarget(path);
     inset-inline-start: var(--step-1);
     width: var(--nav-slot);
     border-radius: var(--r-pill);
-    background: var(--ink);
-    box-shadow: var(--shadow-1);
+    /* the same ink as the primary capsule: a vertical gradient, its inset
+       edge and a hairline of lift */
+    background: var(--ink-fill);
+    box-shadow: var(--ink-edge), var(--lift-0);
     pointer-events: none;
     transform: translate3d(var(--pill-x), 0, 0);
     transform-origin: center;

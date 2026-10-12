@@ -195,6 +195,9 @@ import Icon from "./Icon.astro";
     max-inline-size: 100vw;
     box-sizing: border-box;
     padding: clamp(4.5rem, 11vh, 7.5rem) var(--gutter) 2rem;
+    /* focus inside the palette is a hairline and this halo, never the
+       global 2px ink ring */
+    --palette-halo: color-mix(in oklch, var(--ink) 10%, transparent);
     pointer-events: none;
   }
   .palette.is-open {
@@ -321,7 +324,8 @@ import Icon from "./Icon.astro";
   }
 
   /* A single-line field is a pill like every other control. The input
-     drops its own outline; the pill carries the focus ring. */
+     drops its own outline; focus lights the pill's hairline and a soft
+     halo instead of the heavy ring. */
   .palette-search {
     display: flex;
     align-items: center;
@@ -330,11 +334,31 @@ import Icon from "./Icon.astro";
     block-size: var(--cap-40);
     padding-inline: var(--step-3);
     border-radius: var(--r-pill);
+    transition: box-shadow var(--t-color);
   }
 
   .palette-search:focus-within {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-offset);
+    box-shadow:
+      inset 0 0 0 1px var(--edge-strong),
+      0 0 0 3px var(--palette-halo);
+  }
+
+  /* Back and close: the same hairline and halo on a resting wash. */
+  .palette :is(.palette-back, .palette-close):focus-visible {
+    outline: none;
+    color: var(--ink);
+    background-color: var(--wash-press);
+    box-shadow:
+      inset 0 0 0 1px var(--edge-strong),
+      0 0 0 3px var(--palette-halo);
+  }
+
+  /* Containers that take programmatic focus for assistive tech. The active
+     option's puddle is what shows where the keys are. */
+  .palette-panel:focus-visible,
+  .palette-list:focus-visible,
+  .palette-mobile-title:focus-visible {
+    outline: none;
   }
 
   .palette-search-icon-box {
@@ -739,6 +763,7 @@ import Icon from "./Icon.astro";
          band, where blurring flat canvas produced identical pixels. */
       box-sizing: border-box;
       overflow: hidden;
+      transition: box-shadow var(--t-color);
     }
 
     /* typing: the rim lights, as a glass control does on hover */
@@ -858,14 +883,22 @@ import Icon from "./Icon.astro";
       background: transparent;
     }
 
-    /* The stage clips its children, so the ring goes on the stage itself. */
+    /* The stage clips its children, so focus is shown on the stage itself:
+       the rim lights and the halo closes around it. */
     .palette-mobile-dock .palette-search:focus-within {
-      outline: none;
+      box-shadow: none;
     }
 
-    .palette-mobile-query-stage:has(#palette-input:focus-visible) {
-      outline: var(--focus-ring);
-      outline-offset: var(--focus-offset);
+    .palette-mobile-query-stage:has(:focus-visible) {
+      background:
+        var(--glass-sheen) padding-box,
+        linear-gradient(var(--glass-fill), var(--glass-fill)) padding-box,
+        var(--glass-rim-hover) border-box;
+      box-shadow: var(--glass-spec), var(--lift-0), 0 0 0 3px var(--palette-halo);
+    }
+
+    .palette-mobile-search-launch:focus-visible {
+      outline: none;
     }
 
     .palette-mobile-dock .palette-search-icon-box {
@@ -903,9 +936,15 @@ import Icon from "./Icon.astro";
     }
 
     .palette .palette-mobile-close:hover,
-    .palette .palette-mobile-close:active {
+    .palette .palette-mobile-close:active,
+    .palette .palette-mobile-close:focus-visible {
       color: var(--ink);
       background-color: var(--wash-press);
+    }
+
+    .palette .palette-mobile-close:focus-visible {
+      outline: none;
+      box-shadow: inset 0 0 0 1px var(--edge-strong);
     }
 
     .palette-mobile-close[hidden] {
@@ -967,6 +1006,13 @@ import Icon from "./Icon.astro";
     }
     .palette-mobile-close {
       border: 1px solid CanvasText;
+    }
+
+    /* shadows are not painted here, so focus keeps a real outline */
+    .palette-search:focus-within,
+    .palette-mobile-query-stage:has(:focus-visible) {
+      outline: 2px solid Highlight;
+      outline-offset: var(--focus-offset);
     }
 
     .palette-list-wrap::before,
