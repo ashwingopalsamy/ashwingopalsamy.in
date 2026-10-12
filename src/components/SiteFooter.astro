@@ -24,16 +24,17 @@ const shortSha = buildMeta.commit;
     id="local-time"
     type="button"
     class="clock ui-cap ui-cap--quiet ui-cap--40 ui-cap--lead"
-    aria-label="Pollachi time"
+    aria-label="Pollachi local time. Activate to toggle timezone."
   >
     <span class="dot" aria-hidden="true"></span>
-    <span id="clock-time" class="clock-time ui-cap__label" aria-hidden="true"><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-sep">:</span><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-slot"><span class="digit-face">0</span></span></span>
+    <span id="clock-time" class="clock-time ui-cap__label" aria-hidden="true"><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-sep">:</span><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-sep">:</span><span class="digit-slot"><span class="digit-face">0</span></span><span class="digit-slot"><span class="digit-face">0</span></span></span>
     <span class="clock-place ui-cap__label" aria-hidden="true">Pollachi</span>
-    <span class="ui-tip ui-tip--above" role="tooltip">Pollachi time</span>
+    <span id="clock-tooltip" class="ui-tip ui-tip--above" role="tooltip">Pollachi · Around right now</span>
   </button>
 
   <div class="footer-dock" role="group" aria-label="Footer controls">
     <a
+      id="repo-btn"
       class="repo-btn ui-cap ui-cap--quiet ui-cap--40 ui-cap--icon"
       href={shortSha ? `${site.repoUrl}/commit/${shortSha}` : site.repoUrl}
       target="_blank"
@@ -43,7 +44,7 @@ const shortSha = buildMeta.commit;
       <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true">
         <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
       </svg>
-      <span class="ui-tip ui-tip--above" role="tooltip"><span>Source{shortSha && <> · <span class="repo-sha">{shortSha}</span></>}</span></span>
+      <span id="repo-tooltip" class="ui-tip ui-tip--above" role="tooltip"><span>View source code</span></span>
     </a>
     <SoundToggle />
     <ThemeToggle />
@@ -290,34 +291,30 @@ const shortSha = buildMeta.commit;
   import "../scripts/tooltip";
 
   const ASHWIN_TZ = "Asia/Kolkata";
-  const PLACE = "Pollachi";
-  const DIGITS = 4;
-  const MINUTE = 60_000;
+  type TooltipView = "presence" | "timezone";
+  let tooltipView: TooltipView = "presence";
   const visitorTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  // "Asia/Calcutta" is the legacy name engines still report for Kolkata.
-  const sameZone = visitorTz === ASHWIN_TZ || visitorTz === "Asia/Calcutta";
-  const visitorPlace = visitorTz.split("/").pop()!.replace(/_/g, " ");
-  // The view outlives a page: the document does, and so does the visitor's choice.
-  let showYours = false;
+  const offsetFormatters = new Map<string, Intl.DateTimeFormat>();
 
   interface ClockContext {
     signal: AbortSignal;
     footer: HTMLElement;
     button: HTMLButtonElement;
     tooltip: HTMLElement | null;
-    place: HTMLElement | null;
     dot: HTMLElement | null;
     slots: HTMLElement[];
     faces: HTMLElement[];
     snaps: Array<{ ghost: HTMLElement; animations: Animation[] } | undefined>;
     timer?: ReturnType<typeof setTimeout>;
+    tipTimer?: ReturnType<typeof setTimeout>;
     inView: boolean;
-    lastMinute: number;
+    lastSecond: number;
   }
 
   let clock: ClockContext | null = null;
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
   let snapTiming: KeyframeAnimationOptions | undefined;
 
   /* The tick gesture takes its duration and curve from the motion tokens.
@@ -333,49 +330,84 @@ const shortSha = buildMeta.commit;
     return snapTiming;
   }
 
-  const hhmm = (timeZone: string) =>
-    new Intl.DateTimeFormat("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-      timeZone,
-    });
-  const fmtAshwin = hhmm(ASHWIN_TZ);
-  const fmtYours = sameZone ? fmtAshwin : hhmm(visitorTz);
+  const fmtSec = new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    timeZone: ASHWIN_TZ,
+  });
 
-  function getTimeDigits(now: Date): string[] {
+  function offsetMinutes(tz: string, date: Date): number {
+    let formatter = offsetFormatters.get(tz);
+    if (!formatter) {
+      formatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: tz,
+        hour12: false,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+      offsetFormatters.set(tz, formatter);
+    }
     const parts: Record<string, string> = {};
-    for (const part of (showYours ? fmtYours : fmtAshwin).formatToParts(now)) {
+    for (const part of formatter.formatToParts(date)) {
+      parts[part.type] = part.value;
+    }
+    const asUTC = Date.UTC(
+      Number(parts.year),
+      Number(parts.month) - 1,
+      Number(parts.day),
+      Number(parts.hour),
+      Number(parts.minute),
+      Number(parts.second),
+    );
+    return (asUTC - date.getTime()) / 60000;
+  }
+
+  function getDeltaMinutes(now: Date): number {
+    return Math.round(offsetMinutes(ASHWIN_TZ, now) - offsetMinutes(visitorTz, now));
+  }
+
+  function getTimezoneRelation(now: Date): string {
+    const delta = getDeltaMinutes(now);
+    if (visitorTz === ASHWIN_TZ || Math.abs(delta) < 1) {
+      return "Same timezone as you";
+    }
+    const abs = Math.abs(delta);
+    const hours = Math.floor(abs / 60);
+    const minutes = abs % 60;
+    const span = minutes ? `${hours}h ${minutes}m` : `${hours}h`;
+    return delta > 0 ? `${span} ahead of you` : `${span} behind you`;
+  }
+
+  function getAshwinTimeDigits(now: Date): string[] {
+    const parts: Record<string, string> = {};
+    for (const part of fmtSec.formatToParts(now)) {
       parts[part.type] = part.value;
     }
     const h = (parts.hour || "00").padStart(2, "0");
     const m = (parts.minute || "00").padStart(2, "0");
-    return [h[0]!, h[1]!, m[0]!, m[1]!];
+    const s = (parts.second || "00").padStart(2, "0");
+    return [h[0]!, h[1]!, m[0]!, m[1]!, s[0]!, s[1]!];
   }
 
-  /* One sentence per view. The tooltip promises the toggle only where there
-     is one: a visitor in Pollachi's own zone has nothing to switch to. */
-  function viewCopy(): { place: string; tip: string } {
-    if (sameZone) return { place: PLACE, tip: "Pollachi time" };
-    return showYours
-      ? { place: visitorPlace, tip: "Your time, tap for Pollachi" }
-      : { place: PLACE, tip: "Pollachi time, tap for yours" };
-  }
-
-  /* The incoming footer is swapped in with the live time and the visitor's
-     chosen view already showing, so the digits do not flash 00:00 and the
-     place does not snap back to Pollachi before the clock initialises. */
+  /* The incoming footer is swapped in with the live time and the tooltip's
+     current view already showing, so the digits do not flash 00:00:00 and
+     the label does not snap back to the markup default before the clock
+     initialises. */
   function prepareClock(event: Event) {
     const incoming = (event as TransitionBeforeSwapEvent).newDocument;
-    const digits = getTimeDigits(new Date());
-    const copy = viewCopy();
+    const now = new Date();
+    const digits = getAshwinTimeDigits(now);
     incoming.querySelectorAll<HTMLElement>(".site-footer .digit-face").forEach((face, index) => {
       if (digits[index] !== undefined) face.textContent = digits[index]!;
     });
-    const place = incoming.querySelector<HTMLElement>(".site-footer .clock-place");
-    if (place) place.textContent = copy.place;
-    const tip = incoming.querySelector<HTMLElement>(".site-footer #local-time [role=\"tooltip\"]");
-    if (tip) tip.textContent = copy.tip;
+    const tip = incoming.querySelector<HTMLElement>(".site-footer #clock-tooltip");
+    if (tip) tip.textContent = tooltipView === "presence" ? tickPresence(now).label : getTimezoneRelation(now);
   }
 
   function clearSnap(context: ClockContext, index: number) {
@@ -433,25 +465,24 @@ const shortSha = buildMeta.commit;
   function render(context: ClockContext, force = false, animate = true) {
     if (context.signal.aborted || !context.footer.isConnected) return;
     const now = new Date();
-    const minute = Math.floor(now.getTime() / MINUTE);
-    if (!force && context.lastMinute === minute) return;
-    context.lastMinute = minute;
+    const second = Math.floor(now.getTime() / 1000);
+    if (!force && context.lastSecond === second) return;
+    context.lastSecond = second;
     const presence = tickPresence(now);
-    const { dot, tooltip, place, button } = context;
+    const { dot, tooltip, button } = context;
     if (dot) {
       if (dot.style.getPropertyValue("--presence") !== presence.token) dot.style.setProperty("--presence", presence.token);
       if (dot.dataset.presence !== presence.state) dot.dataset.presence = presence.state;
     }
 
-    const digits = getTimeDigits(now);
-    const copy = viewCopy();
-    if (tooltip && tooltip.textContent !== copy.tip) tooltip.textContent = copy.tip;
-    if (place && place.textContent !== copy.place) place.textContent = copy.place;
-    const time = `${digits[0]}${digits[1]}:${digits[2]}${digits[3]}`;
-    const toggle = sameZone ? "" : showYours ? ". Show Pollachi time." : ". Show your time.";
-    const label = showYours ? `Your time · ${time}${toggle}` : `${presence.label} · ${time}${toggle}`;
+    const digits = getAshwinTimeDigits(now);
+    if (tooltip) {
+      const text = tooltipView === "presence" ? presence.label : getTimezoneRelation(now);
+      if (tooltip.textContent !== text) tooltip.textContent = text;
+    }
+    const label = `${presence.label} · ${digits[0]}${digits[1]}:${digits[2]}${digits[3]}:${digits[4]}${digits[5]}`;
     if (button.getAttribute("aria-label") !== label) button.setAttribute("aria-label", label);
-    if (context.faces.length === DIGITS) updateDigits(context, digits, animate);
+    if (context.faces.length === 6) updateDigits(context, digits, animate);
   }
 
   function stopClock(context: ClockContext) {
@@ -461,15 +492,15 @@ const shortSha = buildMeta.commit;
     }
   }
 
-  /* One timer per minute, aimed at the next minute boundary, so the digits
-     change when the minute does instead of up to a poll interval late. */
+  /* One timer per second, aimed at the next second boundary, so the digits
+     change when the second does instead of up to 250ms late. */
   function armClock(context: ClockContext) {
     context.timer = setTimeout(() => {
       context.timer = undefined;
       if (context.signal.aborted || !context.footer.isConnected) return;
       render(context);
       armClock(context);
-    }, MINUTE - (Date.now() % MINUTE));
+    }, 1000 - (Date.now() % 1000));
   }
 
   /* Ticks only while the clock is on screen and the tab is visible. Coming
@@ -500,22 +531,27 @@ const shortSha = buildMeta.commit;
       signal,
       footer,
       button: btn,
-      tooltip: btn.querySelector<HTMLElement>('[role="tooltip"]'),
-      place: footer.querySelector<HTMLElement>(".clock-place"),
+      tooltip: footer.querySelector<HTMLElement>("#clock-tooltip"),
       dot: footer.querySelector<HTMLElement>(".dot"),
       slots: Array.from(footer.querySelectorAll<HTMLElement>(".digit-slot")),
       faces: Array.from(footer.querySelectorAll<HTMLElement>(".digit-face")),
       snaps: [],
       inView: false,
-      lastMinute: -1,
+      lastSecond: -1,
     };
     clock = context;
     btn.dataset.enhanced = "true";
     btn.addEventListener("click", () => {
-      if (sameZone) return;
-      showYours = !showYours;
+      tooltipView = tooltipView === "presence" ? "timezone" : "presence";
       playAccent("tick");
       render(context, true);
+      // Touch has no hover, so a tap holds its answer open as long as a
+      // long press does (tooltip.ts).
+      if (!finePointer.matches) {
+        clearTimeout(context.tipTimer);
+        btn.setAttribute("data-tip-open", "");
+        context.tipTimer = setTimeout(() => btn.removeAttribute("data-tip-open"), 1500);
+      }
     }, { signal });
     // A stopped clock can hold a stale label; refresh it before focus is read.
     btn.addEventListener("focus", () => render(context, true, false), { signal });
@@ -529,13 +565,49 @@ const shortSha = buildMeta.commit;
     onPageCleanup(() => {
       observer.disconnect();
       stopClock(context);
+      clearTimeout(context.tipTimer);
       if (clock === context) clock = null;
     }, signal);
     // First paint shows the right time even when the clock starts off screen.
     render(context, true, false);
   }
 
+  const REPO_BANTERS = [
+    "View source code",
+    "Wanna fork? Go for it.",
+    "Inspired? Steal freely.",
+    "Borrow. Remix. Ship.",
+    "Open source. Go wild.",
+    "Peek inside.",
+    "Read the code.",
+  ];
+  let repoBanterIndex = 0;
+  let repoPage: AbortSignal | null = null;
+
+  function nextBanter(): string {
+    const pool = REPO_BANTERS.filter((_, i) => i !== repoBanterIndex);
+    const pick = pool[Math.floor(Math.random() * pool.length)]!;
+    repoBanterIndex = REPO_BANTERS.indexOf(pick);
+    return pick;
+  }
+
+  function initRepoBtn() {
+    const signal = pageSignal();
+    if (repoPage === signal || signal.aborted) return;
+    const btn = document.getElementById("repo-btn");
+    const label = document.querySelector<HTMLElement>("#repo-tooltip > span");
+    if (!btn || !label) return;
+    repoPage = signal;
+    label.textContent = nextBanter();
+    // A new line each time the pointer arrives or keyboard focus lands, so it
+    // never rewrites while the tooltip is showing.
+    btn.addEventListener("pointerenter", () => { label.textContent = nextBanter(); }, { signal });
+    btn.addEventListener("focus", () => { label.textContent = nextBanter(); }, { signal });
+  }
+
   document.addEventListener("astro:before-swap", prepareClock);
   init();
+  initRepoBtn();
   document.addEventListener("astro:page-load", init);
+  document.addEventListener("astro:page-load", initRepoBtn);
 </script>
