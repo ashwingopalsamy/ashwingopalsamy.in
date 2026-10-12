@@ -126,7 +126,7 @@ const contributions = await getGithubContributions();
     /* The actions always fill the row exactly, so nothing is left hanging at
        the right edge at any phone width. One row while it fits: the two
        capsules absorb the spare width equally and the three profile circles
-       (40px here, 48 on larger screens) keep their size. Below ~376px they no
+       (44px here, 48 on larger screens) keep their size. Below ~380px they no
        longer fit, so the capsules share the first row and the circles spread
        edge to edge on the second. */
     .refined-contact__row {
@@ -143,10 +143,13 @@ const contributions = await getGithubContributions();
       min-width: 0;
     }
 
+    /* Every control in the row is the same 44px, capsules and circles alike,
+       which is also the touch target, so nothing needs a hit-area pseudo. */
     .refined-cta-row > :global(.ui-cap) {
+      --cap-h: var(--hit);
       flex: 1 1 auto;
       justify-content: center;
-      padding-inline: var(--step-4);
+      padding-inline: var(--step-3);
     }
 
     .refined-socials {
@@ -154,16 +157,7 @@ const contributions = await getGithubContributions();
     }
 
     .refined-socials :global(.ui-cap--icon) {
-      --cap-h: var(--cap-40);
-      position: relative;
-    }
-
-    /* 40px visual, 44px target (the shared rule keys on the size class). */
-    .refined-socials :global(.ui-cap--icon)::before {
-      content: "";
-      position: absolute;
-      inset: calc((var(--cap-h) - var(--hit)) / 2 - 1px);
-      border-radius: var(--r-pill);
+      --cap-h: var(--hit);
     }
 
     .refined-socials :global(.social-preview__triggers) {
@@ -183,7 +177,7 @@ const contributions = await getGithubContributions();
     }
   }
 
-  @media (max-width: 23.4375rem) {
+  @media (max-width: 23.75rem) {
     .refined-contact__row {
       flex-wrap: wrap;
     }
