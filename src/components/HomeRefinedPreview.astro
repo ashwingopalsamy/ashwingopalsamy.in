@@ -123,23 +123,32 @@ const contributions = await getGithubContributions();
   }
 
   @media (max-width: 38rem) {
+    /* One row: the capsules hug their labels and the three profile circles
+       (40px here, 48 on larger screens) follow Resume. A phone too narrow
+       for all of it wraps the circles beneath, never squeezes them. */
     .refined-contact__row {
-      align-items: stretch;
-      flex-direction: column;
-      gap: var(--step-4);
-    }
-
-    .refined-cta-row {
-      width: 100%;
-      max-width: 21rem;
-    }
-
-    .refined-cta-row > .ui-cap {
-      flex: 1 1 0;
+      gap: var(--step-2);
     }
 
     .refined-row-sep {
       display: none;
+    }
+
+    .refined-cta-row > :global(.ui-cap) {
+      padding-inline: var(--step-4);
+    }
+
+    .refined-socials :global(.ui-cap--icon) {
+      --cap-h: var(--cap-40);
+      position: relative;
+    }
+
+    /* 40px visual, 44px target (the shared rule keys on the size class). */
+    .refined-socials :global(.ui-cap--icon)::before {
+      content: "";
+      position: absolute;
+      inset: calc((var(--cap-h) - var(--hit)) / 2 - 1px);
+      border-radius: var(--r-pill);
     }
 
     .refined-home :global(.connect-grid) {
