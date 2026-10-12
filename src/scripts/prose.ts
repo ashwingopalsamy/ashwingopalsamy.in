@@ -36,19 +36,12 @@ import { track, trackCopy } from "./telemetry";
  *  read at click, and a data-copy attribute would also hand the click to
  *  clipboard.ts's delegated listener, which copies the page URL. */
 function copyCapsule(): HTMLButtonElement {
-  const icon = (name: "copy" | "check" | "alert", className?: string) =>
-    iconMarkup(name, { size: 14, strokeWidth: 2, className });
   const btn = document.createElement("button");
   btn.type = "button";
-  btn.className = "ui-cap ui-cap--glass ui-cap--32 ui-cap--lead code-copy";
+  btn.className = "ui-cap ui-cap--glass ui-cap--32 code-copy";
   btn.dataset.fx = "spot";
   btn.dataset.state = "idle";
   btn.innerHTML =
-    '<span class="ui-stk ui-stk--icon">' +
-    `<span data-when="idle">${icon("copy")}</span>` +
-    `<span data-when="done">${icon("check", "ui-draw")}</span>` +
-    `<span data-when="error">${icon("alert")}</span>` +
-    "</span>" +
     '<span class="ui-cap__label ui-stk">' +
     '<span data-when="idle">Copy<span class="visually-hidden"> code</span></span>' +
     '<span data-when="done">Copied</span>' +

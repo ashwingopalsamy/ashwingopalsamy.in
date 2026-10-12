@@ -297,7 +297,7 @@
 
 .ui-stk {
   display: inline-grid;
-  justify-items: start;
+  justify-items: center;
   align-items: center;
 }
 

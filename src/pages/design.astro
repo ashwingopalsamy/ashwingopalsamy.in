@@ -146,17 +146,12 @@ const jsonLd = {
           </div>
           <button
             type="button"
-            class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead"
+            class="ui-cap ui-cap--glass ui-cap--32"
             data-fx="spot"
             data-swatch-copy
             data-copy={neutralTokens[0]?.[1]}
             data-state="idle"
           >
-            <span class="ui-stk ui-stk--icon" aria-hidden="true">
-              <span data-when="idle"><Icon name="copy" size={14} strokeWidth={2} /></span>
-              <span data-when="done"><Icon name="check" size={14} strokeWidth={2} class="ui-draw" /></span>
-              <span data-when="error"><Icon name="alert" size={14} strokeWidth={2} /></span>
-            </span>
             <span class="ui-cap__label ui-stk">
               <span data-when="idle">Copy OKLCH</span>
               <span data-when="done">Copied</span>
@@ -457,12 +452,7 @@ const jsonLd = {
           <span class="height-key">40 · glass</span>
         </div>
         <div class="height-item">
-          <button type="button" class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead" data-fx="spot" data-copy data-state="idle">
-            <span class="ui-stk ui-stk--icon" aria-hidden="true">
-              <span data-when="idle"><Icon name="copy" size={14} strokeWidth={2} /></span>
-              <span data-when="done"><Icon name="check" size={14} strokeWidth={2} class="ui-draw" /></span>
-              <span data-when="error"><Icon name="alert" size={14} strokeWidth={2} /></span>
-            </span>
+          <button type="button" class="ui-cap ui-cap--glass ui-cap--32" data-fx="spot" data-copy data-state="idle">
             <span class="ui-cap__label ui-stk">
               <span data-when="idle">Copy link</span>
               <span data-when="done">Copied</span>
@@ -483,7 +473,7 @@ const jsonLd = {
         </div>
       </div>
 
-      <p>Every press goes down in 70 ms and springs back up, and none of it moves layout: width never animates, so a capsule that says Copy is as wide as the word Copied. State is never colour alone. Success shows a check and a word, and soon shows a dot and a word.</p>
+      <p>Every press goes down in 70 ms and springs back up, and none of it moves layout: width never animates, so a capsule that says Copy is as wide as the word Copied. State is never colour alone. A labelled capsule says Copied in words and never pairs a word with a symbol; soon shows a dot and a word.</p>
 
       <h3>Arrow direction</h3>
       <p>One glyph per meaning, and it never hides. Hovering does not reveal an arrow, it moves one: the glyph leaves along its own direction while a twin arrives behind it. This is the complete set.</p>

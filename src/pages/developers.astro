@@ -2,26 +2,17 @@
 import Page from "../layouts/Page.astro";
 import PageIntro from "../components/PageIntro.astro";
 import Icon from "../components/Icon.astro";
-import { iconMarkup } from "../lib/ui-icons";
 import { ogPath } from "../lib/og-url";
 
 const ogImage = ogPath("developers");
 
-// The Copy capsule's cells (the markup contract is contact.astro's). Icon and
-// label each stack idle / done / error in one grid cell, so the capsule keeps
-// its width through Copy, Copied and Retry.
-const copyCellsFor = (idle: string) =>
-  '<span class="ui-stk ui-stk--icon">' +
-  `<span data-when="idle">${iconMarkup("copy", { size: 14, strokeWidth: 2 })}</span>` +
-  `<span data-when="done">${iconMarkup("check", { size: 14, strokeWidth: 2, className: "ui-draw" })}</span>` +
-  `<span data-when="error">${iconMarkup("alert", { size: 14, strokeWidth: 2 })}</span>` +
-  "</span>" +
+// The Copy capsule's label cell (the markup contract is contact.astro's): a
+// word and never a symbol. Copy, Copied and Retry stack in one grid cell, so
+// the capsule keeps its width through all three.
+const copyCells =
   '<span class="ui-cap__label ui-stk">' +
-  `<span data-when="idle">${idle}</span><span data-when="done">Copied</span><span data-when="error">Retry</span>` +
+  '<span data-when="idle">Copy</span><span data-when="done">Copied</span><span data-when="error">Retry</span>' +
   "</span>";
-const copyCells = copyCellsFor("Copy");
-// the card header's capsule copies the whole example, so it says so
-const headCopyCells = copyCellsFor("Copy code");
 
 const sdks = [
   {
@@ -339,17 +330,6 @@ const developersJsonLd = [
                 }
               </div>
             </div>
-            <!-- copies the open tab's example; the script swaps data-copy and the label on seg:change -->
-            <button
-              type="button"
-              class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead sdk-copy"
-              data-fx="spot"
-              data-sdk-copy
-              data-copy={sdks[0].rawCode}
-              data-state="idle"
-              aria-label={`Copy code, ${sdks[0].name} example`}
-              set:html={headCopyCells}
-            />
           </div>
 
           {
@@ -360,10 +340,7 @@ const developersJsonLd = [
                 aria-labelledby={`tab-${sdk.id}`}
                 class="sdk-body-panel"
                 hidden={idx !== 0}
-                data-panel={sdk.id}
-                data-name={sdk.name}
                 data-ecosystem={sdk.ecosystem}
-                data-code={sdk.rawCode}
               >
                 <button
                   type="button"
@@ -375,7 +352,7 @@ const developersJsonLd = [
                   <span class="prompt-glyph" aria-hidden="true">$</span>
                   <code class="install-text mono">{sdk.install}</code>
                   <span
-                    class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead"
+                    class="ui-cap ui-cap--glass ui-cap--32"
                     data-fx="spot"
                     data-state="idle"
                     aria-hidden="true"
@@ -415,7 +392,7 @@ const developersJsonLd = [
                   <pre><code class="mono" set:html={cli.highlightedSnippet} /></pre>
                   <button
                     type="button"
-                    class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead code-copy"
+                    class="ui-cap ui-cap--glass ui-cap--32 code-copy"
                     data-fx="spot"
                     data-copy={cli.rawSnippet}
                     data-state="idle"
@@ -451,7 +428,7 @@ const developersJsonLd = [
               </div>
               <button
                 type="button"
-                class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead"
+                class="ui-cap ui-cap--glass ui-cap--32"
                 data-fx="spot"
                 data-copy={ep.example}
                 data-state="idle"
@@ -485,7 +462,7 @@ const developersJsonLd = [
                 <code class="cmd-code mono" set:html={proto.highlightedTest} />
                 <button
                   type="button"
-                  class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead"
+                  class="ui-cap ui-cap--glass ui-cap--32"
                   data-fx="spot"
                   data-copy={proto.testCommand}
                   data-state="idle"
@@ -535,7 +512,7 @@ const developersJsonLd = [
           <pre><code class="mono" set:html={highlightedErrorPayload} /></pre>
           <button
             type="button"
-            class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead code-copy"
+            class="ui-cap ui-cap--glass ui-cap--32 code-copy"
             data-fx="spot"
             data-copy={rawErrorPayload}
             data-state="idle"
@@ -595,21 +572,10 @@ const developersJsonLd = [
     initializedSignal = signal;
 
     // SDK tabs: segmented.ts owns selection, roving focus and the panels
-    // (aria-controls). The header Copy follows the open tab.
+    // (aria-controls). Each panel holds its own install row, so its Copy
+    // follows the open tab with no script.
     const [tabs] = initSegmented(widget, { signal });
-    const headCopy = widget.querySelector<HTMLElement>("[data-sdk-copy]");
-    tabs?.element.addEventListener(
-      "seg:change",
-      (event) => {
-        playAccent("tab");
-        const panel = widget.querySelector<HTMLElement>(`[data-panel="${CSS.escape(event.detail.value)}"]`);
-        if (!panel || !headCopy) return;
-        headCopy.dataset.copy = panel.dataset.code ?? "";
-        headCopy.dataset.state = "idle";
-        headCopy.setAttribute("aria-label", `Copy code, ${panel.dataset.name ?? ""} example`);
-      },
-      { signal },
-    );
+    tabs?.element.addEventListener("seg:change", () => playAccent("tab"), { signal });
   }
 
   initDeveloperPage();
@@ -725,7 +691,7 @@ const developersJsonLd = [
     padding: var(--step-1);
   }
 
-  /* lets the track scroll inside itself on phones instead of pushing Copy out */
+  /* lets the track scroll inside itself on phones instead of widening the card */
   .code-head > :global(.ui-seg) {
     min-inline-size: 0;
   }
@@ -1072,23 +1038,10 @@ const developersJsonLd = [
       padding-inline: var(--step-4);
     }
 
-    /* Copy collapses to a 32px icon circle so the tabs keep the row. The
-       header's inset grows from 4px to 6px to hold its 44px hit area. */
+    /* The header's inset grows from 4px to 6px so the tabs' 44px hit area
+       stays inside the clipped card. */
     .code-head {
       padding: calc((var(--hit) - var(--cap-32)) / 2);
-    }
-
-    .sdk-copy {
-      inline-size: var(--cap-h);
-      padding-inline: 0;
-    }
-
-    .sdk-copy > :global(.ui-cap__label) {
-      display: none;
-    }
-
-    .sdk-copy::before {
-      inset-inline: calc((var(--cap-h) - var(--hit)) / 2 - 1px);
     }
   }
 </style>
