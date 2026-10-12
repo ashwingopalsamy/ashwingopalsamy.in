@@ -864,6 +864,9 @@ func main() {
 };
 
 // 14px / stroke 2 in a 32 capsule, 12px / 2.2 in a 28 chip (spec 2.1)
+const COPY_ICON = iconMarkup("copy", { size: 14, strokeWidth: 2 });
+const CHECK_ICON = iconMarkup("check", { size: 14, strokeWidth: 2, className: "ui-draw" });
+const ALERT_ICON = iconMarkup("alert", { size: 14, strokeWidth: 2 });
 const SAVE_ICON = iconMarkup("check", { size: 14, strokeWidth: 2 });
 const PLAY_ICON = iconMarkup("play", { size: 14, strokeWidth: 2 });
 const EDIT_ICON = iconMarkup("edit", { size: 14, strokeWidth: 2 });
@@ -977,12 +980,12 @@ function enhanceSnippet(sectionEl: HTMLElement, data: TourModuleData) {
   // attribute would hand the click to the delegated handler instead.
   const copyBtn = document.createElement("button");
   copyBtn.type = "button";
-  copyBtn.className = "go-tour-btn ui-cap ui-cap--glass ui-cap--32";
+  copyBtn.className = "go-tour-btn ui-cap ui-cap--glass ui-cap--32 ui-cap--icon";
   copyBtn.dataset.fx = "spot";
   copyBtn.dataset.state = "idle";
   copyBtn.setAttribute("aria-label", "Copy code");
   copyBtn.innerHTML =
-    '<span class="ui-cap__label ui-stk"><span data-when="idle">Copy</span><span data-when="done">Copied</span><span data-when="error">Retry</span></span>';
+    `<span class="ui-stk ui-stk--icon"><span data-when="idle">${COPY_ICON}</span><span data-when="done">${CHECK_ICON}</span><span data-when="error">${ALERT_ICON}</span></span>`;
 
   // Edit button: Edit while reading, Save while editing
   const editBtn = capsule("glass", "Edit", "Edit code", EDIT_ICON);
@@ -1104,7 +1107,7 @@ function enhanceSnippet(sectionEl: HTMLElement, data: TourModuleData) {
   );
 
   // Copy Action
-  // the capsule confirms itself (Copied / Retry, the sound): no toast
+  // the circle confirms itself (check / alert glyph, the sound): no toast
   copyBtn.onclick = () => {
     void copyControl(copyBtn, isEditing ? textarea.value : code, signal);
   };

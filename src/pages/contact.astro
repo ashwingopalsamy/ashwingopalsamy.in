@@ -34,16 +34,23 @@ const profiles = (["github", "linkedin", "x", "scholar", "researchgate"] as cons
         <a class="ui-link contact-addr mono" href={canonicalLinks.email}>{email}</a>
         <button
           type="button"
-          class="ui-cap ui-cap--glass ui-cap--32"
+          class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
           data-fx="spot"
           data-copy={email}
           data-state="idle"
           aria-label="Copy email address"
         >
-          <span class="ui-cap__label ui-stk">
-            <span data-when="idle">Copy</span>
-            <span data-when="done">Copied</span>
-            <span data-when="error">Retry</span>
+          <span class="ui-stk ui-stk--icon">
+            <span data-when="idle"><Icon name="copy" size={14} strokeWidth={2} /></span>
+            <span data-when="done"><Icon name="check" size={14} strokeWidth={2} class="ui-draw" /></span>
+            <span data-when="error"><Icon name="alert" size={14} strokeWidth={2} /></span>
+          </span>
+          <span class="ui-tip" role="tooltip">
+            <span class="ui-stk">
+              <span data-when="idle">Copy</span>
+              <span data-when="done">Copied</span>
+              <span data-when="error">Retry</span>
+            </span>
           </span>
         </button>
       </div>

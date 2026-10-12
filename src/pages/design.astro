@@ -146,16 +146,24 @@ const jsonLd = {
           </div>
           <button
             type="button"
-            class="ui-cap ui-cap--glass ui-cap--32"
+            class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
             data-fx="spot"
             data-swatch-copy
             data-copy={neutralTokens[0]?.[1]}
             data-state="idle"
+            aria-label="Copy OKLCH value"
           >
-            <span class="ui-cap__label ui-stk">
-              <span data-when="idle">Copy OKLCH</span>
-              <span data-when="done">Copied</span>
-              <span data-when="error">Retry</span>
+            <span class="ui-stk ui-stk--icon">
+              <span data-when="idle"><Icon name="copy" size={14} strokeWidth={2} /></span>
+              <span data-when="done"><Icon name="check" size={14} strokeWidth={2} class="ui-draw" /></span>
+              <span data-when="error"><Icon name="alert" size={14} strokeWidth={2} /></span>
+            </span>
+            <span class="ui-tip ui-tip--above" role="tooltip">
+              <span class="ui-stk">
+                <span data-when="idle">Copy</span>
+                <span data-when="done">Copied</span>
+                <span data-when="error">Retry</span>
+              </span>
             </span>
           </button>
         </div>
@@ -452,11 +460,25 @@ const jsonLd = {
           <span class="height-key">40 · glass</span>
         </div>
         <div class="height-item">
-          <button type="button" class="ui-cap ui-cap--glass ui-cap--32" data-fx="spot" data-copy data-state="idle">
-            <span class="ui-cap__label ui-stk">
-              <span data-when="idle">Copy link</span>
-              <span data-when="done">Copied</span>
-              <span data-when="error">Retry</span>
+          <button
+            type="button"
+            class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
+            data-fx="spot"
+            data-copy
+            data-state="idle"
+            aria-label="Copy link"
+          >
+            <span class="ui-stk ui-stk--icon">
+              <span data-when="idle"><Icon name="copy" size={14} strokeWidth={2} /></span>
+              <span data-when="done"><Icon name="check" size={14} strokeWidth={2} class="ui-draw" /></span>
+              <span data-when="error"><Icon name="alert" size={14} strokeWidth={2} /></span>
+            </span>
+            <span class="ui-tip ui-tip--above" role="tooltip">
+              <span class="ui-stk">
+                <span data-when="idle">Copy link</span>
+                <span data-when="done">Copied</span>
+                <span data-when="error">Retry</span>
+              </span>
             </span>
           </button>
           <span class="height-key">32 · glass</span>
@@ -473,7 +495,7 @@ const jsonLd = {
         </div>
       </div>
 
-      <p>Every press goes down in 70 ms and springs back up, and none of it moves layout: a press or a state change never animates width, so a capsule that says Copy is as wide as the word Copied. The one capsule that grows is an arrow capsule on hover, by the glyph's width. State is never colour alone. A labelled capsule says Copied in words and never pairs a word with a symbol; soon shows a dot and a word.</p>
+      <p>Every press goes down in 70 ms and springs back up, and none of it moves layout: a press or a state change never animates width, so the copy circle is the same size at rest, copied and failed. The one capsule that grows is an arrow capsule on hover, by the glyph's width. State is never colour alone. Copy is a symbol and never a word: the glyph becomes a check that draws itself, or an alert; soon shows a dot and a word.</p>
 
       <h3>Arrow direction</h3>
       <p>One glyph per meaning. On a labelled capsule the arrow is not there until you reach for it: hover or tab to the capsule and it opens by the glyph's width, the label stays put, and the glyph travels its last few pixels along its own direction. Touch never shows it. Rows, tiles and icon-only controls keep theirs visible. Hover or tab through these; this is the complete set.</p>
@@ -714,7 +736,7 @@ const jsonLd = {
     let currentSwatchIndex = 0;
     const resetTimers = new Map<HTMLButtonElement, number>();
 
-    // The Copy OKLCH capsule is a [data-copy] control: clipboard.ts copies its
+    // The copy circle is a [data-copy] control: clipboard.ts copies its
     // data-copy value on click and confirms on the capsule itself. Selecting a
     // swatch only has to keep that value, and the readout, current.
     const selectSwatch = (index: number, shouldCopy: boolean) => {

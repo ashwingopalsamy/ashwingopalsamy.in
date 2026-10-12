@@ -31,21 +31,24 @@ import { track, trackCopy } from "./telemetry";
 /*  code-figure copy                                                   */
 /* ------------------------------------------------------------------ */
 
-/** The ui-cap glass-32 action capsule (Note.astro's markup contract). It
+/** The ui-cap glass-32 icon circle (Note.astro's markup contract). It
  *  carries data-state but no data-copy: the value is the live code text,
  *  read at click, and a data-copy attribute would also hand the click to
  *  clipboard.ts's delegated listener, which copies the page URL. */
 function copyCapsule(): HTMLButtonElement {
+  const icon = (name: "copy" | "check" | "alert", className?: string) =>
+    iconMarkup(name, { size: 14, strokeWidth: 2, className });
   const btn = document.createElement("button");
   btn.type = "button";
-  btn.className = "ui-cap ui-cap--glass ui-cap--32 code-copy";
+  btn.className = "ui-cap ui-cap--glass ui-cap--32 ui-cap--icon code-copy";
   btn.dataset.fx = "spot";
   btn.dataset.state = "idle";
+  btn.setAttribute("aria-label", "Copy code");
   btn.innerHTML =
-    '<span class="ui-cap__label ui-stk">' +
-    '<span data-when="idle">Copy<span class="visually-hidden"> code</span></span>' +
-    '<span data-when="done">Copied</span>' +
-    '<span data-when="error">Retry</span>' +
+    '<span class="ui-stk ui-stk--icon">' +
+    `<span data-when="idle">${icon("copy")}</span>` +
+    `<span data-when="done">${icon("check", "ui-draw")}</span>` +
+    `<span data-when="error">${icon("alert")}</span>` +
     "</span>";
   return btn;
 }

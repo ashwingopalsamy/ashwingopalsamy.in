@@ -331,9 +331,9 @@
   box-shadow: inset 2px 0 0 color-mix(in oklch, var(--color-6) 70%, transparent);
 }
 
-/* code action toolbar: one glass Copy capsule. prose.ts builds it from the
-   ui-cap primitives (state, label cells, spotlight, press); this only places
-   it and decides when it is seen. No toast: the capsule confirms itself. */
+/* code action toolbar: one glass copy circle. prose.ts builds it from the
+   ui-cap primitives (state, glyph cells, spotlight, press); this only places
+   it and decides when it is seen. No toast: the circle confirms itself. */
 .prose .code-actions {
   position: absolute;
   top: var(--code-actions-top);

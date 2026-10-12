@@ -118,11 +118,25 @@ const jsonLd = [
             {entry.data.tags && <RowTags tags={entry.data.tags} linked={linkedTags} />}
           </Fragment>
           <Fragment slot="action">
-            <button type="button" class="ui-cap ui-cap--glass ui-cap--32" data-fx="spot" data-copy data-state="idle">
-              <span class="ui-cap__label ui-stk">
-                <span data-when="idle">Copy link</span>
-                <span data-when="done">Copied</span>
-                <span data-when="error">Retry</span>
+            <button
+              type="button"
+              class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
+              data-fx="spot"
+              data-copy
+              data-state="idle"
+              aria-label="Copy link"
+            >
+              <span class="ui-stk ui-stk--icon">
+                <span data-when="idle"><Icon name="copy" size={14} strokeWidth={2} /></span>
+                <span data-when="done"><Icon name="check" size={14} strokeWidth={2} class="ui-draw" /></span>
+                <span data-when="error"><Icon name="alert" size={14} strokeWidth={2} /></span>
+              </span>
+              <span class="ui-tip" role="tooltip">
+                <span class="ui-stk">
+                  <span data-when="idle">Copy link</span>
+                  <span data-when="done">Copied</span>
+                  <span data-when="error">Retry</span>
+                </span>
               </span>
             </button>
           </Fragment>
@@ -145,11 +159,25 @@ const jsonLd = [
             {entry.data.tags && entry.data.tags.length > 0 && (
               <div class="note-bar-tags"><RowTags tags={entry.data.tags} linked={linkedTags} /></div>
             )}
-            <button type="button" class="ui-cap ui-cap--glass ui-cap--32 note-copy" data-fx="spot" data-copy data-state="idle">
-              <span class="ui-cap__label ui-stk">
-                <span data-when="idle">Copy link</span>
-                <span data-when="done">Copied</span>
-                <span data-when="error">Retry</span>
+            <button
+              type="button"
+              class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon note-copy"
+              data-fx="spot"
+              data-copy
+              data-state="idle"
+              aria-label="Copy link"
+            >
+              <span class="ui-stk ui-stk--icon">
+                <span data-when="idle"><Icon name="copy" size={14} strokeWidth={2} /></span>
+                <span data-when="done"><Icon name="check" size={14} strokeWidth={2} class="ui-draw" /></span>
+                <span data-when="error"><Icon name="alert" size={14} strokeWidth={2} /></span>
+              </span>
+              <span class="ui-tip ui-tip--above" role="tooltip">
+                <span class="ui-stk">
+                  <span data-when="idle">Copy link</span>
+                  <span data-when="done">Copied</span>
+                  <span data-when="error">Retry</span>
+                </span>
               </span>
             </button>
           </div>

@@ -2,16 +2,19 @@
 import Page from "../layouts/Page.astro";
 import PageIntro from "../components/PageIntro.astro";
 import Icon from "../components/Icon.astro";
+import { iconMarkup } from "../lib/ui-icons";
 import { ogPath } from "../lib/og-url";
 
 const ogImage = ogPath("developers");
 
-// The Copy capsule's label cell (the markup contract is contact.astro's): a
-// word and never a symbol. Copy, Copied and Retry stack in one grid cell, so
-// the capsule keeps its width through all three.
+// The copy circle's glyph cell (the markup contract is contact.astro's): a
+// symbol and never a word. Copy, check and alert stack in one grid cell, so
+// the circle keeps its size through all three.
 const copyCells =
-  '<span class="ui-cap__label ui-stk">' +
-  '<span data-when="idle">Copy</span><span data-when="done">Copied</span><span data-when="error">Retry</span>' +
+  '<span class="ui-stk ui-stk--icon">' +
+  `<span data-when="idle">${iconMarkup("copy", { size: 14, strokeWidth: 2 })}</span>` +
+  `<span data-when="done">${iconMarkup("check", { size: 14, strokeWidth: 2, className: "ui-draw" })}</span>` +
+  `<span data-when="error">${iconMarkup("alert", { size: 14, strokeWidth: 2 })}</span>` +
   "</span>";
 
 const sdks = [
@@ -352,7 +355,7 @@ const developersJsonLd = [
                   <span class="prompt-glyph" aria-hidden="true">$</span>
                   <code class="install-text mono">{sdk.install}</code>
                   <span
-                    class="ui-cap ui-cap--glass ui-cap--32"
+                    class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
                     data-fx="spot"
                     data-state="idle"
                     aria-hidden="true"
@@ -392,7 +395,7 @@ const developersJsonLd = [
                   <pre><code class="mono" set:html={cli.highlightedSnippet} /></pre>
                   <button
                     type="button"
-                    class="ui-cap ui-cap--glass ui-cap--32 code-copy"
+                    class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon code-copy"
                     data-fx="spot"
                     data-copy={cli.rawSnippet}
                     data-state="idle"
@@ -428,7 +431,7 @@ const developersJsonLd = [
               </div>
               <button
                 type="button"
-                class="ui-cap ui-cap--glass ui-cap--32"
+                class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
                 data-fx="spot"
                 data-copy={ep.example}
                 data-state="idle"
@@ -462,7 +465,7 @@ const developersJsonLd = [
                 <code class="cmd-code mono" set:html={proto.highlightedTest} />
                 <button
                   type="button"
-                  class="ui-cap ui-cap--glass ui-cap--32"
+                  class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
                   data-fx="spot"
                   data-copy={proto.testCommand}
                   data-state="idle"
@@ -512,7 +515,7 @@ const developersJsonLd = [
           <pre><code class="mono" set:html={highlightedErrorPayload} /></pre>
           <button
             type="button"
-            class="ui-cap ui-cap--glass ui-cap--32 code-copy"
+            class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon code-copy"
             data-fx="spot"
             data-copy={rawErrorPayload}
             data-state="idle"

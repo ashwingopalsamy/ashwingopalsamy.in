@@ -412,9 +412,10 @@
 }
 
 /* ------------------------------------------------------------------
-   stacked state cells: Copy / Copied / Retry share one grid cell, so the
-   capsule is as wide as its longest word and never animates width. The
-   .ui-stk must be a direct child of the [data-state] control.
+   stacked state cells: a copy circle's copy / check / alert glyphs share
+   one grid cell, so it keeps its size through every state. A tooltip's
+   Copy / Copied / Retry words stack the same way. The .ui-stk must be a
+   direct child of the [data-state] control, or of the .ui-tip that is.
    ------------------------------------------------------------------ */
 
 .ui-stk {
@@ -442,11 +443,14 @@
     visibility var(--dur-exit);
 }
 
-:not([data-state]) > .ui-stk > [data-when="idle"],
+:not([data-state], .ui-tip) > .ui-stk > [data-when="idle"],
 [data-state="idle"] > .ui-stk > [data-when="idle"],
 [data-state="done"] > .ui-stk > [data-when="done"],
 [data-state="error"] > .ui-stk > [data-when="error"],
-[data-state="loading"] > .ui-stk > [data-when="loading"] {
+[data-state="loading"] > .ui-stk > [data-when="loading"],
+[data-state="idle"] > .ui-tip > .ui-stk > [data-when="idle"],
+[data-state="done"] > .ui-tip > .ui-stk > [data-when="done"],
+[data-state="error"] > .ui-tip > .ui-stk > [data-when="error"] {
   visibility: visible;
   opacity: 1;
   translate: none;
@@ -1508,14 +1512,14 @@
     transform: scale(var(--press-scale-inline));
   }
 
-  /* label cells: the outgoing word rises, the incoming one settles up
-     from below, each under a constant 1px blur while hidden */
+  /* word cells (a tooltip's): the outgoing word rises, the incoming one
+     settles up from below, each under a constant 1px blur while hidden */
   .ui-stk > [data-when] {
     translate: 0 var(--travel-hair);
     filter: blur(1px);
   }
 
-  [data-state]:not([data-state="idle"]) > .ui-stk:not(.ui-stk--icon) > [data-when="idle"] {
+  [data-state]:not([data-state="idle"]) > .ui-tip > .ui-stk > [data-when="idle"] {
     translate: 0 calc(var(--travel-nudge) * -1);
   }
 
