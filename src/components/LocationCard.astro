@@ -151,6 +151,8 @@ const PIN_LON = 76.9558;
     color: var(--faint);
   }
 
+  /* The pin is a steady dot. A ring leaves it, grows outward and fades, then
+     the next one leaves: always outward, never breathing back in. */
   .loc-dot {
     position: absolute;
     top: 50%;
@@ -161,7 +163,6 @@ const PIN_LON = 76.9558;
     background: var(--loc-beacon);
     border: 2.5px solid var(--canvas);
     transform: translate(-50%, -50%);
-    animation: loc-pulse var(--dur-beacon) var(--ease-pulse) infinite;
   }
 
   .loc-dot::after {
@@ -170,25 +171,24 @@ const PIN_LON = 76.9558;
     inset: -2px;
     border-radius: 50%;
     background: var(--loc-beacon);
-    opacity: 0.45;
+    opacity: 0;
     transform: scale(1);
-    animation: loc-pulse var(--dur-beacon) var(--ease-pulse) infinite;
+    animation: loc-beacon var(--dur-beacon) var(--ease-enter) infinite;
     pointer-events: none;
   }
 
-  @keyframes loc-pulse {
+  @keyframes loc-beacon {
     0% {
       transform: scale(1);
-      opacity: 0.45;
+      opacity: 0.5;
     }
-    50% {
-      transform: scale(1.75);
+    75% {
+      transform: scale(3);
       opacity: 0;
     }
-    /* back to the start values, so the loop breathes instead of popping */
     100% {
-      transform: scale(1);
-      opacity: 0.45;
+      transform: scale(3);
+      opacity: 0;
     }
   }
 
