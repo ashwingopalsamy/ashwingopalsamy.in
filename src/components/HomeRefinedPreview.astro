@@ -123,10 +123,14 @@ const contributions = await getGithubContributions();
   }
 
   @media (max-width: 38rem) {
-    /* One row: the capsules hug their labels and the three profile circles
-       (40px here, 48 on larger screens) follow Resume. A phone too narrow
-       for all of it wraps the circles beneath, never squeezes them. */
+    /* The actions always fill the row exactly, so nothing is left hanging at
+       the right edge at any phone width. One row while it fits: the two
+       capsules absorb the spare width equally and the three profile circles
+       (40px here, 48 on larger screens) keep their size. Below ~376px they no
+       longer fit, so the capsules share the first row and the circles spread
+       edge to edge on the second. */
     .refined-contact__row {
+      flex-wrap: nowrap;
       gap: var(--step-2);
     }
 
@@ -134,8 +138,19 @@ const contributions = await getGithubContributions();
       display: none;
     }
 
+    .refined-cta-row {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
     .refined-cta-row > :global(.ui-cap) {
+      flex: 1 1 auto;
+      justify-content: center;
       padding-inline: var(--step-4);
+    }
+
+    .refined-socials {
+      flex: 0 0 auto;
     }
 
     .refined-socials :global(.ui-cap--icon) {
@@ -151,6 +166,11 @@ const contributions = await getGithubContributions();
       border-radius: var(--r-pill);
     }
 
+    .refined-socials :global(.social-preview__triggers) {
+      display: flex;
+      gap: var(--step-2);
+    }
+
     .refined-home :global(.connect-grid) {
       grid-template-columns: 1fr;
       grid-template-rows: 152px 200px;
@@ -160,6 +180,24 @@ const contributions = await getGithubContributions();
     .refined-home :global(.connect-grid .loc-card) {
       min-height: 200px;
       height: 200px;
+    }
+  }
+
+  @media (max-width: 23.4375rem) {
+    .refined-contact__row {
+      flex-wrap: wrap;
+    }
+
+    .refined-cta-row,
+    .refined-socials {
+      flex: 1 1 100%;
+    }
+
+    .refined-socials,
+    .refined-socials :global(.social-preview),
+    .refined-socials :global(.social-preview__triggers) {
+      inline-size: 100%;
+      justify-content: space-between;
     }
   }
 </style>
