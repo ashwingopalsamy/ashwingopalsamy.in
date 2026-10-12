@@ -65,8 +65,8 @@ function iconPath(link: SocialLink): string {
               <div class="social-preview__identity">
                 <div class="social-preview__github-topline">
                   <a class="ui-link social-preview__profile-link" href={link.href} target="_blank" rel="me noopener noreferrer">@ashwingopalsamy</a>
-                  <a class="ui-cap ui-cap--glass ui-cap--32 ui-cap--trail" data-fx="spot" href={link.href} target="_blank" rel="me noopener noreferrer">
-                    <span class="ui-cap__label">Open profile<span class="visually-hidden"> on Ashwin Gopalsamy's GitHub</span></span>
+                  <a class="ui-cap ui-cap--32 ui-cap--trail social-preview__cta" href={link.href} target="_blank" rel="me noopener noreferrer">
+                    <span class="ui-cap__label">Read code<span class="visually-hidden"> on Ashwin Gopalsamy's GitHub</span></span>
                     <span class="ui-arw ui-arw--ext" aria-hidden="true"><Icon name="arrow-up-right" size={14} strokeWidth={2} /><Icon name="arrow-up-right" size={14} strokeWidth={2} /></span>
                   </a>
                 </div>
@@ -108,8 +108,8 @@ function iconPath(link: SocialLink): string {
                   <p class="social-preview__name">Ashwin Gopalsamy</p>
                   <span class="social-preview__verified social-preview__verified--linkedin" role="img" aria-label="Verified account"></span>
                 </div>
-                <a class="ui-cap ui-cap--glass ui-cap--32 ui-cap--trail" data-fx="spot" href={link.href} target="_blank" rel="me noopener noreferrer">
-                  <span class="ui-cap__label">Open profile<span class="visually-hidden"> on Ashwin Gopalsamy's LinkedIn</span></span>
+                <a class="ui-cap ui-cap--32 ui-cap--trail social-preview__cta" href={link.href} target="_blank" rel="me noopener noreferrer">
+                  <span class="ui-cap__label">Let's connect<span class="visually-hidden"> on Ashwin Gopalsamy's LinkedIn</span></span>
                   <span class="ui-arw ui-arw--ext" aria-hidden="true"><Icon name="arrow-up-right" size={14} strokeWidth={2} /><Icon name="arrow-up-right" size={14} strokeWidth={2} /></span>
                 </a>
               </div>
@@ -127,8 +127,8 @@ function iconPath(link: SocialLink): string {
             </div>
             <div class="social-preview__x-body">
               <div class="social-preview__x-action-row">
-                <a class="ui-cap ui-cap--glass ui-cap--32 ui-cap--trail" data-fx="spot" href={link.href} target="_blank" rel="me noopener noreferrer">
-                  <span class="ui-cap__label">Open profile<span class="visually-hidden"> on Ashwin Gopalsamy's X (Twitter)</span></span>
+                <a class="ui-cap ui-cap--32 ui-cap--trail social-preview__cta" href={link.href} target="_blank" rel="me noopener noreferrer">
+                  <span class="ui-cap__label">Follow<span class="visually-hidden"> on Ashwin Gopalsamy's X (Twitter)</span></span>
                   <span class="ui-arw ui-arw--ext" aria-hidden="true"><Icon name="arrow-up-right" size={14} strokeWidth={2} /><Icon name="arrow-up-right" size={14} strokeWidth={2} /></span>
                 </a>
               </div>
@@ -362,6 +362,11 @@ function iconPath(link: SocialLink): string {
     overflow: hidden;
   }
 
+  /* the longer label plus its arrow must fit the name row on hover */
+  .social-preview__card--linkedin {
+    width: min(22rem, calc(100vw - 3rem));
+  }
+
   .social-preview__banner {
     position: relative;
   }
@@ -458,6 +463,52 @@ function iconPath(link: SocialLink): string {
   .social-preview__x-body .social-preview__meta {
     margin: 0;
     overflow-wrap: anywhere;
+  }
+
+  /* Each card's action is a capsule in its platform's own colour. The two
+     neutral brands invert with the theme so they never vanish on a dark
+     card; the label's contrast is AA in all six cases. */
+  .social-preview__card--github {
+    --cta-bg: #24292f;
+    --cta-fg: #fff;
+  }
+
+  .social-preview__card--linkedin {
+    --cta-bg: #0a66c2;
+    --cta-fg: #fff;
+  }
+
+  .social-preview__card--x {
+    --cta-bg: #000;
+    --cta-fg: #fff;
+  }
+
+  :global(:root[data-theme="dark"]) .social-preview__card--github,
+  :global(:root[data-theme="dark"]) .social-preview__card--x {
+    --cta-bg: var(--ink);
+    --cta-fg: var(--canvas);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme])) .social-preview__card--github,
+    :global(:root:not([data-theme])) .social-preview__card--x {
+      --cta-bg: var(--ink);
+      --cta-fg: var(--canvas);
+    }
+  }
+
+  .social-preview__cta {
+    background-color: var(--cta-bg);
+    color: var(--cta-fg);
+  }
+
+  /* Toward the label colour: a lift on the dark fills, a dim on the
+     inverted ones. A brightness filter would do nothing to black, and
+     oklch has no hue to mix an achromatic label into. */
+  @media (hover: hover) and (pointer: fine) {
+    .social-preview__cta:hover {
+      background-color: color-mix(in srgb, var(--cta-bg) 86%, var(--cta-fg));
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
