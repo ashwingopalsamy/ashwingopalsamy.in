@@ -3,12 +3,10 @@ import type { CraftItem, NoteItem, PersonItem } from "../data/home";
 import Icon from "./Icon.astro";
 
 /**
- * ContentList - one row pattern for craft, notes, and good people.
- *
- * Row choreography (hover): sibling rows dim to faint values while the
- * hovered row returns to full ink, indents slightly, and its arrow
- * nudges. Keyboard focus gets the same treatment via :focus-within.
- * Placeholder rows carry a muted "(sample)" tag and are never links.
+ * ContentList - one row pattern for craft, notes, and good people, on the
+ * shared .ui-row. Linked rows light a puddle under the pointer and nudge
+ * their arrow; the rest of the stack dims. Placeholder rows are static
+ * (a div, no glyph, no hover) and carry a "sample" badge.
  */
 
 interface Props {
@@ -51,38 +49,37 @@ function formatDate(iso: string): string {
             ? formatDate(item.date)
             : (item as CraftItem | PersonItem).sentence;
           const lede = isNote(item) ? item.sentence : undefined;
+          const sub = variant === "craft" ? detail : variant === "notes" ? lede : undefined;
+          const external = Boolean(item.href) && /^https?:\/\//.test(item.href!);
 
           const inner = (
             <>
               <span class="row-main">
-                <span class="row-title">{title}</span>
-                {variant === "craft" && detail && (
-                  <span class="row-detail">{detail}</span>
-                )}
-                {variant === "notes" && lede && (
-                  <span class="row-lede">{lede}</span>
-                )}
-                {item.placeholder && (
-                  <span class="sample-tag" title="Sample entry, awaiting the real thing">
-                    (sample)
-                  </span>
-                )}
+                <span class="ui-row__title">
+                  {title}
+                  {item.placeholder && <>&nbsp;<span class="ui-badge">sample</span></>}
+                </span>
+                {sub && <span class="ui-row__sub">{sub}</span>}
               </span>
               {isNote(item) && (
-                <time class="row-date" datetime={item.date}>{detail}</time>
+                <time class="ui-row__meta" datetime={item.date}>{detail}</time>
               )}
-              {item.href && <span class="row-arrow" aria-hidden="true"><Icon name="chevron-right" size={15} /></span>}
+              <span class:list={["ui-row__glyph", { "ui-row__glyph--ext": external }]} aria-hidden="true">
+                {item.href && <Icon name={external ? "arrow-up-right" : "arrow-right"} size={16} />}
+              </span>
             </>
           );
 
           return (
-            <li class="row">
+            <li>
               {item.href ? (
-                <a class="row-link" href={item.href}>
+                <a class:list={["ui-row", { "ui-row--multiline": Boolean(sub) }]} data-fx="spot" href={item.href}>
                   {inner}
                 </a>
               ) : (
-                <div class="row-static">{inner}</div>
+                <div class:list={["ui-row", "ui-row--static", { "ui-row--multiline": Boolean(sub) }]}>
+                  {inner}
+                </div>
               )}
             </li>
           );
@@ -106,193 +103,32 @@ function formatDate(iso: string): string {
     line-height: var(--leading-tight);
   }
 
-  .rows {
-    --surface-row-gap: 0.15rem;
-  }
-
-  .row-link,
-  .row-static {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    align-items: baseline;
-    gap: var(--step-4);
-    /* on the lattice: 12px block, 16px inline, pulled back by the same
-       16px so the text stays flush with the rail while the hover surface
-       overhangs it */
-    padding: var(--step-3) var(--step-4);
-    margin-inline: calc(var(--step-4) * -1);
-    border-radius: var(--r-3);
-    background: var(--surface-row-rest);
-    border: none;
-    box-shadow: none;
-    text-decoration: none;
-    color: inherit;
-    transition:
-      background-color var(--t-color),
-      transform var(--dur-press) var(--ease-snap);
-  }
-
   .row-main {
-    min-width: 0;
+    flex: 1;
+    min-inline-size: 0;
   }
 
+  /* work: the name and its sentence side by side, one column on phones */
   .rows[data-variant="craft"] .row-main {
     display: grid;
-    grid-template-columns: minmax(12.5rem, 0.75fr) minmax(0, 1.25fr);
+    grid-template-columns: minmax(calc(var(--step) * 50), 0.75fr) minmax(0, 1.25fr);
     align-items: baseline;
     gap: var(--step-4);
   }
 
-  .row-title {
-    font-weight: 560;
-    font-size: var(--text-md);
-    letter-spacing: -0.015em;
-    color: var(--ink);
-    transition: color var(--t-color);
-  }
-
-  .row-detail {
-    color: var(--ghost);
-    font-size: var(--text-ui);
-    line-height: var(--leading-normal);
+  .rows[data-variant="craft"] .ui-row__sub {
+    margin-block-start: 0;
     overflow-wrap: anywhere;
-    transition: color var(--t-color);
-  }
-
-  .row-lede {
-    display: block;
-    margin-top: 0.25rem;
-    font-size: var(--text-ui);
-    color: var(--ghost);
-    line-height: var(--leading-normal);
-    transition: color var(--t-color);
-  }
-
-  .row-date {
-    flex-shrink: 0;
-    font-size: var(--text-sm);
-    font-family: var(--font-mono);
-    color: var(--faint);
-    transition: color var(--t-color);
-  }
-
-  .row-arrow {
-    flex-shrink: 0;
-    align-self: center;
-    color: var(--ghost);
-    /* The arrow leads and the surface follows. Giving the two different
-       curves and durations is the whole difference between a row that
-       highlights and a row that responds: the chevron springs out ahead
-       of the background settling in behind it. */
-    transition:
-      transform var(--dur-shift) var(--ease-spring-pop),
-      color var(--dur-tint) linear;
-  }
-
-  .sample-tag {
-    margin-left: var(--step-2);
-    font-size: var(--text-xs);
-    color: var(--faint);
-    white-space: nowrap;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .row-link:hover,
-    .row-link:focus-visible {
-      background: var(--surface-row-hover);
-    }
-
-    .row-link:hover .row-detail,
-    .row-link:hover .row-lede,
-    .row-link:focus-visible .row-detail,
-    .row-link:focus-visible .row-lede {
-      color: var(--muted);
-    }
-
-    .row-link:hover .row-arrow,
-    .row-link:focus-visible .row-arrow {
-      color: var(--ink);
-      transform: translate3d(var(--travel-nudge), 0, 0);
-    }
-
-    /* A hairline strikes in at the leading edge, growing from its centre.
-       It lives in the negative margin the row already overhangs by, so it
-       reads as the rail itself marking the row rather than as decoration
-       added to it. Transform only — no layout, no paint beyond 2px. */
-    .row-link:hover::before,
-    .row-link:focus-visible::before {
-      transform: scaleY(1);
-    }
-  }
-
-  .row-link::before {
-    content: "";
-    position: absolute;
-    inset-block: var(--step-2);
-    inset-inline-start: 0;
-    width: 2px;
-    border-radius: var(--r-pill);
-    background: var(--ink);
-    transform: scaleY(0);
-    transform-origin: center;
-    transition: transform var(--dur-shift) var(--ease-spring-snap);
-  }
-
-  .row-link {
-    position: relative;
-  }
-
-  .row-link:active {
-    background: var(--surface-row-press);
-    transform: scale(var(--press-scale-inline));
-  }
-
-  .row-link:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: 2px;
-  }
-
-  .rows[data-variant="people"] .row-link:hover .row-title,
-  .rows[data-variant="people"] .row-link:focus-visible .row-title {
-    text-decoration: underline;
-    text-decoration-thickness: 0.5px;
-    text-decoration-color: color-mix(in oklch, currentColor 55%, transparent);
-    text-underline-offset: 4px;
-    text-decoration-skip-ink: auto;
   }
 
   @media (max-width: 38rem) {
-    .row-link,
-    .row-static {
-      padding: var(--step-3) var(--step-3);
-      margin-inline: calc(var(--step-3) * -1);
-    }
-
     .rows[data-variant="craft"] .row-main {
       grid-template-columns: minmax(0, 1fr);
-      gap: 0.25rem;
+      gap: 0;
     }
 
-    .rows[data-variant="notes"] .row-link,
-    .rows[data-variant="notes"] .row-static {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      row-gap: var(--step-1);
-    }
-
-    .rows[data-variant="notes"] .row-main {
-      grid-column: 1;
-    }
-
-    .rows[data-variant="notes"] .row-arrow {
-      grid-column: 2;
-      grid-row: 1;
-      align-self: center;
-    }
-
-    .rows[data-variant="notes"] .row-date {
-      grid-column: 1 / -1;
-      margin-top: 0;
+    .rows[data-variant="craft"] .ui-row__sub {
+      margin-block-start: calc(var(--step) / 2);
     }
   }
 </style>

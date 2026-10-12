@@ -52,9 +52,9 @@ const ogImage = ogPath("about");
       </p>
       <p class="about-p">
         Outside software engineering, I spend time exploring automotive machinery, anthropology,
-        regional history, photography, and reading. You can explore my technical writings in the
-        <a href="/library/">Library</a>, inspect software projects in <a href="/work/">Work</a>,
-        or read my machine-readable interfaces at <a href="/ai/">/ai</a> and <a href="/developers/">/developers</a>.
+        regional history, photography, and reading. You can explore my technical writings in the{" "}
+        <a class="ui-link" href="/library/">Library</a>, inspect software projects in <a class="ui-link" href="/work/">Work</a>,
+        or read my machine-readable interfaces at <a class="ui-link" href="/ai/">/ai</a> and <a class="ui-link" href="/developers/">/developers</a>.
       </p>
     </section>
   </div>
@@ -80,47 +80,13 @@ const ogImage = ogPath("about");
     transition: color var(--t-color);
   }
 
-  .about-p a {
-    color: var(--ink);
-    text-decoration: none;
-    display: inline;
-    background-image: linear-gradient(
-      90deg,
-      transparent 0%,
-      color-mix(in oklch, currentColor 55%, transparent) 5%,
-      color-mix(in oklch, currentColor 55%, transparent) 95%,
-      transparent 100%
-    );
-    background-position: 0 100%;
-    background-repeat: no-repeat;
-    background-size: 0% 0.75px;
-    padding-bottom: 2px;
-    transition:
-      color var(--t-color),
-      font-weight var(--t-color),
-      background-size var(--dur-enter) var(--ease-enter);
-  }
-
-  .about-p a:hover,
-  .about-p a:focus-visible {
-    font-weight: var(--font-hover-lift);
-    background-size: 100% 0.75px;
-  }
-
   .about-k {
     color: var(--ink);
-    transition: font-weight var(--t-color);
   }
 
   @media (hover: hover) and (pointer: fine) {
     .about-p:hover {
       color: color-mix(in oklch, var(--ink) 80%, var(--muted));
-    }
-
-    .about-p:hover .about-k,
-    .about-p:hover a {
-      font-weight: var(--font-hover-lift);
-      background-size: 100% 0.75px;
     }
   }
 

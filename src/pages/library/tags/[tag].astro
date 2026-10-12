@@ -9,6 +9,7 @@ import {
 import { collectionPageJsonLd } from "../../../lib/jsonld";
 import { ogPath } from "../../../lib/og-url";
 import { absUrl, slashPath } from "../../../lib/urls";
+import Icon from "../../../components/Icon.astro";
 
 export async function getStaticPaths() {
   const buckets = await getTagBuckets();
@@ -48,19 +49,20 @@ const fmt = (d: Date) =>
   ]}
 >
   <header class="tag-header" data-enter>
-    <h1 class="tag-title">#{bucket.tag}</h1>
+    <h1 class="tag-title"><Icon name="hash" size={14} strokeWidth={2} class="ui-chip__hash ui-chip__hash--inline" />{bucket.tag}</h1>
     {description && <p class="tag-lede">{description}</p>}
     <div class="tag-meta-bar">
-      <span class="tag-count-badge mono">{bucket.count} {bucket.count === 1 ? "entry" : "entries"}</span>
+      <span class="ui-badge">{bucket.count} {bucket.count === 1 ? "entry" : "entries"}</span>
     </div>
   </header>
 
-  <ul class="note-list surface-stack" data-enter>
+  <ul class="surface-stack" data-enter>
     {notes.map((n) => (
-      <li class="note-row">
-        <a class="note-link" href={slashPath(`/blog/${n.id}`)}>
-          <span class="note-title">{n.title}</span>
-          <time class="note-date mono" datetime={n.date.toISOString()}>{fmt(n.date)}</time>
+      <li>
+        <a class="ui-row" data-fx="spot" href={slashPath(`/blog/${n.id}`)}>
+          <span class="ui-row__title">{n.title}</span>
+          <time class="ui-row__meta" datetime={n.date.toISOString()}>{fmt(n.date)}</time>
+          <span class="ui-row__glyph" aria-hidden="true"><Icon name="arrow-right" size={16} /></span>
         </a>
       </li>
     ))}
@@ -91,6 +93,14 @@ const fmt = (d: Date) =>
     overflow-wrap: anywhere;
   }
 
+  /* the title's own symbol: it scales with the title (14px would read as a
+     subscript at this size), stays ghost, and sits on the x-height */
+  .tag-title :global(.ui-chip__hash--inline) {
+    inline-size: 0.6em;
+    block-size: 0.6em;
+    vertical-align: 0.04em;
+  }
+
   .tag-lede {
     max-inline-size: 56ch;
     color: var(--muted);
@@ -104,71 +114,5 @@ const fmt = (d: Date) =>
     align-items: center;
     gap: 0.5rem;
     padding-top: 0.25rem;
-  }
-
-  .tag-count-badge {
-    font-size: var(--text-sm);
-    color: var(--faint);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .note-list {
-    --surface-row-gap: 0.15rem;
-    max-width: 100%;
-  }
-  .note-link {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: var(--step-3) var(--step-3);
-    margin-inline: calc(var(--step-3) * -1);
-    border-radius: var(--r-3);
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    text-decoration: none;
-    color: var(--ink);
-    transition:
-      background-color var(--t-color),
-      transform var(--dur-press) var(--ease-enter);
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .note-link:hover,
-    .note-link:focus-visible {
-      background: color-mix(in oklch, var(--ink) 3.5%, transparent);
-    }
-    .note-link:hover .note-date,
-    .note-link:focus-visible .note-date {
-      color: var(--muted);
-    }
-  }
-  .note-link:active {
-    background: color-mix(in oklch, var(--ink) 6.5%, transparent);
-    transform: scale(0.995);
-  }
-  .note-title {
-    font-size: var(--text-sm);
-    font-weight: var(--font-medium);
-    line-height: var(--leading-snug);
-  }
-  .note-date {
-    font-size: var(--text-xs);
-    font-family: var(--font-mono);
-    color: var(--faint);
-    font-variant-numeric: tabular-nums;
-    transition: color var(--t-color);
-  }
-  .mono {
-    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
-  }
-
-  @media (max-width: 38rem) {
-    .note-link {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 0.25rem;
-      padding: 0.75rem 1rem;
-    }
   }
 </style>

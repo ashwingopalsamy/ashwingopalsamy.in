@@ -8,8 +8,8 @@ import { quotes } from "../data/home";
  * above a full-width map, then a bare quote. The contact block lives in
  * its own Contact component right after the homepage intro.
  * Spotify lazy-mounts as the card nears the viewport, behind a loading
- * skeleton, with an 8s load timeout that falls back to a static
- * "Open in Spotify" card.
+ * skeleton, with an 8s load timeout that falls back to an "Open in Spotify"
+ * row.
  */
 
 const SPOTIFY_URL =
@@ -37,7 +37,8 @@ const pickIndex = quoteIndexOfTheDayServer();
         </div>
       </div>
       <a
-        class="spotify-fallback"
+        class="spotify-fallback ui-row"
+        data-fx="spot"
         href={SPOTIFY_URL}
         target="_blank"
         rel="noopener noreferrer"
@@ -48,11 +49,10 @@ const pickIndex = quoteIndexOfTheDayServer();
             <path d={SPOTIFY_MARK} />
           </svg>
         </span>
-        <span class="spotify-fallback-copy">
-          <span class="spotify-fallback-title">Open in Spotify</span>
-          <span class="spotify-fallback-sub">Embed didn’t load: listen on Spotify instead</span>
+        <span class="ui-row__title">Open in Spotify</span>
+        <span class="ui-row__glyph ui-row__glyph--ext" aria-hidden="true">
+          <Icon name="arrow-up-right" size={16} />
         </span>
-        <Icon name="arrow-up-right" size={14} class="spotify-fallback-arrow" />
       </a>
     </div>
     <LocationCard />
@@ -61,29 +61,6 @@ const pickIndex = quoteIndexOfTheDayServer();
   {
     quotes.length > 0 && (
       <div class="quote-block">
-        <div class="quote-controls chrome-surface">
-          <button
-            id="quote-copy"
-            type="button"
-            class="quote-btn quote-copy"
-            aria-label="Copy this quote"
-            title="Copy quote"
-          >
-            <Icon name="copy" size={14} class="ico-copy" />
-            <Icon name="check" size={14} strokeWidth={2.2} class="ico-check" />
-          </button>
-          {quotes.length > 1 && (
-            <button
-              id="quote-again"
-              type="button"
-              class="quote-btn quote-again"
-              aria-label="Show another quote"
-              title="Another quote (J)"
-            >
-              <Icon name="repeat" size={14} />
-            </button>
-          )}
-        </div>
         <div id="quote-viewport">
           {
             quotes.map((quote, index) => {
@@ -104,6 +81,34 @@ const pickIndex = quoteIndexOfTheDayServer();
               );
             })
           }
+        </div>
+        <div class="quote-actions" role="group" aria-label="Quote controls">
+          <button
+            id="quote-copy"
+            type="button"
+            class="ui-cap ui-cap--quiet ui-cap--32 ui-cap--icon"
+            data-state="idle"
+            aria-label="Copy this quote"
+          >
+            <span class="ui-stk ui-stk--icon">
+              <span data-when="idle"><Icon name="copy" size={16} /></span>
+              <span data-when="done"><Icon name="check" size={16} class="ui-draw" /></span>
+              <span data-when="error"><Icon name="alert" size={16} /></span>
+            </span>
+            <span class="ui-tip" role="tooltip">Copy quote</span>
+          </button>
+          {quotes.length > 1 && (
+            <button
+              id="quote-again"
+              type="button"
+              class="quote-again ui-cap ui-cap--quiet ui-cap--32 ui-cap--icon"
+              aria-label="Show another quote"
+              aria-keyshortcuts="J"
+            >
+              <Icon name="repeat" size={16} />
+              <span class="ui-tip" role="tooltip">Another quote <kbd class="ui-kbd">J</kbd></span>
+            </button>
+          )}
         </div>
       </div>
     )
@@ -128,7 +133,7 @@ const pickIndex = quoteIndexOfTheDayServer();
     flex-shrink: 0;
     border-radius: var(--r-5);
     overflow: hidden;
-    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--ink) 10%, transparent);
+    box-shadow: inset 0 0 0 1px var(--edge);
     background: color-mix(in oklch, var(--ink) 4%, var(--canvas));
   }
 
@@ -220,68 +225,31 @@ const pickIndex = quoteIndexOfTheDayServer();
     display: none;
   }
 
+  /* The whole band is one row: .ui-row supplies the puddle, press and ring;
+     this lays it over the card instead of letting it bleed past the rail. */
   .spotify-fallback {
-    display: none;
     position: absolute;
     inset: 0;
-    align-items: center;
+    display: none;
     gap: var(--step-3);
-    padding: var(--step-4) var(--step-4);
-    text-decoration: none;
-    color: var(--ink);
-    background: color-mix(in oklch, var(--ink) 4%, var(--canvas));
+    margin: 0;
+    padding: var(--step-4);
+    border-radius: inherit;
   }
 
   .spotify-wrap.is-fallback .spotify-fallback {
     display: flex;
   }
 
-  .spotify-fallback:hover,
-  .spotify-fallback:focus-visible {
-    text-decoration: none;
-    background: color-mix(in oklch, var(--ink) 7%, var(--canvas));
-  }
-
   .spotify-fallback-mark {
     display: inline-grid;
     place-items: center;
-    width: 2.75rem;
-    height: 2.75rem;
+    inline-size: var(--cap-48);
+    block-size: var(--cap-48);
     border-radius: 50%;
     flex-shrink: 0;
     color: var(--ink);
-    background: color-mix(in oklch, var(--ink) 10%, var(--canvas));
-  }
-
-  .spotify-fallback-copy {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-  }
-
-  .spotify-fallback-title {
-    font-weight: var(--font-medium);
-    font-size: var(--text-sm);
-  }
-
-  .spotify-fallback-sub {
-    font-size: var(--text-xs);
-    color: var(--muted);
-    line-height: var(--leading-snug);
-  }
-
-  :global(.spotify-fallback-arrow) {
-    flex-shrink: 0;
-    color: var(--faint);
-    transition: transform var(--t-move), color var(--t-color);
-  }
-
-  .spotify-fallback:hover :global(.spotify-fallback-arrow),
-  .spotify-fallback:focus-visible :global(.spotify-fallback-arrow) {
-    color: var(--ink);
-    transform: translate(1.5px, -1.5px);
+    background: var(--wash-press);
   }
 
   .connect-grid :global(.loc-card) {
@@ -289,12 +257,26 @@ const pickIndex = quoteIndexOfTheDayServer();
     height: 100%;
   }
 
+  /* One unit: the quote, then one footer row with the two controls at the
+     start and the attribution at the end. Every card shares one cell, so
+     the viewport is as tall as the longest quote and nothing below it moves
+     on a shuffle; each card sits its text on the cell's floor, so the
+     attribution is always the last row. The controls share the block's
+     cell and sit on that row: they never move under the pointer, never
+     flip, and never ride inside the viewport's clip. */
   .quote-block {
-    display: flex;
-    flex-direction: column;
+    /* the controls' 44px hit areas meet without overlapping */
+    --quote-gap: calc(var(--hit) - var(--cap-32));
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     position: relative;
     margin-top: var(--step-5);
     perspective: 1000px;
+  }
+
+  #quote-viewport,
+  .quote-actions {
+    grid-area: 1 / 1;
   }
 
   #quote-viewport {
@@ -308,12 +290,15 @@ const pickIndex = quoteIndexOfTheDayServer();
 
   .quote-card {
     grid-area: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
     margin: 0;
     padding: 0;
     min-width: 0;
     visibility: hidden;
     pointer-events: none;
-    transform-origin: center top;
+    transform-origin: center bottom;
     backface-visibility: hidden;
   }
 
@@ -334,16 +319,20 @@ const pickIndex = quoteIndexOfTheDayServer();
     text-wrap: pretty;
   }
 
+  /* the controls' row: as tall as a circle, right-aligned, and clear of
+     both circles on its start side */
   .attribution {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: flex-end;
     gap: 0.75rem;
-    margin-top: 1.5rem;
+    min-block-size: var(--cap-32);
+    margin-top: var(--step-2);
+    padding-inline-start: calc(var(--cap-32) * 2 + var(--quote-gap) + var(--step-3));
+    text-align: end;
     font-size: var(--text-sm);
     color: var(--faint);
     transition: color var(--t-color);
-    text-align: right;
   }
 
   .qa {
@@ -353,89 +342,29 @@ const pickIndex = quoteIndexOfTheDayServer();
     transition: color var(--t-color);
   }
 
-  .quote-author::before {
-    display: inline-block;
-    width: var(--step-3);
-    height: 1px;
-    margin: 0 var(--step-2) 0.25em 0;
-    background: var(--rule-strong);
-    content: "";
-  }
-
   .quote-source {
     display: none;
   }
 
-  .quote-controls {
-    display: inline-flex;
-    align-items: center;
-    align-self: flex-end;
-    gap: 0;
-    block-size: var(--chrome-size);
-    margin-bottom: 1rem;
-    padding: 0;
-    border-radius: var(--r-pill);
-  }
-
-  .quote-btn {
-    position: relative;
-    display: inline-grid;
-    place-items: center;
-    flex: 0 0 var(--control-hit);
-    inline-size: var(--control-hit);
-    block-size: calc(var(--chrome-size) - 2px);
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: var(--faint);
-    cursor: pointer;
-    border-radius: 50%;
-    transition:
-      color var(--t-color),
-      transform var(--t-move);
-  }
-
-  .quote-btn::before {
-    content: "";
-    position: absolute;
-    width: 1.75rem;
-    height: 1.75rem;
-    border-radius: 50%;
-    background: color-mix(in oklch, var(--ink) 7%, transparent);
-    opacity: 0;
-    transition: opacity var(--t-color);
-  }
-
-  .quote-btn:hover,
-  .quote-btn:focus-visible {
-    color: var(--ink);
-  }
-
-  .quote-btn:hover::before,
-  .quote-btn:focus-visible::before {
-    opacity: 1;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .quote-btn:hover > :global(.ui-icon),
-    .quote-btn:focus-visible > :global(.ui-icon) {
-      transform: scale(1.1);
-    }
-  }
-
-  .quote-btn:active {
-    transform: scale(0.94);
-    transition: transform var(--dur-press) var(--ease-enter);
-  }
-
-  .quote-btn > :global(.ui-icon) {
-    position: relative;
+  /* quiet ghost circles, no container. The first glyph's edge, not the
+     circle's, sits on the rail like the quote's text: the circle gives back
+     its own whitespace (a 16px glyph centred in 32). */
+  .quote-actions {
+    --quote-hang: calc((var(--cap-32) - var(--step-4)) / 2);
     z-index: 1;
-    transition: transform var(--dur-tint) var(--ease-enter);
+    display: flex;
+    align-self: end;
+    justify-self: start;
+    gap: var(--quote-gap);
+    margin-inline-start: calc(var(--quote-hang) * -1);
   }
 
-  .quote-again :global(.ui-icon) {
-    transition: transform var(--t-move);
+  /* the first circle sits at the rail's edge: its tooltip is flush with the
+     rail instead of centred past the gutter */
+  .quote-actions > :global(:first-child > .ui-tip) {
+    inset-inline-start: calc(var(--quote-hang) - 1px);
+    translate: none;
+    transform-origin: 0 0;
   }
 
   .quote-again.is-spinning :global(.ui-icon) {
@@ -449,41 +378,6 @@ const pickIndex = quoteIndexOfTheDayServer();
     to {
       transform: rotate(360deg);
     }
-  }
-
-  .quote-copy {
-    position: relative;
-  }
-
-  .quote-copy :global(.ico-check) {
-    position: absolute;
-    inset: 0;
-    margin: auto;
-    opacity: 0;
-    transform: scale(0.6);
-    transition:
-      opacity var(--t-color),
-      transform var(--t-move);
-  }
-
-  .quote-copy :global(.ico-copy) {
-    transition:
-      opacity var(--t-color),
-      transform var(--t-move);
-  }
-
-  .quote-copy.copied {
-    color: var(--ink);
-  }
-
-  .quote-copy.copied :global(.ico-copy) {
-    opacity: 0;
-    transform: scale(0.6);
-  }
-
-  .quote-copy.copied :global(.ico-check) {
-    opacity: 1;
-    transform: scale(1);
   }
 
   @media (max-width: 38rem) {
@@ -620,8 +514,7 @@ const pickIndex = quoteIndexOfTheDayServer();
   import { quotes } from "../data/home";
   import { playAccent } from "../scripts/sound";
   import { getPresence } from "../scripts/presence";
-  import { showToast } from "../scripts/toast";
-  import { copyToClipboard } from "../scripts/clipboard";
+  import { copyControl } from "../scripts/clipboard";
   import { onPageCleanup, pageSignal } from "../scripts/lifecycle";
 
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -662,15 +555,13 @@ const pickIndex = quoteIndexOfTheDayServer();
     const viewport = block.querySelector<HTMLElement>("#quote-viewport");
     const animations = new Set<Animation>();
     let flipping = false;
-    let copiedTimer = 0;
 
     onPageCleanup(() => {
-      window.clearTimeout(copiedTimer);
       animations.forEach((animation) => animation.cancel());
       animations.clear();
       flipping = false;
       againButton?.classList.remove("is-spinning");
-      copyButton?.classList.remove("copied");
+      if (copyButton) copyButton.dataset.state = "idle";
       delete block.dataset.enhanced;
       if (viewport) delete viewport.dataset.swipeEnhanced;
     }, signal);
@@ -801,7 +692,9 @@ const pickIndex = quoteIndexOfTheDayServer();
 
       againButton?.addEventListener("click", () => void rotate(), { signal });
 
-      copyButton?.addEventListener("click", async () => {
+      // The quote changes, so the value is read at click time and handed to
+      // copyControl, which owns the button's idle/done/error state.
+      copyButton?.addEventListener("click", () => {
         const card = activeCard();
         const t = card?.querySelector<HTMLElement>(".quote-text")?.textContent ?? "";
         const a = card?.querySelector<HTMLElement>(".quote-author")?.textContent ?? "";
@@ -813,18 +706,7 @@ const pickIndex = quoteIndexOfTheDayServer();
           .replace(/[ \t]+/g, " ")
           .replace(/ ([.,!?])/g, "$1")
           .trim();
-        const copied = await copyToClipboard(payload, signal);
-        if (!active()) return;
-        if (copied) {
-          playAccent("copy");
-          const btn = copyButton;
-          btn?.classList.add("copied");
-          showToast({ message: "Quote copied", duration: 2200 });
-          window.clearTimeout(copiedTimer);
-          copiedTimer = window.setTimeout(() => btn?.classList.remove("copied"), 1200);
-        } else {
-          showToast({ message: "Couldn’t copy quote", duration: 2600 });
-        }
+        void copyControl(copyButton, payload, signal);
       }, { signal });
 
       document.addEventListener("keydown", (e) => {

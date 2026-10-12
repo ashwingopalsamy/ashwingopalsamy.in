@@ -3,11 +3,11 @@ import { ClientRouter } from "astro:transitions";
 import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 import geistLatin from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import fontStyles from "../styles/fonts.css?inline";
-import DevTuner from "../components/DevTuner.astro";
 // geometry first (global.css consumes --step-*/--r-*), motion last so its
 // retuned duration and easing tokens win over the legacy values.
 import "../styles/geometry.css";
 import "../styles/global.css";
+import "../styles/controls.css";
 import "../styles/motion.css";
 import { site } from "../data/home";
 import { buildMeta } from "../lib/build";
@@ -163,10 +163,6 @@ const documentTitle = isHome
             target.head.appendChild(tc);
           }
           if (tc.getAttribute("content") !== canvas(theme)) tc.setAttribute("content", canvas(theme));
-          target.querySelectorAll(".theme-toggle").forEach(function (button) {
-            var pressed = String(theme === "dark");
-            if (button.getAttribute("aria-pressed") !== pressed) button.setAttribute("aria-pressed", pressed);
-          });
         }
         function introHasAnimated() {
           if (window.__siteIntroAnimated || document.documentElement.dataset.introAnimated === "true") return true;
@@ -360,7 +356,6 @@ const documentTitle = isHome
     </div>
     <div class="viewport-frame" transition:persist="viewport-frame" aria-hidden="true"></div>
     <div class="page-scrollbar" transition:persist="page-scrollbar" aria-hidden="true"><div class="page-scrollbar-thumb"></div></div>
-    {import.meta.env.DEV && <DevTuner />}
 
     <script>
       import { onPageCleanup, pageSignal } from "../scripts/lifecycle";
@@ -369,6 +364,7 @@ const documentTitle = isHome
       import "../scripts/floating-toc";
       import "../scripts/grid-overlay";
       import "../scripts/page-scrollbar";
+      import "../scripts/pointer-fx";
 
       /* Nothing below affects the first interaction: the devtools console
          art, the telemetry queue, the web-vitals observers and the WebMCP

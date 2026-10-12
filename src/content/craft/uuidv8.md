@@ -9,7 +9,7 @@ status: "Active"
 github: "https://github.com/ash3in/uuidv8"
 ---
 
-A Go library for generating UUIDv8 identifiers per RFC 9562. UUIDv8 is the newest UUID version, designed for applications that need custom timestamp encoding, database-friendly sorting, and domain-specific node bits -- all within the standard 128-bit UUID format.
+A Go library for generating UUIDv8 identifiers per RFC 9562. UUIDv8 is the newest UUID version, designed for applications that need custom timestamp encoding, database-friendly sorting, and domain-specific node bits, all within the standard 128-bit UUID format.
 
 ## Why UUIDv8
 
@@ -17,4 +17,4 @@ UUIDv4 is random. UUIDv7 is time-ordered but opinionated about its timestamp lay
 
 ## Design
 
-Zero external dependencies. The library handles timestamp encoding, clock sequence management, and node ID generation while enforcing the RFC 9562 variant and version bits. The API is deliberately minimal -- one function to generate, one to parse.
+Zero external dependencies. The library handles timestamp encoding, clock sequence management, and node ID generation while enforcing the RFC 9562 variant and version bits. The API is deliberately minimal: one function to generate, one to parse.

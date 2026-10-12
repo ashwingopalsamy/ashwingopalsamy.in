@@ -15,6 +15,7 @@ const backTarget = resolveBackTarget(path);
 ---
 
 <header class="site-header">
+  <div class="scroll-veil" aria-hidden="true"></div>
   <a
     href={backTarget.href}
     class="wordmark logo-control nav-glass chrome-surface"
@@ -38,6 +39,19 @@ const backTarget = resolveBackTarget(path);
     </span>
   </a>
 
+  {/* Phones only: desktop opens the palette with ⌘K or /. */}
+  <div class="header-actions">
+    <a
+      class="header-palette-trigger palette-trigger nav-glass chrome-surface"
+      href="/library/"
+      aria-label="Search"
+      aria-keyshortcuts="Meta+K Control+K"
+      data-palette-entry="directory"
+    >
+      <Icon name="command" size={18} />
+    </a>
+  </div>
+
   <nav class="site-nav nav-glass chrome-surface" aria-label="Pages" data-no-active={desktopActiveIndex < 0 ? "true" : undefined} data-active-index={String(Math.max(0, desktopActiveIndex))}>
     <span class="nav-selection" aria-hidden="true"></span>
     {desktopNavigation.map((item) => {
@@ -54,18 +68,10 @@ const backTarget = resolveBackTarget(path);
         </a>
       );
     })}
+    <span class="nav-ink" aria-hidden="true" inert>
+      {desktopNavigation.map((item) => <span class="quiet-link">{item.label}</span>)}
+    </span>
   </nav>
-
-  <div class="header-actions">
-    <a
-      class="header-palette-trigger palette-trigger nav-glass chrome-surface"
-      href="/library/"
-      aria-label="Open commands"
-      data-palette-entry="directory"
-    >
-      <Icon name="command" size={18} />
-    </a>
-  </div>
 
   <nav class="site-nav-bottom" aria-label="Pages" data-no-active={mobileActiveIndex < 0 ? "true" : undefined} data-active-index={String(Math.max(0, mobileActiveIndex))}>
     <span class="nav-selection" aria-hidden="true"></span>
@@ -295,8 +301,10 @@ const backTarget = resolveBackTarget(path);
     inset-inline-start: var(--step-1);
     width: var(--nav-slot);
     border-radius: var(--r-pill);
-    background: var(--ink);
-    box-shadow: var(--shadow-1);
+    /* the same ink as the primary capsule: a vertical gradient, its inset
+       edge and a hairline of lift */
+    background: var(--ink-fill);
+    box-shadow: var(--ink-edge), var(--lift-0);
     pointer-events: none;
     transform: translate3d(var(--pill-x), 0, 0);
     transform-origin: center;
@@ -348,21 +356,140 @@ const backTarget = resolveBackTarget(path);
     color: var(--canvas);
   }
 
+  /* Ink-through: the labels again in canvas ink, clipped to the pill's slot
+     on the pill's spring, so a label inverts exactly where the ink passes
+     under it. The slots are fixed, so the clip is pure CSS from the same
+     active index the pill reads. Named so that during a route transition it
+     paints above the sliding pill and the cross-fading labels; its new
+     snapshot is live, so the clip keeps travelling there. */
+  .site-nav {
+    --ink-x: 0px;
+  }
+
+  .site-nav[data-active-index="1"] {
+    --ink-x: calc(var(--nav-slot) + var(--nav-gap));
+  }
+
+  .site-nav[data-active-index="2"] {
+    --ink-x: calc((var(--nav-slot) + var(--nav-gap)) * 2);
+  }
+
+  .nav-ink {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: repeat(3, var(--nav-slot));
+    gap: var(--nav-gap);
+    padding: var(--step-1);
+    pointer-events: none;
+    clip-path: inset(
+      var(--step-1)
+      calc(100% - var(--step-1) - var(--ink-x) - var(--nav-slot))
+      var(--step-1)
+      calc(var(--step-1) + var(--ink-x))
+      round var(--r-pill)
+    );
+    transition: opacity var(--t-color);
+    view-transition-name: nav-ink;
+  }
+
+  .nav-ink .quiet-link {
+    color: var(--canvas);
+  }
+
+  .site-nav[data-no-active] .nav-ink {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .nav-ink {
+      transition:
+        opacity var(--t-color),
+        clip-path var(--dur-shift) var(--ease-spring-snap);
+    }
+  }
+
+  :global(::view-transition-group(nav-ink)),
+  :global(::view-transition-new(nav-ink)) {
+    animation: none;
+  }
+
+  :global(::view-transition-old(nav-ink)) {
+    display: none;
+  }
+
   .header-actions {
     display: none;
     align-items: center;
-    gap: var(--step-2);
     min-inline-size: 0;
+    margin-inline-start: auto;
   }
 
   .header-palette-trigger {
-    display: none;
+    display: grid;
     width: var(--chrome-size);
     height: var(--chrome-size);
     place-items: center;
     padding: 0;
     color: var(--muted);
     text-decoration: none;
+  }
+
+  /* The veil: content dissolves under the chrome instead of sliding
+     visibly between the floating chips. One fixed band at a constant
+     radius, shown only once the page has scrolled (the script below). */
+  .scroll-veil {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    block-size: var(--header-zone);
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--canvas) 78%, transparent),
+      color-mix(in oklch, var(--canvas) 0%, transparent)
+    );
+    -webkit-backdrop-filter: blur(calc(var(--step) * 2.5));
+    backdrop-filter: blur(calc(var(--step) * 2.5));
+    -webkit-mask-image: linear-gradient(180deg, black 62%, transparent);
+    mask-image: linear-gradient(180deg, black 62%, transparent);
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity var(--dur-shift) var(--ease-enter),
+      visibility 0s linear var(--dur-shift);
+  }
+
+  :global(:root[data-scrolled]) .scroll-veil {
+    visibility: visible;
+    opacity: 1;
+    transition:
+      opacity var(--dur-shift) var(--ease-enter),
+      visibility 0s;
+  }
+
+  /* in the persisted .site-chrome, which is static: top 0 is the document's */
+  :global(.veil-sentinel) {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    inline-size: 1px;
+    block-size: 0;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .scroll-veil {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .nav-ink {
+      display: none;
+    }
   }
 
   .site-nav-bottom {
@@ -401,6 +528,11 @@ const backTarget = resolveBackTarget(path);
       color: var(--ink);
       background: color-mix(in oklch, var(--ink) 4.5%, transparent);
     }
+
+    .header-palette-trigger:hover,
+    .header-palette-trigger:focus-visible {
+      color: var(--ink);
+    }
   }
 
   @media (max-width: 38rem) {
@@ -413,18 +545,15 @@ const backTarget = resolveBackTarget(path);
       display: none;
     }
 
-    .header-actions {
-      display: flex;
-    }
-
     .site-header .chrome-surface {
       background: var(--chrome-surface-bg);
       -webkit-backdrop-filter: blur(20px) saturate(170%);
       backdrop-filter: blur(20px) saturate(170%);
     }
 
-    .header-palette-trigger {
-      display: grid;
+    /* the ⌘ chip opens the command directory */
+    .header-actions {
+      display: flex;
     }
 
     .site-nav-bottom {
@@ -530,3 +659,35 @@ const backTarget = resolveBackTarget(path);
     }
   }
 </style>
+
+<script>
+  /* The veil is on once the page has scrolled at all. A zero-height
+     sentinel at the top of the document tells an IntersectionObserver;
+     nothing listens to scroll. It lives in the persisted chrome, so it
+     outlives navigations, and so does this module: it runs once per
+     document. The flag sits on <html>, which the router rebuilds on every
+     swap, so it is re-derived after each one (scroll is already restored
+     by then). */
+  const FLAG = "data-scrolled";
+  const root = document.documentElement;
+  const sentinel = document.createElement("div");
+  sentinel.className = "veil-sentinel";
+  sentinel.setAttribute("aria-hidden", "true");
+
+  const observer = new IntersectionObserver((entries) => {
+    const scrolled = !entries[entries.length - 1].isIntersecting;
+    if (root.hasAttribute(FLAG) !== scrolled) root.toggleAttribute(FLAG, scrolled);
+  });
+
+  function mount() {
+    if (sentinel.isConnected) return;
+    (document.querySelector(".site-chrome") ?? document.body).prepend(sentinel);
+    observer.observe(sentinel);
+  }
+
+  mount();
+  document.addEventListener("astro:after-swap", () => {
+    mount();
+    root.toggleAttribute(FLAG, window.scrollY > 0);
+  });
+</script>

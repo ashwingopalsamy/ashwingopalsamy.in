@@ -33,10 +33,10 @@ const machineReadable = [
     <h1 class="visually-hidden">Page Not Found</h1>
     <p class="nf-lede">This page took a wrong turn.</p>
     <p class="nf-muted">
-      Nothing lives at this address. Press
-      <kbd class="nf-kbd">⌘</kbd><kbd class="nf-kbd">K</kbd>
-      <span class="nf-kbd-alt">(<kbd class="nf-kbd">Ctrl</kbd><kbd class="nf-kbd">K</kbd>)</span>{" "}
-      to search once the palette lands, or pick the thread back up below.
+      Nothing lives at this address. Press{" "}
+      <kbd class="ui-kbd" aria-label="Command"><Icon name="command" size={12} strokeWidth={2.2} /></kbd><kbd class="ui-kbd">K</kbd>{" "}
+      <span class="nf-kbd-alt">(<kbd class="ui-kbd">Ctrl</kbd><kbd class="ui-kbd">K</kbd>)</span>{" "}
+      to search, or pick the thread back up below.
     </p>
 
     <nav class="nf-group" aria-labelledby="nf-pages-label">
@@ -44,12 +44,12 @@ const machineReadable = [
       <ul class="nf-rows surface-stack" role="list">
         {pages.map((item) => (
           <li>
-            <a class="nf-row" href={item.href}>
-              <span class="nf-row-label">{item.label}</span>
-              <span class="nf-row-detail">{item.detail}</span>
-              <span class="nf-row-arrow" aria-hidden="true">
-                <Icon name="chevron-right" size={15} />
+            <a class="ui-row ui-row--multiline" data-fx="spot" href={item.href}>
+              <span class="nf-row-main">
+                <span class="ui-row__title">{item.label}</span>
+                <span class="ui-row__sub">{item.detail}</span>
               </span>
+              <span class="ui-row__glyph" aria-hidden="true"><Icon name="arrow-right" size={16} /></span>
             </a>
           </li>
         ))}
@@ -61,7 +61,7 @@ const machineReadable = [
       <ul class="nf-inline" role="list">
         {machineReadable.map((item) => (
           <li>
-            <a class="nf-inline-link mono" href={item.href}>{item.label}</a>
+            <a class="ui-link nf-inline-link mono" href={item.href}>{item.label}</a>
           </li>
         ))}
       </ul>
@@ -109,20 +109,13 @@ const machineReadable = [
     transition: color var(--t-color);
   }
 
-  .nf-kbd {
-    display: inline-block;
-    min-width: 1.35em;
-    padding: 0.12em 0.5em;
-    margin-inline: 0.08em;
-    border: var(--hairline) solid var(--chrome-surface-border);
-    border-radius: var(--r-pill);
-    background: var(--canvas);
-    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
-    font-size: 0.78em;
-    line-height: 1.4;
-    color: var(--ink);
-    text-align: center;
-    box-shadow: inset 0 -1px 0 color-mix(in oklch, var(--ink) 8%, transparent);
+  /* keycaps ride the sentence's middle, a hair apart */
+  .nf-muted .ui-kbd {
+    vertical-align: middle;
+  }
+
+  .nf-muted .ui-kbd + .ui-kbd {
+    margin-inline-start: calc(var(--step) / 2);
   }
 
   .nf-kbd-alt {
@@ -148,104 +141,32 @@ const machineReadable = [
   }
 
   /* ---------------------------------------------------------------- */
-  /*  page rows — the site's row pattern, not a second one            */
+  /*  page rows: the label and its line side by side, one column on    */
+  /*  phones                                                           */
   /* ---------------------------------------------------------------- */
 
-  .nf-row {
-    position: relative;
+  .nf-row-main {
+    flex: 1;
+    min-inline-size: 0;
     display: grid;
-    grid-template-columns: minmax(7rem, auto) minmax(0, 1fr) auto;
+    grid-template-columns: minmax(7rem, 0.4fr) minmax(0, 1fr);
     align-items: baseline;
     gap: var(--step-4);
-    padding: var(--step-3) var(--step-4);
-    margin-inline: calc(var(--step-4) * -1);
-    border-radius: var(--r-3);
-    background: var(--surface-row-rest);
-    color: inherit;
-    text-decoration: none;
-    transition:
-      background-color var(--t-color),
-      transform var(--dur-press) var(--ease-snap);
   }
 
-  /* the same hairline strike the content rows use */
-  .nf-row::before {
-    content: "";
-    position: absolute;
-    inset-block: var(--step-2);
-    inset-inline-start: 0;
-    width: 2px;
-    border-radius: var(--r-pill);
-    background: var(--ink);
-    transform: scaleY(0);
-    transform-origin: center;
-    transition: transform var(--dur-shift) var(--ease-spring-snap);
-  }
-
-  .nf-row-label {
-    font-weight: 560;
-    font-size: var(--text-md);
-    letter-spacing: -0.015em;
-    color: var(--ink);
-  }
-
-  .nf-row-detail {
-    color: var(--ghost);
-    font-size: var(--text-ui);
-    line-height: var(--leading-normal);
-    transition: color var(--t-color);
-  }
-
-  .nf-row-arrow {
-    align-self: center;
-    color: var(--ghost);
-    transition:
-      transform var(--dur-shift) var(--ease-spring-pop),
-      color var(--dur-tint) linear;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .nf-row:hover,
-    .nf-row:focus-visible {
-      background: var(--surface-row-hover);
-    }
-
-    .nf-row:hover::before,
-    .nf-row:focus-visible::before {
-      transform: scaleY(1);
-    }
-
-    .nf-row:hover .nf-row-detail,
-    .nf-row:focus-visible .nf-row-detail {
-      color: var(--muted);
-    }
-
-    .nf-row:hover .nf-row-arrow,
-    .nf-row:focus-visible .nf-row-arrow {
-      color: var(--ink);
-      transform: translate3d(var(--travel-nudge), 0, 0);
-    }
-  }
-
-  .nf-row:active {
-    background: var(--surface-row-press);
-    transform: scale(var(--press-scale-inline));
-  }
-
-  .nf-row:focus-visible {
-    outline: var(--focus-ring);
-    outline-offset: 2px;
+  .nf-row-main .ui-row__sub {
+    margin-block-start: 0;
   }
 
   /* ---------------------------------------------------------------- */
-  /*  machine-readable — one quiet line, separated by rules            */
+  /*  machine-readable: one quiet line, separated by rules             */
   /* ---------------------------------------------------------------- */
 
   .nf-inline {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0 var(--step-3);
+    gap: var(--step-1) var(--step-3);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -257,50 +178,29 @@ const machineReadable = [
   }
 
   .nf-inline-link {
-    display: inline-block;
-    padding-block: var(--step-1);
-    color: var(--faint);
+    position: relative;
     font-size: var(--text-sm);
-    text-decoration: none;
-    text-decoration-color: transparent;
-    transition: color var(--t-color), text-decoration-color var(--t-color);
   }
 
-  .nf-inline-link:hover,
-  .nf-inline-link:focus-visible {
-    color: var(--ink);
-    text-decoration: underline;
-    text-decoration-thickness: var(--hairline);
-    text-underline-offset: 4px;
-    text-decoration-color: currentColor;
+  /* a 44px target around a line of text */
+  .nf-inline-link::after {
+    content: "";
+    position: absolute;
+    inset: calc(var(--step-3) * -1) calc(var(--step-2) * -1);
+  }
+
+  .mono {
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
   }
 
   @media (max-width: 38rem) {
-    .nf-row {
-      grid-template-columns: minmax(0, 1fr) auto;
-      row-gap: var(--step-1);
-      padding-inline: var(--step-3);
-      margin-inline: calc(var(--step-3) * -1);
+    .nf-row-main {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
     }
 
-    .nf-row-label {
-      grid-column: 1;
-    }
-
-    .nf-row-arrow {
-      grid-column: 2;
-      grid-row: 1;
-    }
-
-    .nf-row-detail {
-      grid-column: 1 / -1;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .nf-row::before,
-    .nf-row-arrow {
-      transition: none;
+    .nf-row-main .ui-row__sub {
+      margin-block-start: calc(var(--step) / 2);
     }
   }
 </style>

@@ -5,31 +5,15 @@ import type { LibraryCatalogItem } from "../lib/library-list";
 interface Props {
   items: LibraryCatalogItem[];
   linkedTags: Set<string>;
-  empty?: string;
   density?: "overview" | "full";
 }
 
-const { items, linkedTags, empty = "Nothing here yet.", density = "full" } = Astro.props;
+const { items, linkedTags, density = "full" } = Astro.props;
 ---
 
 <ul class:list={["library-rows", "surface-stack", `is-${density}`]}>
   {items.length > 0
     ? items.map((item) => <LibraryRow item={item} linkedTags={linkedTags} density={density} />)
-    : <li class="library-row-empty" aria-live="polite"><p>{empty}</p></li>}
+    : <li class="ui-row ui-row--static" aria-live="polite"><span class="ui-row__title">Nothing here yet.</span></li>}
 </ul>
 
-<style>
-  .library-rows {
-    --surface-row-gap: 0.15rem;
-  }
-
-  .library-row-empty {
-    display: grid;
-    min-block-size: 2.5rem;
-    place-items: center start;
-    padding: var(--step-3) var(--step-3);
-    margin-inline: calc(var(--step-3) * -1);
-    color: var(--faint);
-    font-size: var(--text-sm);
-  }
-</style>

@@ -95,7 +95,7 @@ export const paletteLucideNames: Record<Exclude<PaletteIconKey, `brand:${string}
   compare: "arrow-right-left", text: "type", hash: "hash", password: "key",
   time: "clock", coin: "coins", dice: "dice", quote: "quote", surprise: "sparkle",
   egg: "egg", command: "command", navigate: "arrow-up-down", actions: "list",
-  open: "arrow-right", external: "external", pin: "pin", "pin-off": "pin-off",
+  open: "arrow-right", external: "arrow-up-right", pin: "pin", "pin-off": "pin-off",
   repeat: "repeat", alert: "alert",
 };
 
@@ -106,13 +106,15 @@ export function profileIconKey(id: string): PaletteIconKey {
   return profileIconIds.has(id) ? `brand:${id}` : "contact";
 }
 
-export function iconMarkup(key: PaletteIconKey): string {
+/** 17 and `palette-svg` for a row's plate; pass a size (and no class) for a keycap. */
+export function iconMarkup(key: PaletteIconKey, options: { size?: number; className?: string } = {}): string {
+  const { size = 17, className = "palette-svg" } = options;
   if (key.startsWith("brand:")) {
     const path = profileIconPaths[key.slice(6)];
     if (path) return `<svg class="palette-brand-icon" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="${path}"></path></svg>`;
   }
   const name = paletteLucideNames[key as Exclude<PaletteIconKey, `brand:${string}`>] ?? "alert";
-  return sharedIconMarkup(name, { size: 17, strokeWidth: 1.8, className: "palette-svg" });
+  return sharedIconMarkup(name, { size, strokeWidth: 1.8, className: className || undefined });
 }
 
 export function hydratePaletteIcons(_root: Element): void {}

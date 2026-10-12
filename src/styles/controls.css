@@ -1,0 +1,1958 @@
+/* ==================================================================
+   controls — the primitive set every page builds its controls from.
+
+   Every global class is prefixed ui- so it never meets the bare .row,
+   .chip, .cap and .tile names component styles already use. State lives
+   in attributes, never in classes. Tokens: geometry.css (--cap-*, --row-*,
+   --track-inset, --tile-r), global.css (--glass-*, --ink-*, --wash*,
+   --edge*, --ok-*, --err-*, --toast-*, --link-*), motion.css.
+
+   class                              part / modifier
+   .ui-cap                            capsule, 48 by default
+     --ink --glass --quiet            tier; ink is the one primary per view
+     --chip --chip-selected           tag tiers (.ui-chip = cap + chip + 28)
+     --48 --40 --32 --28 --20         height
+     --lead --trail --icon            icon side gives 4px back; icon-only circle
+     --hang                           label, not box, sits on the column edge;
+                                      the arrow opens outward (quiet only)
+     __label                          every capsule label (lift, magnet parallax)
+   .ui-count                          mono tabular count in a cap or segment
+   .ui-chip  __hash                   28px tag chip, registry hash icon in ghost,
+                                      then the bare name; .go-spec-pill is the same
+                                      recipe for markdown-authored links
+   .ui-arw  --ext --back              registry arrow. Labelled cap: opens on hover
+                                      and focus. Icon cap, tile, pager: conveyor
+   .ui-stk  --icon                    one grid cell, children carry data-when
+   .ui-draw                           stroke icon (check) that draws itself
+   .ui-link  __ext                    inline link: paragraph weight, lifts with
+                                      its hovered block; no underline, no wash.
+                                      __ext = external glyph, shown on hover
+   .ui-badge  --mono                  20px static label; data-tone adds the dot
+   .ui-row  --static --multiline      __title __sub __meta __glyph(--ext --back)
+   .ui-disc  __chev __body            <details>; its <summary> is a .ui-row
+   .ui-seg  --sm --bare               __track __item __ind __ov (glass track)
+   .ui-dock                           glass track of 40px icon circles
+   .ui-card                           in-flow glass surface; radius, clip, padding are the page's
+   .ui-tip  --above  .ui-kbd          tooltip inside its trigger; keycap
+   .ui-toast  .solo .ti .msg .act .ring   built by scripts/toast.ts
+   .ui-pager  __card(--next) __key __title
+   .ui-tile  --soon  __title __desc __corner __go __art
+
+   attribute                          on            effect
+   data-fx="spot"                     row tile      pointer-fx.ts writes --mx/--my
+                                      pager card    (glass caps, docks, cards: none)
+   data-fx="magnet"                   ink cap       --tx/--ty, --lx/--ly
+   data-state=idle|done|error|loading action cap    ok/err fill, .ui-stk cell, spinner
+   data-when=idle|done|error|loading  .ui-stk child shown while parent state matches
+   aria-busy="true"                   cap           spinner, contents hidden
+   :disabled, aria-disabled="true"    cap, chip     disabled look
+   aria-pressed / aria-current=page   chip          selected (active filter)
+   aria-selected / -current / -pressed  seg item    selected
+   data-tone=reading|live|new|down    badge      dot colour
+   data-ready  data-stuck             .ui-seg       segmented.ts: ink-through on;
+   data-overflow                      __track       chrome glass; edge fade
+   data-slide=a|b + --slide-*         __ind         FLIP from the previous box
+   data-tip-open  :root[data-tip-warm]  trigger     show now; skip the dwell
+   data-state=in|out                  .ui-toast     entry / exit
+   data-play                          .ui-tile      --tile-play: running
+   ================================================================== */
+
+/* ------------------------------------------------------------------
+   capsule
+   ------------------------------------------------------------------ */
+
+.ui-cap,
+.ui-chip,
+.go-spec-pill {
+  --cap-h: var(--cap-48);
+  --cap-px: var(--cap-px-48);
+  --cap-gap: var(--cap-gap-lg);
+  --cap-spin: var(--step-4);
+  /* release is a spring; :active swaps in the 70ms press */
+  --ui-move: var(--dur-spring-pop) var(--ease-spring-pop);
+  --ui-drift: var(--dur-spring-snap) var(--ease-spring-snap);
+  /* arrow reveal (below): 0 closed, 1 open. Reduced motion keeps these
+     instant; the no-preference block gives them their curves. */
+  --arw-open: 0;
+  --arw-move: 0s;
+  --arw-fade: var(--t-color);
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cap-gap);
+  block-size: var(--cap-h);
+  padding-block: 0;
+  padding-inline: var(--cap-px);
+  /* one box for every tier, so a tier change never moves a pixel */
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  background-color: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: var(--text-ui);
+  font-weight: var(--font-medium);
+  line-height: 1;
+  letter-spacing: -0.006em;
+  white-space: nowrap;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  transition:
+    color var(--t-color),
+    background-color var(--t-color),
+    border-color var(--t-color),
+    box-shadow var(--t-color),
+    transform var(--ui-move),
+    translate var(--ui-drift),
+    margin-inline var(--arw-move);
+}
+
+.ui-cap--48 {
+  --cap-h: var(--cap-48);
+  --cap-px: var(--cap-px-48);
+}
+
+.ui-cap--40 {
+  --cap-h: var(--cap-40);
+  --cap-px: var(--cap-px-40);
+}
+
+.ui-cap--32 {
+  --cap-h: var(--cap-32);
+  --cap-px: var(--cap-px-32);
+  --cap-gap: var(--cap-gap-sm);
+  --cap-spin: calc(var(--step) * 3.5);
+  font-size: var(--text-ui-sm);
+}
+
+.ui-cap--28,
+.ui-chip,
+.go-spec-pill {
+  --cap-h: var(--cap-28);
+  --cap-px: var(--cap-px-28);
+  --cap-gap: var(--cap-gap-sm);
+  --cap-spin: calc(var(--step) * 3.5);
+  font-size: var(--text-ui-sm);
+  font-weight: 450;
+}
+
+.ui-cap--20 {
+  --cap-h: var(--cap-20);
+  --cap-px: var(--cap-px-20);
+  --cap-gap: var(--cap-gap-sm);
+  font-size: var(--text-xs);
+}
+
+/* The side that holds an icon gives back the glyph's own whitespace. */
+.ui-cap--lead {
+  padding-inline-start: calc(var(--cap-px) - var(--cap-icon-trim));
+}
+
+.ui-cap--trail {
+  padding-inline-end: calc(var(--cap-px) - var(--cap-icon-trim));
+}
+
+.ui-cap--icon {
+  inline-size: var(--cap-h);
+  padding-inline: 0;
+}
+
+/* 40, 32 and 28 are below the touch minimum; the hit area is not. The
+   ::before is placed against the padding box, inside the 1px border, so
+   the block inset gives that pixel back or the target is 42. A text
+   capsule reaches 4px past each side; an icon circle grows square, which
+   in a dock's 4px gap meets its neighbour's area without overlapping. */
+:is(.ui-cap--40, .ui-cap--32, .ui-cap--28, .ui-chip, .go-spec-pill)::before {
+  content: "";
+  position: absolute;
+  inset-block: calc((var(--cap-h) - var(--hit)) / 2 - 1px);
+  inset-inline: calc(var(--step-1) * -1);
+  border-radius: var(--r-pill);
+}
+
+:is(.ui-cap--40, .ui-cap--32, .ui-cap--28).ui-cap--icon::before {
+  inset-inline: calc((var(--cap-h) - var(--hit)) / 2 - 1px);
+}
+
+/* Caps carry no descender, so a centred label reads low. */
+.ui-cap__label {
+  transform: translateY(calc(var(--optical-pill-lift) * -1));
+  transition:
+    opacity var(--t-color),
+    translate var(--ui-drift, var(--dur-nudge) var(--ease-enter));
+}
+
+.ui-count {
+  font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  font-size: var(--text-xs);
+  font-weight: var(--font-normal);
+  font-variant-numeric: tabular-nums;
+  color: var(--ghost);
+  transition: color var(--t-color);
+}
+
+/* ---- tiers -------------------------------------------------------- */
+
+.ui-cap--ink {
+  color: var(--canvas);
+  background: var(--ink-fill) border-box;
+  box-shadow: var(--ink-edge);
+}
+
+.ui-cap--ink .ui-count {
+  color: color-mix(in oklch, var(--canvas) 58%, transparent);
+}
+
+.ui-cap--quiet {
+  color: var(--ghost);
+}
+
+/* Translucent fill, so a solid border-color, never the gradient rim. */
+.ui-cap--chip,
+.ui-chip,
+.go-spec-pill {
+  color: var(--muted);
+  background-color: var(--wash);
+  background-clip: padding-box;
+  border-color: var(--edge-soft);
+}
+
+/* the registry hash icon, a flex child of the chip: the chip's own 4px gap
+   sits before the label, so the label's text node is the bare tag name */
+.ui-chip__hash {
+  flex: none;
+  color: var(--ghost);
+  transition: color var(--t-color);
+}
+
+/* in running text (a tags row, the tag page title): the same 4px, on the line */
+.ui-chip__hash--inline {
+  display: inline-block;
+  vertical-align: -0.1em;
+  margin-inline-end: var(--step-1);
+}
+
+.ui-cap--chip-selected,
+:is(.ui-cap--chip, .ui-chip):is([aria-pressed="true"], [aria-current="page"]) {
+  color: var(--canvas);
+  background: var(--ink-fill) border-box;
+  border-color: transparent;
+  box-shadow: var(--ink-edge);
+}
+
+:is(.ui-cap--chip-selected, [aria-pressed="true"], [aria-current="page"]) > .ui-chip__hash {
+  color: color-mix(in oklch, var(--canvas) 55%, transparent);
+}
+
+/* Glass: sheen, opaque fill and spec over a border-box rim, then one drop.
+   The fill must be opaque or the rim shows through it. No backdrop-filter:
+   the canvas behind in-flow glass is flat. Light glass is the header nav's
+   surface (the tokens leave sheen and spec empty and the rim one solid
+   hairline); dark keeps all five layers. */
+:is(.ui-cap--glass, .ui-seg, .ui-dock, .ui-card, .ui-pager__card, .ui-tile, .ui-tile__go) {
+  border: 1px solid transparent;
+  background:
+    var(--glass-sheen) padding-box,
+    linear-gradient(var(--glass-fill), var(--glass-fill)) padding-box,
+    var(--glass-rim) border-box;
+  box-shadow: var(--glass-spec), var(--glass-lift);
+}
+
+/* Spotlight, on the wide surfaces only (tiles, pager cards): pointer-fx.ts
+   moves it on [data-fx~="spot"]; without it, it rests at the top centre.
+   Capsules, docks and cards have none. */
+:is(.ui-pager__card, .ui-tile)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(
+    var(--spot-size) circle at var(--mx, 50%) var(--my, 0%),
+    var(--spot),
+    transparent 70%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-color);
+}
+
+/* ------------------------------------------------------------------
+   arrow conveyor: the glyph leaves along its own vector and its twin
+   arrives behind it. Box is the icons' own size.
+   ------------------------------------------------------------------ */
+
+.ui-arw {
+  position: relative;
+  display: inline-grid;
+  flex: none;
+  overflow: clip;
+  vertical-align: middle;
+}
+
+.ui-arw > * {
+  grid-area: 1 / 1;
+  transition:
+    translate var(--dur-exit) var(--ease-exit),
+    opacity var(--dur-exit) var(--ease-exit);
+}
+
+.ui-arw > :nth-child(2) {
+  opacity: 0;
+  translate: -100% 0;
+}
+
+.ui-arw--ext > :nth-child(2) {
+  translate: -100% 100%;
+}
+
+.ui-arw--back > :nth-child(2) {
+  translate: 100% 0;
+}
+
+/* ------------------------------------------------------------------
+   arrow reveal: on a labelled capsule the glyph answers the pointer; it
+   is not furniture. Closed, it has no width and no gap, so the capsule is
+   its label between two equal paddings. Hover and keyboard focus set
+   --arw-open to 1: the box opens to the glyph and the glyph travels its
+   last few pixels along its own vector. Leaving closes it in --dur-exit.
+   Touch never opens it, and reduced motion fades it in without moving
+   anything. Icon circles, tiles and pager cards keep the conveyor above;
+   the conveyor's twin icon is not used here.
+   ------------------------------------------------------------------ */
+
+/* what the capsule gains when it opens: the glyph and its gap, less the
+   whitespace the icon side gave back */
+.ui-cap {
+  --cap-open: calc(var(--cap-spin) + var(--cap-gap) - var(--cap-icon-trim));
+}
+
+.ui-cap:not(.ui-cap--icon) > .ui-arw {
+  inline-size: calc(var(--cap-spin) * var(--arw-open));
+  min-inline-size: 0;
+  transition:
+    inline-size var(--arw-move),
+    margin-inline var(--arw-move);
+}
+
+/* closed, the glyph's gap is cancelled and its trim is handed back, so
+   the padding is symmetric */
+.ui-cap--trail:not(.ui-cap--icon) > .ui-arw {
+  margin-inline:
+    calc(var(--cap-gap) * (var(--arw-open) - 1))
+    calc(var(--cap-icon-trim) * (1 - var(--arw-open)));
+}
+
+.ui-cap--lead:not(.ui-cap--icon) > .ui-arw {
+  margin-inline:
+    calc(var(--cap-icon-trim) * (1 - var(--arw-open)))
+    calc(var(--cap-gap) * (var(--arw-open) - 1));
+}
+
+.ui-cap:not(.ui-cap--icon) > .ui-arw > :nth-child(1) {
+  opacity: var(--arw-open);
+  transition: opacity var(--arw-fade);
+}
+
+.ui-cap:not(.ui-cap--icon) > .ui-arw > :nth-child(2) {
+  display: none;
+}
+
+/* A leading arrow opens into the capsule's start edge. The margin pays
+   for it, so the label stays where it was and nothing beside it moves. */
+.ui-cap--lead:not(.ui-cap--icon):has(> .ui-arw:first-child) {
+  margin-inline-start: calc(var(--cap-edge, 0px) - var(--cap-open) * var(--arw-open));
+}
+
+/* Hang: a quiet capsule is text until it is touched, so its label sits on
+   the column edge and its wash and glyph bleed into the gutter, the way a
+   row's hover surface bleeds past the rail. A trailing one pays for its
+   growth on the end side the same way. */
+.ui-cap--hang {
+  --cap-edge: calc((var(--cap-px) + 1px) * -1);
+}
+
+.ui-cap--hang.ui-cap--trail:not(.ui-cap--icon) {
+  margin-inline-end: calc(var(--cap-edge) - var(--cap-open) * var(--arw-open));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ui-cap {
+    --arw-move: var(--dur-exit) var(--ease-exit);
+    --arw-fade: var(--dur-exit) var(--ease-exit);
+  }
+
+  .ui-cap:not(.ui-cap--icon):focus-visible {
+    --arw-move: var(--dur-enter) var(--ease-spring-snap);
+    --arw-fade: var(--dur-enter) var(--ease-enter);
+  }
+
+  /* the last few pixels along the glyph's own vector */
+  .ui-cap:not(.ui-cap--icon) > .ui-arw > :nth-child(1) {
+    translate: calc(var(--step-1) * (var(--arw-open) - 1)) 0;
+    transition:
+      translate var(--arw-move),
+      opacity var(--arw-fade);
+  }
+
+  .ui-cap:not(.ui-cap--icon) > .ui-arw--ext > :nth-child(1) {
+    translate:
+      calc(var(--travel-nudge) * (var(--arw-open) - 1))
+      calc(var(--travel-nudge) * (1 - var(--arw-open)));
+  }
+
+  .ui-cap:not(.ui-cap--icon) > .ui-arw--back > :nth-child(1) {
+    translate: calc(var(--step-1) * (1 - var(--arw-open))) 0;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ui-cap:not(.ui-cap--icon):hover {
+      --arw-move: var(--dur-enter) var(--ease-spring-snap);
+      --arw-fade: var(--dur-enter) var(--ease-enter);
+    }
+  }
+}
+
+.ui-cap:not(.ui-cap--icon, :disabled, [aria-disabled="true"]):focus-visible {
+  --arw-open: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ui-cap:not(.ui-cap--icon, :disabled, [aria-disabled="true"]):hover {
+    --arw-open: 1;
+  }
+}
+
+/* ------------------------------------------------------------------
+   stacked state cells: a copy circle's copy / check / alert glyphs share
+   one grid cell, so it keeps its size through every state. A tooltip's
+   Copy / Copied / Retry words stack the same way. The .ui-stk must be a
+   direct child of the [data-state] control, or of the .ui-tip that is.
+   ------------------------------------------------------------------ */
+
+.ui-stk {
+  display: inline-grid;
+  justify-items: center;
+  align-items: center;
+}
+
+.ui-stk--icon {
+  justify-items: center;
+}
+
+.ui-stk > * {
+  grid-area: 1 / 1;
+}
+
+.ui-stk > [data-when] {
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity var(--dur-exit) var(--ease-exit),
+    translate var(--dur-exit) var(--ease-exit),
+    scale var(--dur-exit) var(--ease-exit),
+    filter var(--dur-exit) var(--ease-exit),
+    visibility var(--dur-exit);
+}
+
+:not([data-state], .ui-tip) > .ui-stk > [data-when="idle"],
+[data-state="idle"] > .ui-stk > [data-when="idle"],
+[data-state="done"] > .ui-stk > [data-when="done"],
+[data-state="error"] > .ui-stk > [data-when="error"],
+[data-state="loading"] > .ui-stk > [data-when="loading"],
+[data-state="idle"] > .ui-tip > .ui-stk > [data-when="idle"],
+[data-state="done"] > .ui-tip > .ui-stk > [data-when="done"],
+[data-state="error"] > .ui-tip > .ui-stk > [data-when="error"] {
+  visibility: visible;
+  opacity: 1;
+  translate: none;
+  scale: none;
+  filter: none;
+  transition:
+    opacity var(--dur-nudge) var(--ease-spring-soft),
+    translate var(--dur-nudge) var(--ease-spring-soft),
+    scale var(--dur-enter) var(--ease-spring-snap),
+    filter var(--dur-nudge) var(--ease-spring-soft),
+    visibility 0s;
+}
+
+/* A check that draws itself from its short stroke: the dash runs from the
+   end of the path (24 covers the registry check's 22.6 units). */
+.ui-stk .ui-draw path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: -24;
+  transition: stroke-dashoffset var(--dur-exit) var(--ease-exit);
+}
+
+[data-state="done"] > .ui-stk > [data-when="done"] .ui-draw path,
+[data-state="error"] > .ui-stk > [data-when="error"] .ui-draw path {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset var(--dur-enter) var(--ease-enter);
+}
+
+/* ------------------------------------------------------------------
+   inline link: the paragraph's own weight, in ink against its ghost; no
+   underline and no wash. The trigger is the text block under a fine
+   pointer, not the link alone: a hovered paragraph sets --link-lift,
+   which lifts every link in it to --font-hover-lift, and --ext-open,
+   which eases in their external glyphs (below), both at once. Keyboard
+   focus on a link sets the same two for that link. Touch has no hover,
+   so links rest as they are. prose.css's .prose a reads the same inputs;
+   there the body text is ink already, so its links rest at --font-medium.
+   ------------------------------------------------------------------ */
+
+:root {
+  /* external glyph: 0 closed, 1 open. Inherited, so a hovered block opens
+     every glyph in it. Reduced motion keeps the move instant and the fade
+     on the colour curve; the no-preference block gives both their curves. */
+  --ext-open: 0;
+  --ext-move: 0s;
+  --ext-fade: var(--t-color);
+}
+
+.ui-link {
+  color: var(--ink);
+  font-weight: var(--link-lift, inherit);
+  text-decoration: none;
+  border-radius: var(--r-2);
+  transition:
+    color var(--t-color),
+    font-weight var(--t-color);
+}
+
+/* External: <span class="ui-link__ext"> + registry arrow-up-right after
+   the last word (prose.css gives markdown's .external-icon the same).
+   The glyph answers the pointer; it is not furniture. At rest it is
+   invisible and its end margin cancels its advance, so it takes no space
+   and a justified paragraph does not move. When --ext-open is 1 the space
+   opens and the glyph travels its last 2px along its own vector. The word
+   joiner and nowrap keep it on the last word's line. Touch never shows it;
+   reduced motion opens the space at once and fades the glyph. */
+.ui-link__ext {
+  white-space: nowrap;
+}
+
+.ui-link__ext::before {
+  content: "\2060";
+}
+
+.ui-link__ext > .ui-icon {
+  display: inline-block;
+  inline-size: 0.72em;
+  block-size: 0.72em;
+  margin-inline:
+    calc(var(--step) / 2)
+    calc((0.72em + var(--step) / 2) * (var(--ext-open) - 1));
+  vertical-align: 0.02em;
+  color: var(--ink);
+  opacity: var(--ext-open);
+  pointer-events: none;
+  transition:
+    margin-inline var(--ext-move),
+    opacity var(--ext-fade);
+}
+
+.ui-link:focus-visible {
+  --link-lift: var(--font-hover-lift);
+  --ext-open: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :is(p, li, dd, td, blockquote, figcaption):hover,
+  .ui-link:hover {
+    --link-lift: var(--font-hover-lift);
+    --ext-open: 1;
+  }
+}
+
+@media (hover: none) {
+  .ui-link__ext {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root {
+    --ext-move: var(--dur-exit) var(--ease-exit);
+    --ext-fade: var(--dur-exit) var(--ease-exit);
+  }
+
+  .ui-link:focus-visible {
+    --ext-move: var(--dur-enter) var(--ease-spring-snap);
+    --ext-fade: var(--dur-enter) var(--ease-enter);
+  }
+
+  .ui-link__ext > .ui-icon {
+    translate:
+      calc(var(--travel-hair) * (var(--ext-open) - 1))
+      calc(var(--travel-hair) * (1 - var(--ext-open)));
+    transition:
+      margin-inline var(--ext-move),
+      opacity var(--ext-fade),
+      translate var(--ext-move);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    :is(p, li, dd, td, blockquote, figcaption):hover,
+    .ui-link:hover {
+      --ext-move: var(--dur-enter) var(--ease-spring-snap);
+      --ext-fade: var(--dur-enter) var(--ease-enter);
+    }
+  }
+}
+
+/* ------------------------------------------------------------------
+   badge: states a fact, never pressable. Sits in the title's text flow
+   after &nbsp;, inside a nowrap span with the last word.
+   ------------------------------------------------------------------ */
+
+.ui-badge {
+  position: relative;
+  top: -1px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--step-1);
+  block-size: var(--cap-20);
+  padding-inline: var(--cap-px-20);
+  border-radius: var(--r-pill);
+  background: var(--wash);
+  box-shadow: inset 0 0 0 1px var(--edge-soft);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.ui-badge--mono {
+  font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  font-size: calc(var(--text-xs) * 0.92);
+}
+
+.ui-badge[data-tone] {
+  padding-inline-start: calc(var(--step) * 1.5);
+}
+
+.ui-badge[data-tone]::before {
+  content: "";
+  flex: none;
+  inline-size: var(--dot-6);
+  block-size: var(--dot-6);
+  border-radius: 50%;
+  background: var(--badge-dot, var(--ghost));
+}
+
+.ui-badge[data-tone="reading"] { --badge-dot: var(--acc-blue); }
+.ui-badge[data-tone="live"] { --badge-dot: var(--acc-green); }
+.ui-badge[data-tone="new"] { --badge-dot: var(--acc-violet); }
+.ui-badge[data-tone="down"] { --badge-dot: var(--acc-red); }
+
+.ui-badge[data-tone="live"]::before {
+  box-shadow: 0 0 0 var(--dot-3) color-mix(in oklch, var(--badge-dot) 22%, transparent);
+}
+
+/* ------------------------------------------------------------------
+   row: one recipe for every list. It bleeds past the rail by its own
+   padding so its text stays on the rail. The puddle arrives in 110ms and
+   leaves in 220ms, so a pointer moving down a list leaves an afterglow.
+   ------------------------------------------------------------------ */
+
+.ui-row {
+  --ui-move: var(--dur-spring-soft) var(--ease-spring-soft);
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: var(--step-4);
+  min-block-size: var(--row-min);
+  margin-inline: calc(var(--row-bleed) * -1);
+  padding: var(--row-pad);
+  border: 0;
+  border-radius: var(--r-4);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform var(--ui-move);
+}
+
+.ui-row:focus-visible {
+  outline-offset: 0;
+}
+
+.ui-row::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background:
+    radial-gradient(
+      var(--spot-size) var(--step-8) at var(--mx, 50%) 50%,
+      color-mix(in oklch, var(--ink) 5%, transparent),
+      transparent 72%
+    ),
+    var(--wash);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-afterglow) var(--ease-morph);
+}
+
+.ui-row__title {
+  flex: 1;
+  min-inline-size: 0;
+  font-size: var(--text-ui);
+  font-weight: var(--font-medium);
+  line-height: var(--leading-snug);
+  letter-spacing: -0.006em;
+}
+
+.ui-row__sub {
+  display: block;
+  margin-block-start: calc(var(--step) / 2);
+  color: var(--ghost);
+  font-size: var(--text-ui-sm);
+  font-weight: var(--font-normal);
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+/* A meta too long for the row (a handle, a hostname) ellipsises rather
+   than overflowing it. */
+.ui-row__meta {
+  min-inline-size: 0;
+  overflow: hidden;
+  color: var(--ghost);
+  font-size: var(--text-ui-sm);
+  font-weight: var(--font-normal);
+  line-height: var(--leading-snug);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* fixed 16px slot, so meta columns align across rows with and without one */
+.ui-row__glyph {
+  display: flex;
+  flex: none;
+  justify-content: center;
+  inline-size: var(--step-4);
+  color: var(--ghost);
+  transition:
+    color var(--t-color),
+    translate var(--dur-nudge) var(--ease-enter);
+}
+
+.ui-row:focus-visible::before {
+  opacity: 1;
+}
+
+/* a listbox option (the palette): the active option is the puddle,
+   whether the pointer or the arrow keys put it there */
+.ui-row[aria-selected="true"]::before {
+  opacity: 1;
+  transition: opacity var(--t-color);
+}
+
+.ui-row:is(:focus-visible, [aria-selected="true"]) .ui-row__glyph {
+  color: var(--ink);
+}
+
+/* work, links with handles, endpoints */
+.ui-row--multiline {
+  align-items: flex-start;
+}
+
+/* both sit on the title's first line: a 13px meta shares its baseline,
+   a 16px glyph its centre */
+.ui-row--multiline :is(.ui-row__meta, .ui-row__glyph) {
+  margin-block-start: calc(var(--step) / 2);
+}
+
+/* not a link: no puddle, no press, the glyph slot kept but empty */
+.ui-row--static {
+  cursor: auto;
+}
+
+.ui-row--static .ui-row__title {
+  font-weight: 450;
+  color: var(--muted);
+}
+
+.ui-row--static .ui-row__glyph {
+  visibility: hidden;
+}
+
+/* ------------------------------------------------------------------
+   disclosure. FAQ does not use it: answers are reading content.
+   ------------------------------------------------------------------ */
+
+.ui-disc {
+  border-block-start: var(--hairline) solid var(--rule);
+}
+
+.ui-disc:last-child {
+  border-block-end: var(--hairline) solid var(--rule);
+}
+
+.ui-disc > summary {
+  margin-block: var(--step-1);
+  list-style: none;
+}
+
+.ui-disc > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ui-disc > summary .ui-row__title {
+  font-weight: var(--font-semibold);
+}
+
+.ui-disc__chev {
+  flex: none;
+  color: var(--ghost);
+  transition: color var(--t-color);
+}
+
+.ui-disc[open] .ui-disc__chev {
+  rotate: 180deg;
+  color: var(--ink);
+}
+
+.ui-disc__body {
+  padding-block-end: var(--step-4);
+  color: var(--ghost);
+  font-size: var(--text-ui);
+  line-height: var(--leading-normal);
+}
+
+/* ------------------------------------------------------------------
+   segmented: header nav, Library tabs, SDK switcher. A glass track with
+   one ink indicator. segmented.ts clones the items into an aria-hidden
+   overlay in canvas colour and clips it to the indicator, so labels
+   invert exactly where the ink passes under them.
+
+   <div class="ui-seg">
+     <div class="ui-seg__track" role="tablist">
+       <span class="ui-seg__ind" aria-hidden="true"></span>
+       <button class="ui-seg__item" role="tab" aria-selected="true">
+         <span class="ui-cap__label">All</span><span class="ui-count">56</span>
+       </button> ...
+     </div>
+   </div>
+   ------------------------------------------------------------------ */
+
+.ui-seg {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  max-inline-size: 100%;
+  border-radius: var(--r-pill);
+  transition:
+    border-color var(--t-color),
+    box-shadow var(--t-color);
+}
+
+.ui-seg__track {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--step-1);
+  min-inline-size: 0;
+  /* the rim is the track's 1px border: 1 + 3 = --track-inset */
+  padding: calc(var(--track-inset) - 1px);
+  border-radius: inherit;
+}
+
+.ui-seg__item {
+  --ui-move: var(--dur-spring-pop) var(--ease-spring-pop);
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cap-gap-lg);
+  block-size: var(--cap-40);
+  padding-block: 0;
+  padding-inline: var(--cap-px-40);
+  border: 0;
+  border-radius: var(--r-pill);
+  background-color: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: var(--text-ui);
+  font-weight: var(--font-medium);
+  line-height: 1;
+  letter-spacing: -0.006em;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color var(--t-color),
+    background-color var(--t-color),
+    transform var(--ui-move);
+}
+
+/* contained: the ring must not collide with the track rim */
+.ui-seg__item:focus-visible {
+  outline-offset: 0;
+}
+
+.ui-seg--sm .ui-seg__item {
+  gap: var(--cap-gap-sm);
+  block-size: var(--cap-32);
+  padding-inline: var(--cap-px-32);
+  font-size: var(--text-ui-sm);
+}
+
+/* 32 to look at, 44 to hit. Items have no border, so no pixel to give
+   back; sideways the area stops at the middle of the 4px gap. */
+.ui-seg--sm .ui-seg__item::before {
+  content: "";
+  position: absolute;
+  inset-block: calc((var(--cap-32) - var(--hit)) / 2);
+  inset-inline: calc(var(--step-1) / -2);
+  border-radius: var(--r-pill);
+}
+
+/* a parent surface is the track (the code card header) */
+.ui-seg--bare {
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.ui-seg--bare > .ui-seg__track {
+  padding: 0;
+}
+
+/* Without script the selected item carries the ink itself. */
+.ui-seg:not([data-ready]) .ui-seg__item:is([aria-selected="true"], [aria-current="page"], [aria-pressed="true"]) {
+  color: var(--canvas);
+  background: var(--ink-fill);
+  box-shadow: var(--ink-edge), var(--lift-1);
+}
+
+.ui-seg:not([data-ready]) .ui-seg__item:is([aria-selected="true"], [aria-current="page"], [aria-pressed="true"]) .ui-count,
+.ui-seg__ov .ui-count {
+  color: color-mix(in oklch, var(--canvas) 58%, transparent);
+}
+
+/* The script writes transform, width and height inline (library.astro's
+   mechanism) and data-ready on .ui-seg once it has placed it. */
+.ui-seg__ind {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 0;
+  border-radius: var(--r-pill);
+  background: var(--ink-fill);
+  box-shadow: var(--ink-edge), var(--lift-1);
+  transform-origin: 0 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-color);
+}
+
+.ui-seg[data-ready] .ui-seg__ind {
+  opacity: 1;
+}
+
+/* The ink-through copy. Laid out exactly like the items (same padding and
+   gap, max-content so it also spans a scrolled track) and clipped by an
+   inline clip-path: inset(... round var(--r-pill)) from the indicator's box. */
+.ui-seg__ov {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: inherit;
+  inline-size: max-content;
+  padding: inherit;
+  clip-path: inset(50%);
+  pointer-events: none;
+}
+
+.ui-seg:not([data-ready]) .ui-seg__ov {
+  display: none;
+}
+
+.ui-seg__ov .ui-seg__item {
+  color: var(--canvas);
+  background: none;
+  box-shadow: none;
+  transform: none;
+  outline: none;
+}
+
+/* Library from 42.5rem: chrome glass only while stuck under the header.
+   The blur is on from the moment it sticks; only colour fades. */
+.ui-seg[data-stuck] {
+  border-color: var(--edge);
+  background:
+    var(--glass-sheen) padding-box,
+    var(--chrome-surface-bg) padding-box;
+  box-shadow: var(--glass-spec), var(--lift-1);
+  -webkit-backdrop-filter: blur(calc(var(--step) * 5)) saturate(170%);
+  backdrop-filter: blur(calc(var(--step) * 5)) saturate(170%);
+}
+
+/* ------------------------------------------------------------------
+   dock: a glass 48 track holding 40px icon circles (footer, quote). A
+   surface, not a control: it neither lifts nor presses.
+   ------------------------------------------------------------------ */
+
+.ui-dock {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--step-1);
+  /* the rim is the dock's 1px border: 1 + 3 = --track-inset */
+  padding: calc(var(--track-inset) - 1px);
+  border-radius: var(--r-pill);
+}
+
+/* ------------------------------------------------------------------
+   tooltip: a <span class="ui-tip" role="tooltip"> inside its positioned
+   trigger, shown on hover (fine pointer) and keyboard focus without
+   script. No arrow. Below the trigger by default.
+   ------------------------------------------------------------------ */
+
+.ui-tip {
+  position: absolute;
+  inset-block-start: calc(100% + var(--step-2));
+  inset-inline-start: 50%;
+  z-index: var(--z-raised);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--step-2);
+  block-size: var(--cap-28);
+  padding-inline: var(--step-3);
+  border-radius: var(--r-pill);
+  background: var(--glass-sheen), var(--chrome-surface-bg);
+  -webkit-backdrop-filter: blur(var(--step-4)) saturate(180%);
+  backdrop-filter: blur(var(--step-4)) saturate(180%);
+  box-shadow: inset 0 0 0 1px var(--edge), var(--glass-spec), var(--lift-1);
+  color: var(--ink);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+  text-transform: none;
+  translate: -50% 0;
+  transform-origin: 50% 0;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--dur-exit) var(--ease-exit),
+    transform var(--dur-exit) var(--ease-exit),
+    visibility var(--dur-exit);
+}
+
+.ui-tip--above {
+  inset-block-start: auto;
+  inset-block-end: calc(100% + var(--step-2));
+  transform-origin: 50% 100%;
+}
+
+/* the open tooltip's trigger rises above its neighbours */
+:has(> .ui-tip):is(:focus-visible, [data-tip-open]),
+:has(> .ui-tip):has(> :focus-visible) {
+  z-index: var(--z-raised);
+}
+
+/* A frosted trigger is a backdrop root (its own backdrop-filter and
+   transition name), so a tooltip inside it has nothing to blur. That
+   tooltip is the trigger's sibling instead: hover already reaches it
+   through the shared parent, and keyboard focus is the second selector. */
+:focus-visible > .ui-tip,
+:has(> :focus-visible) > .ui-tip,
+[data-tip-open] > .ui-tip {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--dur-nudge) var(--ease-spring-soft),
+    transform var(--dur-nudge) var(--ease-spring-soft),
+    visibility 0s;
+}
+
+/* A key, not a button: --r-2, not a pill. ⌘ is the registry command icon. */
+.ui-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: var(--cap-20);
+  block-size: var(--cap-20);
+  padding-inline: var(--step-1);
+  border-radius: var(--r-2);
+  background: color-mix(in oklch, var(--ink) 8%, transparent);
+  box-shadow: inset 0 -1px 0 color-mix(in oklch, var(--ink) 14%, transparent);
+  color: var(--muted);
+  font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  /* a notch under the 12px label it sits beside */
+  font-size: calc(var(--text-xs) * 0.92);
+  font-weight: var(--font-medium);
+  line-height: 1;
+}
+
+.ui-tip > .ui-kbd + .ui-kbd {
+  margin-inline-start: calc((var(--step) / 2) - var(--step-2));
+}
+
+.ui-tip > .ui-kbd:last-child {
+  margin-inline-end: calc(var(--step) * -1.5);
+}
+
+/* ------------------------------------------------------------------
+   toast: bottom centre, inverted in both themes. scripts/toast.ts builds
+   .ui-toast(.solo) > .ti.ok|.err (> svg.ring) + .msg + button.act, styles
+   the entry pose, then sets data-state="in", and "out" to leave.
+   ------------------------------------------------------------------ */
+
+.ui-toast {
+  position: fixed;
+  inset-block-end: var(--gutter);
+  inset-inline-start: 50%;
+  z-index: var(--z-toast);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--step-3);
+  block-size: var(--cap-48);
+  max-inline-size: calc(100vw - var(--mobile-gutter-start) - var(--mobile-gutter-end));
+  padding-inline: var(--step-2);
+  border-radius: var(--r-pill);
+  background: var(--toast-bg);
+  -webkit-backdrop-filter: blur(var(--step-4)) saturate(180%);
+  backdrop-filter: blur(var(--step-4)) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklch, var(--color-1) 18%, transparent),
+    var(--lift-2);
+  color: var(--toast-ink);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  line-height: 1;
+  white-space: nowrap;
+  translate: -50% 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-nudge) linear;
+}
+
+.ui-toast.solo {
+  padding-inline-end: calc(var(--step) * 5);
+}
+
+.ui-toast[data-state="in"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ui-toast[data-state="out"] {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-exit) var(--ease-exit);
+}
+
+.ui-toast :focus-visible {
+  outline-color: var(--toast-ink);
+}
+
+.ui-toast > .ti {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: var(--cap-32);
+  block-size: var(--cap-32);
+  border-radius: 50%;
+}
+
+/* the accent pulled toward the toast's own ink reads on either inversion */
+.ui-toast > .ti.ok {
+  background: color-mix(in oklch, var(--acc-green) 22%, transparent);
+  color: color-mix(in oklch, var(--acc-green) 70%, var(--toast-ink));
+}
+
+.ui-toast > .ti.err {
+  background: color-mix(in oklch, var(--acc-red) 22%, transparent);
+  color: color-mix(in oklch, var(--acc-red) 70%, var(--toast-ink));
+}
+
+/* drains over the toast's life (toast.ts animates the dashoffset) */
+.ui-toast .ring {
+  position: absolute;
+  inset-block-start: calc(var(--step-1) * -1);
+  inset-inline-start: calc(var(--step-1) * -1);
+  inline-size: calc(100% + var(--step-2));
+  block-size: calc(100% + var(--step-2));
+  rotate: -90deg;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  opacity: 0.9;
+}
+
+.ui-toast > .msg {
+  min-inline-size: 0;
+  padding-inline-end: var(--step-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transform: translateY(calc(var(--optical-pill-lift) * -1));
+}
+
+.ui-toast > .act {
+  --ui-move: var(--dur-spring-pop) var(--ease-spring-pop);
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  block-size: var(--cap-32);
+  margin: 0;
+  padding-block: 0;
+  padding-inline: var(--cap-px-32);
+  border: 0;
+  border-radius: var(--r-pill);
+  background-color: color-mix(in oklch, var(--toast-ink) 10%, transparent);
+  color: var(--toast-ink);
+  font-family: inherit;
+  font-size: var(--text-ui-sm);
+  font-weight: var(--font-semibold);
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color var(--t-color),
+    transform var(--ui-move);
+}
+
+/* ------------------------------------------------------------------
+   pager: previous / next cards. A missing side leaves an empty cell.
+   ------------------------------------------------------------------ */
+
+/* minmax(0, 1fr): a long title wraps inside its column, never widens it */
+.ui-pager {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--step-4);
+}
+
+.ui-pager__card {
+  --ui-move: var(--dur-spring-soft) var(--ease-spring-soft);
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  grid-column: 1;
+  gap: var(--step-2);
+  min-block-size: calc(var(--step) * 26);
+  padding: var(--step-4) calc(var(--step) * 5) calc(var(--step) * 5);
+  border-radius: var(--tile-r);
+  color: var(--ink);
+  text-decoration: none;
+  transition:
+    box-shadow var(--t-color),
+    transform var(--ui-move);
+}
+
+.ui-pager__card--next {
+  grid-column: 2;
+  align-items: flex-end;
+  text-align: end;
+}
+
+.ui-pager__key {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--step-1);
+  color: var(--ghost);
+  font-size: var(--text-ui-sm);
+  font-weight: var(--font-medium);
+  line-height: 1;
+  transition: color var(--t-color);
+}
+
+.ui-pager__title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  color: var(--ink);
+  font-size: var(--type-section-size);
+  font-weight: 560;
+  line-height: var(--leading-snug);
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------
+   tile (/more). Live tiles are links with an arrow in the corner slot;
+   soon tiles are <div>s with no corner at all: not focusable, no hover or
+   press, aria-disabled, and a visually hidden "Coming soon." Illustration
+   loops read animation-play-state: var(--tile-play), which runs only
+   while the tile is hovered or focused, or carries data-play.
+   ------------------------------------------------------------------ */
+
+.ui-tile {
+  --ui-move: var(--dur-spring-soft) var(--ease-spring-soft);
+  --tile-play: paused;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-block-size: calc(var(--step) * 46);
+  padding: calc(var(--step) * 5);
+  overflow: clip;
+  border-radius: var(--tile-r);
+  color: var(--ink);
+  text-decoration: none;
+  transition:
+    box-shadow var(--t-color),
+    transform var(--ui-move);
+}
+
+/* in a grid: contained */
+.ui-tile:focus-visible {
+  outline-offset: 0;
+}
+
+.ui-tile:is(:focus-visible, [data-play]) {
+  --tile-play: running;
+}
+
+.ui-tile__title {
+  font-size: var(--text-lg);
+  font-weight: 620;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.ui-tile__desc {
+  max-inline-size: 24ch;
+  margin-block-start: var(--step-1);
+  color: var(--ghost);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.ui-tile__corner {
+  position: absolute;
+  inset-block-start: var(--step-4);
+  inset-inline-end: var(--step-4);
+  display: flex;
+  align-items: center;
+  block-size: var(--cap-32);
+}
+
+.ui-tile__go {
+  display: grid;
+  place-items: center;
+  inline-size: var(--cap-32);
+  block-size: var(--cap-32);
+  border-radius: 50%;
+  color: var(--ghost);
+  transition:
+    color var(--t-color),
+    box-shadow var(--t-color);
+}
+
+.ui-tile__art {
+  margin-block-start: auto;
+  padding-block-start: calc(var(--step) * 5);
+  color: var(--ghost);
+  transition: color var(--t-color);
+}
+
+.ui-tile--soon {
+  border-color: var(--edge-soft);
+  background: none;
+  box-shadow: none;
+  cursor: default;
+}
+
+.ui-tile--soon .ui-tile__title {
+  color: var(--ghost);
+}
+
+/* --dim on the board: ghost pulled toward the canvas, in either theme */
+.ui-tile--soon .ui-tile__art {
+  color: color-mix(in oklch, var(--ghost) 60%, var(--canvas));
+}
+
+/* ------------------------------------------------------------------
+   hover: fine pointers only. Colour here; movement further down.
+   ------------------------------------------------------------------ */
+
+@media (hover: hover) and (pointer: fine) {
+  .ui-cap--ink:hover {
+    box-shadow: var(--ink-edge), var(--ink-bloom);
+  }
+
+  /* the nav item's answer: a tint and a firmer hairline, nothing moves */
+  .ui-cap--glass:hover {
+    background:
+      var(--glass-sheen) padding-box,
+      linear-gradient(var(--glass-fill-hover), var(--glass-fill-hover)) padding-box,
+      var(--glass-rim-hover) border-box;
+    box-shadow: var(--glass-spec), var(--glass-lift);
+  }
+
+  .ui-cap--quiet:hover {
+    color: var(--ink);
+    background-color: var(--wash);
+  }
+
+  :is(.ui-cap--chip, .ui-chip, .go-spec-pill):hover {
+    color: var(--ink);
+    background-color: var(--wash-press);
+    border-color: var(--edge);
+  }
+
+  .ui-cap--chip-selected:hover,
+  :is(.ui-cap--chip, .ui-chip):is([aria-pressed="true"], [aria-current="page"]):hover {
+    color: var(--canvas);
+    background: var(--ink-fill) border-box;
+    border-color: transparent;
+    box-shadow: var(--ink-edge), var(--ink-bloom);
+  }
+
+  :is(.ui-cap, .ui-chip):hover .ui-count {
+    color: var(--muted);
+  }
+
+  .ui-cap--ink:hover .ui-count {
+    color: color-mix(in oklch, var(--canvas) 58%, transparent);
+  }
+
+  .ui-pager__card:hover::after,
+  .ui-tile:not(.ui-tile--soon):hover::after {
+    opacity: 1;
+  }
+
+  .ui-row:not(.ui-row--static):hover::before {
+    opacity: 1;
+    transition: opacity var(--t-color);
+  }
+
+  .ui-row:not(.ui-row--static):hover .ui-row__glyph,
+  .ui-disc > summary:hover .ui-disc__chev {
+    color: var(--ink);
+  }
+
+  /* a static row is not a target: pointing at one neither lights it nor
+     dims its neighbours (global.css .surface-stack) */
+  .surface-stack:has(.ui-row--static:hover) > * {
+    opacity: 1;
+    filter: none;
+  }
+
+  .ui-seg__item:not(:is([aria-selected="true"], [aria-current="page"], [aria-pressed="true"])):hover {
+    color: var(--ink);
+    background-color: var(--wash);
+  }
+
+  .ui-toast > .act:hover {
+    background-color: color-mix(in oklch, var(--toast-ink) 16%, transparent);
+  }
+
+  .ui-pager__card:hover,
+  .ui-tile:not(.ui-tile--soon):hover {
+    background:
+      var(--glass-sheen) padding-box,
+      linear-gradient(var(--glass-fill-hover), var(--glass-fill-hover)) padding-box,
+      var(--glass-rim-hover) border-box;
+    box-shadow: var(--glass-spec), var(--lift-2);
+  }
+
+  .ui-pager__card:hover .ui-pager__key {
+    color: var(--ink);
+  }
+
+  .ui-tile:not(.ui-tile--soon):hover {
+    --tile-play: running;
+  }
+
+  .ui-tile:not(.ui-tile--soon):hover .ui-tile__art {
+    color: var(--muted);
+  }
+
+  .ui-tile:not(.ui-tile--soon):hover .ui-tile__go {
+    background: var(--ink-fill) border-box;
+    box-shadow: var(--ink-edge), var(--ink-bloom);
+    color: var(--canvas);
+  }
+
+  /* Cold: after a dwell. Warm (a tooltip shown in the last 600ms, flagged
+     on the root by script): at once. */
+  :has(> .ui-tip):hover {
+    z-index: var(--z-raised);
+  }
+
+  :hover > .ui-tip {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--dur-nudge) var(--ease-spring-soft) var(--dur-dwell),
+      transform var(--dur-nudge) var(--ease-spring-soft) var(--dur-dwell),
+      visibility 0s linear var(--dur-dwell);
+  }
+
+  :root[data-tip-warm] :hover > .ui-tip {
+    transition-delay: 0s;
+  }
+}
+
+/* ------------------------------------------------------------------
+   press: every pointer, touch included
+   ------------------------------------------------------------------ */
+
+:is(.ui-cap, .ui-chip, .go-spec-pill, .ui-row, .ui-seg__item, .ui-pager__card, .ui-tile):active,
+.ui-toast > .act:active {
+  --ui-move: var(--dur-press) var(--ease-snap);
+}
+
+.ui-cap--ink:active {
+  background: var(--ink-fill-press) border-box;
+  box-shadow: var(--ink-edge);
+}
+
+.ui-cap--glass:active {
+  background:
+    linear-gradient(var(--glass-fill-press), var(--glass-fill-press)) padding-box,
+    var(--glass-rim-hover) border-box;
+  box-shadow: var(--glass-spec);
+}
+
+.ui-cap--quiet:active {
+  color: var(--ink);
+  background-color: var(--wash-press);
+}
+
+:is(.ui-cap--chip, .ui-chip, .go-spec-pill):active {
+  color: var(--ink);
+  background-color: color-mix(in oklch, var(--ink) 13%, transparent);
+  border-color: var(--edge);
+}
+
+.ui-cap--chip-selected:active,
+:is(.ui-cap--chip, .ui-chip):is([aria-pressed="true"], [aria-current="page"]):active {
+  color: var(--canvas);
+  background: var(--ink-fill-press) border-box;
+  border-color: transparent;
+  box-shadow: var(--ink-edge);
+}
+
+.ui-row:not(.ui-row--static):active::before {
+  opacity: 1;
+  background: var(--wash-press);
+  transition: opacity var(--t-color);
+}
+
+.ui-seg__item:not(:is([aria-selected="true"], [aria-current="page"], [aria-pressed="true"])):active {
+  color: var(--ink);
+  background-color: var(--wash-press);
+}
+
+.ui-toast > .act:active {
+  background-color: color-mix(in oklch, var(--toast-ink) 20%, transparent);
+}
+
+/* ------------------------------------------------------------------
+   movement, only when motion is welcome
+   ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Every press springs: 70ms down on --ease-snap, back up on a spring
+     (pop for capsules, soft for wide targets). */
+  :is(.ui-cap, .ui-chip, .go-spec-pill, .ui-seg__item):active,
+  .ui-toast > .act:active {
+    transform: scale(var(--press-scale));
+  }
+
+  .ui-row:not(.ui-row--static):active,
+  .ui-pager__card:active,
+  .ui-tile:not(.ui-tile--soon):active {
+    transform: scale(var(--press-scale-inline));
+  }
+
+  /* word cells (a tooltip's): the outgoing word rises, the incoming one
+     settles up from below, each under a constant 1px blur while hidden */
+  .ui-stk > [data-when] {
+    translate: 0 var(--travel-hair);
+    filter: blur(1px);
+  }
+
+  [data-state]:not([data-state="idle"]) > .ui-tip > .ui-stk > [data-when="idle"] {
+    translate: 0 calc(var(--travel-nudge) * -1);
+  }
+
+  /* icon cells collapse instead */
+  .ui-stk--icon > [data-when] {
+    translate: none;
+    filter: none;
+    scale: 0.6;
+  }
+
+  .ui-disc__chev {
+    transition:
+      color var(--t-color),
+      rotate var(--dur-shift) var(--ease-spring-snap);
+  }
+
+  .ui-disc[open] > .ui-disc__body {
+    animation: ui-disc-in var(--dur-shift) var(--ease-enter);
+  }
+
+  /* FLIP: the script writes where the indicator was (--slide-*, relative
+     to its new box) and alternates a/b so a new slide restarts without a
+     forced reflow. The overlay clip rides the same spring. */
+  .ui-seg__ind[data-slide] {
+    animation-duration: var(--dur-shift);
+    animation-timing-function: var(--ease-spring-snap);
+  }
+
+  .ui-seg__ind[data-slide="a"] {
+    animation-name: ui-seg-slide-a;
+  }
+
+  .ui-seg__ind[data-slide="b"] {
+    animation-name: ui-seg-slide-b;
+  }
+
+  .ui-seg__ov {
+    transition: clip-path var(--dur-shift) var(--ease-spring-snap);
+  }
+
+  .ui-tip {
+    transform: translateY(var(--step-1)) scale(0.96);
+  }
+
+  .ui-toast {
+    transform: translateY(var(--step-3)) scale(0.94);
+    transition:
+      opacity var(--dur-nudge) linear,
+      transform var(--dur-spring-pop) var(--ease-spring-pop);
+  }
+
+  .ui-toast[data-state="in"] {
+    transform: none;
+  }
+
+  .ui-toast[data-state="out"] {
+    transform: translateY(var(--travel-step));
+    transition:
+      opacity var(--dur-exit) var(--ease-exit),
+      transform var(--dur-exit) var(--ease-exit);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .ui-cap--ink:hover {
+    transform: translateY(-1px);
+  }
+
+  .ui-pager__card:hover,
+  .ui-tile:not(.ui-tile--soon):hover {
+    transform: translateY(calc(var(--travel-hair) * -1));
+  }
+
+  /* pressing while hovered drops the lift */
+  :is(.ui-cap, .ui-chip, .go-spec-pill):active {
+    transform: scale(var(--press-scale));
+  }
+
+  .ui-pager__card:active,
+  .ui-tile:not(.ui-tile--soon):active {
+    transform: scale(var(--press-scale-inline));
+  }
+
+  /* conveyor: icon circles, tiles, pager cards. Labelled capsules reveal. */
+  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):hover .ui-arw > :nth-child(1) {
+    translate: 100% 0;
+    opacity: 0;
+  }
+
+  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):hover .ui-arw--ext > :nth-child(1) {
+    translate: 100% -100%;
+  }
+
+  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):hover .ui-arw--back > :nth-child(1) {
+    translate: -100% 0;
+  }
+
+  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):hover .ui-arw > :nth-child(2) {
+    translate: none;
+    opacity: 1;
+    transition:
+      translate var(--dur-enter) var(--ease-spring-snap),
+      opacity var(--dur-enter) var(--ease-enter);
+  }
+
+  /* dense lists nudge instead of conveying */
+  .ui-row:not(.ui-row--static):hover .ui-row__glyph {
+    translate: var(--travel-nudge) 0;
+  }
+
+  .ui-row:not(.ui-row--static):hover .ui-row__glyph--ext {
+    translate: var(--travel-hair) calc(var(--travel-hair) * -1);
+  }
+
+  .ui-row:not(.ui-row--static):hover .ui-row__glyph--back {
+    translate: calc(var(--travel-nudge) * -1) 0;
+  }
+
+  /* Magnetic primary (ink, one per view): follows on --ease-enter, returns
+     on the spring once pointer-fx.ts clears the props. */
+  [data-fx~="magnet"] {
+    translate: var(--tx, 0px) var(--ty, 0px);
+  }
+
+  [data-fx~="magnet"]:hover {
+    --ui-drift: var(--dur-nudge) var(--ease-enter);
+  }
+
+  [data-fx~="magnet"] .ui-cap__label {
+    translate: var(--lx, 0px) var(--ly, 0px);
+  }
+}
+
+/* Touch has no hover: the conveyor plays once on press. A labelled capsule
+   keeps its arrow closed; its label carries the meaning. */
+@media (hover: none) and (prefers-reduced-motion: no-preference) {
+  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):active .ui-arw > :nth-child(1) {
+    translate: 100% 0;
+    opacity: 0;
+  }
+
+  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):active .ui-arw--ext > :nth-child(1) {
+    translate: 100% -100%;
+  }
+
+  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):active .ui-arw--back > :nth-child(1) {
+    translate: -100% 0;
+  }
+
+  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):active .ui-arw > :nth-child(2) {
+    translate: none;
+    opacity: 1;
+    transition:
+      translate var(--dur-enter) var(--ease-spring-snap),
+      opacity var(--dur-enter) var(--ease-enter);
+  }
+}
+
+@keyframes ui-disc-in {
+  from {
+    opacity: 0;
+    translate: 0 var(--step-1);
+  }
+}
+
+@keyframes ui-seg-slide-a {
+  from {
+    transform: translate3d(var(--slide-x), var(--slide-y), 0) scale(var(--slide-sx), var(--slide-sy));
+  }
+}
+
+@keyframes ui-seg-slide-b {
+  from {
+    transform: translate3d(var(--slide-x), var(--slide-y), 0) scale(var(--slide-sx), var(--slide-sy));
+  }
+}
+
+@keyframes ui-spin {
+  to {
+    rotate: 1turn;
+  }
+}
+
+/* Reduced motion: no travel anywhere (all movement above is opt-in), the
+   check appears whole, and the spotlight sits at the centre at half
+   strength. Colour, opacity and the puddle stay. */
+@media (prefers-reduced-motion: reduce) {
+  :is(.ui-pager__card, .ui-tile)::after {
+    --mx: 50%;
+    --my: 50%;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ui-pager__card:hover::after,
+    .ui-tile:not(.ui-tile--soon):hover::after {
+      opacity: 0.5;
+    }
+  }
+
+  .ui-stk .ui-draw path {
+    stroke-dashoffset: 0;
+    transition: none;
+  }
+}
+
+/* ------------------------------------------------------------------
+   capsule states, last so they win over hover and press
+   ------------------------------------------------------------------ */
+
+/* Success and error, action capsules only. Translucent, so solid border. */
+:is(.ui-cap, .ui-chip)[data-state="done"] {
+  color: var(--ok-ink);
+  background: var(--ok-wash) padding-box;
+  border-color: var(--ok-edge);
+  box-shadow: none;
+}
+
+:is(.ui-cap, .ui-chip)[data-state="error"] {
+  color: var(--err-ink);
+  background: var(--err-wash) padding-box;
+  border-color: var(--err-edge);
+  box-shadow: none;
+}
+
+:is(.ui-cap, .ui-chip):is([data-state="done"], [data-state="error"])::after {
+  opacity: 0;
+}
+
+/* Loading: contents hidden, a ring spinner in their place, same width. */
+:is(.ui-cap, .ui-chip):is([aria-busy="true"], [data-state="loading"]) {
+  cursor: progress;
+}
+
+:is(.ui-cap, .ui-chip):is([aria-busy="true"], [data-state="loading"]) > :not(.ui-tip) {
+  opacity: 0;
+}
+
+:is(.ui-cap, .ui-chip):is([aria-busy="true"], [data-state="loading"])::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  z-index: auto;
+  inline-size: var(--cap-spin);
+  block-size: var(--cap-spin);
+  margin: calc(var(--cap-spin) / -2);
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  background: none;
+  opacity: 0.9;
+  pointer-events: none;
+  animation: ui-spin var(--dur-spin) linear infinite;
+}
+
+/* Disabled drops the surface, never the outline. Its text is below AA on
+   purpose; aria-disabled and the cursor carry the state. */
+:is(.ui-cap, .ui-chip):is(:disabled, [aria-disabled="true"]) {
+  opacity: 1;
+  color: color-mix(in oklch, var(--ink) 34%, transparent);
+  background: color-mix(in oklch, var(--ink) 4%, transparent) padding-box;
+  border-color: var(--edge-soft);
+  box-shadow: none;
+  transform: none;
+  translate: none;
+  cursor: not-allowed;
+}
+
+:is(.ui-cap--quiet, .ui-cap--chip, .ui-chip):is(:disabled, [aria-disabled="true"]) {
+  background: none;
+}
+
+.ui-cap--quiet:is(:disabled, [aria-disabled="true"]) {
+  border-color: transparent;
+}
+
+:is(.ui-cap, .ui-chip):is(:disabled, [aria-disabled="true"])::after {
+  opacity: 0;
+}
+
+:is(.ui-cap, .ui-chip):is(:disabled, [aria-disabled="true"]) :is(.ui-count, .ui-chip__hash) {
+  color: inherit;
+}
+
+:is(.ui-cap, .ui-chip):is(:disabled, [aria-disabled="true"]) .ui-arw > * {
+  translate: none;
+  opacity: 1;
+}
+
+:is(.ui-cap, .ui-chip):is(:disabled, [aria-disabled="true"]) .ui-arw > :nth-child(2) {
+  opacity: 0;
+}
+
+/* ------------------------------------------------------------------
+   phones
+   ------------------------------------------------------------------ */
+
+@media (max-width: 38rem) {
+  /* the track scrolls inside itself; the indicator scrolls with it.
+     segmented.ts flags data-overflow so a track that fits never fades.
+     overflow-y clips: the items' 44px hit areas reach past the track and
+     must not give it a vertical pan. */
+  .ui-seg__track {
+    overflow-x: auto;
+    overflow-y: clip;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .ui-seg__track::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* a track that fits has nothing to pan; the hit areas overhang its box */
+  .ui-seg[data-ready] > .ui-seg__track:not([data-overflow]) {
+    overflow-x: hidden;
+  }
+
+  .ui-seg__track[data-overflow] {
+    -webkit-mask-image: linear-gradient(90deg, transparent, black var(--step-4), black calc(100% - var(--step-4)), transparent);
+    mask-image: linear-gradient(90deg, transparent, black var(--step-4), black calc(100% - var(--step-4)), transparent);
+  }
+
+  .ui-toast {
+    inset-block-end: calc(var(--mobile-chrome-clearance) + var(--step-3));
+  }
+
+  /* two columns are too narrow for a title: the cards stack, both
+     start-aligned */
+  .ui-pager {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--step-3);
+  }
+
+  .ui-pager__card--next {
+    grid-column: 1;
+    align-items: flex-start;
+    text-align: start;
+  }
+}
+
+/* ------------------------------------------------------------------
+   forced colours: gradients are dropped, so selection needs system ink
+   ------------------------------------------------------------------ */
+
+@media (forced-colors: active) {
+  :is(.ui-cap, .ui-chip, .go-spec-pill, .ui-seg, .ui-dock, .ui-card) {
+    border-color: ButtonText;
+  }
+
+  .ui-seg__ind {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+
+  .ui-seg__ov :is(.ui-seg__item, .ui-count) {
+    forced-color-adjust: none;
+    color: HighlightText;
+  }
+}

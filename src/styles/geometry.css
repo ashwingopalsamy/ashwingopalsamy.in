@@ -122,6 +122,52 @@
   --rail-col: calc(
     (var(--rail-content) - (var(--rail-gap) * (var(--rail-cols) - 1))) / var(--rail-cols)
   );
+
+  /* ---------------------------------------------------------------- */
+  /*  controls — capsules, rows, tracks and cards (controls.css)      */
+  /* ---------------------------------------------------------------- */
+
+  /* Five capsule heights. Every single-line control is one of these. */
+  --cap-48: var(--chrome-size);       /* CTA, chrome chips, header nav track */
+  --cap-40: calc(var(--step) * 10);   /* segment, footer dock button, clock */
+  --cap-32: calc(var(--step) * 8);    /* inline action: copy, All N, back */
+  --cap-28: calc(var(--step) * 7);    /* tag chip */
+  --cap-20: calc(var(--step) * 5);    /* badge, never interactive */
+
+  /* Horizontal padding on the text side, per height: 20 / 16 / 12 / 12 / 8.
+     The side that holds an icon gives back --cap-icon-trim, because the
+     glyph carries its own whitespace. */
+  --cap-px-48: calc(var(--step) * 5);
+  --cap-px-40: var(--step-4);
+  --cap-px-32: var(--step-3);
+  --cap-px-28: var(--step-3);
+  --cap-px-20: var(--step-2);
+  --cap-icon-trim: var(--step-1);
+
+  /* icon–label gap: 8 at 40/48, 4 at 28/32 */
+  --cap-gap-lg: var(--step-2);
+  --cap-gap-sm: var(--step-1);
+
+  /* The 44px touch target that 40/32/28 capsules extend to with ::before. */
+  --hit: var(--control-hit);
+
+  /* Track rim (1px) plus padding (3px). Segments are concentric with their
+     track: a 48 track holds 40 segments, a 40 track holds 32. */
+  --track-inset: var(--step-1);
+
+  /* Rows: 48 tall, and bleeding past the rail by their own padding so the
+     text stays on the rail while the hover surface does not. */
+  --row-min: calc(var(--step) * 12);
+  --row-pad: var(--step-3);
+  --row-bleed: var(--step-3);
+
+  /* Multi-line surfaces. The code card's 4px header inset makes its 32px
+     segments concentric (20 - 4 = 16). */
+  --tile-r: var(--r-5);
+  --code-r: var(--r-6);
+
+  /* 13px UI label for 32 and 28 capsules; static like --text-ui. */
+  --text-ui-sm: 0.8125rem;
 }
 
 /* True hairlines where the display can draw one. Below 2dppx a 0.5px

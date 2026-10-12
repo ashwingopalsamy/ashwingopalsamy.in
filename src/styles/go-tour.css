@@ -1,111 +1,29 @@
 /**
- * go-tour.css - Pixel-perfect port of the Go 1.27 Interactive Tour design.
- * High-contrast syntax tokens, shadow-powered cards, pristine callout boxes, circular icon buttons, and default soft-wrapping.
+ * go-tour.css - the Go 1.27 interactive tour: note layout, code well,
+ * snippet card, callouts and spec chips.
+ *
+ * Controls are the shared primitives (controls.css) that go-tour.ts builds:
+ * .ui-seg for the version tabs, .ui-cap for Copy / Edit / Reset / Run,
+ * .ui-badge for the benchmark. This file places them and adds nothing to
+ * their look. .go-spec-pill, which the note's markdown authors without
+ * primitive classes, is named in controls.css's .ui-chip lists instead.
  */
 
-/* Palette. Every colour literal in this file is defined in the theme blocks
-   below (light, dark, and the no-JS dark mirror); the rules read variables only. */
+/* Code well. The syntax colours (--code-kw ...) are global.css's, shared
+   with every other code block; the tour keeps its own darker well and a
+   plain-text ink. The dark theme and its no-JS mirror restate the well. */
 :root {
-  /* Syntax Highlighting - Clean Day */
   --code-bg: var(--color-1);
-  --code-border: rgba(0, 0, 0, 0.05);
-  --code-text: #18181b;
-  --code-kw: #7c3aed;
-  --code-func: #2563eb;
-  --code-type: #0891b2;
-  --code-str: #16a34a;
-  --code-const: #ea580c;
-  --code-comment: #8e8e93;
-
-  /* Surfaces, borders and text */
-  --gt-border-subtle: rgba(0, 0, 0, 0.06);
-  --gt-divider: rgba(0, 0, 0, 0.06);
-  --gt-pill-bg: var(--color-1);
-  --gt-text-soft: #52525b;
-  --gt-text-faint: var(--code-comment);
-  --gt-text-strong: #0a0a0a;
-  --gt-on-strong: var(--color-1);
-  --gt-callout-bg: rgba(244, 244, 246, 0.6);
-  --gt-chip-bg: rgba(0, 0, 0, 0.05);
-  --gt-chip-border: rgba(0, 0, 0, 0.06);
-
-  /* Status colours - the same in both themes */
-  --gt-callout-dot: #e11d48;
-  --gt-danger: #dc2626;
-  --gt-success: #059669;
-
-  /* Card, Callout and Pill Shadows */
-  --gt-shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.04), 0 2px 8px -2px rgba(0, 0, 0, 0.04), 0 8px 24px -4px rgba(0, 0, 0, 0.04);
-  --gt-shadow-card-hover: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.06), 0 12px 32px -4px rgba(0, 0, 0, 0.06);
-  --gt-shadow-callout: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.03);
-  --gt-shadow-btn: 0 1px 2px rgba(0, 0, 0, 0.03); /* same in both themes */
-  --gt-shadow-pill: 0 1px 2px rgba(0, 0, 0, 0.03);
-  --gt-shadow-pill-hover: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --code-text: var(--ink);
 }
 
 :root[data-theme="dark"] {
-  /* Syntax Highlighting - Clean Night */
   --code-bg: #0c0f13;
-  --code-border: rgba(255, 255, 255, 0.07);
-  --code-text: #f4f4f5;
-  --code-kw: #c084fc;
-  --code-func: #60a5fa;
-  --code-type: #38bdf8;
-  --code-str: #4ade80;
-  --code-const: #fb923c;
-  --code-comment: #71717a;
-
-  /* Surfaces, borders and text */
-  --gt-border-subtle: rgba(255, 255, 255, 0.08);
-  --gt-divider: rgba(255, 255, 255, 0.07);
-  --gt-pill-bg: #101317;
-  --gt-text-soft: #a1a1aa;
-  --gt-text-strong: #f4f4f5;
-  --gt-on-strong: #090a0c;
-  --gt-callout-bg: rgba(22, 27, 34, 0.6);
-  --gt-chip-bg: rgba(255, 255, 255, 0.08);
-  --gt-chip-border: rgba(255, 255, 255, 0.1);
-
-  /* Card, Callout and Pill Shadows */
-  --gt-shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 2px 12px 0 rgba(0, 0, 0, 0.5), 0 12px 32px -4px rgba(0, 0, 0, 0.6);
-  --gt-shadow-card-hover: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 4px 16px 0 rgba(0, 0, 0, 0.6), 0 16px 40px -4px rgba(0, 0, 0, 0.7);
-  --gt-shadow-callout: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.4);
-  --gt-shadow-pill: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --gt-shadow-pill-hover: 0 1px 2px rgba(0, 0, 0, 0.4); /* no lift shadow in the dark theme, as before */
 }
 
-/* no-JS: data-theme is never set - follow the OS. Token mirror only;
-   rules read the variables above and need no second copy. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    /* Syntax Highlighting - Clean Night */
     --code-bg: #0c0f13;
-    --code-border: rgba(255, 255, 255, 0.07);
-    --code-text: #f4f4f5;
-    --code-kw: #c084fc;
-    --code-func: #60a5fa;
-    --code-type: #38bdf8;
-    --code-str: #4ade80;
-    --code-const: #fb923c;
-    --code-comment: #71717a;
-
-    /* Surfaces, borders and text */
-    --gt-border-subtle: rgba(255, 255, 255, 0.08);
-    --gt-divider: rgba(255, 255, 255, 0.07);
-    --gt-pill-bg: #101317;
-    --gt-text-soft: #a1a1aa;
-    --gt-text-strong: #f4f4f5;
-    --gt-on-strong: #090a0c;
-    --gt-callout-bg: rgba(22, 27, 34, 0.6);
-    --gt-chip-bg: rgba(255, 255, 255, 0.08);
-    --gt-chip-border: rgba(255, 255, 255, 0.1);
-
-    /* Card, Callout and Pill Shadows */
-    --gt-shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 2px 12px 0 rgba(0, 0, 0, 0.5), 0 12px 32px -4px rgba(0, 0, 0, 0.6);
-    --gt-shadow-card-hover: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 4px 16px 0 rgba(0, 0, 0, 0.6), 0 16px 40px -4px rgba(0, 0, 0, 0.7);
-    --gt-shadow-callout: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 1px 3px 0 rgba(0, 0, 0, 0.4);
-    --gt-shadow-pill: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --gt-shadow-pill-hover: 0 1px 2px rgba(0, 0, 0, 0.4); /* no lift shadow in the dark theme, as before */
   }
 }
 
@@ -124,7 +42,7 @@
   margin-top: 4.5rem;
   margin-bottom: var(--step-3);
   padding-top: 3.75rem;
-  border-top: 1px solid var(--gt-divider);
+  border-top: 1px solid var(--edge-soft);
 }
 
 .note[data-note-tour="go-1-27"] .prose h2:first-of-type,
@@ -134,79 +52,53 @@
   border-top: none;
 }
 
-/* Syntax Token Rules */
-.tok-kw { color: var(--code-kw); font-weight: 500; }
-.tok-func { color: var(--code-func); }
-.tok-type { color: var(--code-type); }
-.tok-str { color: var(--code-str); }
-.tok-const { color: var(--code-const); }
-.tok-comment { color: var(--code-comment); font-style: italic; }
+/* Plain text in highlighted code; the other token colours are global.css's */
 .tok-text { color: var(--code-text); }
 
 /* Snippet Card Container */
 .go-tour-snippet {
   position: relative;
   margin: 1.75rem 0 2rem;
-  border-radius: var(--r-6);
+  border-radius: var(--code-r);
   background: var(--code-bg);
-  box-shadow: var(--gt-shadow-card);
+  box-shadow: 0 0 0 1px var(--edge-soft), var(--lift-0);
   overflow: hidden;
-  transition: box-shadow var(--dur-enter) var(--ease-enter), border-color var(--dur-shift) var(--ease-travel);
+  transition: box-shadow var(--t-color);
 }
 
-.go-tour-snippet:hover {
-  box-shadow: var(--gt-shadow-card-hover);
+@media (hover: hover) and (pointer: fine) {
+  .go-tour-snippet:hover {
+    box-shadow: 0 0 0 1px var(--edge), var(--lift-1);
+  }
 }
 
-/* Top Control Bar */
+/* Top Control Bar. The 4px inset makes the 32px segments concentric with
+   the card (20 - 4 = 16). */
 .go-tour-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--step-3);
-  padding: var(--step-2) var(--step-4);
+  gap: var(--step-2) var(--step-3);
+  padding: var(--step-1);
   background: var(--code-bg);
-  border-bottom: 1px solid var(--code-border);
+  border-bottom: 1px solid var(--edge-soft);
   font-size: var(--text-sm);
   user-select: none;
   flex-wrap: wrap;
 }
 
-/* Tab Switcher (Go 1.27 vs Go 1.26) */
-.go-tour-tabs {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 2.5px;
-  border-radius: var(--r-pill);
-  background: color-mix(in oklch, var(--ink) 5%, transparent);
+/* the track may scroll inside itself on a phone instead of pushing the actions out */
+.go-tour-left {
+  min-inline-size: 0;
 }
 
-.go-tour-tab {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  padding: var(--step-1) var(--step-3);
-  border-radius: var(--r-pill);
-  font-family: inherit;
-  font-size: var(--text-xs);
-  font-weight: var(--font-medium);
-  color: var(--muted);
-  cursor: pointer;
-  transition: all var(--dur-nudge) var(--ease-travel);
+.go-tour-left > .ui-seg {
+  min-inline-size: 0;
 }
 
-.go-tour-tab:hover {
-  color: var(--ink);
-}
-
-.go-tour-tab[aria-selected="true"] {
-  background: var(--canvas);
-  color: var(--ink);
-  box-shadow: 0 1px 3px color-mix(in oklch, var(--ink) 12%, transparent);
-}
-
+/* a snippet without a legacy tab names its file; its text sits on the code's 20px edge */
 .go-tour-filename {
+  padding-inline: var(--step-4);
   font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
   font-size: var(--text-xs);
   font-weight: var(--font-medium);
@@ -214,87 +106,29 @@
   letter-spacing: 0.01em;
 }
 
-/* Circular Round Action Buttons */
+/* Action capsules: 4px apart, so their 44px hit areas meet and never overlap. */
 .go-tour-actions {
   display: flex;
   align-items: center;
   gap: var(--step-1);
 }
 
-.go-tour-btn {
-  appearance: none;
-  border: 1px solid var(--gt-border-subtle);
-  background: var(--gt-pill-bg);
-  color: var(--muted);
-  border-radius: var(--r-pill);
-  width: 1.75rem;
-  height: 1.75rem;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: var(--gt-shadow-btn);
-  transition: all var(--dur-nudge) var(--ease-enter);
-  position: relative;
+/* a capsule is inline-flex, which beats the UA's [hidden] */
+.go-tour-btn[hidden] {
+  display: none;
 }
 
-.go-tour-btn svg {
-  width: var(--step-3);
-  height: var(--step-3);
-}
-
-.go-tour-btn:hover {
-  background: var(--ink);
-  color: var(--canvas);
-  border-color: var(--ink);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .go-tour-btn:hover {
-    transform: scale(1.08);
-    box-shadow: 0 4px 12px color-mix(in oklch, var(--ink) 15%, transparent);
+/* On a phone the capsules are icon circles, so the bar stays on one row.
+   Their aria-labels carry the names. */
+@media (max-width: 38rem) {
+  .go-tour-actions > .go-tour-btn {
+    inline-size: var(--cap-h);
+    padding-inline: 0;
   }
-}
 
-.go-tour-btn:active {
-  transform: scale(0.92);
-}
-
-.go-tour-btn[aria-pressed="true"],
-.go-tour-btn.is-active {
-  background: var(--gt-pill-bg);
-  color: var(--ink);
-  border-color: var(--rule-strong);
-}
-
-.go-tour-btn-reset:hover {
-  background: var(--gt-danger) !important;
-  color: var(--color-1) !important;
-  border-color: var(--gt-danger) !important;
-}
-
-.go-tour-btn-run {
-  background: var(--ink);
-  color: var(--canvas);
-  border-color: var(--ink);
-}
-
-.go-tour-btn-run:hover {
-  filter: brightness(1.1);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .go-tour-btn-run:hover {
-    transform: scale(1.08);
-    box-shadow: 0 4px 14px color-mix(in oklch, var(--ink) 25%, transparent);
+  .go-tour-actions > .go-tour-btn > .ui-cap__label {
+    display: none;
   }
-}
-
-.go-tour-btn.is-done {
-  background: var(--gt-success);
-  color: var(--color-1);
-  border-color: var(--gt-success);
 }
 
 /* Code Container & Default Soft-Wrapping */
@@ -353,11 +187,10 @@
   overflow-wrap: anywhere;
 }
 
-/* Terminal Drawer */
+/* Terminal Drawer: shown and hidden with [hidden], so nothing animates */
 .go-tour-terminal {
-  border-top: 1px solid var(--code-border);
-  background: color-mix(in oklch, var(--ink) 2%, var(--canvas));
-  transition: all var(--dur-shift) var(--ease-enter);
+  border-top: 1px solid var(--edge-soft);
+  background: var(--wash);
 }
 
 .go-tour-terminal[hidden] {
@@ -369,8 +202,7 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--step-2) calc(var(--step) * 5);
-  background: color-mix(in oklch, var(--ink) 3%, transparent);
-  border-bottom: 1px solid color-mix(in oklch, var(--code-border) 60%, transparent);
+  border-bottom: 1px solid var(--edge-soft);
   font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
   font-size: var(--text-xs);
   color: var(--muted);
@@ -396,14 +228,6 @@
   font-weight: 600;
 }
 
-.go-tour-term-bench {
-  padding: 0.1rem var(--step-2);
-  border-radius: var(--r-pill);
-  background: color-mix(in oklch, var(--ink) 6%, transparent);
-  color: var(--muted);
-  font-size: var(--text-xs);
-}
-
 .go-tour-term-body {
   margin: 0;
   padding: var(--step-4) calc(var(--step) * 5);
@@ -422,10 +246,10 @@
   border: none !important;
   border-left: none !important;
   border-radius: var(--r-5) !important;
-  background: var(--gt-callout-bg) !important;
+  background: var(--wash) !important;
   padding: 1rem 1.25rem !important;
   margin: 1.5rem 0 1.75rem !important;
-  box-shadow: var(--gt-shadow-callout) !important;
+  box-shadow: 0 0 0 1px var(--edge-soft), var(--lift-0) !important;
 }
 
 .go-callout-header {
@@ -439,7 +263,7 @@
   width: var(--dot-6);
   height: var(--dot-6);
   border-radius: 50%;
-  background: var(--gt-callout-dot);
+  background: var(--acc-red);
   opacity: 0.85;
   display: inline-block;
   flex-shrink: 0;
@@ -451,7 +275,7 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--gt-text-faint);
+  color: var(--ghost);
 }
 
 .go-callout-body {
@@ -459,12 +283,12 @@
   font-family: inherit;
   font-size: 0.93em;
   line-height: 1.65;
-  color: var(--gt-text-soft);
+  color: var(--muted);
 }
 
 .go-callout-body strong {
   font-weight: 600;
-  color: var(--gt-text-strong);
+  color: var(--ink);
 }
 
 .go-callout-body code,
@@ -473,18 +297,20 @@
   font-size: 0.86em !important;
   padding: 0.12em 0.5em !important;
   border-radius: var(--r-pill) !important;
-  background-color: var(--gt-chip-bg) !important;
-  border: 1px solid var(--gt-chip-border) !important;
+  background-color: var(--wash) !important;
+  border: 1px solid var(--edge-soft) !important;
   color: var(--code-text) !important;
   font-weight: 500 !important;
 }
 
-/* Spec & Citation Pill Badges - Pixel-perfect match to SpecFooter */
+/* Spec & Citation Pills. Markdown authors these as bare <a class="go-spec-pill">
+   and go-tour.ts rebuilds them with icons; controls.css gives the class the
+   28px .ui-chip recipe, so only the icons are placed here. */
 .go-spec-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--step-3);
   margin-top: 1.25rem;
   margin-bottom: 2.5rem;
   font-size: var(--text-xs);
@@ -496,68 +322,29 @@
 .go-spec-pills {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--step-2);
   flex-wrap: wrap;
 }
 
-.prose .go-spec-pill,
-.prose a.go-spec-pill,
-.go-spec-pill,
-.go-spec-pills a {
-  height: 1.75rem;
-  padding: 0 var(--step-3);
-  border-radius: var(--r-pill);
-  background: var(--gt-pill-bg);
-  color: var(--gt-text-soft);
-  border: 1px solid var(--gt-border-subtle);
-  box-shadow: var(--gt-shadow-pill);
-  font-size: var(--text-xs);
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--step-2);
-  text-decoration: none !important;
-  text-decoration-line: none !important;
-  cursor: pointer;
-  transition: all var(--dur-nudge) var(--ease-enter);
-}
-
-.prose .go-spec-pill:hover,
-.prose a.go-spec-pill:hover,
-.go-spec-pill:hover,
-.go-spec-pills a:hover {
-  color: var(--gt-on-strong) !important;
-  border-color: var(--gt-text-strong) !important;
-  background: var(--gt-text-strong) !important;
-  text-decoration: none !important;
-  text-decoration-line: none !important;
+/* the icons sit a step quieter than the label and follow it on hover */
+.go-spec-pill .ui-icon {
+  color: var(--ghost);
+  transition:
+    color var(--t-color),
+    translate var(--dur-nudge) var(--ease-enter);
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .prose .go-spec-pill:hover,
-  .prose a.go-spec-pill:hover,
-  .go-spec-pill:hover,
-  .go-spec-pills a:hover {
-    transform: scale(1.03);
-    box-shadow: var(--gt-shadow-pill-hover);
+  .go-spec-pill:hover .ui-icon {
+    color: var(--ink);
   }
 }
 
-.go-spec-pill svg {
-  width: var(--step-3);
-  height: var(--step-3);
-  opacity: 0.6;
-  transition: opacity var(--dur-nudge) var(--ease-travel);
-}
-
-.go-spec-pill:hover svg {
-  opacity: 1;
-}
-
-.go-spec-pill .pill-ext {
-  width: var(--step-2);
-  height: var(--step-2);
-  opacity: 0.4;
+@media (prefers-reduced-motion: no-preference) {
+  /* the arrow leaves along its own vector, as .ui-link's does */
+  .go-spec-pill:hover .go-spec-ext {
+    translate: 1px -1px;
+  }
 }
 
 .go-spec-authors {
@@ -565,7 +352,7 @@
   align-items: center;
   gap: var(--step-1);
   font-size: var(--text-xs);
-  color: var(--gt-text-faint);
+  color: var(--ghost);
   white-space: nowrap;
 }
 
@@ -573,14 +360,4 @@
   width: var(--step-3);
   height: var(--step-3);
   opacity: 0.6;
-}
-
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  .go-tour-snippet,
-  .go-tour-btn,
-  .go-spec-pill,
-  .go-tour-terminal {
-    transition: none !important;
-  }
 }

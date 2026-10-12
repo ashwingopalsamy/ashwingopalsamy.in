@@ -52,7 +52,7 @@ const PIN_LON = 76.9558;
 
   <div class="loc-attrib" aria-label="Map attribution">
     <span>Map data ©</span>{" "}
-    <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>{" "}
+    <a class="ui-link" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>{" "}
     <span>contributors</span>
   </div>
 </div>
@@ -66,7 +66,7 @@ const PIN_LON = 76.9558;
     height: 100%;
     border-radius: var(--r-5);
     overflow: hidden;
-    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--ink) 10%, transparent);
+    box-shadow: inset 0 0 0 1px var(--edge);
     background: linear-gradient(
       135deg,
       color-mix(in oklch, var(--ink) 6%, var(--canvas)),
@@ -151,6 +151,8 @@ const PIN_LON = 76.9558;
     color: var(--faint);
   }
 
+  /* The pin is a steady dot. A ring leaves it, grows outward and fades, then
+     the next one leaves: always outward, never breathing back in. */
   .loc-dot {
     position: absolute;
     top: 50%;
@@ -161,7 +163,6 @@ const PIN_LON = 76.9558;
     background: var(--loc-beacon);
     border: 2.5px solid var(--canvas);
     transform: translate(-50%, -50%);
-    animation: loc-pulse var(--dur-beacon) var(--ease-enter) 2 forwards;
   }
 
   .loc-dot::after {
@@ -170,49 +171,54 @@ const PIN_LON = 76.9558;
     inset: -2px;
     border-radius: 50%;
     background: var(--loc-beacon);
-    opacity: 0.45;
+    opacity: 0;
     transform: scale(1);
-    animation: loc-pulse var(--dur-beacon) var(--ease-enter) 2 forwards;
+    animation: loc-beacon var(--dur-beacon) var(--ease-enter) infinite;
     pointer-events: none;
   }
 
-  @keyframes loc-pulse {
+  @keyframes loc-beacon {
     0% {
       transform: scale(1);
-      opacity: 0.45;
+      opacity: 0.5;
     }
-    50% {
-      transform: scale(1.75);
+    75% {
+      transform: scale(3);
       opacity: 0;
     }
     100% {
-      transform: scale(1);
+      transform: scale(3);
       opacity: 0;
     }
   }
 
+  /* Inert: a label for the pin, never a control. Shown on hover where there
+     is one, always on touch. */
   .loc-pill {
     position: absolute;
     right: var(--step-4);
-    bottom: var(--step-4);
+    /* clear of the attribution line beneath it */
+    bottom: calc(var(--step) * 7);
     z-index: 2;
     display: inline-flex;
     align-items: center;
     gap: var(--step-2);
-    padding: var(--step-2) var(--step-3);
+    block-size: var(--cap-32);
+    padding-inline: var(--cap-px-32);
     border-radius: var(--r-pill);
-    font-size: var(--text-sm);
+    font-size: var(--text-ui-sm);
     font-weight: var(--font-medium);
+    line-height: 1;
     color: var(--ink);
-    background: var(--chrome-surface-bg);
-    border: 1px solid var(--chrome-surface-border);
-    box-shadow: var(--shadow-inset), var(--shadow-1);
-    -webkit-backdrop-filter: blur(14px) saturate(160%);
-    backdrop-filter: blur(14px) saturate(160%);
+    background: var(--glass-sheen), var(--chrome-surface-bg);
+    box-shadow: inset 0 0 0 1px var(--edge), var(--glass-spec), var(--lift-1);
+    -webkit-backdrop-filter: blur(var(--step-4)) saturate(180%);
+    backdrop-filter: blur(var(--step-4)) saturate(180%);
+    pointer-events: none;
+    user-select: none;
     transition:
       opacity var(--t-color),
-      transform var(--t-move),
-      box-shadow var(--t-move);
+      transform var(--t-move);
   }
 
   .loc-pill svg {
@@ -222,36 +228,40 @@ const PIN_LON = 76.9558;
   @media (hover: hover) and (pointer: fine) {
     .loc-pill {
       opacity: 0;
-      transform: translateY(4px);
+      transform: translateY(var(--step-1));
     }
 
     .loc-card:hover .loc-pill,
     .loc-card:focus-within .loc-pill {
       opacity: 1;
       transform: translateY(0);
-      box-shadow: var(--shadow-inset), var(--shadow-2);
     }
   }
 
   .loc-attrib {
     position: absolute;
     left: var(--step-3);
-    bottom: 8px;
+    bottom: var(--step-2);
     z-index: 2;
     display: inline-flex;
     align-items: center;
     gap: var(--step-1);
     font-size: var(--text-2xs);
-    color: color-mix(in oklch, var(--ink) 62%, transparent);
+    color: var(--muted);
     white-space: nowrap;
   }
+
+  /* The words stay where they were; the hit area is 44px, reaching up into
+     the card and down to its edge. */
   .loc-attrib a {
-    color: inherit;
-    text-decoration: none;
+    position: relative;
   }
-  .loc-attrib a:hover,
-  .loc-attrib a:focus-visible {
-    color: var(--ink);
+
+  .loc-attrib a::before {
+    content: "";
+    position: absolute;
+    inset-block: calc(var(--step) * -4.5) calc(var(--step-2) * -1);
+    inset-inline: calc(var(--step-2) * -1);
   }
 
   @media (prefers-reduced-transparency: reduce) {
@@ -272,6 +282,7 @@ const PIN_LON = 76.9558;
       display: none;
     }
     .loc-pill {
+      transform: none;
       transition: opacity var(--dur-instant);
     }
   }

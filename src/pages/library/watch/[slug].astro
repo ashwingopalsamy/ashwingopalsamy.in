@@ -4,6 +4,7 @@ import Page from "../../../layouts/Page.astro";
 import { watchJsonLd } from "../../../lib/jsonld";
 import { slashPath } from "../../../lib/urls";
 import DetailHeader from "../../../components/DetailHeader.astro";
+import Icon from "../../../components/Icon.astro";
 import StatusPill from "../../../components/StatusPill.astro";
 import "../../../styles/prose.css";
 
@@ -50,7 +51,14 @@ const dateLabel = entry.data.date.toLocaleDateString("en-GB", { year: "numeric",
           <>
             <span class="detail-sep" aria-hidden="true">·</span>
             <ul class="detail-tag-list">
-              {entry.data.tags.map((tag) => <li><span class="detail-tag">#{tag}</span></li>)}
+              {entry.data.tags.map((tag) => (
+                <li>
+                  <span class="ui-chip ui-cap--lead detail-chip">
+                    <Icon name="hash" size={12} strokeWidth={2.2} class="ui-chip__hash" />
+                    <span class="ui-cap__label">{tag}</span>
+                  </span>
+                </li>
+              ))}
             </ul>
           </>
         )}
@@ -61,3 +69,10 @@ const dateLabel = entry.data.date.toLocaleDateString("en-GB", { year: "numeric",
     </div>
   </article>
 </Page>
+
+<style>
+  /* labels here, not links: the chip's look without its pointer behaviour */
+  .detail-chip {
+    pointer-events: none;
+  }
+</style>

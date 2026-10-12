@@ -1,21 +1,32 @@
 ---
+import Icon from "./Icon.astro";
+
 interface Props {
   title: string;
   lede?: string;
+  back?: { href: string; label: string };
 }
 
-const { title, lede } = Astro.props;
+const { title, lede, back } = Astro.props;
 const hasMeta = Astro.slots.has("meta");
 const hasAction = Astro.slots.has("action");
 ---
 
 <header class="detail-header" data-enter>
+  {back && (
+    <a class="ui-cap ui-cap--quiet ui-cap--32 ui-cap--lead ui-cap--hang detail-back" href={back.href}>
+      <span class="ui-arw ui-arw--back">
+        <Icon name="arrow-left" size={14} strokeWidth={2} />
+        <Icon name="arrow-left" size={14} strokeWidth={2} />
+      </span>
+      <span class="ui-cap__label">{back.label}</span>
+    </a>
+  )}
   <h1 class="detail-title">{title}</h1>
   {lede && <p class="detail-lede">{lede}</p>}
   {(hasMeta || hasAction) && (
     <div class="detail-meta-bar">
       {hasMeta && <div class="detail-meta-left"><slot name="meta" /></div>}
-      {hasMeta && hasAction && <span class="detail-sep" aria-hidden="true">·</span>}
       {hasAction && <div class="detail-meta-actions"><slot name="action" /></div>}
     </div>
   )}
@@ -31,6 +42,12 @@ const hasAction = Astro.slots.has("action");
     margin-bottom: 2.25rem;
     border-bottom: 1px solid var(--rule);
     transition: border-color var(--t-color);
+  }
+
+  /* The label sits on the rail; the eyebrow is 12px above the title. */
+  .detail-back {
+    align-self: flex-start;
+    margin-block-end: calc(var(--step-2) * -1);
   }
 
   .detail-title,
@@ -98,7 +115,7 @@ const hasAction = Astro.slots.has("action");
     display: inline-flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--step-1) var(--step-2);
+    gap: var(--step-2);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -108,100 +125,13 @@ const hasAction = Astro.slots.has("action");
     display: inline-flex;
     margin: 0;
     padding: 0;
-    background: none;
-    border: none;
-  }
-
-  .detail-meta-left :global(.detail-tag),
-  .detail-meta-left :global(.note-tag) {
-    display: inline-flex;
-    align-items: center;
-    font-size: var(--text-xs);
-    color: var(--ghost);
-    background: var(--canvas);
-    border: 1px solid var(--chrome-surface-border);
-    box-shadow: var(--chrome-surface-shadow);
-    padding: 0.12rem var(--step-2);
-    border-radius: var(--r-pill);
-    text-decoration: none;
-    line-height: 1.25;
-    transition:
-      color var(--t-color),
-      background-color var(--t-color),
-      border-color var(--t-color),
-      box-shadow var(--t-color);
-  }
-
-  .detail-meta-left :global(a.detail-tag:hover),
-  .detail-meta-left :global(a.note-tag:hover) {
-    color: var(--ink);
-    border-color: color-mix(in oklch, var(--ink) 18%, transparent);
-    background: color-mix(in oklch, var(--ink) 3%, var(--canvas));
   }
 
   .detail-meta-actions {
     display: inline-flex;
     align-items: center;
-    gap: var(--step-1);
+    gap: var(--step-2);
     flex-shrink: 0;
-  }
-
-  .detail-meta-actions :global(a),
-  .detail-meta-actions :global(button) {
-    position: relative;
-    display: inline-grid;
-    place-items: center;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    margin: 0;
-    border-radius: 50%;
-    background: color-mix(in oklch, var(--ink) 3%, transparent);
-    border: 1px solid var(--chrome-surface-border);
-    color: var(--muted);
-    cursor: pointer;
-    text-decoration: none;
-    line-height: 1;
-    transition:
-      background-color var(--t-color),
-      border-color var(--t-color),
-      box-shadow var(--t-color),
-      color var(--t-color),
-      transform var(--dur-press) var(--ease-snap);
-  }
-
-  /* 28px to look at, 44px to hit */
-  .detail-meta-actions :global(a)::before,
-  .detail-meta-actions :global(button)::before {
-    content: "";
-    position: absolute;
-    inset: calc((var(--control-hit) - 28px) / -2);
-    border-radius: 50%;
-  }
-
-  .detail-meta-actions :global(a:hover),
-  .detail-meta-actions :global(a:focus-visible),
-  .detail-meta-actions :global(button:hover),
-  .detail-meta-actions :global(button:focus-visible) {
-    background: color-mix(in oklch, var(--ink) 7%, transparent);
-    color: var(--ink);
-    border-color: color-mix(in oklch, var(--ink) 18%, transparent);
-  }
-
-  .detail-meta-actions :global(.ui-icon) {
-    display: block;
-    transition: transform var(--dur-press) var(--ease-enter);
-  }
-
-  .detail-meta-actions :global(a:hover .ui-icon),
-  .detail-meta-actions :global(a:focus-visible .ui-icon) {
-    transform: scale(1.08);
-  }
-
-  .detail-meta-actions :global(a:active),
-  .detail-meta-actions :global(button:active) {
-    background: color-mix(in oklch, var(--ink) 9%, transparent);
-    transform: scale(0.92);
   }
 
   @media (max-width: 38rem) {
@@ -211,22 +141,17 @@ const hasAction = Astro.slots.has("action");
       margin-bottom: 1.5rem;
     }
 
+    .detail-back {
+      margin-block-end: 0;
+    }
+
     .detail-meta-bar {
-      gap: 0.5rem;
+      gap: var(--step-2);
     }
 
     .detail-meta-left {
       gap: var(--step-1) var(--step-2);
       font-size: var(--text-sm);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .detail-meta-actions :global(a),
-    .detail-meta-actions :global(button),
-    .detail-meta-actions :global(.ui-icon) {
-      transform: none !important;
-      transition: none !important;
     }
   }
 </style>

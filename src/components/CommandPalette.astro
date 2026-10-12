@@ -1,8 +1,7 @@
 ---
 /**
  * CommandPalette - ⌘K surface. Markup only; behaviour in palette.ts.
- * Opened via keyboard (⌘K / /); the homepage text hint is server-rendered
- * in index.astro (hidden without JS via the data-theme gate below).
+ * Opened via keyboard (⌘K / /) or any [data-palette-entry] / .palette-trigger.
  */
 import Icon from "./Icon.astro";
 ---
@@ -19,8 +18,8 @@ import Icon from "./Icon.astro";
   <div class="palette-backdrop" aria-hidden="true"></div>
   <div class="palette-panel" tabindex="-1">
     <div class="palette-chrome">
-      <button type="button" class="palette-back" aria-label="Back" aria-keyshortcuts="Escape" hidden>
-        <Icon name="arrow-left" size={17} class="palette-svg" />
+      <button type="button" class="palette-back ui-cap ui-cap--quiet ui-cap--40 ui-cap--icon" aria-label="Back" aria-keyshortcuts="Escape" hidden>
+        <Icon name="arrow-left" size={16} class="palette-svg" />
       </button>
       <span id="palette-mobile-title" class="palette-mobile-title" tabindex="-1">Commands</span>
       <div id="palette-query-slot-desktop" class="palette-query-slot">
@@ -47,8 +46,8 @@ import Icon from "./Icon.astro";
       <div id="palette-context-shell" class="palette-context-shell" hidden>
         <span id="palette-context-title" class="palette-context-title" aria-live="polite"></span>
       </div>
-      <button type="button" class="palette-close" aria-label="Close command palette" aria-keyshortcuts="Escape">
-        <Icon name="close" size={17} class="palette-svg" />
+      <button type="button" class="palette-close ui-cap ui-cap--quiet ui-cap--40 ui-cap--icon" aria-label="Close command palette" aria-keyshortcuts="Escape">
+        <Icon name="close" size={16} class="palette-svg" />
       </button>
     </div>
     <div class="palette-list-wrap">
@@ -63,8 +62,8 @@ import Icon from "./Icon.astro";
           </button>
           <div id="palette-query-slot-mobile" class="palette-query-slot palette-query-slot-mobile"></div>
         </div>
-        <button id="palette-mobile-close" type="button" class="palette-mobile-close" aria-label="Close command palette">
-          <Icon name="close" size={15} class="palette-svg" />
+        <button id="palette-mobile-close" type="button" class="palette-mobile-close ui-cap ui-cap--quiet ui-cap--40 ui-cap--icon" aria-label="Close command palette">
+          <Icon name="close" size={16} class="palette-svg" />
         </button>
       </div>
     </div>
@@ -117,7 +116,7 @@ import Icon from "./Icon.astro";
     "pointerover",
     (e) => {
       if (paletteLoaded) return;
-      if ((e.target as HTMLElement | null)?.closest(".palette-trigger, .header-palette-trigger, [data-palette-entry], .palette-home-hint")) {
+      if ((e.target as HTMLElement | null)?.closest(".palette-trigger, .header-palette-trigger, [data-palette-entry]")) {
         void loadPaletteModule().catch(() => undefined);
       }
     },
@@ -129,7 +128,7 @@ import Icon from "./Icon.astro";
     (event) => {
       if (paletteLoaded) return;
       const trigger = (event.target as HTMLElement | null)?.closest<HTMLElement>(
-        ".palette-trigger, .header-palette-trigger, [data-palette-entry], .palette-home-hint",
+        ".palette-trigger, .header-palette-trigger, [data-palette-entry]",
       );
       if (!trigger) return;
       event.preventDefault();
@@ -196,6 +195,9 @@ import Icon from "./Icon.astro";
     max-inline-size: 100vw;
     box-sizing: border-box;
     padding: clamp(4.5rem, 11vh, 7.5rem) var(--gutter) 2rem;
+    /* focus inside the palette is a hairline and this halo, never the
+       global 2px ink ring */
+    --palette-halo: color-mix(in oklch, var(--ink) 10%, transparent);
     pointer-events: none;
   }
   .palette.is-open {
@@ -258,7 +260,7 @@ import Icon from "./Icon.astro";
     display: flex;
     flex-direction: column;
     border-radius: var(--r-5);
-    border: 1px solid color-mix(in oklch, var(--ink) 13%, transparent);
+    border: 1px solid var(--edge);
     background: color-mix(in oklch, var(--canvas) 94%, transparent);
     -webkit-backdrop-filter: blur(24px) saturate(130%);
     backdrop-filter: blur(24px) saturate(130%);
@@ -297,7 +299,7 @@ import Icon from "./Icon.astro";
     gap: var(--step-2);
     min-height: 60px;
     padding: var(--step-2) var(--step-3);
-    border-bottom: 1px solid color-mix(in oklch, var(--ink) 8%, transparent);
+    border-bottom: 1px solid var(--edge-soft);
   }
 
   .palette-query-slot {
@@ -308,27 +310,6 @@ import Icon from "./Icon.astro";
 
   .palette-mobile-title {
     display: none;
-  }
-
-  .palette-back {
-    appearance: none;
-    display: inline-grid;
-    place-items: center;
-    flex: 0 0 auto;
-    width: 2.25rem;
-    height: 2.25rem;
-    padding: 0;
-    border: 0;
-    border-radius: 50%;
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-  }
-
-  .palette-back:hover,
-  .palette-back:focus-visible {
-    color: var(--ink);
-    background: color-mix(in oklch, var(--ink) 7%, transparent);
   }
 
   .palette-back[hidden],
@@ -342,18 +323,42 @@ import Icon from "./Icon.astro";
     min-inline-size: 0;
   }
 
+  /* A single-line field is a pill like every other control. The input
+     drops its own outline; focus lights the pill's hairline and a soft
+     halo instead of the heavy ring. */
   .palette-search {
     display: flex;
     align-items: center;
     gap: var(--step-3);
     min-width: 0;
+    block-size: var(--cap-40);
+    padding-inline: var(--step-3);
+    border-radius: var(--r-pill);
+    transition: box-shadow var(--t-color);
   }
 
-  /* The input drops its own outline; the row carries the focus ring. */
   .palette-search:focus-within {
-    border-radius: var(--r-2);
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-offset);
+    box-shadow:
+      inset 0 0 0 1px var(--edge-strong),
+      0 0 0 2px var(--palette-halo);
+  }
+
+  /* Back and close: the same hairline and halo on a resting wash. */
+  .palette :is(.palette-back, .palette-close):focus-visible {
+    outline: none;
+    color: var(--ink);
+    background-color: var(--wash-press);
+    box-shadow:
+      inset 0 0 0 1px var(--edge-strong),
+      0 0 0 2px var(--palette-halo);
+  }
+
+  /* Containers that take programmatic focus for assistive tech. The active
+     option's puddle is what shows where the keys are. */
+  .palette-panel:focus-visible,
+  .palette-list:focus-visible,
+  .palette-mobile-title:focus-visible {
+    outline: none;
   }
 
   .palette-search-icon-box {
@@ -409,37 +414,6 @@ import Icon from "./Icon.astro";
     appearance: none;
   }
 
-  .palette-close {
-    appearance: none;
-    display: inline-grid;
-    place-items: center;
-    flex: 0 0 auto;
-    width: 2.25rem;
-    height: 2.25rem;
-    padding: 0;
-    border: 1px solid transparent;
-    border-radius: 50%;
-    background: transparent;
-    color: var(--faint);
-    cursor: pointer;
-    transition:
-      color var(--t-color),
-      border-color var(--t-color),
-      transform var(--dur-press) var(--ease-enter);
-  }
-  .palette-close:hover {
-    color: var(--ink);
-    background: color-mix(in oklch, var(--ink) 7%, transparent);
-    border-color: color-mix(in oklch, var(--ink) 8%, transparent);
-  }
-  .palette-close:focus-visible {
-    color: var(--ink);
-    background: color-mix(in oklch, var(--ink) 7%, transparent);
-  }
-  .palette-close:active {
-    transform: scale(0.96);
-  }
-
   .palette-list-wrap {
     position: relative;
     display: flex;
@@ -478,7 +452,7 @@ import Icon from "./Icon.astro";
     overflow-y: auto;
     padding: var(--step-2) var(--step-2) var(--step-3);
     overscroll-behavior: contain;
-    scrollbar-color: color-mix(in oklch, var(--ink) 24%, transparent) transparent;
+    scrollbar-color: var(--edge-strong) transparent;
     scrollbar-width: thin;
   }
 
@@ -502,97 +476,57 @@ import Icon from "./Icon.astro";
     padding-top: var(--step-2);
   }
 
+  /* A result is a .ui-row: it brings the layout, the puddle, the press and
+     the ring. The active option is the puddle, whether the pointer or the
+     arrow keys put it there. Rows sit inside the list's own padding, so they
+     do not bleed past it the way rail rows do. */
   .palette-item {
-    position: relative;
-    display: flex;
-    align-items: center;
     gap: var(--step-3);
-    min-height: 3.25rem;
-    min-inline-size: 0;
-    margin-block: 2px;
-    padding: var(--step-2) var(--step-3);
-    border-radius: var(--r-4);
-    cursor: pointer;
-    color: var(--ink);
-    border: 1px solid transparent;
-    background: transparent;
-    transition:
-      background-color var(--t-color),
-      border-color var(--t-color),
-      box-shadow var(--t-color),
-      transform var(--t-move);
+    margin: 0;
+    padding-block: var(--step-2);
   }
 
-  .palette-item[aria-selected="true"] {
-    background: color-mix(in oklch, var(--ink) 6.5%, var(--canvas));
-    border-color: color-mix(in oklch, var(--ink) 12%, transparent);
-    box-shadow:
-      0 2px 8px color-mix(in oklch, var(--ink) 6%, transparent),
-      inset 0 1px 0 color-mix(in oklch, var(--color-1) 22%, transparent);
-    transform: translateY(-1px);
+  .palette-item[aria-selected="true"]::before {
+    opacity: 1;
+    transition: opacity var(--t-color);
+  }
+
+  /* One puddle at a time: the pointer resting on a row the keys have moved
+     off does not keep a second one lit. */
+  .palette-item:not([aria-selected="true"]):hover::before {
+    opacity: 0;
   }
 
   .palette-item[aria-selected="true"] .palette-icon {
-    background: color-mix(in oklch, var(--ink) 9%, transparent);
+    background: var(--wash-press);
     color: var(--ink);
   }
 
-  .palette-item[aria-selected="true"] .palette-label-text {
-    font-weight: var(--font-semibold);
+  .palette-item[aria-selected="true"] .ui-row__meta {
+    color: var(--muted);
   }
 
-  .palette-item[aria-selected="true"] .palette-subtitle {
-    color: color-mix(in oklch, var(--ink) 72%, transparent);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .palette-item:hover {
-      background: color-mix(in oklch, var(--ink) 4%, transparent);
-      border-color: color-mix(in oklch, var(--ink) 8%, transparent);
-      transform: translateY(-1px);
-    }
-
-    .palette-item:hover .palette-icon {
-      background: color-mix(in oklch, var(--ink) 6%, transparent);
-      color: var(--ink);
-    }
-
-    .palette-item[aria-selected="true"]:hover {
-      background: color-mix(in oklch, var(--ink) 7.5%, var(--canvas));
-      border-color: color-mix(in oklch, var(--ink) 14%, transparent);
-      box-shadow:
-        0 4px 12px color-mix(in oklch, var(--ink) 8%, transparent),
-        inset 0 1px 0 color-mix(in oklch, var(--color-1) 26%, transparent);
-    }
-  }
-
-  .palette-item:active {
-    background: color-mix(in oklch, var(--ink) 12%, transparent);
-    transform: translateY(0) scale(0.985);
-    transition: background-color var(--t-color), transform var(--dur-press) var(--ease-enter);
+  .palette-item[aria-selected="true"] .ui-row__glyph {
+    color: var(--ink);
   }
 
   .palette-item-main {
-    flex: 1;
-    min-inline-size: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
   }
 
   .palette-icon {
     display: inline-grid;
     place-items: center;
     flex: 0 0 auto;
-    width: 2rem;
-    height: 2rem;
+    inline-size: var(--cap-32);
+    block-size: var(--cap-32);
     border-radius: var(--r-3);
-    background: color-mix(in oklch, var(--ink) 3%, transparent);
+    background: var(--wash);
     color: var(--muted);
     transition:
       background-color var(--t-color),
-      color var(--t-color),
-      transform var(--t-move);
+      color var(--t-color);
   }
 
   .palette-icon svg {
@@ -600,7 +534,6 @@ import Icon from "./Icon.astro";
     height: var(--step-4);
   }
 
-  .palette-lucide,
   .palette-svg {
     display: inline-block;
     width: var(--step-4);
@@ -615,77 +548,22 @@ import Icon from "./Icon.astro";
     flex: 0 0 auto;
   }
 
-  .palette-icon .palette-brand-icon {
-    width: 16px;
-    height: 16px;
-  }
-
-  .palette-search-ico {
-    width: calc(var(--step) * 5);
-    height: calc(var(--step) * 5);
-  }
-
+  /* size and weight come from .ui-row__title */
   .palette-label {
     display: flex;
     align-items: center;
     gap: var(--step-2);
     min-width: 0;
-    font-weight: var(--font-medium);
-    font-size: var(--text-sm);
-    line-height: 1.3;
-    transition: color var(--t-color);
   }
 
   .palette-label-text {
     min-inline-size: 0;
     overflow-wrap: anywhere;
-    transition: font-weight var(--t-color);
-  }
-
-  .palette-badge {
-    display: inline-flex;
-    align-items: center;
-    flex: 0 0 auto;
-    min-height: calc(var(--step) * 5);
-    padding: 0.12rem var(--step-2);
-    border: 1px solid var(--chrome-surface-border);
-    border-radius: var(--r-pill);
-    background: var(--canvas);
-    box-shadow: var(--chrome-surface-shadow);
-    color: var(--muted);
-    font-size: var(--text-2xs);
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    line-height: 1;
-    text-transform: uppercase;
-    transition:
-      background-color var(--t-color),
-      border-color var(--t-color),
-      color var(--t-color);
-  }
-
-  .palette-item[aria-selected="true"] .palette-badge {
-    border-color: var(--rule-strong);
-    background: color-mix(in oklch, var(--ink) 8%, transparent);
-    color: var(--ink);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .palette-item:hover .palette-badge {
-      border-color: var(--rule-strong);
-      background: color-mix(in oklch, var(--ink) 8%, transparent);
-      color: var(--ink);
-    }
   }
 
   .palette-subtitle {
-    display: block;
     max-inline-size: 100%;
-    color: var(--muted);
-    font-size: var(--text-xs);
-    line-height: 1.4;
     overflow-wrap: anywhere;
-    transition: color var(--t-color);
   }
 
   .palette-value {
@@ -694,68 +572,36 @@ import Icon from "./Icon.astro";
   }
 
   .palette-excerpt {
-    font-size: var(--text-xs);
-    color: var(--muted);
-    line-height: 1.4;
+    margin-block-start: calc(var(--step) / 2);
+    color: var(--ghost);
+    font-size: var(--text-ui-sm);
+    line-height: 1.5;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
   }
+
   .palette-excerpt mark {
-    background: color-mix(in oklch, var(--color-5) 35%, transparent);
-    color: inherit;
+    background: var(--wash-press);
+    color: var(--ink);
     border-radius: var(--r-pill);
     padding: 0 0.3em;
-  }
-
-  .palette-kbd {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    min-height: 1.5rem;
-    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
-    font-size: var(--text-xs);
-    color: var(--faint);
-    border: 1px solid var(--chrome-surface-border);
-    border-radius: var(--r-pill);
-    padding: 0.1rem var(--step-2);
-    transition:
-      color var(--t-color),
-      border-color var(--t-color),
-      background-color var(--t-color);
-  }
-
-  .palette-item[aria-selected="true"] .palette-kbd {
-    color: var(--ink);
-    border-color: var(--rule-strong);
-    background: color-mix(in oklch, var(--ink) 4%, transparent);
   }
 
   .palette-meta {
     flex: 0 0 auto;
     max-inline-size: 8rem;
     overflow-wrap: anywhere;
-    color: var(--faint);
-    font-size: var(--text-xs);
+    text-align: end;
     white-space: normal;
   }
 
-  .palette-external {
-    display: inline-grid;
-    place-items: center;
-  }
-
-  .palette-external svg {
-    width: var(--step-4);
-    height: var(--step-4);
-  }
-
-  .palette-external .palette-lucide,
-  .palette-external .palette-svg {
-    width: var(--step-4);
-    height: var(--step-4);
+  .palette-keys {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: var(--step-1);
   }
 
   .palette-empty {
@@ -772,7 +618,7 @@ import Icon from "./Icon.astro";
     gap: var(--step-3);
     min-height: 2.75rem;
     padding: var(--step-2) var(--step-3);
-    border-top: 1px solid color-mix(in oklch, var(--ink) 8%, transparent);
+    border-top: 1px solid var(--edge-soft);
     font-size: var(--text-xs);
     color: var(--faint);
   }
@@ -791,86 +637,13 @@ import Icon from "./Icon.astro";
   }
 
   .palette-footer-hints span {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--step-2);
     white-space: nowrap;
   }
 
-  .palette-footer kbd {
-    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
-    font-size: var(--text-xs);
-    border: 1px solid var(--chrome-surface-border);
-    border-radius: var(--r-pill);
-    padding: 0.08rem var(--step-2);
-    color: var(--muted);
-  }
-
-  .palette-home-hint {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    margin-top: 1.25rem;
-    font-size: var(--text-sm);
-    color: var(--faint);
-    text-decoration-color: transparent;
-    cursor: pointer;
-    transition: color var(--t-color);
-  }
-  .palette-home-hint:hover,
-  .palette-home-hint:focus-visible {
-    color: var(--ink);
-    text-decoration-color: var(--ink);
-  }
-  .palette-home-hint kbd {
-    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
-    font-size: 0.78em;
-    border: 1px solid var(--chrome-surface-border);
-    border-radius: var(--r-pill);
-    padding: 0.12em 0.5em;
-    color: var(--muted);
-  }
-
-  /* no-JS: the boot script is the only thing that sets data-theme, so this
-     hides the server-rendered hint from visitors who can never open it */
-  :root:not([data-theme]) .palette-home-hint {
-    display: none;
-  }
-
-  /* joins the hero line cascade as a 6th slot (after line 5's 250ms).
-     Gated on data-motion; static with reduced motion. */
-  :root[data-motion="on"]:not([data-intro-animated="true"]) .palette-home-hint {
-    opacity: 0;
-    transform: translateY(12px);
-    animation: palette-hint-in var(--dur-hero) var(--ease-spring-pop) both;
-    --line-delay: 300ms;
-    animation-delay: var(--line-delay);
-  }
-  :root[data-intro-animated="true"] .palette-home-hint {
-    opacity: 1;
-    transform: none;
-    animation: none;
-  }
-  @keyframes palette-hint-in {
-    from {
-      opacity: 0;
-      transform: translateY(12px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    :root[data-motion="on"] .palette-home-hint {
-      opacity: 1;
-      transform: none;
-      animation: none;
-    }
-  }
-
   @media (max-width: 38rem) {
-    .palette-home-hint {
-      display: none;
-    }
-
     .palette {
       place-items: end center;
       padding: 0;
@@ -904,18 +677,12 @@ import Icon from "./Icon.astro";
       display: flex;
       align-items: center;
       gap: var(--step-2);
-      border-bottom: 1px solid color-mix(in oklch, var(--ink) 8%, transparent);
+      border-bottom: 1px solid var(--edge-soft);
     }
 
     .palette-chrome > .palette-close,
     .palette-chrome > .palette-query-slot {
       display: none !important;
-    }
-
-    .palette-chrome > .palette-back {
-      display: inline-grid;
-      width: 2.25rem;
-      height: 2.25rem;
     }
 
     .palette-chrome > .palette-back[hidden] {
@@ -952,7 +719,7 @@ import Icon from "./Icon.astro";
       display: none;
     }
 
-    .palette-kbd {
+    .palette-keys {
       display: none !important;
     }
 
@@ -981,24 +748,30 @@ import Icon from "./Icon.astro";
       flex: 1;
       min-inline-size: 0;
       max-inline-size: 100%;
-      height: 52px;
-      min-height: 52px;
-      padding: 0 var(--step-2) 0 var(--step-3);
-      border: 1px solid var(--chrome-surface-border);
+      height: var(--cap-48);
+      min-height: var(--cap-48);
+      padding: 0 calc(var(--track-inset) - 1px) 0 var(--step-3);
+      border: 1px solid transparent;
       border-radius: var(--r-pill);
-      background: var(--chrome-surface-bg);
-      box-shadow: var(--shadow-2), var(--shadow-inset);
+      /* in-flow glass, as the footer dock: opaque fill under a gradient rim */
+      background:
+        var(--glass-sheen) padding-box,
+        linear-gradient(var(--glass-fill), var(--glass-fill)) padding-box,
+        var(--glass-rim) border-box;
+      box-shadow: var(--glass-spec), var(--lift-0);
       /* No backdrop blur: the stage sits inside the dock's opaque canvas
          band, where blurring flat canvas produced identical pixels. */
       box-sizing: border-box;
       overflow: hidden;
-      transition:
-        border-color var(--t-color),
-        box-shadow var(--t-color);
+      transition: box-shadow var(--t-color);
     }
 
+    /* typing: the rim lights, as a glass control does on hover */
     .palette[data-palette-mode="search"] .palette-mobile-query-stage {
-      border-color: color-mix(in oklch, var(--ink) 18%, transparent);
+      background:
+        var(--glass-sheen) padding-box,
+        linear-gradient(var(--glass-fill), var(--glass-fill)) padding-box,
+        var(--glass-rim-hover) border-box;
     }
 
     .palette-mobile-input-area {
@@ -1110,14 +883,22 @@ import Icon from "./Icon.astro";
       background: transparent;
     }
 
-    /* The stage clips its children, so the ring goes on the stage itself. */
+    /* The stage clips its children, so focus is shown on the stage itself:
+       the rim lights and the halo closes around it. */
     .palette-mobile-dock .palette-search:focus-within {
-      outline: none;
+      box-shadow: none;
     }
 
-    .palette-mobile-query-stage:has(#palette-input:focus-visible) {
-      outline: var(--focus-ring);
-      outline-offset: var(--focus-offset);
+    .palette-mobile-query-stage:has(:focus-visible) {
+      background:
+        var(--glass-sheen) padding-box,
+        linear-gradient(var(--glass-fill), var(--glass-fill)) padding-box,
+        var(--glass-rim-hover) border-box;
+      box-shadow: var(--glass-spec), var(--lift-0), 0 0 0 2px var(--palette-halo);
+    }
+
+    .palette-mobile-search-launch:focus-visible {
+      outline: none;
     }
 
     .palette-mobile-dock .palette-search-icon-box {
@@ -1146,41 +927,28 @@ import Icon from "./Icon.astro";
       color: var(--ink);
     }
 
-    .palette-mobile-close {
-      appearance: none;
-      display: inline-grid;
-      place-items: center;
-      flex: 0 0 calc(var(--step) * 10);
-      inline-size: calc(var(--step) * 10);
-      block-size: calc(var(--step) * 10);
+    /* a quiet 40 circle inside the stage: keeps a resting wash, because a
+       phone has no hover to reveal it */
+    .palette .palette-mobile-close {
       margin-inline-start: var(--step-1);
-      padding: 0;
-      border: 0;
-      border-radius: 50%;
-      background: color-mix(in oklch, var(--ink) 6%, transparent);
       color: var(--muted);
-      cursor: pointer;
-      transition:
-        color var(--t-color),
-        background-color var(--t-color),
-        transform var(--dur-press) var(--ease-enter);
+      background-color: var(--wash);
+    }
+
+    .palette .palette-mobile-close:hover,
+    .palette .palette-mobile-close:active,
+    .palette .palette-mobile-close:focus-visible {
+      color: var(--ink);
+      background-color: var(--wash-press);
+    }
+
+    .palette .palette-mobile-close:focus-visible {
+      outline: none;
+      box-shadow: inset 0 0 0 1px var(--edge-strong);
     }
 
     .palette-mobile-close[hidden] {
       display: none;
-    }
-
-    .palette-mobile-close:hover,
-    .palette-mobile-close:focus-visible {
-      color: var(--ink);
-      background: color-mix(in oklch, var(--ink) 10%, transparent);
-    }
-
-    .palette-mobile-close:active {
-      transform: scale(0.94);
-      background: color-mix(in oklch, var(--ink) 14%, transparent);
-      color: var(--ink);
-      transition-duration: var(--dur-press);
     }
   }
 
@@ -1200,27 +968,13 @@ import Icon from "./Icon.astro";
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .palette-item,
-    .palette-item[aria-selected="true"],
-    .palette-item:hover,
-    .palette-item:active {
-      transform: none;
-    }
-
-    .palette-icon,
-    .palette-item[aria-selected="true"] .palette-icon,
-    .palette-item:hover .palette-icon {
-      transform: none;
-    }
-
     .palette-panel {
       transform: none;
       transition: opacity var(--dur-nudge) var(--ease-enter);
     }
 
     .palette-mobile-search-launch,
-    .palette-mobile-dock .palette-query-shell,
-    .palette-mobile-close {
+    .palette-mobile-dock .palette-query-shell {
       transform: none;
       transition: opacity var(--t-color), background-color var(--t-color), color var(--t-color);
     }
@@ -1254,6 +1008,13 @@ import Icon from "./Icon.astro";
       border: 1px solid CanvasText;
     }
 
+    /* shadows are not painted here, so focus keeps a real outline */
+    .palette-search:focus-within,
+    .palette-mobile-query-stage:has(:focus-visible) {
+      outline: 2px solid Highlight;
+      outline-offset: var(--focus-offset);
+    }
+
     .palette-list-wrap::before,
     .palette-list-wrap::after {
       display: none;
@@ -1261,8 +1022,7 @@ import Icon from "./Icon.astro";
   }
 
   @media print {
-    .palette,
-    .palette-home-hint {
+    .palette {
       display: none !important;
     }
   }

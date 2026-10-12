@@ -1,6 +1,6 @@
 import { isSoundEnabled, playAccent, setSoundEnabled } from "./sound";
 import { showToast } from "./toast";
-import { copyToClipboard } from "./clipboard";
+import { copyWithToast } from "./clipboard";
 import { pageSignal } from "./lifecycle";
 import { calculate, convertQuery, formatCalculation, generatePassword, isCalculationQuery, randomChoice, roll, transformText } from "./palette-utils";
 import { hydratePaletteIcons, iconMarkup, paletteAiIcon, paletteContentIcon, paletteFallbackIcon, palettePageIcon, paletteRouteIcon, profileIconKey, type PaletteIconKey } from "./palette-icons";
@@ -281,12 +281,22 @@ function isPinned(id: string): boolean {
 function togglePin(id: string) {
   if (isPinned(id)) {
     storedState.pins = storedState.pins.filter((value) => value !== id);
-    showToast({ message: "Removed from pinned commands", duration: 1600 });
+    showToast({ message: "Unpinned", duration: 1600 });
   } else if (storedState.pins.length < PIN_CAP) {
     storedState.pins = [id, ...storedState.pins];
-    showToast({ message: "Pinned command", duration: 1600 });
+    showToast({
+      message: "Pinned",
+      action: {
+        kind: "undo",
+        run: () => {
+          storedState.pins = storedState.pins.filter((value) => value !== id);
+          saveState();
+          if (open && mode === "search") void refresh(els().input?.value ?? "");
+        },
+      },
+    });
   } else {
-    showToast({ message: "You can pin up to eight commands", duration: 1800 });
+    showToast({ message: "Eight pins max", tone: "err", duration: 1800 });
   }
   saveState();
 }
@@ -362,15 +372,8 @@ function formatNativeTime(zone: string): string {
 
 async function copyText(value: string, message = "Copied") {
   const signal = pageSignal();
-  const copied = await copyToClipboard(value, signal);
-  if (signal.aborted) return copied;
-  if (copied) {
-    playAccent("copy");
-    showToast({ message, duration: 1600 });
-    trackCopy("palette", message);
-  } else {
-    showToast({ message: "Copy failed", duration: 2200 });
-  }
+  const copied = await copyWithToast(value, message, signal);
+  if (copied && !signal.aborted) trackCopy("palette", message);
   return copied;
 }
 
@@ -763,7 +766,7 @@ async function copyRemoteText(href: string, message: string) {
     if (signal.aborted) return;
     await copyText(text, message);
   } catch {
-    if (!signal.aborted) showToast({ message: "That file could not be read", duration: 2200 });
+    if (!signal.aborted) showToast({ message: "That file could not be read", tone: "err", duration: 2200 });
   }
 }
 
@@ -784,7 +787,7 @@ function staticItems(value: PaletteManifest | null): Item[] {
     createItem({ id: "action:random-note", kind: "action", group: "Quick actions", label: "Random note", subtitle: "Open a note chosen from the library", icon: "random", keywords: ["random", "note", "surprise", "library"], action: () => randomNote(value) }),
     createItem({ id: "fun:coin", kind: "fun", group: "Surprises", label: "Flip a coin", subtitle: "A local random result", icon: "coin", keywords: ["coin", "random"], action: () => { showToast({ message: roll(2) === 1 ? "Heads" : "Tails", duration: 1600 }); } }),
     createItem({ id: "fun:dice", kind: "fun", group: "Surprises", label: "Roll a die", subtitle: "Roll d6, d20, or any dN", icon: "dice", keywords: ["dice", "random", "roll"], action: () => { showToast({ message: `You rolled ${roll(6)}`, duration: 1600 }); } }),
-    createItem({ id: "fun:quote", kind: "fun", group: "Surprises", label: "Copy a random quote", subtitle: "A line from the collection", icon: "quote", keywords: ["quote", "fortune", "inspire"], action: () => { const quote = randomChoice(value?.quotes ?? []); if (quote) void copyText(`“${quote.text}”\n - ${quote.author}`, "Quote copied"); else showToast({ message: "No quotes available", duration: 1800 }); } }),
+    createItem({ id: "fun:quote", kind: "fun", group: "Surprises", label: "Copy a random quote", subtitle: "A line from the collection", icon: "quote", keywords: ["quote", "fortune", "inspire"], action: () => { const quote = randomChoice(value?.quotes ?? []); if (quote) void copyText(`“${quote.text}”\n${quote.author}`, "Quote copied"); else showToast({ message: "No quotes available", tone: "err", duration: 1800 }); } }),
     createItem({ id: "fun:surprise", kind: "fun", group: "Surprises", label: "Surprise me", subtitle: "Open something unexpected", icon: "surprise", keywords: ["random", "surprise", "fun"], action: () => surprise(value) }),
     createItem({ id: "fun:uuid", kind: "utility", group: "Utilities", label: "Generate UUID", subtitle: "A local UUID v4", icon: "hash", keywords: ["uuid", "id", "random"], action: () => { const value = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`; void copyText(value, "UUID copied"); } }),
     createItem({ id: "fun:password", kind: "utility", group: "Utilities", label: "Generate password", subtitle: "A local 20-character password", icon: "password", keywords: ["password", "secret", "random"], action: () => void copyText(generatePassword(), "Password copied") }),
@@ -795,14 +798,14 @@ function randomNote(value: PaletteManifest | null) {
   const notes = (value?.content ?? []).filter((entry) => entry.kind === "note");
   const note = randomChoice(notes);
   if (note) navigate(note.href);
-  else showToast({ message: "No notes available yet", duration: 1800 });
+  else showToast({ message: "No notes available yet", tone: "err", duration: 1800 });
 }
 
 function surprise(value: PaletteManifest | null) {
   const choices = [...(value?.content ?? [])].filter((entry) => entry.kind !== "tag");
   const choice = randomChoice(choices);
   if (choice) navigate(choice.href);
-  else showToast({ message: "The site is still gathering surprises", duration: 1800 });
+  else showToast({ message: "The site is still gathering surprises", tone: "err", duration: 1800 });
 }
 
 function applyRecipe(query: string) {
@@ -859,7 +862,7 @@ function exploreItems(value: PaletteManifest | null, loading = false): Item[] {
 }
 
 function unavailableItems(category: BrowseCategory): Item[] {
-  return [createItem({ id: `browse:${category.id}:unavailable`, kind: "action", group: category.label, section: category.label, label: "Content is unavailable", subtitle: "Try again when the site manifest is reachable", icon: "alert", keywords: category.keywords, closeOnRun: false, trackRecent: false, action: () => showToast({ message: "Site content is unavailable right now", duration: 1800 }) })];
+  return [createItem({ id: `browse:${category.id}:unavailable`, kind: "action", group: category.label, section: category.label, label: "Content is unavailable", subtitle: "Try again when the site manifest is reachable", icon: "alert", keywords: category.keywords, closeOnRun: false, trackRecent: false, action: () => showToast({ message: "Site content is unavailable right now", tone: "err", duration: 1800 }) })];
 }
 
 function categoryItems(categoryId: string, value: PaletteManifest | null): Item[] {
@@ -1131,6 +1134,28 @@ function escapeHtml(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;");
 }
 
+/* Keys are drawn as keycaps. ⌘ and ↑↓ come from the icon registry, never the
+   Unicode glyphs; "⌘K" and "g h" are two keys, and "·" separates alternatives. */
+const KEY_ICONS: Record<string, { key: PaletteIconKey; label: string }> = {
+  "⌘": { key: "command", label: "Command" },
+  "↑↓": { key: "navigate", label: "Up and down" },
+};
+
+function keycap(token: string): string {
+  const icon = KEY_ICONS[token];
+  if (icon) return `<kbd class="ui-kbd" aria-label="${icon.label}">${iconMarkup(icon.key, { size: 12, className: "" })}</kbd>`;
+  return `<kbd class="ui-kbd">${escapeHtml(token)}</kbd>`;
+}
+
+function keycaps(hint: string): string {
+  const keys = hint.split(/\s+/).filter(Boolean).flatMap((token) => {
+    if (token === "·") return ['<span aria-hidden="true">·</span>'];
+    if (token.length > 1 && token.startsWith("⌘")) return [keycap("⌘"), keycap(token.slice(1))];
+    return [keycap(token)];
+  });
+  return `<span class="palette-keys">${keys.join("")}</span>`;
+}
+
 function renderList() {
   const { list, status, input } = els();
   if (!list) return;
@@ -1152,14 +1177,14 @@ function renderList() {
     }
     const selected = index === activeIndex ? "true" : "false";
     const icon = iconMarkup(item.icon ?? paletteFallbackIcon(item.kind));
-    const subtitle = item.live ? `<span class="palette-subtitle palette-live" data-live-id="${escapeHtml(item.id)}">${escapeHtml(item.live())}</span>` : item.subtitle ? `<span class="palette-subtitle">${escapeHtml(item.subtitle)}</span>` : "";
-    const excerpt = item.excerptHtml ? `<span class="palette-excerpt">${item.excerptHtml}</span>` : item.value && !item.live ? `<span class="palette-subtitle palette-value">${escapeHtml(item.value)}</span>` : "";
-    const label = item.badge ? `<span class="palette-label"><span class="palette-label-text">${escapeHtml(item.label)}</span><span class="palette-badge">${escapeHtml(item.badge)}</span></span>` : `<span class="palette-label"><span class="palette-label-text">${escapeHtml(item.label)}</span></span>`;
-    const hint = item.hint ? `<kbd class="palette-kbd">${escapeHtml(item.hint)}</kbd>` : "";
-    const context = item.context ? `<span class="palette-meta">${escapeHtml(item.context)}</span>` : "";
-    const external = item.external ? `<span class="palette-meta palette-external" aria-label="External link">${iconMarkup("external")}</span>` : "";
+    const subtitle = item.live ? `<span class="palette-subtitle ui-row__sub palette-live" data-live-id="${escapeHtml(item.id)}">${escapeHtml(item.live())}</span>` : item.subtitle ? `<span class="palette-subtitle ui-row__sub">${escapeHtml(item.subtitle)}</span>` : "";
+    const excerpt = item.excerptHtml ? `<span class="palette-excerpt">${item.excerptHtml}</span>` : item.value && !item.live ? `<span class="palette-subtitle ui-row__sub palette-value">${escapeHtml(item.value)}</span>` : "";
+    const label = item.badge ? `<span class="palette-label"><span class="palette-label-text">${escapeHtml(item.label)}</span><span class="ui-badge">${escapeHtml(item.badge)}</span></span>` : `<span class="palette-label"><span class="palette-label-text">${escapeHtml(item.label)}</span></span>`;
+    const hint = item.hint ? keycaps(item.hint) : "";
+    const context = item.context ? `<span class="palette-meta ui-row__meta">${escapeHtml(item.context)}</span>` : "";
+    const external = item.external ? `<span class="ui-row__glyph ui-row__glyph--ext" role="img" aria-label="External link">${iconMarkup("external")}</span>` : "";
     const disabled = item.disabled ? ' aria-disabled="true"' : "";
-    html += `<div class="palette-item" role="option" id="palette-opt-${index}" data-index="${index}" aria-selected="${selected}"${disabled}><span class="palette-icon">${icon}</span><span class="palette-item-main">${label}${subtitle}${excerpt}</span>${context}${external}${hint}</div>`;
+    html += `<div class="palette-item ui-row" data-fx="spot" role="option" id="palette-opt-${index}" data-index="${index}" aria-selected="${selected}"${disabled}><span class="palette-icon">${icon}</span><span class="palette-item-main ui-row__title">${label}${subtitle}${excerpt}</span>${context}${external}${hint}</div>`;
   });
   list.innerHTML = html;
   hydratePaletteIcons(list);
@@ -1331,19 +1356,23 @@ function setFooter(currentMode: PaletteMode) {
   const resultNoun = currentMode === "help" ? "shortcut" : currentMode === "actions" ? "action" : currentMode === "browse" ? "item" : currentMode === "directory" ? "command" : "result";
   if (count) count.textContent = resultSummary && currentMode === "search" ? `${resultSummary.shown} of ${resultSummary.total} matches` : items.length ? `${items.length} ${resultNoun}${items.length === 1 ? "" : "s"}` : "No results";
   if (currentMode === "directory") {
-    footerHints.innerHTML = '<span><kbd>↑↓</kbd> Navigate</span><span><kbd>↵</kbd> Open</span><span><kbd>Esc</kbd> Close</span>';
+    footerHints.innerHTML = footerHint("↑↓", "Navigate") + footerHint("↵", "Open") + footerHint("Esc", "Close");
     return;
   }
   if (currentMode === "help") {
-    footerHints.innerHTML = '<span><kbd>↑↓</kbd> Navigate</span><span><kbd>↵</kbd> Open</span><span><kbd>Esc</kbd> Back</span>';
+    footerHints.innerHTML = footerHint("↑↓", "Navigate") + footerHint("↵", "Open") + footerHint("Esc", "Back");
     return;
   }
   if (currentMode === "actions" || currentMode === "browse") {
-    footerHints.innerHTML = `<span><kbd>↑↓</kbd> Navigate</span><span><kbd>↵</kbd> ${currentMode === "actions" ? "Run" : "Open"}</span><span><kbd>Esc</kbd> Back</span>`;
+    footerHints.innerHTML = footerHint("↑↓", "Navigate") + footerHint("↵", currentMode === "actions" ? "Run" : "Open") + footerHint("Esc", "Back");
     return;
   }
   const actions = items[activeIndex]?.actions?.length || items[activeIndex]?.href;
-  footerHints.innerHTML = `<span><kbd>↑↓</kbd> Navigate</span><span><kbd>↵</kbd> Open</span>${actions ? '<span><kbd>⌘K</kbd> Actions</span>' : ""}`;
+  footerHints.innerHTML = footerHint("↑↓", "Navigate") + footerHint("↵", "Open") + (actions ? footerHint("⌘K", "Actions") : "");
+}
+
+function footerHint(keys: string, label: string): string {
+  return `<span>${keycaps(keys)}${label}</span>`;
 }
 
 function focusNestedList() {

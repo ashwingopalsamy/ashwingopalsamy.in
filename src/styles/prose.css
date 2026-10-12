@@ -72,8 +72,10 @@
   color: var(--muted);
 }
 
-/* the anchor link - hover/focus reveal, CSS-drawn # glyph keeps it out of
-   textContent (TOC + screen readers stay clean). */
+/* The anchor hangs left of its heading and is revealed on hover or focus. Its
+   glyph is the registry heading-link icon, carried in the markup, so it never
+   enters textContent (TOC + screen readers stay clean). The 44px hit box is a
+   ::before, so the glyph's own slot stays 1.1em wide. */
 .prose .h-anchor {
   position: absolute;
   inset-inline-start: -1.1em;
@@ -86,16 +88,23 @@
   text-decoration: none;
   color: var(--ghost);
   opacity: 0;
-  transition: opacity var(--t-color);
+  transition: opacity var(--t-color), color var(--t-color);
 }
-.prose .h-anchor svg { display: block; }
+.prose .h-anchor::before {
+  content: "";
+  position: absolute;
+  inset-block-start: calc((100% - var(--hit)) / 2);
+  inset-inline: calc(var(--step-1) * -1) 0;
+  block-size: var(--hit);
+}
+.prose .h-anchor svg { display: block; stroke-width: 2; }
 .prose :is(h2, h3, h4, h5, h6):hover .h-anchor,
 .prose :is(h2, h3, h4, h5, h6):focus-within .h-anchor {
   opacity: 1;
 }
 .prose .h-anchor:hover,
 .prose .h-anchor:focus-visible {
-  color: var(--vermilion);
+  color: var(--ink);
   opacity: 1;
 }
 /* on coarse pointers (touch), keep the anchor always visible so it's
@@ -126,23 +135,39 @@
   transition: font-weight var(--t-color);
 }
 .prose em { font-style: italic; }
-.prose a {
-  color: inherit;
-  text-decoration-line: underline;
-  text-decoration-thickness: var(--hairline);
-  text-decoration-color: color-mix(in oklch, currentColor 35%, transparent);
-  text-underline-offset: 3px;
-  text-decoration-skip-ink: auto;
+
+/* Inline links: ink, no underline, no wash. The body text here is ink too,
+   so colour cannot find a link; it rests a notch heavier (--font-medium)
+   and lifts to --font-hover-lift when its block or it is under a fine
+   pointer. The same two inputs as .ui-link (controls.css): --link-lift and
+   --ext-open, set by the hovered block there and by the link below. Plain
+   links and the engine's own (.external, footnotes) take it; classed
+   anchors (the heading anchor, the Go tour's spec pills) keep their own
+   look. */
+.prose a:where(:not([class]), .external, .footnote-ref, .footnote-backref) {
+  color: var(--ink);
+  font-weight: var(--link-lift, var(--font-medium));
+  text-decoration: none;
+  border-radius: var(--r-2);
   transition:
-    text-decoration-color var(--t-color),
-    color var(--t-color);
+    color var(--t-color),
+    font-weight var(--t-color);
+}
+
+/* a link inside bolder text is never lighter than it */
+.prose :is(h2, h3, h4, h5, h6, strong, b, th) a:where(:not([class]), .external) {
+  font-weight: inherit;
+}
+
+.prose a:where(:not([class]), .external, .footnote-ref, .footnote-backref):focus-visible {
+  --link-lift: var(--font-hover-lift);
+  --ext-open: 1;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .prose a:hover,
-  .prose a:focus-visible {
-    color: var(--ink);
-    text-decoration-color: currentColor;
+  .prose a:where(:not([class]), .external, .footnote-ref, .footnote-backref):hover {
+    --link-lift: var(--font-hover-lift);
+    --ext-open: 1;
   }
 
   .prose :is(p, li, blockquote):hover strong,
@@ -151,19 +176,60 @@
   }
 }
 
+/* External: the build-time arrow-up-right (external-links.ts), the same
+   reveal as .ui-link__ext in controls.css, from the same --ext-* inputs.
+   Invisible at rest with its advance cancelled, so it takes no space; a
+   hovered block or link, or keyboard focus, opens the space and the glyph
+   eases in along its own vector. The word joiner keeps it on the last
+   word's line. Touch never shows it; reduced motion opens the space at
+   once and fades the glyph. */
 .prose .external-icon {
-  display: inline-flex;
-  margin-inline-start: 0.16em;
-  vertical-align: 0.1em;
-  color: var(--faint);
-  transition: color var(--t-color), transform var(--dur-tint) var(--ease-enter);
-  text-decoration: none;
+  white-space: nowrap;
 }
-.prose .external:hover .external-icon,
-.prose .external:focus-visible .external-icon { color: var(--muted); }
-@media (hover: hover) and (pointer: fine) {
-  .prose .external:hover .external-icon,
-  .prose .external:focus-visible .external-icon { transform: translate(1px, -1px); }
+.prose .external-icon::before {
+  content: "\2060";
+}
+.prose .external-icon > svg {
+  display: inline-block;
+  inline-size: 0.72em;
+  block-size: 0.72em;
+  margin-inline:
+    calc(var(--step) / 2)
+    calc((0.72em + var(--step) / 2) * (var(--ext-open) - 1));
+  vertical-align: 0.02em;
+  color: var(--ink);
+  stroke-width: 2.2;
+  opacity: var(--ext-open);
+  pointer-events: none;
+  transition:
+    margin-inline var(--ext-move),
+    opacity var(--ext-fade);
+}
+@media (hover: none) {
+  .prose .external-icon {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .prose a:where(:not([class]), .external, .footnote-ref, .footnote-backref):focus-visible {
+    --ext-move: var(--dur-enter) var(--ease-spring-snap);
+    --ext-fade: var(--dur-enter) var(--ease-enter);
+  }
+  .prose .external-icon > svg {
+    translate:
+      calc(var(--travel-hair) * (var(--ext-open) - 1))
+      calc(var(--travel-hair) * (1 - var(--ext-open)));
+    transition:
+      margin-inline var(--ext-move),
+      opacity var(--ext-fade),
+      translate var(--ext-move);
+  }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .prose a:where(:not([class]), .external, .footnote-ref, .footnote-backref):hover {
+    --ext-move: var(--dur-enter) var(--ease-spring-snap);
+    --ext-fade: var(--dur-enter) var(--ease-enter);
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -186,6 +252,10 @@
 /* ------------------------------------------------------------------ */
 
 .prose .code-figure {
+  /* where the language label and the copy capsule sit: below the caption bar
+     when there is one, the capsule under the label (28px + a 4px gap) */
+  --code-head: 0px;
+  --code-actions-top: calc(var(--code-head) + var(--step-6));
   position: relative;
   margin: 1.5rem 0;
   border: 1px solid var(--chrome-surface-border);
@@ -201,12 +271,13 @@
 .prose .code-figure::before {
   content: attr(data-language);
   position: absolute;
-  top: 0;
+  top: var(--code-head);
   inset-inline-end: 0;
   padding: var(--step-1) var(--step-3);
   font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
   font-size: var(--text-xs);
   font-weight: 500;
+  line-height: calc(var(--step) * 5);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--faint);
@@ -215,12 +286,19 @@
   pointer-events: none;
   z-index: 1;
 }
-/* labels that are just "text" add nothing - hide them */
+/* labels that are just "text" add nothing - hide them, and the capsule
+   takes the corner */
 .prose .code-figure[data-language="text"]::before,
 .prose .code-figure[data-language=""]::before { content: none; }
+.prose .code-figure:is([data-language="text"], [data-language=""]) {
+  --code-actions-top: calc(var(--code-head) + var(--step-2));
+}
 
 /* filename / caption from fence meta (title=main.go) */
 .prose .code-figure > .code-caption {
+  display: flex;
+  align-items: center;
+  min-block-size: var(--code-head);
   padding: var(--step-2) calc(var(--step) * 5);
   font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
   font-size: var(--text-xs);
@@ -231,11 +309,8 @@
   background: transparent;
   overflow-wrap: anywhere;
 }
-.prose .code-figure.has-title::before {
-  top: calc(var(--step) * 7);
-}
-.prose .code-figure.has-title .code-actions {
-  top: calc(var(--step) * 7 + var(--step-1));
+.prose .code-figure.has-title {
+  --code-head: calc(var(--step) * 10);
 }
 
 .prose pre,
@@ -276,63 +351,34 @@
   box-shadow: inset 2px 0 0 color-mix(in oklch, var(--color-6) 70%, transparent);
 }
 
-/* code action toolbar: wrap + copy circular buttons */
+/* code action toolbar: one glass copy circle. prose.ts builds it from the
+   ui-cap primitives (state, glyph cells, spotlight, press); this only places
+   it and decides when it is seen. No toast: the circle confirms itself. */
 .prose .code-actions {
   position: absolute;
-  top: var(--step-1);
-  inset-inline-end: var(--step-1);
+  top: var(--code-actions-top);
+  inset-inline-end: var(--step-2);
   z-index: 2;
   display: inline-flex;
   align-items: center;
-  gap: var(--step-1);
-  opacity: 0;
-  transition: opacity var(--t-color);
 }
 
-.prose .code-figure:hover .code-actions,
-.prose .code-figure:focus-within .code-actions,
-.prose .code-actions:focus-within {
-  opacity: 1;
+/* 44 tall (the primitive's ::before stops 2px short; see .diagram-expand) */
+.prose .code-copy::before {
+  inset-block: calc((var(--cap-32) - var(--hit)) / 2 - 1px);
 }
 
-.prose .code-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: calc(var(--step) * 7);
-  height: calc(var(--step) * 7);
-  margin: 0;
-  padding: 0;
-  border: 1px solid var(--code-border);
-  border-radius: var(--r-pill);
-  background: color-mix(in oklch, var(--canvas) 75%, transparent);
-  color: var(--faint);
-  cursor: pointer;
-  transition:
-    color var(--t-color),
-    border-color var(--t-color),
-    background-color var(--t-color),
-    transform var(--t-move);
-}
+/* fine pointers: revealed on the figure's hover or focus. Touch has no
+   hover, so the capsule stays visible there. */
+@media (hover: hover) and (pointer: fine) {
+  .prose .code-actions {
+    opacity: 0;
+    transition: opacity var(--t-color);
+  }
 
-.prose .code-btn svg { width: var(--step-3); height: var(--step-3); }
-.prose .code-btn:hover { color: var(--ink); border-color: var(--rule-strong); transform: scale(1.08); }
-.prose .code-btn:active { transform: scale(0.92); }
-.prose .code-btn.is-done {
-  color: var(--acc-green);
-  border-color: color-mix(in oklch, var(--acc-green) 45%, transparent);
-  opacity: 1;
-}
-.prose .code-btn[aria-pressed="true"] {
-  color: var(--ink);
-}
-
-@media (pointer: coarse) {
-  .prose .code-actions { opacity: 0.85; }
-}
-/* when the language label is shown, nudge the actions toolbar below/beside it */
-.prose .code-figure[data-language]:not([data-language="text"]):not([data-language=""]) .code-actions {
-  top: var(--step-6);
+  .prose .code-figure:is(:hover, :focus-within) .code-actions {
+    opacity: 1;
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -901,36 +947,42 @@
   background: color-mix(in oklch, var(--acc-red) 6%, transparent);
 }
 
-/* expand button - client-injected into rendered diagrams */
+/* expand button: shipped (hidden) in the prerendered HTML, or built by
+   prose.ts. Once wired, prose.ts gives it the ui-cap glass-32 icon classes,
+   so this is only layout: the row it sits in and the size it holds before
+   that. The glyph is 14px at 32 (spec 2.1). */
 .prose .diagram-expand {
-  position: absolute;
-  top: 0.5rem;
-  inset-inline-end: 0.5rem;
-  z-index: 1;
   display: none;                       /* only when JS injects it */
-  width: calc(var(--step) * 7);
-  height: calc(var(--step) * 7);
+  flex: none;
+  inline-size: var(--cap-32);
+  block-size: var(--cap-32);
+  margin: 0;
+  padding: 0;
+  border-radius: var(--r-pill);
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--code-border);
-  border-radius: 50%;
-  background: color-mix(in oklch, var(--canvas) 70%, transparent);
-  color: var(--faint);
-  cursor: pointer;
 }
 .prose .diagram.is-rendered .diagram-expand {
   display: inline-flex;
-  position: static;                    /* sit on a figcaption-like row */
+}
+.prose .diagram-expand .ui-icon {
+  inline-size: calc(var(--step) * 3.5);
+  block-size: calc(var(--step) * 3.5);
+  stroke-width: 2;
+}
+/* The hit box is 44 both ways. The primitive's ::before is measured from the
+   padding box, which sits inside the 1px border, so it lands 2px short, and
+   it widens a 32 circle by 4 a side where it needs 6. */
+.prose .diagram-expand::before {
+  inset: calc((var(--cap-32) - var(--hit)) / 2 - 1px);
 }
 .prose .diagram.is-rendered .diagram-toolbar {
   display: flex;
   justify-content: flex-end;
-  padding: 0 var(--step-3) var(--step-2);
+  padding: var(--step-1) var(--step-2) var(--step-2);
   border-top: 1px solid var(--rule);
 }
 .prose .diagram-expand[data-pending] { visibility: hidden; }
-.prose .diagram-expand:hover { color: var(--ink); }
-.prose .diagram-expand:active { transform: scale(0.94); }
 
 /* the expand overlay - appended to body by prose.ts */
 .diagram-overlay {
@@ -959,20 +1011,20 @@
   animation: diagram-zoom var(--dur-shift) var(--ease-spring-pop) both;
 }
 .diagram-overlay-stage svg { display: block; max-width: 100%; height: auto; }
-.diagram-overlay-close {
+/* A child of the overlay, not the stage: the stage scrolls and clips, and
+   a button hung off its corner was cut to a sliver. A glass 40 circle. */
+.diagram-overlay .diagram-overlay-close {
   position: absolute;
-  top: calc(var(--step-4) * -1);
-  inset-inline-end: calc(var(--step-4) * -1);
-  width: calc(var(--step) * 9);
-  height: calc(var(--step) * 9);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--rule-strong);
-  border-radius: 50%;
-  background: var(--canvas);
-  color: var(--ink);
-  cursor: pointer;
+  top: var(--step-4);
+  inset-inline-end: var(--step-4);
+  z-index: 1;
+  padding: 0;
+}
+.diagram-overlay-close::before {
+  content: "";
+  position: absolute;
+  inset: calc((var(--cap-40) - var(--hit)) / 2 - 1px);
+  border-radius: var(--r-pill);
 }
 @keyframes diagram-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes diagram-zoom {
@@ -1084,11 +1136,20 @@
   margin: 0 var(--step-3) 0.18rem 0.15rem;
   border-right: 1.5px solid currentColor;
   border-bottom: 1.5px solid currentColor;
-  color: var(--faint);
+  color: var(--ghost);
   transform: rotate(45deg);
-  transition: transform var(--dur-tint) var(--ease-enter), color var(--t-color);
+  transition: color var(--t-color);
 }
-.prose details[open] summary::before { transform: rotate(225deg) translate(-1px, -1px); }
+.prose summary:hover::before,
+.prose details[open] summary::before { color: var(--ink); }
+.prose details[open] summary::before { rotate: 180deg; }
+@media (prefers-reduced-motion: no-preference) {
+  .prose summary::before {
+    transition:
+      color var(--t-color),
+      rotate var(--dur-shift) var(--ease-spring-snap);
+  }
+}
 
 /* ------------------------------------------------------------------ */
 /*  footnotes                                                          */
@@ -1161,11 +1222,15 @@
 
 @media print {
   .prose .h-anchor,
-  .prose .code-copy,
+  .prose .code-actions,
   .prose .diagram-expand,
   .prose .diagram-toolbar { display: none !important; }
   .prose .code-figure { border-color: var(--color-4); background: var(--color-1); }
   .prose .diagram { break-inside: avoid; border-color: var(--color-4); }
-  .prose a { color: var(--color-9); text-decoration: underline; }
+  /* no hover on paper: a link is ink and weight, as on screen */
+  .prose a:where(:not([class]), .external, .footnote-ref, .footnote-backref) {
+    color: var(--color-9);
+    font-weight: var(--font-semibold);
+  }
   .prose .external-icon { display: none; }
 }

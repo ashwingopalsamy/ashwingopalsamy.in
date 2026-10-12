@@ -158,19 +158,15 @@ const photoCards = await Promise.all(photos.map(async (photo) => ({
     display: block;
     overflow: hidden;
     border-radius: var(--r-3);
-    outline: 1px solid color-mix(in oklch, var(--ink) 10%, transparent);
+    outline: 1px solid var(--edge);
     outline-offset: -1px;
     background: var(--surface-inline-bg);
     transition: outline-color var(--dur-tint) linear;
   }
 
   .photo-link:focus-visible {
-    outline-color: color-mix(in oklch, var(--ink) 34%, transparent);
-  }
-
-  .photo-link:focus-visible {
-    outline-width: 2px;
-    outline-offset: 3px;
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
   }
 
   .photo-link :global(.photo-media),
@@ -185,7 +181,7 @@ const photoCards = await Promise.all(photos.map(async (photo) => ({
   }
 
   .photo-link[data-photo-pending="true"] {
-    outline-color: color-mix(in oklch, var(--ink) 28%, transparent);
+    outline-color: var(--edge-strong);
   }
 
   .photo-status {
@@ -222,8 +218,8 @@ const photoCards = await Promise.all(photos.map(async (photo) => ({
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .photo-link:hover {
-      outline-color: color-mix(in oklch, var(--ink) 34%, transparent);
+    .photo-link:hover:not(:focus-visible) {
+      outline-color: var(--edge-strong);
     }
   }
 

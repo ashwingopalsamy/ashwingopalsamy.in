@@ -1,0 +1,64 @@
+---
+/**
+ * Previous / next cards (controls.css `.ui-pager`). A missing side leaves an
+ * empty cell, not a disabled card. `noteNav` marks the links for the note
+ * keyboard keys and edge-swipe (data-note-nav, read by prose.ts and
+ * page-flow.ts); only a note's pager should carry it.
+ */
+import Icon from "./Icon.astro";
+
+interface Item {
+  href: string;
+  title: string;
+}
+
+interface Props {
+  prev?: Item | null;
+  next?: Item | null;
+  label?: string;
+  noteNav?: boolean;
+}
+
+const { prev, next, label = "Previous and next", noteNav = false } = Astro.props;
+---
+
+{(prev || next) && (
+  <nav class="ui-pager" aria-label={label}>
+    {prev && (
+      <a
+        class="ui-pager__card"
+        href={prev.href}
+        rel="prev"
+        data-fx="spot"
+        data-note-nav={noteNav ? "prev" : undefined}
+      >
+        <span class="ui-pager__key">
+          <span class="ui-arw ui-arw--back">
+            <Icon name="arrow-left" size={14} strokeWidth={2} />
+            <Icon name="arrow-left" size={14} strokeWidth={2} />
+          </span>
+          Previous
+        </span>
+        <span class:list={["ui-pager__title", { "note-page-title": noteNav }]}>{prev.title}</span>
+      </a>
+    )}
+    {next && (
+      <a
+        class="ui-pager__card ui-pager__card--next"
+        href={next.href}
+        rel="next"
+        data-fx="spot"
+        data-note-nav={noteNav ? "next" : undefined}
+      >
+        <span class="ui-pager__key">
+          Next
+          <span class="ui-arw">
+            <Icon name="arrow-right" size={14} strokeWidth={2} />
+            <Icon name="arrow-right" size={14} strokeWidth={2} />
+          </span>
+        </span>
+        <span class:list={["ui-pager__title", { "note-page-title": noteNav }]}>{next.title}</span>
+      </a>
+    )}
+  </nav>
+)}

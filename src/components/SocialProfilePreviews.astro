@@ -1,4 +1,5 @@
 ---
+import Icon from "./Icon.astro";
 import { currentRole, site, type SocialLink } from "../data/home";
 import {
   formatContributionDate,
@@ -33,7 +34,7 @@ function iconPath(link: SocialLink): string {
     {
       previewLinks.map((link, index) => (
         <a
-          class="chip"
+          class="ui-cap ui-cap--glass ui-cap--48 ui-cap--icon"
           aria-label={link.label}
           href={link.href}
           target="_blank"
@@ -62,8 +63,11 @@ function iconPath(link: SocialLink): string {
               <img class="social-preview__avatar social-preview__avatar--github" src="/portrait.webp" alt="" width="40" height="40" loading="lazy" decoding="async" />
               <div class="social-preview__identity">
                 <div class="social-preview__github-topline">
-                  <a class="social-preview__profile-link" href={link.href} target="_blank" rel="me noopener noreferrer">@ashwingopalsamy</a>
-                  <a class="social-preview__cta social-preview__cta--github" href={link.href} target="_blank" rel="me noopener noreferrer">View Code<span class="visually-hidden"> on Ashwin Gopalsamy's GitHub profile</span></a>
+                  <a class="ui-link social-preview__profile-link" href={link.href} target="_blank" rel="me noopener noreferrer">@ashwingopalsamy</a>
+                  <a class="ui-cap ui-cap--28 ui-cap--trail social-preview__cta" href={link.href} target="_blank" rel="me noopener noreferrer">
+                    <span class="ui-cap__label">Read code<span class="visually-hidden"> on Ashwin Gopalsamy's GitHub</span></span>
+                    <span class="ui-arw ui-arw--ext" aria-hidden="true"><Icon name="arrow-up-right" size={14} strokeWidth={2} /><Icon name="arrow-up-right" size={14} strokeWidth={2} /></span>
+                  </a>
                 </div>
                 <p>{contributionTotal}</p>
               </div>
@@ -103,7 +107,10 @@ function iconPath(link: SocialLink): string {
                   <p class="social-preview__name">Ashwin Gopalsamy</p>
                   <span class="social-preview__verified social-preview__verified--linkedin" role="img" aria-label="Verified account"></span>
                 </div>
-                <a class="social-preview__cta social-preview__cta--linkedin" href={link.href} target="_blank" rel="me noopener noreferrer">Connect<span class="visually-hidden"> with Ashwin Gopalsamy on LinkedIn</span></a>
+                <a class="ui-cap ui-cap--28 ui-cap--trail social-preview__cta" href={link.href} target="_blank" rel="me noopener noreferrer">
+                  <span class="ui-cap__label">Let's connect<span class="visually-hidden"> on Ashwin Gopalsamy's LinkedIn</span></span>
+                  <span class="ui-arw ui-arw--ext" aria-hidden="true"><Icon name="arrow-up-right" size={14} strokeWidth={2} /><Icon name="arrow-up-right" size={14} strokeWidth={2} /></span>
+                </a>
               </div>
               <p class="social-preview__meta">
                 {currentRole.role}<br />{currentRole.company} · {site.locationShort}
@@ -119,7 +126,10 @@ function iconPath(link: SocialLink): string {
             </div>
             <div class="social-preview__x-body">
               <div class="social-preview__x-action-row">
-                <a class="social-preview__cta social-preview__cta--x" href={link.href} target="_blank" rel="me noopener noreferrer">Follow<span class="visually-hidden"> Ashwin Gopalsamy on X (Twitter)</span></a>
+                <a class="ui-cap ui-cap--28 ui-cap--trail social-preview__cta" href={link.href} target="_blank" rel="me noopener noreferrer">
+                  <span class="ui-cap__label">Follow<span class="visually-hidden"> on Ashwin Gopalsamy's X (Twitter)</span></span>
+                  <span class="ui-arw ui-arw--ext" aria-hidden="true"><Icon name="arrow-up-right" size={14} strokeWidth={2} /><Icon name="arrow-up-right" size={14} strokeWidth={2} /></span>
+                </a>
               </div>
               <div class="social-preview__name-row social-preview__x-name-row">
                 <p class="social-preview__name">@ashwin2125</p>
@@ -136,7 +146,6 @@ function iconPath(link: SocialLink): string {
 
 <style>
   .social-preview {
-    --brand-linkedin: #0a66c2;
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -147,48 +156,6 @@ function iconPath(link: SocialLink): string {
     display: inline-flex;
     align-items: center;
     gap: var(--step-2);
-  }
-
-  .chip {
-    position: relative;
-    z-index: 1;
-    display: inline-grid;
-    place-items: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    border: 1px solid var(--chrome-surface-border);
-    border-radius: 50%;
-    color: var(--faint);
-    text-decoration: none;
-    transition:
-      background-color var(--t-color),
-      color var(--t-color),
-      border-color var(--t-color),
-      transform var(--t-move);
-  }
-
-
-  @media (hover: hover) and (pointer: fine) {
-    .chip:hover {
-      border-color: var(--ink);
-      background: var(--ink);
-      color: var(--canvas);
-      text-decoration: none;
-      transform: translateY(-3px);
-    }
-  }
-
-  .chip:focus-visible {
-    border-color: var(--ink);
-    background: var(--ink);
-    color: var(--canvas);
-    text-decoration: none;
-    transform: translateY(-3px);
-  }
-
-  .chip:active {
-    transform: translateY(-1px) scale(0.96);
-    transition: transform var(--dur-press) var(--ease-enter);
   }
 
   .social-preview__bridge {
@@ -210,7 +177,7 @@ function iconPath(link: SocialLink): string {
     border: 1px solid var(--rule-strong);
     border-radius: var(--r-5);
     background: var(--canvas);
-    box-shadow: var(--shadow-3);
+    box-shadow: var(--shadow-2);
     opacity: 0;
     pointer-events: none;
     transform: translateX(-50%);
@@ -285,7 +252,7 @@ function iconPath(link: SocialLink): string {
   .social-preview__avatar--github {
     width: 2.5rem;
     height: 2.5rem;
-    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--ink) 12%, transparent);
+    box-shadow: inset 0 0 0 1px var(--edge);
   }
 
   .social-preview__identity {
@@ -295,7 +262,6 @@ function iconPath(link: SocialLink): string {
     gap: 0.125rem;
   }
 
-  .social-preview__profile-link,
   .social-preview__name {
     margin: 0;
     color: var(--ink);
@@ -304,17 +270,12 @@ function iconPath(link: SocialLink): string {
     line-height: 1.25;
   }
 
+  /* a grid item stretches; the link and its focus ring should hug the handle */
   .social-preview__profile-link {
-    text-decoration: none;
-  }
-
-  .social-preview__profile-link:hover,
-  .social-preview__profile-link:focus-visible {
-    text-decoration: underline;
-    text-decoration-thickness: 0.5px;
-    text-decoration-color: color-mix(in oklch, currentColor 55%, transparent);
-    text-underline-offset: 4px;
-    text-decoration-skip-ink: auto;
+    justify-self: start;
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
+    line-height: 1.25;
   }
 
   .social-preview__identity p,
@@ -332,10 +293,7 @@ function iconPath(link: SocialLink): string {
     gap: var(--step-2);
   }
 
-  .social-preview__github-topline {
-    align-items: baseline;
-  }
-
+  .social-preview__github-topline,
   .social-preview__profile-topline {
     align-items: center;
   }
@@ -352,9 +310,11 @@ function iconPath(link: SocialLink): string {
     overflow-wrap: anywhere;
   }
 
+  /* fills the card when the header, not the graph, is what sets its width */
   .contribution-graph {
     position: relative;
     width: min(22rem, calc(100vw - 6rem));
+    min-inline-size: 100%;
   }
 
   .contribution-grid {
@@ -384,12 +344,13 @@ function iconPath(link: SocialLink): string {
     inset-block-start: var(--tooltip-y, 0px);
     inset-inline-start: var(--tooltip-x, 50%);
     max-inline-size: calc(100% - 1rem);
-    padding: var(--step-1) var(--step-3);
+    padding: var(--step-2) var(--step-3);
     border-radius: var(--r-pill);
-    background: var(--ink);
-    box-shadow: var(--shadow-1);
-    color: var(--canvas);
+    background: var(--glass-sheen), var(--canvas);
+    box-shadow: inset 0 0 0 1px var(--edge), var(--glass-spec), var(--lift-1);
+    color: var(--ink);
     font-size: var(--text-xs);
+    font-weight: var(--font-medium);
     line-height: 1.25;
     pointer-events: none;
     text-wrap: nowrap;
@@ -398,8 +359,13 @@ function iconPath(link: SocialLink): string {
 
   .social-preview__card--linkedin,
   .social-preview__card--x {
-    width: min(19rem, calc(100vw - 3rem));
+    width: min(20.5rem, calc(100vw - 3rem));
     overflow: hidden;
+  }
+
+  /* the longer label plus its arrow must fit the name row on hover */
+  .social-preview__card--linkedin {
+    width: min(22rem, calc(100vw - 3rem));
   }
 
   .social-preview__banner {
@@ -447,51 +413,13 @@ function iconPath(link: SocialLink): string {
   }
 
   .social-preview__verified--linkedin {
-    background: var(--brand-linkedin);
+    background: var(--acc-blue);
     -webkit-mask: url("/LinkedIn_Verified_Badge.svg") center / contain no-repeat;
     mask: url("/LinkedIn_Verified_Badge.svg") center / contain no-repeat;
   }
 
   .social-preview__verified--x {
     object-fit: contain;
-  }
-
-  .social-preview__cta {
-    display: inline-flex;
-    flex: 0 0 auto;
-    align-items: center;
-    justify-content: center;
-    height: fit-content;
-    padding: 0.25rem 0.75rem;
-    border-radius: var(--r-pill);
-    color: var(--color-1);
-    font-size: var(--text-sm);
-    font-weight: var(--font-semibold);
-    line-height: 1.4;
-    text-decoration: none;
-    transition:
-      filter var(--t-color),
-      transform var(--dur-press) var(--ease-enter);
-  }
-
-  .social-preview__cta:hover,
-  .social-preview__cta:focus-visible {
-    filter: brightness(1.14);
-    text-decoration: none;
-  }
-
-  .social-preview__cta:active {
-    transform: scale(0.97);
-  }
-
-  .social-preview__cta--linkedin {
-    background: var(--brand-linkedin);
-  }
-
-  .social-preview__cta--github,
-  .social-preview__cta--x {
-    background: var(--ink);
-    color: var(--canvas);
   }
 
   .social-preview__x-banner {
@@ -508,7 +436,7 @@ function iconPath(link: SocialLink): string {
     inset-inline-end: var(--step-3);
     width: 1.25rem;
     height: 1.25rem;
-    color: #f5f5f4;
+    color: var(--color-1);
     filter: drop-shadow(0 1px 2px color-mix(in oklch, var(--color-9) 55%, transparent));
     opacity: 0.92;
   }
@@ -521,7 +449,7 @@ function iconPath(link: SocialLink): string {
 
   .social-preview__x-action-row {
     display: flex;
-    min-block-size: 1.75rem;
+    min-block-size: var(--cap-28);
     align-items: flex-start;
     justify-content: flex-end;
   }
@@ -538,19 +466,72 @@ function iconPath(link: SocialLink): string {
     overflow-wrap: anywhere;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .chip:hover,
-    .chip:focus-visible,
-    .chip:active {
-      transform: none;
-    }
+  /* Each card's action is a capsule in its platform's own colour. The two
+     neutral brands invert with the theme so they never vanish on a dark
+     card; the label's contrast is AA in all six cases. */
+  .social-preview__card--github {
+    --cta-bg: #24292f;
+    --cta-fg: #fff;
+  }
 
+  .social-preview__card--linkedin {
+    --cta-bg: #0a66c2;
+    --cta-fg: #fff;
+  }
+
+  .social-preview__card--x {
+    --cta-bg: #000;
+    --cta-fg: #fff;
+  }
+
+  :global(:root[data-theme="dark"]) .social-preview__card--github,
+  :global(:root[data-theme="dark"]) .social-preview__card--x {
+    --cta-bg: var(--ink);
+    --cta-fg: var(--canvas);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme])) .social-preview__card--github,
+    :global(:root:not([data-theme])) .social-preview__card--x {
+      --cta-bg: var(--ink);
+      --cta-fg: var(--canvas);
+    }
+  }
+
+  /* A 24 with 12px type, held at every width like --text-ui-sm; in the
+     platform's fill. The edge is the capsule's transparent hairline;
+     nothing is drawn on it. */
+  .social-preview__cta {
+    --cap-h: calc(var(--step) * 6);
+    block-size: var(--cap-h);
+    min-block-size: 0;
+    padding-inline: var(--step-2) var(--step-2);
+    background-color: var(--cta-bg);
+    color: var(--cta-fg);
+    font-size: calc(var(--step) * 3);
+    font-weight: var(--font-medium);
+  }
+
+  /* The GitHub card is as wide as its content, measured once at rest. The
+     arrow's room is reserved as margin that hands itself back as the
+     capsule opens, so the card never grows past the panel's clip. */
+  .social-preview__card--github .social-preview__cta {
+    margin-inline-start: calc(var(--cap-open) * (1 - var(--arw-open)));
+  }
+
+  /* Toward the label colour: a lift on the dark fills, a dim on the
+     inverted ones. A brightness filter would do nothing to black, and
+     oklch has no hue to mix an achromatic label into. 8% keeps the
+     LinkedIn blue's white label above AA (4.9:1) while it is lifted. */
+  @media (hover: hover) and (pointer: fine) {
+    .social-preview__cta:hover {
+      background-color: color-mix(in srgb, var(--cta-bg) 92%, var(--cta-fg));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
     .social-preview__panel {
       transition: opacity var(--dur-tint) linear;
-    }
-
-    .social-preview__cta:active {
-      transform: none;
     }
   }
 </style>

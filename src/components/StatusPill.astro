@@ -1,31 +1,27 @@
 ---
+/**
+ * A badge states a fact and is never pressable (controls.css `.ui-badge`).
+ * Labels read lowercase and a known meaning adds its dot, so colour is never
+ * the only signal. In a title's text flow the caller puts the last word, a
+ * no-break space and this badge in one nowrap span.
+ */
 interface Props {
   label: string;
   class?: string;
 }
 
 const { label, class: className } = Astro.props;
+
+const text = label.trim().toLowerCase();
+
+const tones: Record<string, string> = {
+  reading: "reading",
+  watching: "reading",
+  live: "live",
+  new: "new",
+  down: "down",
+  unavailable: "down",
+};
 ---
 
-<span class:list={["status-pill", className]}>{label}</span>
-
-<style>
-  .status-pill {
-    display: inline-flex;
-    align-items: center;
-    min-block-size: calc(var(--step) * 5);
-    padding-inline: var(--step-2);
-    border-radius: var(--r-pill);
-    background: var(--canvas);
-    border: 1px solid var(--chrome-surface-border);
-    box-shadow: var(--chrome-surface-shadow);
-    color: var(--muted);
-    font-size: var(--text-2xs);
-    font-weight: var(--font-medium);
-    font-family: var(--font-mono);
-    letter-spacing: 0.03em;
-    line-height: 1;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-</style>
+<span class:list={["ui-badge", className]} data-tone={tones[text]}>{text}</span>

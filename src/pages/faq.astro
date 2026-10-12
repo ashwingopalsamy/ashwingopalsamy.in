@@ -11,12 +11,16 @@ import PageIntro from "../components/PageIntro.astro";
 >
   <PageIntro title="faq" lede="The questions that come up often enough to keep an answer here." />
   <div class="faq-layout" data-enter>
-    <section class="faq-stream surface-stream" aria-label="Frequently asked questions">
+    {/* Static rows: reading content, so no puddle, no press, and no part in
+         the sibling dim. Answers stay in the DOM for agents. */}
+    <section class="faq-stream" aria-label="Frequently asked questions">
       {
         faqEntries.map((entry) => (
-          <article class="faq-row surface-row">
-            <h2 class="faq-q">{entry.question}</h2>
-            <p class="faq-a">{entry.answer}</p>
+          <article class="ui-row ui-row--static ui-row--multiline faq-row">
+            <div class="faq-body">
+              <h2 class="faq-q">{entry.question}</h2>
+              <p class="faq-a">{entry.answer}</p>
+            </div>
           </article>
         ))
       }
@@ -34,31 +38,12 @@ import PageIntro from "../components/PageIntro.astro";
   .faq-stream {
     display: flex;
     flex-direction: column;
-    gap: var(--step-1);
-    margin-top: 0;
+    gap: var(--step-2);
   }
 
-  .faq-row {
-    padding: var(--step-4) calc(var(--step) * 5);
-    margin-inline: calc(var(--step) * -5);
-    border-radius: var(--r-3);
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    transition:
-      background-color var(--t-color),
-      opacity var(--dur-tint) var(--ease-enter),
-      filter var(--dur-tint) var(--ease-enter);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .faq-row:hover {
-      background: color-mix(in oklch, var(--ink) 3.5%, transparent);
-    }
-
-    .faq-row:hover .faq-a {
-      color: color-mix(in oklch, var(--ink) 85%, var(--muted));
-    }
+  .faq-body {
+    flex: 1;
+    min-inline-size: 0;
   }
 
   .faq-q {
@@ -76,15 +61,9 @@ import PageIntro from "../components/PageIntro.astro";
     font-size: var(--text-base);
     line-height: var(--leading-relaxed);
     text-wrap: pretty;
-    transition: color var(--t-color);
   }
 
   @media (max-width: 38rem) {
-    .faq-row {
-      padding: var(--step-3) var(--step-4);
-      margin-inline: -1rem;
-    }
-
     .faq-a {
       text-align: justify;
       text-justify: inter-word;

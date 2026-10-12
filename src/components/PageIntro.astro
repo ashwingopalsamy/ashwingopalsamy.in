@@ -6,12 +6,12 @@ interface Props {
 }
 
 const { title, lede, eyebrow } = Astro.props;
-const hasSlot = Astro.slots.has("default");
 ---
 
 <header class="page-intro" data-enter>
   {eyebrow && <p class="page-intro-eyebrow">{eyebrow}</p>}
-  <h1>{title}{hasSlot && <Fragment><span class="page-intro-badge"><slot /></span></Fragment>}</h1>
+  <h1>{title}</h1>
+  <slot />
   {lede && <p class="page-intro-lede">{lede}</p>}
 </header>
 
@@ -45,12 +45,6 @@ const hasSlot = Astro.slots.has("default");
     letter-spacing: var(--type-page-title-tracking);
     line-height: var(--type-page-title-leading);
     text-wrap: balance;
-  }
-
-  .page-intro-badge {
-    display: inline-flex;
-    vertical-align: middle;
-    margin-inline-start: 0.5rem;
   }
 
   .page-intro-lede {

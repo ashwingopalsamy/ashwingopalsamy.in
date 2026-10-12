@@ -57,12 +57,58 @@
   --code-str: #16a34a;
   --code-const: #ea580c;
   --code-comment: #8e8e93;
-  --cta-secondary-bg: var(--chrome-surface-bg);
-  --cta-secondary-border: var(--chrome-surface-border);
   --loc-map-filter: grayscale(1) contrast(1.02);
   --loc-map-opacity: 0.92;
   --media-monochrome-filter: grayscale(1);
   --cx-label-warning: oklch(0.52 0.14 55);
+
+  /* Controls (controls.css). Glass is a recipe of layers; only the
+     overlays add a backdrop blur. --glass-fill is opaque on purpose: the
+     rim is a border-box layer under a padding-box fill, which only works
+     when the fill hides it. Translucent fills (wash, ok, err, chips) use a
+     solid border-color instead. The dark theme and its no-JS mirror
+     restate every one of these.
+     Light glass is the header nav's surface, pre-composited over the flat
+     canvas: the canvas itself, one solid hairline (--chrome-surface-border)
+     and the nav's soft drop. No sheen, no specular edge, no gradient rim;
+     hover is the nav item's wash and a firmer hairline. */
+  --glass-fill: var(--canvas);
+  --glass-fill-hover: color-mix(in oklch, var(--ink) 4.5%, var(--canvas));
+  --glass-fill-press: color-mix(in oklch, var(--ink) 8%, var(--canvas));
+  --glass-sheen: none;
+  --glass-rim: linear-gradient(var(--chrome-surface-border), var(--chrome-surface-border));
+  --glass-rim-hover: linear-gradient(var(--edge-strong), var(--edge-strong));
+  --glass-spec: 0 0 transparent;
+  --glass-lift: 0 8px 24px color-mix(in oklch, var(--ink) 6%, transparent);
+  --lift-0: 0 1px 2px color-mix(in oklch, oklch(0 0 0) 6%, transparent);
+  --lift-1:
+    0 1px 2px color-mix(in oklch, oklch(0 0 0) 7%, transparent),
+    0 10px 24px -12px color-mix(in oklch, oklch(0 0 0) 22%, transparent);
+  --lift-2:
+    0 2px 6px color-mix(in oklch, oklch(0 0 0) 6%, transparent),
+    0 22px 44px -18px color-mix(in oklch, oklch(0 0 0) 30%, transparent);
+  --ink-fill: linear-gradient(180deg, oklch(0.33 0.004 240), oklch(0.2 0.003 240));
+  --ink-fill-press: linear-gradient(180deg, oklch(0.27 0.004 240), oklch(0.16 0.003 240));
+  --ink-edge:
+    inset 0 1px 0 color-mix(in oklch, var(--color-1) 16%, transparent),
+    inset 0 -1px 0 color-mix(in oklch, oklch(0 0 0) 25%, transparent);
+  --ink-bloom: 0 10px 24px -10px color-mix(in oklch, var(--ink) 60%, transparent);
+  --wash: color-mix(in oklch, var(--ink) 4.5%, transparent);
+  --wash-press: color-mix(in oklch, var(--ink) 8%, transparent);
+  --edge-soft: color-mix(in oklch, var(--ink) 8%, transparent);
+  --edge: color-mix(in oklch, var(--ink) 11%, transparent);
+  --edge-strong: color-mix(in oklch, var(--ink) 20%, transparent);
+  --spot: color-mix(in oklch, var(--color-1) 95%, transparent);
+  --ok-ink: oklch(0.47 0.12 155);
+  --ok-wash: color-mix(in oklch, var(--acc-green) 13%, transparent);
+  --ok-edge: color-mix(in oklch, var(--acc-green) 42%, transparent);
+  --err-ink: oklch(0.5 0.18 25);
+  --err-wash: color-mix(in oklch, var(--acc-red) 11%, transparent);
+  --err-edge: color-mix(in oklch, var(--acc-red) 38%, transparent);
+  /* the toast is inverted in both themes */
+  --toast-bg: color-mix(in oklch, var(--color-9) 90%, transparent);
+  --toast-ink: var(--color-1);
+  --link-wash-press: color-mix(in oklch, var(--ink) 14%, transparent);
 
   /* ------------------------------------------------------------------ */
   /*  typography                                                         */
@@ -83,6 +129,8 @@
   --font-medium: 500;
   --font-semibold: 550;
   --font-bold: 600;
+  /* the hover lifts: inline links in a hovered paragraph go to --font-hover-lift,
+     <strong> in a hovered prose block to --font-hover-bold (controls.css, prose.css) */
   --font-hover-lift: 550;
   --font-hover-bold: 680;
   /* --mono-optical-shift and the other optical corrections: geometry.css */
@@ -120,7 +168,6 @@
   --surface-row-border: transparent;
   --surface-row-shadow: none;
   --surface-row-hover: color-mix(in oklch, var(--ink) 3.5%, transparent);
-  --surface-row-press: color-mix(in oklch, var(--ink) 6.5%, transparent);
   --surface-row-current: color-mix(in oklch, var(--ink) 4%, transparent);
   --surface-row-disabled: color-mix(in oklch, var(--ink) 1.5%, transparent);
   --surface-raised: color-mix(in oklch, var(--ink) 4%, var(--canvas));
@@ -137,7 +184,7 @@
      onto the base it rests on. */
   --frame-gap: calc(var(--step) * 1.5);
   --frame-radius: calc(var(--step) * 1.5);
-  /* Tuning knobs (the dev tuner drives these); the dark theme overrides the
+  /* Tuning knobs; the dark theme overrides the
      percentages and mixes the base from black instead of ink. */
   --frame-base-mix: 5%;
   --frame-edge-mix: 9%;
@@ -251,7 +298,6 @@
   --surface-row-border: transparent;
   --surface-row-shadow: none;
   --surface-row-hover: color-mix(in oklch, var(--color-1) 5%, transparent);
-  --surface-row-press: color-mix(in oklch, var(--color-1) 8%, transparent);
   --surface-row-current: color-mix(in oklch, var(--color-1) 6%, transparent);
   --surface-row-disabled: color-mix(in oklch, var(--color-1) 2%, transparent);
   --shiki-fg: var(--color-1);
@@ -261,12 +307,56 @@
   --code-str: #4ade80;
   --code-const: #fb923c;
   --code-comment: #71717a;
-  --cta-secondary-bg: var(--chrome-surface-bg);
-  --cta-secondary-border: var(--chrome-surface-border);
   --loc-map-filter: grayscale(1) invert(1) brightness(1.45) contrast(0.9);
   --loc-map-opacity: 0.94;
   --media-monochrome-filter: grayscale(1);
   --cx-label-warning: oklch(0.82 0.12 65);
+
+  --glass-fill: color-mix(in oklch, var(--ink) 5%, var(--canvas));
+  --glass-fill-hover: color-mix(in oklch, var(--ink) 8%, var(--canvas));
+  --glass-fill-press: color-mix(in oklch, var(--ink) 11%, var(--canvas));
+  --glass-sheen: linear-gradient(180deg, color-mix(in oklch, var(--ink) 5%, transparent), transparent 62%);
+  --glass-rim: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--ink) 26%, transparent),
+    color-mix(in oklch, var(--ink) 9%, transparent) 42%,
+    color-mix(in oklch, var(--ink) 12%, transparent)
+  );
+  --glass-rim-hover: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--ink) 42%, transparent),
+    color-mix(in oklch, var(--ink) 15%, transparent) 42%,
+    color-mix(in oklch, var(--ink) 19%, transparent)
+  );
+  --glass-spec: inset 0 1px 0 color-mix(in oklch, var(--ink) 11%, transparent);
+  --glass-lift: var(--lift-0);
+  --lift-0: 0 1px 2px color-mix(in oklch, oklch(0 0 0) 30%, transparent);
+  --lift-1:
+    0 1px 2px color-mix(in oklch, oklch(0 0 0) 35%, transparent),
+    0 10px 24px -10px color-mix(in oklch, oklch(0 0 0) 75%, transparent);
+  --lift-2:
+    0 2px 6px color-mix(in oklch, oklch(0 0 0) 30%, transparent),
+    0 22px 44px -16px color-mix(in oklch, oklch(0 0 0) 85%, transparent);
+  /* white ink is near-flat: 1.5% of lightness, no chroma, no edge line */
+  --ink-fill: linear-gradient(180deg, oklch(1 0 0), oklch(0.985 0 0));
+  --ink-fill-press: linear-gradient(180deg, oklch(0.93 0 0), oklch(0.915 0 0));
+  --ink-edge: 0 0 transparent;
+  --ink-bloom: 0 10px 30px -10px color-mix(in oklch, var(--color-1) 34%, transparent);
+  --wash: color-mix(in oklch, var(--ink) 6%, transparent);
+  --wash-press: color-mix(in oklch, var(--ink) 10%, transparent);
+  --edge-soft: color-mix(in oklch, var(--ink) 8%, transparent);
+  --edge: color-mix(in oklch, var(--ink) 13%, transparent);
+  --edge-strong: color-mix(in oklch, var(--ink) 24%, transparent);
+  --spot: color-mix(in oklch, var(--ink) 15%, transparent);
+  --ok-ink: oklch(0.83 0.13 155);
+  --ok-wash: color-mix(in oklch, var(--acc-green) 17%, transparent);
+  --ok-edge: color-mix(in oklch, var(--acc-green) 38%, transparent);
+  --err-ink: oklch(0.81 0.12 25);
+  --err-wash: color-mix(in oklch, var(--acc-red) 17%, transparent);
+  --err-edge: color-mix(in oklch, var(--acc-red) 38%, transparent);
+  --toast-bg: color-mix(in oklch, oklch(0.97 0.002 240) 90%, transparent);
+  --toast-ink: var(--color-9);
+  --link-wash-press: color-mix(in oklch, var(--ink) 14%, transparent);
 
   color-scheme: dark;
 }
@@ -322,7 +412,6 @@
     --surface-row-border: transparent;
     --surface-row-shadow: none;
     --surface-row-hover: color-mix(in oklch, var(--color-1) 5%, transparent);
-    --surface-row-press: color-mix(in oklch, var(--color-1) 8%, transparent);
     --surface-row-current: color-mix(in oklch, var(--color-1) 6%, transparent);
     --surface-row-disabled: color-mix(in oklch, var(--color-1) 2%, transparent);
     --shiki-fg: var(--color-1);
@@ -332,12 +421,55 @@
     --code-str: #4ade80;
     --code-const: #fb923c;
     --code-comment: #71717a;
-    --cta-secondary-bg: var(--chrome-surface-bg);
-    --cta-secondary-border: var(--chrome-surface-border);
     --loc-map-filter: grayscale(1) invert(1) brightness(1.45) contrast(0.9);
     --loc-map-opacity: 0.94;
     --media-monochrome-filter: grayscale(1);
     --cx-label-warning: oklch(0.82 0.12 65);
+
+    --glass-fill: color-mix(in oklch, var(--ink) 5%, var(--canvas));
+    --glass-fill-hover: color-mix(in oklch, var(--ink) 8%, var(--canvas));
+    --glass-fill-press: color-mix(in oklch, var(--ink) 11%, var(--canvas));
+    --glass-sheen: linear-gradient(180deg, color-mix(in oklch, var(--ink) 5%, transparent), transparent 62%);
+    --glass-rim: linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--ink) 26%, transparent),
+      color-mix(in oklch, var(--ink) 9%, transparent) 42%,
+      color-mix(in oklch, var(--ink) 12%, transparent)
+    );
+    --glass-rim-hover: linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--ink) 42%, transparent),
+      color-mix(in oklch, var(--ink) 15%, transparent) 42%,
+      color-mix(in oklch, var(--ink) 19%, transparent)
+    );
+    --glass-spec: inset 0 1px 0 color-mix(in oklch, var(--ink) 11%, transparent);
+    --glass-lift: var(--lift-0);
+    --lift-0: 0 1px 2px color-mix(in oklch, oklch(0 0 0) 30%, transparent);
+    --lift-1:
+      0 1px 2px color-mix(in oklch, oklch(0 0 0) 35%, transparent),
+      0 10px 24px -10px color-mix(in oklch, oklch(0 0 0) 75%, transparent);
+    --lift-2:
+      0 2px 6px color-mix(in oklch, oklch(0 0 0) 30%, transparent),
+      0 22px 44px -16px color-mix(in oklch, oklch(0 0 0) 85%, transparent);
+    --ink-fill: linear-gradient(180deg, oklch(1 0 0), oklch(0.985 0 0));
+    --ink-fill-press: linear-gradient(180deg, oklch(0.93 0 0), oklch(0.915 0 0));
+    --ink-edge: 0 0 transparent;
+    --ink-bloom: 0 10px 30px -10px color-mix(in oklch, var(--color-1) 34%, transparent);
+    --wash: color-mix(in oklch, var(--ink) 6%, transparent);
+    --wash-press: color-mix(in oklch, var(--ink) 10%, transparent);
+    --edge-soft: color-mix(in oklch, var(--ink) 8%, transparent);
+    --edge: color-mix(in oklch, var(--ink) 13%, transparent);
+    --edge-strong: color-mix(in oklch, var(--ink) 24%, transparent);
+    --spot: color-mix(in oklch, var(--ink) 15%, transparent);
+    --ok-ink: oklch(0.83 0.13 155);
+    --ok-wash: color-mix(in oklch, var(--acc-green) 17%, transparent);
+    --ok-edge: color-mix(in oklch, var(--acc-green) 38%, transparent);
+    --err-ink: oklch(0.81 0.12 25);
+    --err-wash: color-mix(in oklch, var(--acc-red) 17%, transparent);
+    --err-edge: color-mix(in oklch, var(--acc-red) 38%, transparent);
+    --toast-bg: color-mix(in oklch, oklch(0.97 0.002 240) 90%, transparent);
+    --toast-ink: var(--color-9);
+    --link-wash-press: color-mix(in oklch, var(--ink) 14%, transparent);
 
     color-scheme: dark;
   }
@@ -608,24 +740,10 @@ button[aria-disabled="true"] {
 /* ------------------------------------------------------------------ */
 
 :where(
-  button:not(.surface-row):not(.surface-item):not(.note-toc-btn),
-  .btn,
-  .btn-pill,
-  .cta-secondary,
-  .dev-cta:not(.cta-primary),
-  .chip,
-  .chip-all,
-  .dev-chip,
-  .design-link,
-  .text-btn,
-  .mono-toggle,
-  .focus-demo-btn,
+  button:not(.surface-row):not(.note-toc-btn),
   .footer-link,
-  .quiet-btn,
-  .note-copy-link,
   .detail-meta-actions a,
   .detail-meta-actions button,
-  .quote-btn,
   .action-btn,
   .sdk-nav-btn
 ) {
@@ -640,22 +758,10 @@ button[aria-disabled="true"] {
 
 @media (hover: hover) and (pointer: fine) {
   :where(
-    button:not(.surface-row):not(.surface-item):not(.note-toc-btn):not(.cta-primary):not(.is-active):not([aria-pressed="true"]),
-    .btn:not(.btn-primary):not(.is-active),
-    .btn-pill:not(.is-active),
-    .cta-secondary,
-    .dev-cta:not(.cta-primary):not(.is-active),
-    .dev-chip:not(.is-active),
-    .design-link,
-    .text-btn,
-    .mono-toggle,
-    .focus-demo-btn,
+    button:not(.surface-row):not(.note-toc-btn):not(.is-active):not([aria-pressed="true"]),
     .footer-link,
-    .quiet-btn,
-    .note-copy-link,
     .detail-meta-actions a,
     .detail-meta-actions button,
-    .quote-btn,
     .action-btn,
     .sdk-nav-btn:not(.is-active)
   ):hover {
@@ -666,15 +772,6 @@ button[aria-disabled="true"] {
 }
 
 @supports (text-box-trim: trim-both) {
-  .cta,
-  .dev-cta,
-  .chip,
-  .chip-all,
-  .dev-chip,
-  .design-link,
-  .text-btn,
-  .mono-toggle,
-  .focus-demo-btn,
   .site-nav .quiet-link,
   .site-nav-bottom .tab-label,
   .clock,
@@ -895,58 +992,6 @@ button[aria-disabled="true"] {
   }
 }
 
-.toast {
-  position: fixed;
-  z-index: var(--z-toast);
-  max-inline-size: min(22rem, calc(100vw - var(--mobile-gutter-start) - var(--mobile-gutter-end)));
-  min-inline-size: 0;
-  padding: var(--step-3) calc(var(--step) * 5);
-  border-radius: var(--r-pill);
-  background: var(--ink);
-  color: var(--canvas);
-  font-size: var(--text-sm);
-  line-height: var(--leading-snug);
-  overflow-wrap: anywhere;
-  box-shadow: var(--shadow-2);
-  opacity: 0;
-  pointer-events: none;
-  filter: blur(2px);
-  will-change: transform, opacity, filter;
-  transition:
-    opacity var(--dur-exit) var(--ease-enter),
-    transform var(--dur-exit) var(--ease-enter),
-    filter var(--dur-exit) var(--ease-enter);
-}
-.toast-corner {
-  right: var(--mobile-gutter-end);
-  bottom: calc(var(--gutter) + (var(--toast-stack, 0) * 3.25rem));
-  transform: translateY(10px) scale(0.97);
-}
-.toast-anchored {
-  transform: translate(-50%, calc(-100% - 10px)) translateY(6px) scale(0.97);
-}
-.toast.is-in {
-  opacity: 1;
-  filter: blur(0);
-  transition:
-    opacity var(--dur-enter) var(--ease-enter),
-    transform var(--dur-enter) var(--ease-enter),
-    filter var(--dur-enter) var(--ease-enter);
-}
-.toast-corner.is-in {
-  transform: translateY(0) scale(1);
-}
-.toast-anchored.is-in {
-  transform: translate(-50%, calc(-100% - 10px)) scale(1);
-}
-@media (prefers-reduced-motion: reduce) {
-  .toast {
-    transition: opacity var(--dur-tint) var(--ease-travel);
-    transform: none !important;
-    filter: none !important;
-  }
-}
-
 .column-body {
   flex: 1 0 auto;
   display: flex;
@@ -965,10 +1010,6 @@ button[aria-disabled="true"] {
 
   .column-body {
     padding-bottom: var(--mobile-chrome-clearance);
-  }
-
-  .toast-corner {
-    bottom: calc(var(--mobile-chrome-clearance) + var(--step-3) + (var(--toast-stack, 0) * 3.25rem));
   }
 }
 
@@ -1033,9 +1074,7 @@ main > *,
 @media (hover: hover) and (pointer: fine) {
   .surface-stack:hover > *,
   .surface-stack:hover .surface-row,
-  .surface-stream:hover .surface-row,
-  .surface-stack:hover .surface-item,
-  .surface-stream:hover .surface-item {
+  .surface-stream:hover .surface-row {
     opacity: var(--dim-opacity);
     filter: blur(var(--dim-blur));
     transition: opacity var(--dur-tint) var(--ease-enter);
@@ -1045,19 +1084,14 @@ main > *,
   .surface-stack:hover > *:focus-within,
   .surface-stack:hover .surface-row:hover,
   .surface-stream:hover .surface-row:hover,
-  .surface-stack:hover .surface-item:hover,
-  .surface-stream:hover .surface-item:hover,
   .surface-stack:hover .surface-row:focus-within,
-  .surface-stream:hover .surface-row:focus-within,
-  .surface-stack:hover .surface-item:focus-within,
-  .surface-stream:hover .surface-item:focus-within {
+  .surface-stream:hover .surface-row:focus-within {
     opacity: 1;
     filter: none;
   }
 }
 
-.surface-row,
-.surface-item {
+.surface-row {
   min-inline-size: 0;
   max-inline-size: 100%;
   border-radius: var(--surface-row-radius);
@@ -1071,32 +1105,13 @@ main > *,
     transform var(--dur-press) var(--ease-enter);
 }
 
-.surface-row[aria-current="page"],
-.surface-item[aria-current="page"] {
+.surface-row[aria-current="page"] {
   background: var(--surface-row-current);
 }
 
-.surface-row[aria-disabled="true"],
-.surface-row.is-disabled,
-.surface-item[aria-disabled="true"],
-.surface-item.is-disabled {
+.surface-row[aria-disabled="true"] {
   background: var(--surface-row-disabled);
   opacity: 0.35;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .surface-row.is-interactive:hover,
-  .surface-row.is-interactive:focus-within,
-  .surface-item.is-interactive:hover,
-  .surface-item.is-interactive:focus-within {
-    background: var(--surface-row-hover);
-  }
-}
-
-.surface-row.is-interactive:active,
-.surface-item.is-interactive:active {
-  background: var(--surface-row-press);
-  transform: scale(0.98);
 }
 
 main :where(article, section, header, footer, nav, ul, ol, dl, figure, form, fieldset, details, blockquote, pre) {
@@ -1280,15 +1295,12 @@ a {
 
   .site-nav-bottom,
   .scroll-veil,
-  .quote-controls,
-  .toast,
+  .quote-dock,
+  .ui-toast,
   .spotify-wrap,
   .loc-map,
   .loc-attrib,
-  .header-theme-toggle,
   .header-palette-trigger,
-  .logo-tip,
-  .share-btn,
   .command-palette,
   .note-progress,
   .code-copy,
@@ -1374,25 +1386,13 @@ a {
   }
 
   .nav-glass,
-  .quote-controls,
   .loc-pill,
   .loc-card,
-  .toast,
-  .cta,
-  .dev-cta,
-  .chip,
-  .chip-all,
-  .dev-chip,
-  .design-link,
-  .text-btn,
-  .mono-toggle,
-  .focus-demo-btn,
-  .tab-pill,
+  .ui-toast,
   .prose .callout,
   .prose .code-figure,
   .prose .diagram,
-  .prose .diagram-overlay-stage,
-  .note-toc {
+  .prose .diagram-overlay-stage {
     forced-color-adjust: none;
     background: Canvas !important;
     color: CanvasText !important;
@@ -1403,7 +1403,6 @@ a {
   }
 
   .nav-selection,
-  .library-selection,
   .prose .callout-icon {
     forced-color-adjust: none;
     background: Highlight !important;

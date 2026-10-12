@@ -2,9 +2,20 @@
 import Page from "../layouts/Page.astro";
 import PageIntro from "../components/PageIntro.astro";
 import Icon from "../components/Icon.astro";
+import { iconMarkup } from "../lib/ui-icons";
 import { ogPath } from "../lib/og-url";
 
 const ogImage = ogPath("developers");
+
+// The copy circle's glyph cell (the markup contract is contact.astro's): a
+// symbol and never a word. Copy, check and alert stack in one grid cell, so
+// the circle keeps its size through all three.
+const copyCells =
+  '<span class="ui-stk ui-stk--icon">' +
+  `<span data-when="idle">${iconMarkup("copy", { size: 14, strokeWidth: 2 })}</span>` +
+  `<span data-when="done">${iconMarkup("check", { size: 14, strokeWidth: 2, className: "ui-draw" })}</span>` +
+  `<span data-when="error">${iconMarkup("alert", { size: 14, strokeWidth: 2 })}</span>` +
+  "</span>";
 
 const sdks = [
   {
@@ -255,102 +266,109 @@ const developersJsonLd = [
 >
   <PageIntro
     title="developers"
-    lede="APIs, OpenAPI specification, Model Context Protocol server, and client SDKs for engineers and AI agents."
+    lede="An OpenAPI spec, an MCP server and four SDKs. Every read endpoint is open: no key, no rate penalty."
   />
 
   <div class="dev-layout" data-enter>
-    <!-- Open Sandbox Introduction -->
-    <section class="dev-editorial" aria-label="Open Access & Sandbox">
-      <p class="editorial-p editorial-lede">
-        All read-only REST and agent interfaces operate without keys, credentials, or rate penalties. Live endpoints serve deterministic data with sub-second latency.
-      </p>
-
-      <div class="quick-cta-row">
-        <a class="dev-cta" href="/openapi.json" target="_blank" rel="noopener noreferrer">
-          <span>OpenAPI Spec</span>
-          <Icon name="arrow-up-right" size={14} class="dev-cta-arrow" />
-        </a>
-        <a class="dev-cta" href="/ai/">
-          <span>AI briefing</span>
-          <Icon name="arrow-right" size={14} class="dev-cta-arrow" />
-        </a>
-        <a class="dev-cta" href="/design/">
-          <span>Design Details</span>
-          <Icon name="arrow-right" size={14} class="dev-cta-arrow" />
-        </a>
-      </div>
-    </section>
+    <div class="quick-cta-row">
+      <a
+        class="ui-cap ui-cap--ink ui-cap--48 ui-cap--trail"
+        data-fx="magnet"
+        href="/openapi.json"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <span class="ui-cap__label">OpenAPI</span>
+        <span class="ui-arw ui-arw--ext">
+          <Icon name="arrow-up-right" size={16} />
+          <Icon name="arrow-up-right" size={16} />
+        </span>
+      </a>
+      <a class="ui-cap ui-cap--glass ui-cap--48 ui-cap--trail" href="/ai/">
+        <span class="ui-cap__label">Agents</span>
+        <span class="ui-arw">
+          <Icon name="arrow-right" size={16} />
+          <Icon name="arrow-right" size={16} />
+        </span>
+      </a>
+      <a class="ui-cap ui-cap--glass ui-cap--48 ui-cap--trail" href="/design/">
+        <span class="ui-cap__label">Design</span>
+        <span class="ui-arw">
+          <Icon name="arrow-right" size={16} />
+          <Icon name="arrow-right" size={16} />
+        </span>
+      </a>
+    </div>
 
     <hr class="page-rule" data-enter />
 
     <!-- Official Multi-Language SDKs -->
     <section class="dev-section" aria-label="Official Multi-Language SDKs">
       <div class="section-heading-split">
-        <h2 class="section-heading">Official SDKs</h2>
+        <h2 class="section-heading">SDKs</h2>
       </div>
 
       <div class="sdk-stream" data-sdk-widget>
-        <div class="sdk-tab-rail" role="tablist" aria-label="SDK Languages">
-          <div class="sdk-nav-pills">
-            {
-              sdks.map((sdk, idx) => (
+        <div class="ui-card code-card">
+          <div class="code-head">
+            <div class="ui-seg ui-seg--sm ui-seg--bare">
+              <div class="ui-seg__track" role="tablist" aria-label="Language">
+                <span class="ui-seg__ind" aria-hidden="true"></span>
+                {
+                  sdks.map((sdk, idx) => (
+                    <button
+                      type="button"
+                      role="tab"
+                      class="ui-seg__item"
+                      id={`tab-${sdk.id}`}
+                      data-value={sdk.id}
+                      data-tab-target={sdk.id}
+                      aria-selected={idx === 0 ? "true" : "false"}
+                      aria-controls={`panel-${sdk.id}`}
+                      tabindex={idx === 0 ? 0 : -1}
+                    >
+                      <span class="ui-cap__label">{sdk.name}</span>
+                    </button>
+                  ))
+                }
+              </div>
+            </div>
+          </div>
+
+          {
+            sdks.map((sdk, idx) => (
+              <div
+                id={`panel-${sdk.id}`}
+                role="tabpanel"
+                aria-labelledby={`tab-${sdk.id}`}
+                class="sdk-body-panel"
+                hidden={idx !== 0}
+                data-ecosystem={sdk.ecosystem}
+              >
                 <button
                   type="button"
-                  role="tab"
-                  class={`sdk-nav-btn ${idx === 0 ? "is-active" : ""}`}
-                  id={`tab-${sdk.id}`}
-                  aria-selected={idx === 0 ? "true" : "false"}
-                  aria-controls={`panel-${sdk.id}`}
-                  data-tab-target={sdk.id}
+                  class="inst"
+                  data-copy={sdk.install}
+                  data-state="idle"
+                  aria-label={`Copy ${sdk.name} install command`}
                 >
-                  {sdk.name}
-                </button>
-              ))
-            }
-          </div>
-        </div>
-
-        {
-          sdks.map((sdk, idx) => (
-            <div
-              id={`panel-${sdk.id}`}
-              role="tabpanel"
-              aria-labelledby={`tab-${sdk.id}`}
-              class={`sdk-body-panel ${idx === 0 ? "is-active" : ""}`}
-              data-panel={sdk.id}
-              data-ecosystem={sdk.ecosystem}
-            >
-              <div class="code-card">
-                <div class="install-bar">
                   <span class="prompt-glyph" aria-hidden="true">$</span>
                   <code class="install-text mono">{sdk.install}</code>
-                  <button
-                    type="button"
-                    class="action-btn"
-                    data-copy={sdk.install}
-                    aria-label={`Copy ${sdk.name} install command`}
-                    title="Copy install command"
-                  >
-                    <Icon name="copy" size={13} strokeWidth={1.8} />
-                  </button>
-                </div>
+                  <span
+                    class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
+                    data-state="idle"
+                    aria-hidden="true"
+                    set:html={copyCells}
+                  />
+                </button>
 
                 <div class="code-view">
                   <pre><code class="mono" set:html={sdk.highlightedCode} /></pre>
-                  <button
-                    type="button"
-                    class="action-btn code-copy-anchor"
-                    data-copy={sdk.rawCode}
-                    aria-label={`Copy ${sdk.name} code example`}
-                    title="Copy code"
-                  >
-                    <Icon name="copy" size={13} strokeWidth={1.8} />
-                  </button>
                 </div>
               </div>
-            </div>
-          ))
-        }
+            ))
+          }
+        </div>
       </div>
     </section>
 
@@ -358,7 +376,7 @@ const developersJsonLd = [
 
     <!-- Official CLI Tool -->
     <section class="dev-section" aria-label="Official CLI Tool">
-      <h2 class="section-heading">CLI Tool</h2>
+      <h2 class="section-heading">CLI</h2>
       <p class="editorial-p p-grey">
         Inspect profile facts, technical notes, and search index directly from your terminal:
       </p>
@@ -368,21 +386,20 @@ const developersJsonLd = [
           cliTools.map((cli) => (
             <div class="cli-block">
               <div class="cli-header-row">
-                <span class="cli-badge">{cli.runtime}</span>
+                <span class="ui-badge">{cli.runtime}</span>
                 <span class="cli-desc p-grey">{cli.description}</span>
               </div>
-              <div class="code-card">
-                <div class="code-view">
+              <div class="ui-card code-card">
+                <div class="code-view code-view--copy">
                   <pre><code class="mono" set:html={cli.highlightedSnippet} /></pre>
                   <button
                     type="button"
-                    class="action-btn code-copy-anchor"
+                    class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon code-copy"
                     data-copy={cli.rawSnippet}
+                    data-state="idle"
                     aria-label={`Copy ${cli.runtime} commands`}
-                    title="Copy commands"
-                  >
-                    <Icon name="copy" size={13} strokeWidth={1.8} />
-                  </button>
+                    set:html={copyCells}
+                  />
                 </div>
               </div>
             </div>
@@ -396,68 +413,66 @@ const developersJsonLd = [
     <!-- REST v1 Endpoints -->
     <section class="dev-section" aria-label="REST v1 Endpoints">
       <div class="section-heading-split">
-        <h2 class="section-heading">REST Endpoints</h2>
+        <h2 class="section-heading">Endpoints</h2>
       </div>
 
-      <div class="endpoint-stream surface-stream">
+      <ul class="endpoint-stream" role="list">
         {
           endpoints.map((ep) => (
-            <article class="endpoint-row surface-row">
+            <li class="ui-row ui-row--static endpoint-row">
               <div class="endpoint-main">
                 <div class="endpoint-badge-path">
-                  <span class="http-badge">{ep.method}</span>
+                  <span class="ui-badge ui-badge--mono">{ep.method}</span>
                   <span class="endpoint-route mono">{ep.path}</span>
                 </div>
-                <p class="endpoint-summary p-grey">{ep.description}</p>
+                <p class="endpoint-summary">{ep.description}</p>
               </div>
               <button
                 type="button"
-                class="action-btn"
+                class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
                 data-copy={ep.example}
+                data-state="idle"
                 aria-label={`Copy curl command for ${ep.path}`}
-                title="Copy curl command"
-              >
-                <Icon name="copy" size={13} strokeWidth={1.8} />
-              </button>
-            </article>
+                set:html={copyCells}
+              />
+            </li>
           ))
         }
-      </div>
+      </ul>
     </section>
 
     <hr class="page-rule" data-enter />
 
     <!-- Protocol Interfaces -->
     <section class="dev-section" aria-label="Protocol Interfaces">
-      <h2 class="section-heading">Protocol Interfaces</h2>
-      <div class="proto-stream surface-stream">
+      <h2 class="section-heading">Protocols</h2>
+      <ul class="proto-stream" role="list">
         {
           protocols.map((proto) => (
-            <article class="proto-row surface-row">
+            <li class="ui-row ui-row--static proto-row">
               <div class="proto-header">
                 <div class="proto-title-group">
                   <h3 class="proto-title">{proto.name}</h3>
-                  <a class="proto-path mono link" href={proto.path}>{proto.path}</a>
+                  <a class="ui-link mono proto-path" href={proto.path}>{proto.path}</a>
                 </div>
-                <span class="spec-tag">{proto.spec}</span>
+                <span class="ui-badge">{proto.spec}</span>
               </div>
-              <p class="proto-desc p-grey">{proto.description}</p>
+              <p class="proto-desc">{proto.description}</p>
               <div class="cmd-bar">
                 <code class="cmd-code mono" set:html={proto.highlightedTest} />
                 <button
                   type="button"
-                  class="action-btn"
+                  class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
                   data-copy={proto.testCommand}
+                  data-state="idle"
                   aria-label={`Copy command for ${proto.name}`}
-                  title="Copy command"
-                >
-                  <Icon name="copy" size={13} strokeWidth={1.8} />
-                </button>
+                  set:html={copyCells}
+                />
               </div>
-            </article>
+            </li>
           ))
         }
-      </div>
+      </ul>
     </section>
 
     <hr class="page-rule" data-enter />
@@ -468,15 +483,15 @@ const developersJsonLd = [
       <p class="editorial-p p-grey">
         API responses carry a version header:
       </p>
-      <div class="spec-stream surface-stream">
+      <div class="spec-stream">
         {
           responseHeaders.map((item) => (
-            <div class="spec-row-item surface-row">
+            <div class="ui-row ui-row--static spec-row-item">
               <div class="spec-label-group">
                 <span class="spec-name mono">{item.header}</span>
-                <span class="spec-value-tag">{item.tag}</span>
+                <span class="ui-badge ui-badge--mono">{item.tag}</span>
               </div>
-              <span class="spec-desc p-grey">{item.desc}</span>
+              <span class="spec-desc">{item.desc}</span>
             </div>
           ))
         }
@@ -487,44 +502,45 @@ const developersJsonLd = [
 
     <!-- API Versioning & Errors -->
     <section class="dev-section" id="errors" aria-label="Versioning & Error Model">
-      <h2 class="section-heading">Versioning & Errors (RFC 9457)</h2>
+      <h2 class="section-heading">Errors&nbsp;<span class="ui-badge ui-badge--mono">RFC 9457</span></h2>
       <p class="editorial-p p-grey">
         Explicit path versioning (<code>/api/v1</code>) paired with RFC 9457 Problem Details for typed error responses:
       </p>
-      <div class="code-card">
-        <div class="code-view">
+      <div class="ui-card code-card">
+        <div class="code-view code-view--copy">
           <pre><code class="mono" set:html={highlightedErrorPayload} /></pre>
           <button
             type="button"
-            class="action-btn code-copy-anchor"
+            class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon code-copy"
             data-copy={rawErrorPayload}
+            data-state="idle"
             aria-label="Copy error JSON example"
-            title="Copy JSON"
-          >
-            <Icon name="copy" size={13} strokeWidth={1.8} />
-          </button>
+            set:html={copyCells}
+          />
         </div>
       </div>
     </section>
-
 
     <hr class="page-rule" data-enter />
 
     <!-- Machine Discovery Index -->
     <section class="dev-section" aria-label="Machine Discovery Index">
-      <h2 class="section-heading">Discovery Index</h2>
+      <h2 class="section-heading">Discovery</h2>
       <div class="discovery-groups">
         {
           discoveryGroups.map((group) => (
             <div class="discovery-group-block">
               <h3 class="discovery-group-title">{group.title}</h3>
-              <ul class="discovery-list surface-stream">
+              <ul class="discovery-list surface-stack" role="list">
                 {
                   group.items.map((item) => (
-                    <li class="discovery-item surface-row">
-                      <a class="discovery-link" href={item.path} data-astro-prefetch="false">
-                        <span class="discovery-path mono">{item.path}</span>
-                        <span class="discovery-desc p-grey">{item.desc}</span>
+                    <li class="discovery-item">
+                      <a class="ui-row ui-row--multiline" data-fx="spot" href={item.path} data-astro-prefetch="false">
+                        <span class="ui-row__title">
+                          <span class="discovery-path mono">{item.path}</span>
+                          <span class="ui-row__sub">{item.desc}</span>
+                        </span>
+                        <span class="ui-row__glyph" aria-hidden="true"><Icon name="arrow-right" size={16} /></span>
                       </a>
                     </li>
                   ))
@@ -539,10 +555,10 @@ const developersJsonLd = [
 </Page>
 
 <script>
-  import { showToast } from "../scripts/toast";
-  import { playAccent, isSoundEnabled } from "../scripts/sound";
-  import { onPageCleanup, pageSignal } from "../scripts/lifecycle";
-  import { copyToClipboard } from "../scripts/clipboard";
+  import "../scripts/clipboard";
+  import { playAccent } from "../scripts/sound";
+  import { pageSignal } from "../scripts/lifecycle";
+  import { initSegmented } from "../scripts/segmented";
 
   let initializedSignal: AbortSignal | undefined;
 
@@ -552,82 +568,12 @@ const developersJsonLd = [
     const signal = pageSignal();
     if (initializedSignal === signal) return;
     initializedSignal = signal;
-    const feedbackTimers = new Set<number>();
-    onPageCleanup(() => {
-      feedbackTimers.forEach((timer) => window.clearTimeout(timer));
-      feedbackTimers.clear();
-    }, signal);
 
-    // 1. SDK Tab Switcher
-    if (widget) {
-      const tabs = widget.querySelectorAll<HTMLButtonElement>(".sdk-nav-btn");
-      const panels = widget.querySelectorAll<HTMLElement>(".sdk-body-panel");
-      const packageLabel = widget.querySelector<HTMLElement>("#sdk-package-label");
-
-      tabs.forEach((tab) => {
-        tab.addEventListener(
-          "click",
-          () => {
-            if (tab.getAttribute("aria-selected") === "true") return;
-            const targetId = tab.dataset.tabTarget;
-            if (!targetId) return;
-
-            tabs.forEach((t) => {
-              const active = t === tab;
-              t.classList.toggle("is-active", active);
-              t.setAttribute("aria-selected", active ? "true" : "false");
-            });
-
-            panels.forEach((p) => {
-              const active = p.dataset.panel === targetId;
-              p.classList.toggle("is-active", active);
-              if (active && packageLabel && p.dataset.ecosystem) {
-                packageLabel.textContent = p.dataset.ecosystem;
-              }
-            });
-
-            if (isSoundEnabled()) playAccent("tab");
-          },
-          { signal },
-        );
-      });
-    }
-
-    // 2. Clipboard copy buttons with tactile feedback
-    const copyButtons = widget.closest("main")?.querySelectorAll<HTMLButtonElement>(".action-btn");
-    copyButtons?.forEach((btn) => {
-      btn.addEventListener(
-        "click",
-        async () => {
-          const text = btn.dataset.copy;
-          if (!text) return;
-
-          const success = await copyToClipboard(text, signal);
-          if (signal.aborted || !btn.isConnected) return;
-          if (success) {
-            btn.classList.add("is-done");
-            if (isSoundEnabled()) playAccent("copy");
-            showToast({
-              message: "Copied to clipboard",
-              anchor: btn,
-              duration: 1600,
-            });
-            const timer = window.setTimeout(() => {
-              feedbackTimers.delete(timer);
-              if (!signal.aborted && btn.isConnected) btn.classList.remove("is-done");
-            }, 1400);
-            feedbackTimers.add(timer);
-          } else {
-            showToast({
-              message: "Copy failed",
-              anchor: btn,
-              duration: 2200,
-            });
-          }
-        },
-        { signal },
-      );
-    });
+    // SDK tabs: segmented.ts owns selection, roving focus and the panels
+    // (aria-controls). Each panel holds its own install row, so its Copy
+    // follows the open tab with no script.
+    const [tabs] = initSegmented(widget, { signal });
+    tabs?.element.addEventListener("seg:change", () => playAccent("tab"), { signal });
   }
 
   initDeveloperPage();
@@ -643,10 +589,6 @@ const developersJsonLd = [
     max-inline-size: 100%;
     min-inline-size: 0;
     box-sizing: border-box;
-  }
-
-  .dev-editorial {
-    margin-top: 0;
   }
 
   .dev-section {
@@ -668,14 +610,6 @@ const developersJsonLd = [
     color: var(--muted);
     text-wrap: pretty;
     margin: 0 0 1rem;
-  }
-
-  .editorial-lede {
-    color: var(--ink);
-    font-size: var(--text-md);
-    line-height: 1.62;
-    text-wrap: pretty;
-    margin: 0 0 1.25rem;
   }
 
   .section-heading {
@@ -703,27 +637,9 @@ const developersJsonLd = [
 
   @media (hover: hover) and (pointer: fine) {
     .editorial-p:hover,
-    .dev-section:hover .editorial-p.p-grey,
-    .endpoint-row:hover .endpoint-summary,
-    .proto-row:hover .proto-desc,
-    .spec-row-item:hover .spec-desc {
+    .dev-section:hover .editorial-p.p-grey {
       color: color-mix(in oklch, var(--ink) 85%, var(--muted));
     }
-  }
-
-  .link {
-    color: var(--ink);
-    font-weight: var(--font-normal);
-    text-decoration-line: underline;
-    text-decoration-thickness: 0.5px;
-    text-decoration-color: transparent;
-    text-underline-offset: 2px;
-    transition: text-decoration-color var(--t-color);
-  }
-
-  .link:hover,
-  .link:focus-visible {
-    text-decoration-color: currentColor;
   }
 
   code,
@@ -741,192 +657,86 @@ const developersJsonLd = [
   }
 
   /* ------------------------------------------------------------------ */
-  /*  Quick Action Row                                                  */
+  /*  Header CTAs (the capsules are controls.css; this is the row)      */
   /* ------------------------------------------------------------------ */
   .quick-cta-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.75rem;
-    margin-top: 1.5rem;
-  }
-
-  .dev-cta {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: var(--control-hit);
-    padding: var(--step-2) calc(var(--step) * 5);
-    border-radius: var(--r-pill);
-    background: var(--canvas);
-    border: 1px solid var(--chrome-surface-border);
-    box-shadow: var(--chrome-surface-shadow);
-    color: var(--ink);
-    font-size: var(--text-ui);
-    font-weight: 500;
-    text-decoration: none;
-    overflow: hidden;
-    transition:
-      transform var(--dur-tint) var(--ease-enter),
-      box-shadow var(--t-move),
-      background-color var(--t-color),
-      border-color var(--t-color),
-      color var(--t-color);
-  }
-
-  .dev-cta :global(.dev-cta-arrow) {
-    display: inline-flex;
-    align-items: center;
-    max-width: 0;
-    opacity: 0;
-    margin-inline-start: 0;
-    transform: translateX(-4px) scale(0.85);
-    color: var(--muted);
-    overflow: hidden;
-    pointer-events: none;
-    transition:
-      max-width var(--dur-tint) var(--ease-enter),
-      opacity var(--dur-tint) var(--ease-enter),
-      margin var(--dur-tint) var(--ease-enter),
-      transform var(--dur-tint) var(--ease-enter),
-      color var(--dur-press) var(--ease-enter);
-  }
-
-  .dev-cta:hover,
-  .dev-cta:focus-visible {
-    background: var(--canvas);
-    border-color: color-mix(in oklch, var(--ink) 25%, transparent);
-    text-decoration: none;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .dev-cta:hover,
-    .dev-cta:focus-visible {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-2);
-    }
-
-    .dev-cta:hover :global(.dev-cta-arrow),
-    .dev-cta:focus-visible :global(.dev-cta-arrow) {
-      max-width: 1.25rem;
-      opacity: 1;
-      margin-inline-start: var(--step-2);
-      color: var(--ink);
-      transform: translateX(0) scale(1);
-    }
-  }
-
-  .dev-cta:active {
-    transform: scale(0.96);
-    transition: transform var(--dur-press) var(--ease-enter);
+    gap: var(--step-2);
+    margin-top: var(--step-2);
   }
 
   /* ------------------------------------------------------------------ */
-  /*  Code Card & SDK Tab Rail                                          */
+  /*  Code card: a glass surface whose header is the SDK track          */
   /* ------------------------------------------------------------------ */
   .sdk-stream {
     margin-top: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
   }
 
-  .sdk-tab-rail {
+  /* .ui-card is the glass; this is its radius (--code-r) and clip. The 4px
+     header inset makes the 32px segments concentric with the 20px card. */
+  .code-card {
+    border-radius: var(--code-r);
+    overflow: hidden;
+  }
+
+  .code-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--step-2);
-    padding: 0.15rem 0;
-  }
-
-  .sdk-nav-pills {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--step-1);
-    background: color-mix(in oklch, var(--ink) 4.5%, transparent);
-    border: 1px solid var(--chrome-surface-border);
-    box-shadow: inset 0 1px 2px color-mix(in oklch, var(--ink) 4%, transparent);
     padding: var(--step-1);
-    border-radius: var(--r-pill);
   }
 
-  .sdk-nav-btn {
-    padding: var(--step-1) var(--step-4);
-    border: 1px solid transparent;
-    border-radius: var(--r-pill);
-    background: transparent;
-    color: var(--muted);
-    font-family: inherit;
-    font-size: var(--text-xs);
-    font-weight: var(--font-medium);
-    cursor: pointer;
-    transition:
-      background-color var(--t-color),
-      border-color var(--t-color),
-      color var(--t-color),
-      box-shadow var(--t-color),
-      transform var(--dur-press) var(--ease-snap);
-  }
-
-  .sdk-nav-btn:hover {
-    color: var(--ink);
-  }
-
-  .sdk-nav-btn.is-active {
-    background: var(--canvas);
-    color: var(--ink);
-    font-weight: var(--font-semibold);
-    border-color: color-mix(in oklch, var(--ink) 12%, transparent);
-    box-shadow:
-      0 1px 3px color-mix(in oklch, var(--ink) 9%, transparent),
-      0 1px 2px color-mix(in oklch, var(--ink) 5%, transparent);
-  }
-
-  .sdk-nav-btn:active {
-    transform: scale(0.95);
-  }
-
-  .sdk-header-label {
-    font-size: var(--text-xs);
-    color: var(--ghost);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .sdk-body-panel {
-    display: none;
-  }
-
-  .sdk-body-panel.is-active {
-    display: block;
-  }
-
-  .code-card {
-    border-radius: var(--r-4);
-    background: var(--chrome-surface-bg);
-    border: 1px solid var(--chrome-surface-border);
-    box-shadow: var(--chrome-surface-shadow);
-    overflow: hidden;
-    transition: border-color var(--t-color), box-shadow var(--t-color);
-  }
-
-  .install-bar {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: var(--step-3) calc(var(--step) * 5);
-    background: var(--chrome-surface-bg);
-    border-bottom: 1px solid var(--chrome-surface-border);
+  /* lets the track scroll inside itself on phones instead of widening the card */
+  .code-head > :global(.ui-seg) {
     min-inline-size: 0;
   }
 
+  /* The install row: one button, full bleed between two hairlines. Its
+     capsule is the affordance and takes the press and hover for the row. */
+  .inst {
+    display: flex;
+    align-items: center;
+    gap: var(--step-3);
+    inline-size: 100%;
+    min-block-size: calc(var(--step) * 14);
+    margin: 0;
+    padding-block: var(--step-2);
+    padding-inline: calc(var(--step) * 5) var(--step-3);
+    border: 0;
+    border-block: 1px solid var(--edge-soft);
+    border-radius: 0;
+    background-color: var(--wash);
+    color: var(--ink);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: background-color var(--t-color);
+  }
+
+  /* inside the clipped card; offset 0 would sit on the hairlines */
+  .inst:focus-visible {
+    outline-offset: calc(var(--step-1) * -1);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .inst:hover {
+      background-color: var(--wash-press);
+    }
+  }
+
+  .inst:active {
+    background-color: var(--link-wash-press);
+  }
+
   .prompt-glyph {
+    flex: none;
     color: var(--ghost);
-    font-family: "JetBrains Mono", monospace;
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
     font-size: var(--text-xs);
-    font-weight: var(--font-bold);
+    font-weight: var(--font-normal);
     user-select: none;
   }
 
@@ -936,7 +746,6 @@ const developersJsonLd = [
     color: var(--ink);
     font-size: var(--text-sm);
     white-space: pre-wrap;
-    word-break: break-all;
     overflow-wrap: anywhere;
   }
 
@@ -945,15 +754,13 @@ const developersJsonLd = [
   /* ------------------------------------------------------------------ */
   .code-view {
     position: relative;
-    background: var(--chrome-surface-bg);
-    overflow: hidden;
     max-inline-size: 100%;
     min-inline-size: 0;
   }
 
   .code-view pre {
     margin: 0;
-    padding: calc(var(--step) * 5) calc(var(--step) * 5);
+    padding: calc(var(--step) * 5);
     font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
     font-size: 0.8125rem;
     line-height: 1.68;
@@ -966,57 +773,21 @@ const developersJsonLd = [
     min-inline-size: 0;
   }
 
-  .code-copy-anchor {
-    position: absolute;
-    top: 0.75rem;
-    inset-inline-end: 0.75rem;
-    opacity: 0;
-    transition: opacity var(--t-color);
+  /* A card with no header carries its Copy beside the code, not over it, so
+     a long line never runs under the capsule. */
+  .code-view--copy {
+    display: flex;
+    align-items: flex-start;
   }
 
-  .code-view:hover .code-copy-anchor,
-  .code-view:focus-within .code-copy-anchor {
-    opacity: 1;
+  .code-view--copy pre {
+    flex: 1 1 auto;
+    padding-inline-end: var(--step-2);
   }
 
-  @media (pointer: coarse) {
-    .code-copy-anchor {
-      opacity: 0.85;
-    }
-  }
-
-  .action-btn {
-    flex-shrink: 0;
-    display: inline-grid;
-    place-items: center;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    border: 1px solid var(--chrome-surface-border);
-    border-radius: 50%;
-    background: var(--canvas);
-    box-shadow: var(--chrome-surface-shadow);
-    color: var(--muted);
-    cursor: pointer;
-    transition:
-      color var(--t-color),
-      background-color var(--t-color),
-      border-color var(--t-color),
-      transform var(--dur-press) var(--ease-snap);
-  }
-
-  .action-btn:hover {
-    color: var(--ink);
-    background: var(--canvas);
-    border-color: color-mix(in oklch, var(--ink) 25%, transparent);
-  }
-
-  .action-btn:active {
-    transform: scale(0.92);
-  }
-
-  .action-btn.is-done {
-    color: var(--acc-green);
+  .code-copy {
+    margin-block-start: var(--step-4);
+    margin-inline-end: var(--step-3);
   }
 
   /* ------------------------------------------------------------------ */
@@ -1038,15 +809,9 @@ const developersJsonLd = [
 
   .cli-header-row {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     flex-wrap: wrap;
     gap: var(--step-2);
-  }
-
-  .cli-badge {
-    font-size: var(--text-sm);
-    font-weight: var(--font-semibold);
-    color: var(--ink);
   }
 
   .cli-desc {
@@ -1054,34 +819,26 @@ const developersJsonLd = [
   }
 
   /* ------------------------------------------------------------------ */
-  /*  Endpoints Stream                                                  */
+  /*  Static rows: endpoints, protocols and headers are not links, so    */
+  /*  they carry the row geometry and none of its hover. Layout only.   */
   /* ------------------------------------------------------------------ */
-  .endpoint-stream {
+  .endpoint-stream,
+  .proto-stream,
+  .spec-stream {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
-    margin-top: 0.75rem;
+    gap: var(--step-1);
+    margin: var(--step-3) 0 0;
+    padding: 0;
+    list-style: none;
     min-inline-size: 0;
     max-inline-size: 100%;
   }
 
   .endpoint-row {
-    display: flex;
-    align-items: center;
     justify-content: space-between;
     gap: var(--step-4);
-    padding: 0.75rem 1rem;
-    margin-inline: -1rem;
-    border-radius: var(--r-3);
     min-inline-size: 0;
-    transition: background-color var(--t-color);
-  }
-
-  .endpoint-row:hover,
-  .proto-row:hover,
-  .spec-row-item:hover,
-  .discovery-link:hover {
-    background: var(--surface-row-hover);
   }
 
   .endpoint-main {
@@ -1098,24 +855,10 @@ const developersJsonLd = [
     gap: var(--step-2);
   }
 
-  .http-badge {
-    font-size: var(--text-xs);
-    font-weight: 600;
-    color: var(--muted);
-    background: var(--canvas);
-    border: 1px solid var(--chrome-surface-border);
-    padding: 0.15em 0.55em;
-    border-radius: var(--r-pill);
-    letter-spacing: 0.04em;
-    font-family: "JetBrains Mono", monospace;
-    line-height: 1.4;
-  }
-
   .endpoint-route {
     font-size: var(--text-sm);
     font-weight: var(--font-medium);
     color: var(--ink);
-    word-break: break-all;
     overflow-wrap: anywhere;
   }
 
@@ -1126,26 +869,11 @@ const developersJsonLd = [
     line-height: var(--leading-normal);
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  Protocol Stream                                                   */
-  /* ------------------------------------------------------------------ */
-  .proto-stream {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-top: 0.75rem;
-    min-inline-size: 0;
-  }
-
   .proto-row {
-    display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    padding: var(--step-3) var(--step-4);
-    margin-inline: -1rem;
-    border-radius: var(--r-3);
+    align-items: stretch;
+    gap: var(--step-2);
     min-inline-size: 0;
-    transition: background-color var(--t-color);
   }
 
   .proto-header {
@@ -1159,6 +887,7 @@ const developersJsonLd = [
   .proto-title-group {
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     gap: 0.15rem;
   }
 
@@ -1172,19 +901,6 @@ const developersJsonLd = [
 
   .proto-path {
     font-size: var(--text-xs);
-    color: var(--muted);
-    text-decoration: none;
-  }
-
-  .spec-tag {
-    font-size: var(--text-xs);
-    font-weight: var(--font-medium);
-    color: var(--faint);
-    background: var(--canvas);
-    border: 1px solid var(--chrome-surface-border);
-    padding: 0.15em 0.6em;
-    border-radius: var(--r-pill);
-    white-space: nowrap;
   }
 
   .proto-desc {
@@ -1195,16 +911,17 @@ const developersJsonLd = [
     text-wrap: pretty;
   }
 
+  /* The command is a code well with its Copy beside it. Rounded rectangle,
+     because it is multi-line; the capsule is concentric enough at 8px. */
   .cmd-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--step-2);
-    padding: var(--step-2) var(--step-3);
+    padding: var(--step-2) var(--step-2) var(--step-2) var(--step-3);
     border-radius: var(--r-3);
     background: var(--canvas);
-    border: 1px solid var(--chrome-surface-border);
-    box-shadow: var(--chrome-surface-shadow);
+    border: 1px solid var(--edge-soft);
     min-inline-size: 0;
     max-inline-size: 100%;
     box-sizing: border-box;
@@ -1217,37 +934,20 @@ const developersJsonLd = [
     font-size: var(--text-xs);
     color: var(--ink);
     white-space: pre-wrap;
-    word-break: break-all;
     overflow-wrap: anywhere;
-  }
-
-  /* ------------------------------------------------------------------ */
-  /*  Specification Stream                                              */
-  /* ------------------------------------------------------------------ */
-  .spec-stream {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    margin-top: 0.75rem;
-    min-inline-size: 0;
-    max-inline-size: 100%;
   }
 
   .spec-row-item {
     display: grid;
     grid-template-columns: 16rem minmax(0, 1fr);
     align-items: baseline;
-    gap: 0.5rem 1.5rem;
-    padding: var(--step-3) var(--step-4);
-    margin-inline: -1rem;
-    border-radius: var(--r-3);
+    gap: var(--step-2) calc(var(--step) * 6);
     min-inline-size: 0;
-    transition: background-color var(--t-color);
   }
 
   .spec-label-group {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     flex-wrap: wrap;
     gap: var(--step-2);
   }
@@ -1258,15 +958,6 @@ const developersJsonLd = [
     font-weight: var(--font-medium);
   }
 
-  .spec-value-tag {
-    font-size: var(--text-xs);
-    color: var(--faint);
-    background: var(--canvas);
-    border: 1px solid var(--chrome-surface-border);
-    padding: 0.1em 0.5em;
-    border-radius: var(--r-pill);
-  }
-
   .spec-desc {
     margin: 0;
     font-size: var(--text-sm);
@@ -1275,7 +966,7 @@ const developersJsonLd = [
   }
 
   /* ------------------------------------------------------------------ */
-  /*  Discovery Groups & Clean Catalog Layout                           */
+  /*  Discovery Groups                                                  */
   /* ------------------------------------------------------------------ */
   .discovery-groups {
     display: flex;
@@ -1300,12 +991,6 @@ const developersJsonLd = [
   }
 
   .discovery-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
     min-inline-size: 0;
   }
 
@@ -1314,32 +999,11 @@ const developersJsonLd = [
     min-inline-size: 0;
   }
 
-  .discovery-link {
-    display: grid;
-    grid-template-columns: 16rem minmax(0, 1fr);
-    align-items: baseline;
-    gap: var(--step-2) var(--step-5);
-    padding: var(--step-3) var(--step-4);
-    margin-inline: -1rem;
-    border-radius: var(--r-3);
-    background: transparent;
-    color: inherit;
-    text-decoration: none;
-    transition: background-color var(--t-color);
-  }
-
   .discovery-path {
     color: var(--ink);
     font-size: var(--text-sm);
     font-weight: var(--font-medium);
     overflow-wrap: anywhere;
-  }
-
-  .discovery-desc {
-    font-size: var(--text-xs);
-    color: var(--ghost);
-    line-height: var(--leading-normal);
-    transition: color var(--t-color);
   }
 
   /* ------------------------------------------------------------------ */
@@ -1355,66 +1019,27 @@ const developersJsonLd = [
       text-wrap: pretty;
     }
 
-    .spec-row-item,
-    .discovery-link {
+    .spec-row-item {
       grid-template-columns: 1fr;
-      gap: 0.25rem;
-      border-radius: var(--r-3);
-      padding: var(--step-3) var(--step-3);
-      margin-inline: calc(var(--step-3) * -1);
+      gap: var(--step-1);
     }
 
     .endpoint-row {
       align-items: flex-start;
       gap: var(--step-2);
-      border-radius: var(--r-3);
-      padding: var(--step-3) var(--step-3);
-      margin-inline: calc(var(--step-3) * -1);
     }
 
-    .proto-row {
-      padding: var(--step-3) var(--step-3);
-      margin-inline: calc(var(--step-3) * -1);
+    /* The track scrolls inside itself under a 16px edge fade. A bare track
+       has no padding of its own, so the first and last tab would rest under
+       the fade; this keeps them clear of it. */
+    .code-head :global(.ui-seg--bare > .ui-seg__track) {
+      padding-inline: var(--step-4);
     }
 
-    .proto-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: var(--step-2);
-    }
-
-    .sdk-tab-rail {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: var(--step-2);
-    }
-
-    .sdk-header-label {
-      max-inline-size: 100%;
-    }
-
-    .quick-cta-row {
-      flex-direction: column;
-      align-items: stretch;
-      gap: var(--step-2);
-    }
-
-    .dev-cta {
-      justify-content: center;
-      width: 100%;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .dev-cta:hover,
-    .dev-cta:focus-visible,
-    .dev-cta:active,
-    .sdk-nav-btn:active,
-    .action-btn:active,
-    .dev-cta :global(.dev-cta-arrow),
-    .dev-cta:hover :global(.dev-cta-arrow),
-    .dev-cta:focus-visible :global(.dev-cta-arrow) {
-      transform: none;
+    /* The header's inset grows from 4px to 6px so the tabs' 44px hit area
+       stays inside the clipped card. */
+    .code-head {
+      padding: calc((var(--hit) - var(--cap-32)) / 2);
     }
   }
 </style>

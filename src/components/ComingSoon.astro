@@ -1,6 +1,5 @@
 ---
 import PageIntro from "./PageIntro.astro";
-import StatusPill from "./StatusPill.astro";
 
 interface Props {
   title: string;
@@ -11,5 +10,15 @@ const { title, description } = Astro.props;
 ---
 
 <PageIntro title={title.toLowerCase()} lede={description}>
-  <StatusPill label="Coming soon" />
+  <p class="coming-soon">Coming soon.</p>
 </PageIntro>
+
+<style>
+  /* Quiet body text hugging the title; the lede keeps the intro's own gap. */
+  .coming-soon {
+    margin: calc(var(--step-2) * -1) 0 0;
+    color: var(--muted);
+    font-size: var(--text-base);
+    line-height: 1.6;
+  }
+</style>

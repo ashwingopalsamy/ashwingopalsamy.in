@@ -10,6 +10,10 @@
 import { invalidateScrollMetrics, onScrollFrame } from "./scroll-scheduler";
 
 const MIN_THUMB = 32;
+/* A narrow window (a phone-width desktop window) gets a short indicator rather
+   than a proportional bar, which on a short page would span most of the card. */
+const COMPACT_THUMB = 40;
+const compact = matchMedia("(max-width: 38rem)");
 const FADE_DELAY = 800;
 
 if (CSS.supports("animation-timeline: scroll()") && matchMedia("(hover: hover) and (pointer: fine)").matches) {
@@ -70,7 +74,10 @@ if (CSS.supports("animation-timeline: scroll()") && matchMedia("(hover: hover) a
       view = viewport;
       doc = docHeight;
       if (!scrollable) return;
-      const size = Math.max(MIN_THUMB, Math.round((track * viewport) / docHeight));
+      const natural = Math.round((track * viewport) / docHeight);
+      const size = compact.matches
+        ? Math.min(COMPACT_THUMB, Math.max(MIN_THUMB, natural))
+        : Math.max(MIN_THUMB, natural);
       travel = Math.max(0, track - size);
       bar.style.setProperty("--thumb-size", `${size}px`);
       bar.style.setProperty("--thumb-travel", `${travel}px`);
@@ -83,6 +90,12 @@ if (CSS.supports("animation-timeline: scroll()") && matchMedia("(hover: hover) a
 
   document.addEventListener("astro:page-load", () => {
     bind();
+    invalidateScrollMetrics();
+  });
+
+  // Crossing the narrow breakpoint changes the size with no height change.
+  compact.addEventListener("change", () => {
+    view = -1;
     invalidateScrollMetrics();
   });
 }
