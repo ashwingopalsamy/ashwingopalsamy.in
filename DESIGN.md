@@ -315,7 +315,7 @@ The five semantic colors are Green (available, success), Amber (warning, winding
 
 Light and dark themes receive equal attention. A mechanical inversion is not enough if secondary text, chrome, shadows, or focus become weaker.
 
-Controls draw on a derived layer in `global.css`: `--glass-*` for in-flow glass, `--ink-fill` for the one primary per view, `--wash` and `--wash-press` behind hovered and pressed rows, `--edge-soft`, `--edge` and `--edge-strong` for borders, `--ok-*` and `--err-*` for outcomes, and an inverted `--toast-*` pair. Each is written in all three theme blocks (light, dark, and the no-JS dark mirror); nothing else mixes a raw ink tint. State is never colour alone: a copy control is a symbol and never a word, so its glyph becomes a check that draws itself or an alert, soon shows a dot and a word, and selection moves the ink.
+Controls draw on a derived layer in `global.css`: `--glass-*` for in-flow glass, `--ink-fill` for the one primary per view, `--wash` and `--wash-press` behind hovered and pressed rows, `--edge-soft`, `--edge` and `--edge-strong` for borders, `--ok-*` and `--err-*` for outcomes, and an inverted `--toast-*` pair. Each is written in all three theme blocks (light, dark, and the no-JS dark mirror); nothing else mixes a raw ink tint. State is never colour alone: a copy control is a symbol and never a word, so its glyph becomes a check that draws itself or an alert, a tag's hash and a brand are marks and never letters, a soon tile is simply dim with no badge, and selection moves the ink.
 
 ## Typography
 
