@@ -257,8 +257,8 @@ const pickIndex = quoteIndexOfTheDayServer();
     height: 100%;
   }
 
-  /* One unit: the quote, then one footer row with the attribution at the
-     start and the two controls at the end. Every card shares one cell, so
+  /* One unit: the quote, then one footer row with the two controls at the
+     start and the attribution at the end. Every card shares one cell, so
      the viewport is as tall as the longest quote and nothing below it moves
      on a shuffle; each card sits its text on the cell's floor, so the
      attribution is always the last row. The controls share the block's
@@ -319,14 +319,17 @@ const pickIndex = quoteIndexOfTheDayServer();
     text-wrap: pretty;
   }
 
-  /* the controls' row: as tall as a circle, and clear of both of them */
+  /* the controls' row: as tall as a circle, right-aligned, and clear of
+     both circles on its start side */
   .attribution {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 0.75rem;
     min-block-size: var(--cap-32);
     margin-top: var(--step-2);
-    padding-inline-end: calc(var(--cap-32) * 2 + var(--quote-gap) + var(--step-3));
+    padding-inline-start: calc(var(--cap-32) * 2 + var(--quote-gap) + var(--step-3));
+    text-align: end;
     font-size: var(--text-sm);
     color: var(--faint);
     transition: color var(--t-color);
@@ -339,35 +342,35 @@ const pickIndex = quoteIndexOfTheDayServer();
     transition: color var(--t-color);
   }
 
+  /* the dash is the name's own colour, so "— Name" reads as one unit */
   .quote-author::before {
-    display: inline-block;
-    width: var(--step-3);
-    height: 1px;
-    margin: 0 var(--step-2) 0.25em 0;
-    background: var(--rule-strong);
-    content: "";
+    margin-inline-end: 0.35em;
+    content: "\2014";
   }
 
   .quote-source {
     display: none;
   }
 
-  /* quiet ghost circles, no container */
+  /* quiet ghost circles, no container. The first glyph's edge, not the
+     circle's, sits on the rail like the quote's text: the circle gives back
+     its own whitespace (a 16px glyph centred in 32). */
   .quote-actions {
+    --quote-hang: calc((var(--cap-32) - var(--step-4)) / 2);
     z-index: 1;
     display: flex;
     align-self: end;
-    justify-self: end;
+    justify-self: start;
     gap: var(--quote-gap);
+    margin-inline-start: calc(var(--quote-hang) * -1);
   }
 
-  /* the last circle sits at the rail's edge: its tooltip is flush with it
-     instead of centred past the gutter */
-  .quote-actions > :global(:last-child > .ui-tip) {
-    inset-inline-start: auto;
-    inset-inline-end: 0;
+  /* the first circle sits at the rail's edge: its tooltip is flush with the
+     rail instead of centred past the gutter */
+  .quote-actions > :global(:first-child > .ui-tip) {
+    inset-inline-start: calc(var(--quote-hang) - 1px);
     translate: none;
-    transform-origin: 100% 0;
+    transform-origin: 0 0;
   }
 
   .quote-again.is-spinning :global(.ui-icon) {

@@ -64,7 +64,7 @@ function iconPath(link: SocialLink): string {
               <div class="social-preview__identity">
                 <div class="social-preview__github-topline">
                   <a class="ui-link social-preview__profile-link" href={link.href} target="_blank" rel="me noopener noreferrer">@ashwingopalsamy</a>
-                  <a class="ui-cap ui-cap--32 ui-cap--trail social-preview__cta" href={link.href} target="_blank" rel="me noopener noreferrer">
+                  <a class="ui-cap ui-cap--28 ui-cap--trail social-preview__cta" href={link.href} target="_blank" rel="me noopener noreferrer">
                     <span class="ui-cap__label">Read code<span class="visually-hidden"> on Ashwin Gopalsamy's GitHub</span></span>
                     <span class="ui-arw ui-arw--ext" aria-hidden="true"><Icon name="arrow-up-right" size={14} strokeWidth={2} /><Icon name="arrow-up-right" size={14} strokeWidth={2} /></span>
                   </a>
@@ -107,7 +107,7 @@ function iconPath(link: SocialLink): string {
                   <p class="social-preview__name">Ashwin Gopalsamy</p>
                   <span class="social-preview__verified social-preview__verified--linkedin" role="img" aria-label="Verified account"></span>
                 </div>
-                <a class="ui-cap ui-cap--32 ui-cap--trail social-preview__cta" href={link.href} target="_blank" rel="me noopener noreferrer">
+                <a class="ui-cap ui-cap--28 ui-cap--trail social-preview__cta" href={link.href} target="_blank" rel="me noopener noreferrer">
                   <span class="ui-cap__label">Let's connect<span class="visually-hidden"> on Ashwin Gopalsamy's LinkedIn</span></span>
                   <span class="ui-arw ui-arw--ext" aria-hidden="true"><Icon name="arrow-up-right" size={14} strokeWidth={2} /><Icon name="arrow-up-right" size={14} strokeWidth={2} /></span>
                 </a>
@@ -126,7 +126,7 @@ function iconPath(link: SocialLink): string {
             </div>
             <div class="social-preview__x-body">
               <div class="social-preview__x-action-row">
-                <a class="ui-cap ui-cap--32 ui-cap--trail social-preview__cta" href={link.href} target="_blank" rel="me noopener noreferrer">
+                <a class="ui-cap ui-cap--28 ui-cap--trail social-preview__cta" href={link.href} target="_blank" rel="me noopener noreferrer">
                   <span class="ui-cap__label">Follow<span class="visually-hidden"> on Ashwin Gopalsamy's X (Twitter)</span></span>
                   <span class="ui-arw ui-arw--ext" aria-hidden="true"><Icon name="arrow-up-right" size={14} strokeWidth={2} /><Icon name="arrow-up-right" size={14} strokeWidth={2} /></span>
                 </a>
@@ -310,9 +310,11 @@ function iconPath(link: SocialLink): string {
     overflow-wrap: anywhere;
   }
 
+  /* fills the card when the header, not the graph, is what sets its width */
   .contribution-graph {
     position: relative;
     width: min(22rem, calc(100vw - 6rem));
+    min-inline-size: 100%;
   }
 
   .contribution-grid {
@@ -447,7 +449,7 @@ function iconPath(link: SocialLink): string {
 
   .social-preview__x-action-row {
     display: flex;
-    min-block-size: var(--cap-32);
+    min-block-size: var(--cap-28);
     align-items: flex-start;
     justify-content: flex-end;
   }
@@ -496,17 +498,30 @@ function iconPath(link: SocialLink): string {
     }
   }
 
+  /* A 28 with 12px type, held at every width like --text-ui-sm; in the
+     platform's fill. The edge is the capsule's transparent hairline;
+     nothing is drawn on it. */
   .social-preview__cta {
     background-color: var(--cta-bg);
     color: var(--cta-fg);
+    font-size: calc(var(--step) * 3);
+    font-weight: var(--font-medium);
+  }
+
+  /* The GitHub card is as wide as its content, measured once at rest. The
+     arrow's room is reserved as margin that hands itself back as the
+     capsule opens, so the card never grows past the panel's clip. */
+  .social-preview__card--github .social-preview__cta {
+    margin-inline-start: calc(var(--cap-open) * (1 - var(--arw-open)));
   }
 
   /* Toward the label colour: a lift on the dark fills, a dim on the
      inverted ones. A brightness filter would do nothing to black, and
-     oklch has no hue to mix an achromatic label into. */
+     oklch has no hue to mix an achromatic label into. 8% keeps the
+     LinkedIn blue's white label above AA (4.9:1) while it is lifted. */
   @media (hover: hover) and (pointer: fine) {
     .social-preview__cta:hover {
-      background-color: color-mix(in srgb, var(--cta-bg) 86%, var(--cta-fg));
+      background-color: color-mix(in srgb, var(--cta-bg) 92%, var(--cta-fg));
     }
   }
 

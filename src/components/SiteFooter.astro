@@ -23,7 +23,7 @@ const shortSha = buildMeta.commit;
   <button
     id="local-time"
     type="button"
-    class="clock ui-cap ui-cap--glass ui-cap--40 ui-cap--lead"
+    class="clock ui-cap ui-cap--quiet ui-cap--40 ui-cap--lead"
     aria-label="Pollachi time"
   >
     <span class="dot" aria-hidden="true"></span>
@@ -32,7 +32,7 @@ const shortSha = buildMeta.commit;
     <span class="ui-tip ui-tip--above" role="tooltip">Pollachi time</span>
   </button>
 
-  <div class="footer-dock ui-dock" role="group" aria-label="Footer controls">
+  <div class="footer-dock" role="group" aria-label="Footer controls">
     <a
       class="repo-btn ui-cap ui-cap--quiet ui-cap--40 ui-cap--icon"
       href={shortSha ? `${site.repoUrl}/commit/${shortSha}` : site.repoUrl}
@@ -106,19 +106,22 @@ const shortSha = buildMeta.commit;
     color: var(--muted);
   }
 
+  /* Plain inline content: the dot sits on the rail, and the hover wash
+     bleeds into the gutter the way a hung quiet capsule's does. */
   .clock {
     grid-column: 1;
     grid-row: 1;
     justify-self: start;
     max-inline-size: 100%;
     min-inline-size: 0;
+    margin-inline-start: calc((var(--cap-px) - var(--cap-icon-trim) + 1px) * -1);
     user-select: none;
   }
 
-  /* wider than the capsule, and the capsule is at the rail's edge: flush
-     with its left edge rather than centred past the gutter */
+  /* wider than the capsule, and the dot is at the rail's edge: flush with
+     the rail rather than centred past the gutter */
   .clock > .ui-tip {
-    inset-inline-start: 0;
+    inset-inline-start: calc(var(--cap-px) - var(--cap-icon-trim));
     translate: none;
     transform-origin: 0 100%;
   }
@@ -219,18 +222,25 @@ const shortSha = buildMeta.commit;
     }
   }
 
-  /* the dock (.ui-dock): three 40 circles in a glass 48 track */
+  /* three bare 40 circles in a row, no track. The last glyph's edge, not
+     its circle's, sits on the rail (the 18px theme glyph centred in 40). */
   .footer-dock {
+    --dock-hang: calc((var(--cap-40) - var(--step) * 4.5) / 2);
+    display: inline-flex;
     grid-column: 3;
     grid-row: 1;
+    align-items: center;
     justify-self: end;
+    gap: var(--step-1);
+    margin-inline-end: calc(var(--dock-hang) * -1);
   }
 
-  /* The last circle sits at the rail's edge: its tooltip is flush with the
-     dock's outer edge rather than centred past the gutter. */
-  .footer-dock :global(:last-child > .ui-tip) {
+  /* The last circle's tooltip is flush with the rail rather than centred
+     past the gutter. Named, not :last-child: dev leaves the toggles'
+     <script>s between the buttons. */
+  .footer-dock :global(.theme-toggle > .ui-tip) {
     inset-inline-start: auto;
-    inset-inline-end: calc(var(--step-1) * -1);
+    inset-inline-end: calc(var(--dock-hang) - 1px);
     translate: none;
     transform-origin: 100% 100%;
   }
