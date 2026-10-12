@@ -284,14 +284,14 @@ const developersJsonLd = [
           <Icon name="arrow-up-right" size={16} />
         </span>
       </a>
-      <a class="ui-cap ui-cap--glass ui-cap--48 ui-cap--trail" data-fx="spot" href="/ai/">
+      <a class="ui-cap ui-cap--glass ui-cap--48 ui-cap--trail" href="/ai/">
         <span class="ui-cap__label">Agents</span>
         <span class="ui-arw">
           <Icon name="arrow-right" size={16} />
           <Icon name="arrow-right" size={16} />
         </span>
       </a>
-      <a class="ui-cap ui-cap--glass ui-cap--48 ui-cap--trail" data-fx="spot" href="/design/">
+      <a class="ui-cap ui-cap--glass ui-cap--48 ui-cap--trail" href="/design/">
         <span class="ui-cap__label">Design</span>
         <span class="ui-arw">
           <Icon name="arrow-right" size={16} />
@@ -356,7 +356,6 @@ const developersJsonLd = [
                   <code class="install-text mono">{sdk.install}</code>
                   <span
                     class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
-                    data-fx="spot"
                     data-state="idle"
                     aria-hidden="true"
                     set:html={copyCells}
@@ -396,7 +395,6 @@ const developersJsonLd = [
                   <button
                     type="button"
                     class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon code-copy"
-                    data-fx="spot"
                     data-copy={cli.rawSnippet}
                     data-state="idle"
                     aria-label={`Copy ${cli.runtime} commands`}
@@ -432,7 +430,6 @@ const developersJsonLd = [
               <button
                 type="button"
                 class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
-                data-fx="spot"
                 data-copy={ep.example}
                 data-state="idle"
                 aria-label={`Copy curl command for ${ep.path}`}
@@ -466,7 +463,6 @@ const developersJsonLd = [
                 <button
                   type="button"
                   class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
-                  data-fx="spot"
                   data-copy={proto.testCommand}
                   data-state="idle"
                   aria-label={`Copy command for ${proto.name}`}
@@ -516,7 +512,6 @@ const developersJsonLd = [
           <button
             type="button"
             class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon code-copy"
-            data-fx="spot"
             data-copy={rawErrorPayload}
             data-state="idle"
             aria-label="Copy error JSON example"

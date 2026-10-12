@@ -24,9 +24,9 @@ colors:
   success-light: "oklch(0.68 0.16 155)"
   success-dark: "oklch(0.72 0.15 155)"
   # controls: CSS names at their light values; global.css restates each for dark and the no-JS mirror
-  glass-fill: "color-mix(in oklch, var(--ink) 2.5%, var(--canvas))"
-  glass-fill-hover: "color-mix(in oklch, var(--ink) 4%, var(--canvas))"
-  glass-fill-press: "color-mix(in oklch, var(--ink) 7%, var(--canvas))"
+  glass-fill: "var(--canvas)"
+  glass-fill-hover: "color-mix(in oklch, var(--ink) 4.5%, var(--canvas))"
+  glass-fill-press: "color-mix(in oklch, var(--ink) 8%, var(--canvas))"
   ink-fill: "linear-gradient(180deg, oklch(0.33 0.004 240), oklch(0.2 0.003 240))"
   ink-fill-press: "linear-gradient(180deg, oklch(0.27 0.004 240), oklch(0.16 0.003 240))"
   wash: "color-mix(in oklch, var(--ink) 4.5%, transparent)"
@@ -43,7 +43,6 @@ colors:
   err-edge: "color-mix(in oklch, var(--acc-red) 38%, transparent)"
   toast-bg: "color-mix(in oklch, var(--color-9) 90%, transparent)"
   toast-ink: "oklch(1 0 0)"
-  link-wash: "color-mix(in oklch, var(--ink) 9%, transparent)"
   link-wash-press: "color-mix(in oklch, var(--ink) 14%, transparent)"
 typography:
   inter-400:
@@ -324,7 +323,7 @@ Inter carries navigation and prose on desktop; compact viewports (38rem and belo
 
 Body copy uses a readable 65 to 75 character measure. Headings are balanced, tracking never goes below `-0.04em`, and long editorial paragraphs may use deliberate justification. The one-pixel mono offset is an optical correction, not layout spacing.
 
-Capsule labels are 15px (`--text-ui`) at 500 on 48 and 40, and 13px (`--text-ui-sm`) on 32 and 28. Weight is static: a link is ink at `--link-weight` (560 in light, where body grey sits close to ink; 500 in dark) at rest and on hover alike, so nothing reflows.
+Capsule labels are 15px (`--text-ui`) at 500 on 48 and 40, and 13px (`--text-ui-sm`) on 32 and 28. An inline link takes its paragraph's own weight at rest and differs from the surrounding text by colour alone (ink on the ghost paragraph). Inside `.prose`, where body text is ink already, it rests at `--font-medium` (500) so it stays findable. With a fine pointer over the paragraph, not only the link, every link in it lifts to `--font-hover-lift` (550) on the colour curve, and `<strong>` in a hovered prose block to `--font-hover-bold` (680). Weight is the one thing in the system that may reflow a line on hover; touch never lifts.
 
 ## The invisible grid
 
@@ -358,7 +357,7 @@ The whole page sits on an inset card above a slightly darker base (the viewport 
 
 Depth is used to separate persistent chrome, overlays, and feedback. A surface gets either a border or a shadow strong enough to explain its elevation.
 
-Glass is a recipe; blur is a privilege. In-flow glass (capsules, segmented tracks, docks, tiles, pager cards) is layers only: a sheen, an opaque `--glass-fill`, a gradient rim, a specular top edge and a `--lift-*` shadow. It paints once and composites. The rim is a `border-box` layer under a `padding-box` fill, so it only works when the fill is opaque; a translucent fill (wash, chips, ok, err, disabled) takes a solid `border-color` instead, or the rim bleeds through the whole surface.
+Glass is a recipe; blur is a privilege. In-flow glass (capsules, segmented tracks, docks, cards, tiles, pager cards) is layers only, painted once. In the light theme it is the header nav's surface, flat: an opaque `--glass-fill` (the canvas), one solid hairline (`--chrome-surface-border`; `--edge-strong` on hover) and the nav's one soft drop (`--glass-lift`). There is no sheen, no gradient rim and no specular edge: `--glass-sheen` is `none`, `--glass-spec` is empty and `--glass-rim` is a flat colour. Hover is `--glass-fill-hover` and the firmer hairline; nothing lifts. The dark theme keeps all five layers: a sheen, the fill, a gradient rim, a specular top edge and a `--lift-0` shadow. Its primary ink button (white) is near-flat: under 1.5% of lightness top to bottom, no chroma, no inner highlight. The rim is a `border-box` layer under a `padding-box` fill, so it only works when the fill is opaque; a translucent fill (wash, chips, ok, err, disabled) takes a solid `border-color` instead, or the rim bleeds through the whole surface. Only tiles, pager cards and rows take the pointer spotlight (`data-fx="spot"`); capsules, docks and cards do not.
 
 `backdrop-filter` is only correct where something non-uniform actually sits behind the element:
 
@@ -401,7 +400,7 @@ Every single-line control is a capsule at one of five heights: 48 (page CTAs, he
 
 The shared icon registry is the only source for interface symbols, and each meaning has one glyph: `arrow-right` for internal destinations, `arrow-up-right` for external ones (or a file) and nothing else, `arrow-left` for back and previous, `chevron-down` for disclosure. Chevrons left and right are for carousels only. On labelled capsules the arrow appears on hover and keyboard focus: the capsule opens by the glyph's width, the label stays where it was, and the glyph travels its last 3 to 4px along its own vector; at rest the capsule is its label with equal padding, touch never shows the arrow, and reduced motion fades it in without movement. A quiet capsule on a column edge (`--hang`: the labelled back, All N) sits its label on the edge and lets the arrow open into the gutter. Rows, chips and icon-only controls keep theirs visible: on an icon circle or tile chip the glyph leaves along its own vector and a twin arrives behind it, and dense lists nudge it 3px instead.
 
-No underlines anywhere: not at rest, not on hover, not on focus. A link is ink and weight; on hover a `--link-wash` sits behind the words and follows them across line wraps.
+No underlines anywhere: not at rest, not on hover, not on focus, and no wash behind an inline link either; the focus ring is the only box it ever gets. An inline link is ink on its paragraph's weight; the hovered paragraph lifts it (see Typography). Its external glyph (`arrow-up-right`, 0.72em) is the same idea inside a sentence: hidden at rest and taking no space, so a justified paragraph does not move, it opens with its space and eases in along its own vector when the paragraph or link is under a fine pointer or the link has keyboard focus. A wrapped link keeps the glyph on its last line fragment; touch never shows it, and reduced motion fades it without movement.
 
 Navigation and segmented controls use a single transform-only selection indicator in ink, and the labels invert exactly where the ink passes under them: an `aria-hidden` copy of the label row in canvas colour is clipped to the indicator, and the clip rides the indicator's spring. Unselected labels never change colour; only the clip moves. Labels and icon slots have fixed geometry, including the five permanent mobile destinations. Timings come from the motion scale above; press feedback is 70ms, local movement 150 to 200ms, overlays 280ms. Decorative loops are not part of the system.
 
@@ -423,6 +422,7 @@ Every control needs a default, hover, active, focus, disabled, loading, empty, a
 - Do not replay page entrances after client navigation.
 - Do not rotate directional icons into a new meaning.
 - Do not underline anything.
+- Do not set an inline link bold at rest, or lay a wash behind it: it differs from its paragraph by colour, and weight only lifts on hover.
 - Do not use text arrows or Unicode interface symbols in place of registry glyphs, or hyphens as bullets.
 - Do not hide persistent mobile navigation while the page scrolls.
 - Do not add tracking, a backend, or an animation dependency for polish.

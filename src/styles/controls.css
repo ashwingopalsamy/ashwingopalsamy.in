@@ -23,7 +23,9 @@
                                       and focus. Icon cap, tile, pager: conveyor
    .ui-stk  --icon                    one grid cell, children carry data-when
    .ui-draw                           stroke icon (check) that draws itself
-   .ui-link                           inline link, no underline; icon = external
+   .ui-link  __ext                    inline link: paragraph weight, lifts with
+                                      its hovered block; no underline, no wash.
+                                      __ext = external glyph, shown on hover
    .ui-badge  --mono                  20px static label; data-tone adds the dot
    .ui-row  --static --multiline      __title __sub __meta __glyph(--ext --back)
    .ui-disc  __chev __body            <details>; its <summary> is a .ui-row
@@ -36,8 +38,9 @@
    .ui-tile  --soon  __title __desc __corner __go __art
 
    attribute                          on            effect
-   data-fx="spot magnet"              cap row card  pointer-fx.ts writes --mx/--my,
-                                      tile          --tx/--ty, --lx/--ly
+   data-fx="spot"                     row tile      pointer-fx.ts writes --mx/--my
+                                      pager card    (glass caps, docks, cards: none)
+   data-fx="magnet"                   ink cap       --tx/--ty, --lx/--ly
    data-state=idle|done|error|loading action cap    ok/err fill, .ui-stk cell, spinner
    data-when=idle|done|error|loading  .ui-stk child shown while parent state matches
    aria-busy="true"                   cap           spinner, contents hidden
@@ -64,7 +67,6 @@
   --cap-px: var(--cap-px-48);
   --cap-gap: var(--cap-gap-lg);
   --cap-spin: var(--step-4);
-  --spot-size: calc(var(--cap-h) * 1.5);
   /* release is a spring; :active swaps in the 70ms press */
   --ui-move: var(--dur-spring-pop) var(--ease-spring-pop);
   --ui-drift: var(--dur-spring-snap) var(--ease-spring-snap);
@@ -235,21 +237,24 @@
   color: color-mix(in oklch, var(--canvas) 55%, transparent);
 }
 
-/* Glass: sheen, opaque fill and spec over a border-box gradient rim. The
-   fill must be opaque or the rim shows through it. No backdrop-filter:
-   the canvas behind in-flow glass is flat. */
+/* Glass: sheen, opaque fill and spec over a border-box rim, then one drop.
+   The fill must be opaque or the rim shows through it. No backdrop-filter:
+   the canvas behind in-flow glass is flat. Light glass is the header nav's
+   surface (the tokens leave sheen and spec empty and the rim one solid
+   hairline); dark keeps all five layers. */
 :is(.ui-cap--glass, .ui-seg, .ui-dock, .ui-card, .ui-pager__card, .ui-tile, .ui-tile__go) {
   border: 1px solid transparent;
   background:
     var(--glass-sheen) padding-box,
     linear-gradient(var(--glass-fill), var(--glass-fill)) padding-box,
     var(--glass-rim) border-box;
-  box-shadow: var(--glass-spec), var(--lift-0);
+  box-shadow: var(--glass-spec), var(--glass-lift);
 }
 
-/* Spotlight: the light source the rim implies. pointer-fx.ts moves it on
-   [data-fx~="spot"]; without it, it rests at the top centre. */
-:is(.ui-cap--glass, .ui-pager__card, .ui-tile)::after {
+/* Spotlight, on the wide surfaces only (tiles, pager cards): pointer-fx.ts
+   moves it on [data-fx~="spot"]; without it, it rests at the top centre.
+   Capsules, docks and cards have none. */
+:is(.ui-pager__card, .ui-tile)::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -479,40 +484,114 @@
 }
 
 /* ------------------------------------------------------------------
-   inline link: ink and weight at rest, a wash behind the words on hover.
-   Weight is static, so nothing reflows.
+   inline link: the paragraph's own weight, in ink against its ghost; no
+   underline and no wash. The trigger is the text block under a fine
+   pointer, not the link alone: a hovered paragraph sets --link-lift,
+   which lifts every link in it to --font-hover-lift, and --ext-open,
+   which eases in their external glyphs (below), both at once. Keyboard
+   focus on a link sets the same two for that link. Touch has no hover,
+   so links rest as they are. prose.css's .prose a reads the same inputs;
+   there the body text is ink already, so its links rest at --font-medium.
    ------------------------------------------------------------------ */
+
+:root {
+  /* external glyph: 0 closed, 1 open. Inherited, so a hovered block opens
+     every glyph in it. Reduced motion keeps the move instant and the fade
+     on the colour curve; the no-preference block gives both their curves. */
+  --ext-open: 0;
+  --ext-move: 0s;
+  --ext-fade: var(--t-color);
+}
 
 .ui-link {
   color: var(--ink);
-  font-weight: var(--link-weight);
+  font-weight: var(--link-lift, inherit);
   text-decoration: none;
   border-radius: var(--r-2);
-  padding: 1px 2px;
-  margin: -1px -2px;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
   transition:
-    background-color var(--t-color),
-    color var(--t-color);
+    color var(--t-color),
+    font-weight var(--t-color);
 }
 
-/* inside the wash padding, so the ring never swallows a neighbouring comma */
-.ui-link:focus-visible {
-  outline-offset: -2px;
+/* External: <span class="ui-link__ext"> + registry arrow-up-right after
+   the last word (prose.css gives markdown's .external-icon the same).
+   The glyph answers the pointer; it is not furniture. At rest it is
+   invisible and its end margin cancels its advance, so it takes no space
+   and a justified paragraph does not move. When --ext-open is 1 the space
+   opens and the glyph travels its last 2px along its own vector. The word
+   joiner and nowrap keep it on the last word's line. Touch never shows it;
+   reduced motion opens the space at once and fades the glyph. */
+.ui-link__ext {
+  white-space: nowrap;
 }
 
-/* external: registry arrow-up-right, inserted as markup */
-.ui-link > .ui-icon {
+.ui-link__ext::before {
+  content: "\2060";
+}
+
+.ui-link__ext > .ui-icon {
   display: inline-block;
   inline-size: 0.72em;
   block-size: 0.72em;
-  margin-inline-start: 2px;
+  margin-inline:
+    calc(var(--step) / 2)
+    calc((0.72em + var(--step) / 2) * (var(--ext-open) - 1));
   vertical-align: 0.02em;
-  color: var(--ghost);
+  color: var(--ink);
+  opacity: var(--ext-open);
+  pointer-events: none;
   transition:
-    color var(--t-color),
-    translate var(--dur-nudge) var(--ease-enter);
+    margin-inline var(--ext-move),
+    opacity var(--ext-fade);
+}
+
+.ui-link:focus-visible {
+  --link-lift: var(--font-hover-lift);
+  --ext-open: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :is(p, li, dd, td, blockquote, figcaption):hover,
+  .ui-link:hover {
+    --link-lift: var(--font-hover-lift);
+    --ext-open: 1;
+  }
+}
+
+@media (hover: none) {
+  .ui-link__ext {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root {
+    --ext-move: var(--dur-exit) var(--ease-exit);
+    --ext-fade: var(--dur-exit) var(--ease-exit);
+  }
+
+  .ui-link:focus-visible {
+    --ext-move: var(--dur-enter) var(--ease-spring-snap);
+    --ext-fade: var(--dur-enter) var(--ease-enter);
+  }
+
+  .ui-link__ext > .ui-icon {
+    translate:
+      calc(var(--travel-hair) * (var(--ext-open) - 1))
+      calc(var(--travel-hair) * (1 - var(--ext-open)));
+    transition:
+      margin-inline var(--ext-move),
+      opacity var(--ext-fade),
+      translate var(--ext-move);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    :is(p, li, dd, td, blockquote, figcaption):hover,
+    .ui-link:hover {
+      --ext-move: var(--dur-enter) var(--ease-spring-snap);
+      --ext-fade: var(--dur-enter) var(--ease-enter);
+    }
+  }
 }
 
 /* ------------------------------------------------------------------
@@ -1312,12 +1391,13 @@
     box-shadow: var(--ink-edge), var(--ink-bloom);
   }
 
+  /* the nav item's answer: a tint and a firmer hairline, nothing moves */
   .ui-cap--glass:hover {
     background:
       var(--glass-sheen) padding-box,
       linear-gradient(var(--glass-fill-hover), var(--glass-fill-hover)) padding-box,
       var(--glass-rim-hover) border-box;
-    box-shadow: var(--glass-spec), var(--lift-1);
+    box-shadow: var(--glass-spec), var(--glass-lift);
   }
 
   .ui-cap--quiet:hover {
@@ -1347,18 +1427,9 @@
     color: color-mix(in oklch, var(--canvas) 58%, transparent);
   }
 
-  .ui-cap--glass:hover::after,
   .ui-pager__card:hover::after,
   .ui-tile:not(.ui-tile--soon):hover::after {
     opacity: 1;
-  }
-
-  .ui-link:hover {
-    background-color: var(--link-wash);
-  }
-
-  .ui-link:hover > .ui-icon {
-    color: var(--ink);
   }
 
   .ui-row:not(.ui-row--static):hover::before {
@@ -1475,10 +1546,6 @@
   box-shadow: var(--ink-edge);
 }
 
-.ui-link:active {
-  background-color: var(--link-wash-press);
-}
-
 .ui-row:not(.ui-row--static):active::before {
   opacity: 1;
   background: var(--wash-press);
@@ -1584,8 +1651,7 @@
 }
 
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .ui-cap--ink:hover,
-  .ui-cap--glass:hover {
+  .ui-cap--ink:hover {
     transform: translateY(-1px);
   }
 
@@ -1637,10 +1703,6 @@
 
   .ui-row:not(.ui-row--static):hover .ui-row__glyph--back {
     translate: calc(var(--travel-nudge) * -1) 0;
-  }
-
-  .ui-link:hover > .ui-icon {
-    translate: 1px -1px;
   }
 
   /* Magnetic primary (ink, one per view): follows on --ease-enter, returns
@@ -1712,13 +1774,12 @@
    check appears whole, and the spotlight sits at the centre at half
    strength. Colour, opacity and the puddle stay. */
 @media (prefers-reduced-motion: reduce) {
-  :is(.ui-cap--glass, .ui-pager__card, .ui-tile)::after {
+  :is(.ui-pager__card, .ui-tile)::after {
     --mx: 50%;
     --my: 50%;
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .ui-cap--glass:hover::after,
     .ui-pager__card:hover::after,
     .ui-tile:not(.ui-tile--soon):hover::after {
       opacity: 0.5;

@@ -92,7 +92,6 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
         {previous ? (
           <a
             class="ui-cap ui-cap--glass ui-cap--icon ui-cap--40 photo-control"
-            data-fx="spot"
             href={photoHref(previous.id)}
             rel="prev"
             aria-label="Previous photo"
@@ -113,7 +112,6 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
         {next ? (
           <a
             class="ui-cap ui-cap--glass ui-cap--icon ui-cap--40 photo-control"
-            data-fx="spot"
             href={photoHref(next.id)}
             rel="next"
             aria-label="Next photo"

@@ -147,7 +147,6 @@ const jsonLd = {
           <button
             type="button"
             class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
-            data-fx="spot"
             data-swatch-copy
             data-copy={neutralTokens[0]?.[1]}
             data-state="idle"
@@ -321,7 +320,7 @@ const jsonLd = {
       <div class="logo-specimen" data-logo-specimen>
         <div class="specimen-header">
           <span class="specimen-label">Wordmark & back arrow crossfade</span>
-          <button type="button" data-logo-toggle class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead" data-fx="spot">
+          <button type="button" data-logo-toggle class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead">
             <Icon name="repeat" size={14} strokeWidth={2} />
             <span class="ui-cap__label">Toggle state</span>
           </button>
@@ -355,7 +354,6 @@ const jsonLd = {
             <button
               type="button"
               class="ui-cap ui-cap--glass ui-cap--icon"
-              data-fx="spot"
               data-duration={d.value}
               aria-label={`Play ${d.value} animation sample`}
             >
@@ -375,7 +373,7 @@ const jsonLd = {
       <div class="route-specimen" data-route-specimen>
         <div class="specimen-header">
           <span class="specimen-label">Zero-flash route swap</span>
-          <button type="button" class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead" data-fx="spot" data-replay-route>
+          <button type="button" class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead" data-replay-route>
             <Icon name="repeat" size={14} strokeWidth={2} />
             <span class="ui-cap__label">Replay handoff</span>
           </button>
@@ -444,17 +442,17 @@ const jsonLd = {
       <p>Individually, none of these are remarkable. Together, they account for most of the time I spend on this site.</p>
 
       <h3>Pills, at five heights</h3>
-      <p>Every single-line control is a pill, at one of five heights: 48 for the one primary action, 40 for segments and the footer, 32 for inline actions like copy, 28 for tags, and 20 for a badge, which only states a fact and is never pressable. Anything with more than one line is a rounded rectangle whose radius nests inside its padding. Glass is a recipe, not a blur: a sheen, an opaque fill, a gradient rim, a specular edge and a shadow, painted once. Real blur goes only where content actually moves behind the surface.</p>
+      <p>Every single-line control is a pill, at one of five heights: 48 for the one primary action, 40 for segments and the footer, 32 for inline actions like copy, 28 for tags, and 20 for a badge, which only states a fact and is never pressable. Anything with more than one line is a rounded rectangle whose radius nests inside its padding. Glass is a recipe, not a blur. In the light theme it is the header nav's surface and nothing else: the canvas, one solid hairline and one soft shadow, with no sheen, no gradient rim and no specular edge, and hover is a tint and a firmer hairline. Dark keeps a sheen, an opaque fill, a gradient rim, a specular edge and a shadow, painted once. Capsules, docks and cards carry no pointer spotlight; only tiles, pager cards and rows do. Real blur goes only where content actually moves behind the surface.</p>
 
       <div class="height-specimen">
         <div class="height-item">
-          <a class="ui-cap ui-cap--ink" href="/contact/" data-fx="spot magnet">
+          <a class="ui-cap ui-cap--ink" href="/contact/" data-fx="magnet">
             <span class="ui-cap__label">Let's talk</span>
           </a>
           <span class="height-key">48 · ink</span>
         </div>
         <div class="height-item">
-          <a class="ui-cap ui-cap--glass ui-cap--40" href="/library/" data-fx="spot">
+          <a class="ui-cap ui-cap--glass ui-cap--40" href="/library/">
             <span class="ui-cap__label">Library</span>
           </a>
           <span class="height-key">40 · glass</span>
@@ -463,7 +461,6 @@ const jsonLd = {
           <button
             type="button"
             class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
-            data-fx="spot"
             data-copy
             data-state="idle"
             aria-label="Copy link"
@@ -498,11 +495,11 @@ const jsonLd = {
       <p>Every press goes down in 70 ms and springs back up, and none of it moves layout: a press or a state change never animates width, so the copy circle is the same size at rest, copied and failed. The one capsule that grows is an arrow capsule on hover, by the glyph's width. State is never colour alone. Copy is a symbol and never a word: the glyph becomes a check that draws itself, or an alert; soon shows a dot and a word.</p>
 
       <h3>Arrow direction</h3>
-      <p>One glyph per meaning. On a labelled capsule the arrow is not there until you reach for it: hover or tab to the capsule and it opens by the glyph's width, the label stays put, and the glyph travels its last few pixels along its own direction. Touch never shows it. Rows, tiles and icon-only controls keep theirs visible. Hover or tab through these; this is the complete set.</p>
+      <p>One glyph per meaning. On a labelled capsule the arrow is not there until you reach for it: hover or tab to the capsule and it opens by the glyph's width, the label stays put, and the glyph travels its last few pixels along its own direction. Touch never shows it. Rows, tiles and icon-only controls keep theirs visible. The arrow on an inline external link is the same idea inside a sentence: it takes no room at rest, so a justified paragraph holds still, and opens with its space when the paragraph or the link is under a fine pointer or has keyboard focus. Hover or tab through these; this is the complete set.</p>
 
       <ul class="arrow-grid">
         <li class="arrow-row">
-          <a class="ui-cap ui-cap--glass ui-cap--32 ui-cap--trail" href="/library/" data-fx="spot">
+          <a class="ui-cap ui-cap--glass ui-cap--32 ui-cap--trail" href="/library/">
             <span class="ui-cap__label">The library</span>
             <span class="ui-arw" aria-hidden="true">
               <Icon name="arrow-right" size={14} strokeWidth={2} />
@@ -512,7 +509,7 @@ const jsonLd = {
           <span class="arrow-role">ArrowRight: another page on this site</span>
         </li>
         <li class="arrow-row">
-          <a class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead" href="/" data-fx="spot">
+          <a class="ui-cap ui-cap--glass ui-cap--32 ui-cap--lead" href="/">
             <span class="ui-arw ui-arw--back" aria-hidden="true">
               <Icon name="arrow-left" size={14} strokeWidth={2} />
               <Icon name="arrow-left" size={14} strokeWidth={2} />
@@ -527,7 +524,6 @@ const jsonLd = {
             href={site.repoUrl}
             target="_blank"
             rel="noopener noreferrer"
-            data-fx="spot"
           >
             <span class="ui-cap__label">Source</span>
             <span class="ui-arw ui-arw--ext" aria-hidden="true">
@@ -548,10 +544,10 @@ const jsonLd = {
       </details>
 
       <h3>Links without underlines</h3>
-      <p>Inline links are ink and a little extra weight at rest, a wash behind the words on hover, and never an underline: this <a class="ui-link inline-mono" href="/design.md" data-astro-prefetch="false">/design.md</a> is one. The weight is fixed, so nothing reflows on hover. It is 560 in the light theme, where body grey sits close to ink, and 500 in dark.</p>
+      <p>Inline links are ink against the paragraph's grey and take the paragraph's own weight at rest, with no underline and no wash behind them: this <a class="ui-link inline-mono" href="/design.md" data-astro-prefetch="false">/design.md</a> is one. Hover the paragraph, not just the link, and every link in it lifts to 550 together; a fine pointer only, so touch rests as it is. In long-form notes the body text is ink already, so colour cannot find a link: there they rest at 500 and lift to the same 550. Because weight moves, a hover can reflow a line; that is accepted.</p>
 
       <h3>Focus</h3>
-      <p>A 2 px ink ring that lands from 8 px out and closes to 3 px, shown only for keyboard navigation via <code class="inline-code">:focus-visible</code>. Mouse clicks suppress it. Controls that sit in a group, like rows and segments, keep the ring flush so it never collides with a neighbour, and inline links pull it inside their wash. The 32 and 28 px capsules carry an invisible 44 px hit area, so their visible size is not their target size.</p>
+      <p>A 2 px ink ring that lands from 8 px out and closes to 3 px, shown only for keyboard navigation via <code class="inline-code">:focus-visible</code>. Mouse clicks suppress it. Controls that sit in a group, like rows and segments, keep the ring flush so it never collides with a neighbour, and it hugs an inline link's own box. The 32 and 28 px capsules carry an invisible 44 px hit area, so their visible size is not their target size.</p>
 
       <div class="focus-specimen">
         <div class="specimen-header">
@@ -559,7 +555,7 @@ const jsonLd = {
           <span class="ui-badge ui-badge--mono">:focus-visible</span>
         </div>
         <div class="focus-strip">
-          <button type="button" class="ui-cap ui-cap--glass ui-cap--40" data-fx="spot">
+          <button type="button" class="ui-cap ui-cap--glass ui-cap--40">
             <span class="ui-cap__label">Action button</span>
           </button>
           <a href="#interactions" class="ui-cap ui-cap--quiet ui-cap--40 ui-cap--trail">
@@ -669,21 +665,21 @@ const jsonLd = {
         The exact token values, timing curves, and color math live at <a class="ui-link inline-mono" href="/design.md" data-astro-prefetch="false">/design.md</a>. This page is the part I rewrite when the site teaches me something new about itself.
       </p>
       <div class="design-endnote-links">
-        <a class="ui-cap ui-cap--glass ui-cap--32 ui-cap--trail" href="/agent-readiness.md" data-astro-prefetch="false" data-fx="spot">
+        <a class="ui-cap ui-cap--glass ui-cap--32 ui-cap--trail" href="/agent-readiness.md" data-astro-prefetch="false">
           <span class="ui-cap__label">Machine-readiness notes</span>
           <span class="ui-arw" aria-hidden="true">
             <Icon name="arrow-right" size={14} strokeWidth={2} />
             <Icon name="arrow-right" size={14} strokeWidth={2} />
           </span>
         </a>
-        <a class="ui-cap ui-cap--glass ui-cap--32 ui-cap--trail" href="/colophon/" data-fx="spot">
+        <a class="ui-cap ui-cap--glass ui-cap--32 ui-cap--trail" href="/colophon/">
           <span class="ui-cap__label">Colophon</span>
           <span class="ui-arw" aria-hidden="true">
             <Icon name="arrow-right" size={14} strokeWidth={2} />
             <Icon name="arrow-right" size={14} strokeWidth={2} />
           </span>
         </a>
-        <a class="ui-cap ui-cap--glass ui-cap--32 ui-cap--trail" href="/DESIGN.md" data-astro-prefetch="false" data-fx="spot">
+        <a class="ui-cap ui-cap--glass ui-cap--32 ui-cap--trail" href="/DESIGN.md" data-astro-prefetch="false">
           <span class="ui-cap__label">Canonical source</span>
           <span class="ui-arw" aria-hidden="true">
             <Icon name="arrow-right" size={14} strokeWidth={2} />

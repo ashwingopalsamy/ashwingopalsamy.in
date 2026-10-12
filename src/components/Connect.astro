@@ -61,34 +61,6 @@ const pickIndex = quoteIndexOfTheDayServer();
   {
     quotes.length > 0 && (
       <div class="quote-block">
-        <div class="quote-dock ui-dock" role="group" aria-label="Quote controls">
-          <button
-            id="quote-copy"
-            type="button"
-            class="ui-cap ui-cap--quiet ui-cap--40 ui-cap--icon"
-            data-state="idle"
-            aria-label="Copy this quote"
-          >
-            <span class="ui-stk ui-stk--icon">
-              <span data-when="idle"><Icon name="copy" size={16} /></span>
-              <span data-when="done"><Icon name="check" size={16} class="ui-draw" /></span>
-              <span data-when="error"><Icon name="alert" size={16} /></span>
-            </span>
-            <span class="ui-tip ui-tip--above" role="tooltip">Copy quote</span>
-          </button>
-          {quotes.length > 1 && (
-            <button
-              id="quote-again"
-              type="button"
-              class="quote-again ui-cap ui-cap--quiet ui-cap--40 ui-cap--icon"
-              aria-label="Show another quote"
-              aria-keyshortcuts="J"
-            >
-              <Icon name="repeat" size={16} />
-              <span class="ui-tip ui-tip--above" role="tooltip">Another quote <kbd class="ui-kbd">J</kbd></span>
-            </button>
-          )}
-        </div>
         <div id="quote-viewport">
           {
             quotes.map((quote, index) => {
@@ -109,6 +81,34 @@ const pickIndex = quoteIndexOfTheDayServer();
               );
             })
           }
+        </div>
+        <div class="quote-actions" role="group" aria-label="Quote controls">
+          <button
+            id="quote-copy"
+            type="button"
+            class="ui-cap ui-cap--quiet ui-cap--32 ui-cap--icon"
+            data-state="idle"
+            aria-label="Copy this quote"
+          >
+            <span class="ui-stk ui-stk--icon">
+              <span data-when="idle"><Icon name="copy" size={16} /></span>
+              <span data-when="done"><Icon name="check" size={16} class="ui-draw" /></span>
+              <span data-when="error"><Icon name="alert" size={16} /></span>
+            </span>
+            <span class="ui-tip" role="tooltip">Copy quote</span>
+          </button>
+          {quotes.length > 1 && (
+            <button
+              id="quote-again"
+              type="button"
+              class="quote-again ui-cap ui-cap--quiet ui-cap--32 ui-cap--icon"
+              aria-label="Show another quote"
+              aria-keyshortcuts="J"
+            >
+              <Icon name="repeat" size={16} />
+              <span class="ui-tip" role="tooltip">Another quote <kbd class="ui-kbd">J</kbd></span>
+            </button>
+          )}
         </div>
       </div>
     )
@@ -257,12 +257,26 @@ const pickIndex = quoteIndexOfTheDayServer();
     height: 100%;
   }
 
+  /* One unit: the quote, then one footer row with the attribution at the
+     start and the two controls at the end. Every card shares one cell, so
+     the viewport is as tall as the longest quote and nothing below it moves
+     on a shuffle; each card sits its text on the cell's floor, so the
+     attribution is always the last row. The controls share the block's
+     cell and sit on that row: they never move under the pointer, never
+     flip, and never ride inside the viewport's clip. */
   .quote-block {
-    display: flex;
-    flex-direction: column;
+    /* the controls' 44px hit areas meet without overlapping */
+    --quote-gap: calc(var(--hit) - var(--cap-32));
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     position: relative;
     margin-top: var(--step-5);
     perspective: 1000px;
+  }
+
+  #quote-viewport,
+  .quote-actions {
+    grid-area: 1 / 1;
   }
 
   #quote-viewport {
@@ -276,12 +290,15 @@ const pickIndex = quoteIndexOfTheDayServer();
 
   .quote-card {
     grid-area: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
     margin: 0;
     padding: 0;
     min-width: 0;
     visibility: hidden;
     pointer-events: none;
-    transform-origin: center top;
+    transform-origin: center bottom;
     backface-visibility: hidden;
   }
 
@@ -302,16 +319,17 @@ const pickIndex = quoteIndexOfTheDayServer();
     text-wrap: pretty;
   }
 
+  /* the controls' row: as tall as a circle, and clear of both of them */
   .attribution {
     display: flex;
-    align-items: baseline;
-    justify-content: flex-end;
+    align-items: center;
     gap: 0.75rem;
-    margin-top: 1.5rem;
+    min-block-size: var(--cap-32);
+    margin-top: var(--step-2);
+    padding-inline-end: calc(var(--cap-32) * 2 + var(--quote-gap) + var(--step-3));
     font-size: var(--text-sm);
     color: var(--faint);
     transition: color var(--t-color);
-    text-align: right;
   }
 
   .qa {
@@ -334,19 +352,22 @@ const pickIndex = quoteIndexOfTheDayServer();
     display: none;
   }
 
-  /* the dock (.ui-dock), as the footer's */
-  .quote-dock {
-    align-self: flex-end;
-    margin-bottom: var(--step-4);
+  /* quiet ghost circles, no container */
+  .quote-actions {
+    z-index: 1;
+    display: flex;
+    align-self: end;
+    justify-self: end;
+    gap: var(--quote-gap);
   }
 
-  /* the last circle sits at the rail's edge: its tooltip is flush with the
-     dock instead of centred past the gutter */
-  .quote-dock > :global(:last-child > .ui-tip) {
+  /* the last circle sits at the rail's edge: its tooltip is flush with it
+     instead of centred past the gutter */
+  .quote-actions > :global(:last-child > .ui-tip) {
     inset-inline-start: auto;
-    inset-inline-end: calc(var(--step-1) * -1);
+    inset-inline-end: 0;
     translate: none;
-    transform-origin: 100% 100%;
+    transform-origin: 100% 0;
   }
 
   .quote-again.is-spinning :global(.ui-icon) {

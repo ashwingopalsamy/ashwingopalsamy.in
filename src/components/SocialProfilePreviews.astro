@@ -35,7 +35,6 @@ function iconPath(link: SocialLink): string {
       previewLinks.map((link, index) => (
         <a
           class="ui-cap ui-cap--glass ui-cap--48 ui-cap--icon"
-          data-fx="spot"
           aria-label={link.label}
           href={link.href}
           target="_blank"
@@ -271,7 +270,7 @@ function iconPath(link: SocialLink): string {
     line-height: 1.25;
   }
 
-  /* a grid item stretches; the link's wash should hug the handle */
+  /* a grid item stretches; the link and its focus ring should hug the handle */
   .social-preview__profile-link {
     justify-self: start;
     font-size: var(--text-base);

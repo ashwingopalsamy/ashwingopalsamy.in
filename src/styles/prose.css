@@ -132,29 +132,26 @@
 .prose strong {
   font-weight: 600;
   color: var(--ink);
+  transition: font-weight var(--t-color);
 }
 .prose em { font-style: italic; }
 
-/* Inline links: ink and weight at rest, a wash behind the words on hover.
-   The same recipe as .ui-link in controls.css, from the same --link-* tokens
-   (a markdown <a> has no class to hang .ui-link on). Weight is static, so
-   nothing reflows; there is no underline at rest, on hover or on focus.
-   Plain links and the engine's own (.external, footnotes) take it; classed
-   anchors (the heading anchor, the Go tour's spec pills) keep their own look. */
+/* Inline links: ink, no underline, no wash. The body text here is ink too,
+   so colour cannot find a link; it rests a notch heavier (--font-medium)
+   and lifts to --font-hover-lift when its block or it is under a fine
+   pointer. The same two inputs as .ui-link (controls.css): --link-lift and
+   --ext-open, set by the hovered block there and by the link below. Plain
+   links and the engine's own (.external, footnotes) take it; classed
+   anchors (the heading anchor, the Go tour's spec pills) keep their own
+   look. */
 .prose a:where(:not([class]), .external, .footnote-ref, .footnote-backref) {
   color: var(--ink);
-  font-weight: var(--link-weight);
+  font-weight: var(--link-lift, var(--font-medium));
   text-decoration: none;
   border-radius: var(--r-2);
-  /* 1px 2px, cancelled by the margin: the wash grows, the text does not move */
-  padding: calc(var(--step) / 4) calc(var(--step) / 2);
-  margin: calc(var(--step) / -4) calc(var(--step) / -2);
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-  -webkit-tap-highlight-color: transparent;
   transition:
-    background-color var(--t-color),
-    color var(--t-color);
+    color var(--t-color),
+    font-weight var(--t-color);
 }
 
 /* a link inside bolder text is never lighter than it */
@@ -162,24 +159,30 @@
   font-weight: inherit;
 }
 
-/* inside the wash padding, so the ring never swallows a neighbouring comma */
 .prose a:where(:not([class]), .external, .footnote-ref, .footnote-backref):focus-visible {
-  outline-offset: calc(var(--step) / -2);
-}
-
-.prose a:where(:not([class]), .external, .footnote-ref, .footnote-backref):active {
-  background-color: var(--link-wash-press);
+  --link-lift: var(--font-hover-lift);
+  --ext-open: 1;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .prose a:where(:not([class]), .external, .footnote-ref, .footnote-backref):hover {
-    background-color: var(--link-wash);
+    --link-lift: var(--font-hover-lift);
+    --ext-open: 1;
+  }
+
+  .prose :is(p, li, blockquote):hover strong,
+  .prose strong:hover {
+    font-weight: var(--font-hover-bold);
   }
 }
 
-/* External: the build-time arrow-up-right (external-links.ts), 0.72em and
-   ghost; ink and a (1px, -1px) nudge when the link is touched. The word
-   joiner keeps it on the last word's line. */
+/* External: the build-time arrow-up-right (external-links.ts), the same
+   reveal as .ui-link__ext in controls.css, from the same --ext-* inputs.
+   Invisible at rest with its advance cancelled, so it takes no space; a
+   hovered block or link, or keyboard focus, opens the space and the glyph
+   eases in along its own vector. The word joiner keeps it on the last
+   word's line. Touch never shows it; reduced motion opens the space at
+   once and fades the glyph. */
 .prose .external-icon {
   white-space: nowrap;
 }
@@ -190,25 +193,42 @@
   display: inline-block;
   inline-size: 0.72em;
   block-size: 0.72em;
-  margin-inline-start: calc(var(--step) / 2);
+  margin-inline:
+    calc(var(--step) / 2)
+    calc((0.72em + var(--step) / 2) * (var(--ext-open) - 1));
   vertical-align: 0.02em;
-  color: var(--ghost);
-  stroke-width: 2.2;
-  transition:
-    color var(--t-color),
-    translate var(--dur-nudge) var(--ease-enter);
-}
-.prose .external:focus-visible .external-icon > svg {
   color: var(--ink);
+  stroke-width: 2.2;
+  opacity: var(--ext-open);
+  pointer-events: none;
+  transition:
+    margin-inline var(--ext-move),
+    opacity var(--ext-fade);
 }
-@media (hover: hover) and (pointer: fine) {
-  .prose .external:hover .external-icon > svg {
-    color: var(--ink);
+@media (hover: none) {
+  .prose .external-icon {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .prose a:where(:not([class]), .external, .footnote-ref, .footnote-backref):focus-visible {
+    --ext-move: var(--dur-enter) var(--ease-spring-snap);
+    --ext-fade: var(--dur-enter) var(--ease-enter);
+  }
+  .prose .external-icon > svg {
+    translate:
+      calc(var(--travel-hair) * (var(--ext-open) - 1))
+      calc(var(--travel-hair) * (1 - var(--ext-open)));
+    transition:
+      margin-inline var(--ext-move),
+      opacity var(--ext-fade),
+      translate var(--ext-move);
   }
 }
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .prose .external:hover .external-icon > svg {
-    translate: 1px -1px;
+  .prose a:where(:not([class]), .external, .footnote-ref, .footnote-backref):hover {
+    --ext-move: var(--dur-enter) var(--ease-spring-snap);
+    --ext-fade: var(--dur-enter) var(--ease-enter);
   }
 }
 
@@ -1211,8 +1231,6 @@
   .prose a:where(:not([class]), .external, .footnote-ref, .footnote-backref) {
     color: var(--color-9);
     font-weight: var(--font-semibold);
-    padding: 0;
-    margin: 0;
   }
   .prose .external-icon { display: none; }
 }

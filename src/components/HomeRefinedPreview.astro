@@ -18,7 +18,7 @@ const contributions = await getGithubContributions();
       Hey! I'm <a class="ui-link" href="/more/" aria-label="More about Ashwin">Ashwin</a>. I build the infrastructure behind global payments.
     </p>
     <p class="refined-context">
-      I work remotely as a Staff Software Engineer at <a class="ui-link" href="https://developers.pismo.io/pismo-docs" target="_blank" rel="noopener noreferrer">Pismo, a Visa company<Icon name="arrow-up-right" /></a>, and study AI at <a class="ui-link" href="https://cdso.utexas.edu/msai" target="_blank" rel="noopener noreferrer">UT Austin<Icon name="arrow-up-right" /></a> alongside work.
+      I work remotely as a Staff Software Engineer at <a class="ui-link" href="https://developers.pismo.io/pismo-docs" target="_blank" rel="noopener noreferrer">Pismo, a Visa company<span class="ui-link__ext"><Icon name="arrow-up-right" /></span></a>, and study AI at <a class="ui-link" href="https://cdso.utexas.edu/msai" target="_blank" rel="noopener noreferrer">UT Austin<span class="ui-link__ext"><Icon name="arrow-up-right" /></span></a> alongside work.
     </p>
     <p class="refined-context">
       Off the clock, I'm happiest around good machinery and cars, or lost in anthropology, history, and long-form craft. Here’s my <a class="ui-link" href="/library/">library</a>, <a class="ui-link" href="/more/photos/">photos I take</a>, and <a class="ui-link" href="/more/cafe/">cafes I try</a>.
@@ -30,7 +30,7 @@ const contributions = await getGithubContributions();
     <div class="refined-contact__row">
       <div class="refined-cta-row">
         <a class="ui-cap ui-cap--ink ui-cap--48" data-fx="magnet" href={site.cal} target="_blank" rel="noopener noreferrer"><span class="ui-cap__label">Let's talk</span></a>
-        {resumeUrl && <a class="ui-cap ui-cap--glass ui-cap--48" data-fx="spot" href={resumeUrl} download="AshwinGopalsamy_Resume.pdf" data-astro-prefetch="false"><span class="ui-cap__label">Resume</span></a>}
+        {resumeUrl && <a class="ui-cap ui-cap--glass ui-cap--48" href={resumeUrl} download="AshwinGopalsamy_Resume.pdf" data-astro-prefetch="false"><span class="ui-cap__label">Resume</span></a>}
       </div>
       <span class="refined-row-sep" aria-hidden="true"></span>
       <div class="refined-socials">

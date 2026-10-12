@@ -4,9 +4,10 @@
  * Adds `target="_blank"` + `rel="noopener noreferrer"` (security), an
  * `external` class, and a trailing registry `arrow-up-right` in an
  * `.external-icon` span, so readers know they're leaving the site. prose.css
- * sizes it (0.72em, ghost) and nudges it on hover; the link itself is ink and
- * weight with a wash, never an underline. Same-origin links (pages, `.md` and
- * other files, `#anchors`) are left alone and carry no glyph.
+ * sizes it (0.72em), hides it at rest with no space, and eases it in when the
+ * block or the link is under a fine pointer; the link itself is ink, never an
+ * underline or a wash. Same-origin links (pages, `.md` and other files,
+ * `#anchors`) are left alone and carry no glyph.
  */
 import type { Element } from "hast";
 import type { HastVisitorContext } from "satteri";
