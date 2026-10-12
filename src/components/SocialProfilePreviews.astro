@@ -498,10 +498,14 @@ function iconPath(link: SocialLink): string {
     }
   }
 
-  /* A 28 with 12px type, held at every width like --text-ui-sm; in the
+  /* A 24 with 12px type, held at every width like --text-ui-sm; in the
      platform's fill. The edge is the capsule's transparent hairline;
      nothing is drawn on it. */
   .social-preview__cta {
+    --cap-h: calc(var(--step) * 6);
+    block-size: var(--cap-h);
+    min-block-size: 0;
+    padding-inline: var(--step-2) var(--step-2);
     background-color: var(--cta-bg);
     color: var(--cta-fg);
     font-size: calc(var(--step) * 3);
