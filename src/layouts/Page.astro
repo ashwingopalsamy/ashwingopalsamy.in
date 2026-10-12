@@ -3,7 +3,6 @@ import { ClientRouter } from "astro:transitions";
 import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 import geistLatin from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import fontStyles from "../styles/fonts.css?inline";
-import DevTuner from "../components/DevTuner.astro";
 // geometry first (global.css consumes --step-*/--r-*), motion last so its
 // retuned duration and easing tokens win over the legacy values.
 import "../styles/geometry.css";
@@ -357,7 +356,6 @@ const documentTitle = isHome
     </div>
     <div class="viewport-frame" transition:persist="viewport-frame" aria-hidden="true"></div>
     <div class="page-scrollbar" transition:persist="page-scrollbar" aria-hidden="true"><div class="page-scrollbar-thumb"></div></div>
-    {import.meta.env.DEV && <DevTuner />}
 
     <script>
       import { onPageCleanup, pageSignal } from "../scripts/lifecycle";

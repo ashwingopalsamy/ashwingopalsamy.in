@@ -184,7 +184,7 @@
      onto the base it rests on. */
   --frame-gap: calc(var(--step) * 1.5);
   --frame-radius: calc(var(--step) * 1.5);
-  /* Tuning knobs (the dev tuner drives these); the dark theme overrides the
+  /* Tuning knobs; the dark theme overrides the
      percentages and mixes the base from black instead of ink. */
   --frame-base-mix: 5%;
   --frame-edge-mix: 9%;

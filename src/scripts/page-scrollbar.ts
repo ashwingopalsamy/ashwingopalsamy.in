@@ -9,6 +9,10 @@
 import { invalidateScrollMetrics, onScrollFrame } from "./scroll-scheduler";
 
 const MIN_THUMB = 32;
+/* Compact and touch-first screens get a short indicator, not a proportional
+   bar: on a short page a proportional thumb would span most of the card. */
+const COMPACT_THUMB = 40;
+const compact = matchMedia("(max-width: 38rem), (hover: none)");
 
 if (CSS.supports("animation-timeline: scroll()")) {
   let bar: HTMLElement | null = null;
@@ -59,7 +63,10 @@ if (CSS.supports("animation-timeline: scroll()")) {
       const scrollable = docHeight > viewport + 1;
       bar.toggleAttribute("data-idle", !scrollable);
       if (!scrollable || track <= 0) return;
-      const size = Math.max(MIN_THUMB, Math.round((track * viewport) / docHeight));
+      const natural = Math.round((track * viewport) / docHeight);
+      const size = compact.matches
+        ? Math.min(COMPACT_THUMB, Math.max(MIN_THUMB, natural))
+        : Math.max(MIN_THUMB, natural);
       travel = Math.max(0, track - size);
       bar.style.setProperty("--thumb-size", `${size}px`);
       bar.style.setProperty("--thumb-travel", `${travel}px`);
@@ -72,6 +79,12 @@ if (CSS.supports("animation-timeline: scroll()")) {
 
   document.addEventListener("astro:page-load", () => {
     bind();
+    invalidateScrollMetrics();
+  });
+  // Crossing the compact breakpoint changes the thumb size without any
+  // viewport-height change, so force the next frame to re-measure.
+  compact.addEventListener("change", () => {
+    view = -1;
     invalidateScrollMetrics();
   });
 }
