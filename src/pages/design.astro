@@ -481,8 +481,9 @@ const jsonLd = {
           <span class="height-key">32 · glass</span>
         </div>
         <div class="height-item">
-          <a class="ui-chip" href="/library/tags/">
-            <span class="ui-cap__label"><span class="ui-chip__hash">#</span>payments</span>
+          <a class="ui-chip ui-cap--lead" href="/library/tags/">
+            <Icon name="hash" size={12} strokeWidth={2.2} class="ui-chip__hash" />
+            <span class="ui-cap__label">payments</span>
           </a>
           <span class="height-key">28 · chip</span>
         </div>
@@ -492,7 +493,7 @@ const jsonLd = {
         </div>
       </div>
 
-      <p>Every press goes down in 70 ms and springs back up, and none of it moves layout: a press or a state change never animates width, so the copy circle is the same size at rest, copied and failed. The one capsule that grows is an arrow capsule on hover, by the glyph's width. State is never colour alone. Copy is a symbol and never a word: the glyph becomes a check that draws itself, or an alert; soon shows a dot and a word.</p>
+      <p>Every press goes down in 70 ms and springs back up, and none of it moves layout: a press or a state change never animates width, so the copy circle is the same size at rest, copied and failed. The one capsule that grows is an arrow capsule on hover, by the glyph's width. State is never colour alone. Copy is a symbol and never a word: the glyph becomes a check that draws itself, or an alert. A tag's hash and a brand are marks, never letters; a soon tile is simply dim, with no badge.</p>
 
       <h3>Arrow direction</h3>
       <p>One glyph per meaning. On a labelled capsule the arrow is not there until you reach for it: hover or tab to the capsule and it opens by the glyph's width, the label stays put, and the glyph travels its last few pixels along its own direction. Touch never shows it. Rows, tiles and icon-only controls keep theirs visible. The arrow on an inline external link is the same idea inside a sentence: it takes no room at rest, so a justified paragraph holds still, and opens with its space when the paragraph or the link is under a fine pointer or has keyboard focus. Hover or tab through these; this is the complete set.</p>
@@ -565,8 +566,9 @@ const jsonLd = {
               <Icon name="arrow-right" size={16} />
             </span>
           </a>
-          <button type="button" class="ui-chip">
-            <span class="ui-cap__label"><span class="ui-chip__hash">#</span>tag chip</span>
+          <button type="button" class="ui-chip ui-cap--lead">
+            <Icon name="hash" size={12} strokeWidth={2.2} class="ui-chip__hash" />
+            <span class="ui-cap__label">tag chip</span>
           </button>
         </div>
         <span class="specimen-note">Press <kbd class="ui-kbd">Tab</kbd> to cycle between controls. Mouse clicks suppress the ring via <code class="inline-code">:focus-visible</code>.</span>

@@ -49,7 +49,7 @@ const fmt = (d: Date) =>
   ]}
 >
   <header class="tag-header" data-enter>
-    <h1 class="tag-title">#{bucket.tag}</h1>
+    <h1 class="tag-title"><Icon name="hash" size={14} strokeWidth={2} class="ui-chip__hash ui-chip__hash--inline" />{bucket.tag}</h1>
     {description && <p class="tag-lede">{description}</p>}
     <div class="tag-meta-bar">
       <span class="ui-badge">{bucket.count} {bucket.count === 1 ? "entry" : "entries"}</span>
@@ -91,6 +91,14 @@ const fmt = (d: Date) =>
     color: var(--ink);
     text-wrap: balance;
     overflow-wrap: anywhere;
+  }
+
+  /* the title's own symbol: it scales with the title (14px would read as a
+     subscript at this size), stays ghost, and sits on the x-height */
+  .tag-title :global(.ui-chip__hash--inline) {
+    inline-size: 0.6em;
+    block-size: 0.6em;
+    vertical-align: 0.04em;
   }
 
   .tag-lede {

@@ -23,17 +23,20 @@ const { tags, linked, label = "Tags", active, clearHref = "/library/tags/" } = A
   <span class="row-tags" role="group" aria-label={label}>
     {tags.map((tag) => (
       tag === active ? (
-        <a class="ui-chip ui-cap--trail" href={clearHref} aria-pressed="true" aria-label={`Remove filter #${tag}`}>
-          <span class="ui-cap__label"><span class="ui-chip__hash">#</span>{tag}</span>
+        <a class="ui-chip ui-cap--lead ui-cap--trail" href={clearHref} aria-pressed="true" aria-label={`Remove filter: ${tag}`}>
+          <Icon name="hash" size={12} strokeWidth={2.2} class="ui-chip__hash" />
+          <span class="ui-cap__label">{tag}</span>
           <Icon name="close" size={12} strokeWidth={2.2} />
         </a>
       ) : isLinkedTag(tag, linked) ? (
-        <a class="ui-chip" href={tagHref(tag)}>
-          <span class="ui-cap__label"><span class="ui-chip__hash">#</span>{tag}</span>
+        <a class="ui-chip ui-cap--lead" href={tagHref(tag)}>
+          <Icon name="hash" size={12} strokeWidth={2.2} class="ui-chip__hash" />
+          <span class="ui-cap__label">{tag}</span>
         </a>
       ) : (
-        <span class="ui-chip row-tag-label">
-          <span class="ui-cap__label"><span class="ui-chip__hash">#</span>{tag}</span>
+        <span class="ui-chip ui-cap--lead row-tag-label">
+          <Icon name="hash" size={12} strokeWidth={2.2} class="ui-chip__hash" />
+          <span class="ui-cap__label">{tag}</span>
         </span>
       )
     ))}

@@ -17,8 +17,9 @@
                                       the arrow opens outward (quiet only)
      __label                          every capsule label (lift, magnet parallax)
    .ui-count                          mono tabular count in a cap or segment
-   .ui-chip  __hash                   28px tag chip, "#" in ghost; .go-spec-pill
-                                      is the same recipe for markdown-authored links
+   .ui-chip  __hash                   28px tag chip, registry hash icon in ghost,
+                                      then the bare name; .go-spec-pill is the same
+                                      recipe for markdown-authored links
    .ui-arw  --ext --back              registry arrow. Labelled cap: opens on hover
                                       and focus. Icon cap, tile, pager: conveyor
    .ui-stk  --icon                    one grid cell, children carry data-when
@@ -47,7 +48,7 @@
    :disabled, aria-disabled="true"    cap, chip     disabled look
    aria-pressed / aria-current=page   chip          selected (active filter)
    aria-selected / -current / -pressed  seg item    selected
-   data-tone=reading|soon|live|new|down  badge      dot colour
+   data-tone=reading|live|new|down    badge      dot colour
    data-ready  data-stuck             .ui-seg       segmented.ts: ink-through on;
    data-overflow                      __track       chrome glass; edge fade
    data-slide=a|b + --slide-*         __ind         FLIP from the previous box
@@ -219,10 +220,19 @@
   border-color: var(--edge-soft);
 }
 
+/* the registry hash icon, a flex child of the chip: the chip's own 4px gap
+   sits before the label, so the label's text node is the bare tag name */
 .ui-chip__hash {
+  flex: none;
   color: var(--ghost);
-  margin-inline-end: -1px;
   transition: color var(--t-color);
+}
+
+/* in running text (a tags row, the tag page title): the same 4px, on the line */
+.ui-chip__hash--inline {
+  display: inline-block;
+  vertical-align: -0.1em;
+  margin-inline-end: var(--step-1);
 }
 
 .ui-cap--chip-selected,
@@ -233,7 +243,7 @@
   box-shadow: var(--ink-edge);
 }
 
-:is(.ui-cap--chip-selected, [aria-pressed="true"], [aria-current="page"]) > .ui-cap__label > .ui-chip__hash {
+:is(.ui-cap--chip-selected, [aria-pressed="true"], [aria-current="page"]) > .ui-chip__hash {
   color: color-mix(in oklch, var(--canvas) 55%, transparent);
 }
 
@@ -638,7 +648,6 @@
 }
 
 .ui-badge[data-tone="reading"] { --badge-dot: var(--acc-blue); }
-.ui-badge[data-tone="soon"] { --badge-dot: var(--acc-amber); }
 .ui-badge[data-tone="live"] { --badge-dot: var(--acc-green); }
 .ui-badge[data-tone="new"] { --badge-dot: var(--acc-violet); }
 .ui-badge[data-tone="down"] { --badge-dot: var(--acc-red); }
@@ -1291,7 +1300,8 @@
 
 /* ------------------------------------------------------------------
    tile (/more). Live tiles are links with an arrow in the corner slot;
-   soon tiles are <div>s with the soon badge there instead. Illustration
+   soon tiles are <div>s with no corner at all: not focusable, no hover or
+   press, aria-disabled, and a visually hidden "Coming soon." Illustration
    loops read animation-play-state: var(--tile-play), which runs only
    while the tile is hovered or focused, or carries data-play.
    ------------------------------------------------------------------ */

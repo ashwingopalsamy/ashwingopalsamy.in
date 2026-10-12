@@ -876,6 +876,7 @@ const FILE_ICON = iconMarkup("file-text", { size: 12, strokeWidth: 2.2 });
 const GIT_ICON = iconMarkup("git-commit", { size: 12, strokeWidth: 2.2 });
 const USERS_ICON = iconMarkup("people", { size: 12, strokeWidth: 1.8 });
 const EXT_ICON = iconMarkup("arrow-up-right", { size: 12, strokeWidth: 2.2, className: "go-spec-ext" });
+const HASH_ICON = iconMarkup("hash", { size: 12, strokeWidth: 2.2, className: "ui-chip__hash" });
 
 let snippetSeq = 0;
 
@@ -1203,7 +1204,7 @@ function enhanceSpecFooters() {
       issueLink.target = "_blank";
       issueLink.rel = "noreferrer";
       issueLink.className = "go-spec-pill";
-      issueLink.innerHTML = `<span class="ui-chip__hash">#</span><span class="ui-cap__label">${data.issueNumber}</span>${EXT_ICON}`;
+      issueLink.innerHTML = `${HASH_ICON}<span class="ui-cap__label">${data.issueNumber}</span>${EXT_ICON}`;
       issueLink.onclick = () => {
         if (isSoundEnabled()) playAccent("tick");
       };

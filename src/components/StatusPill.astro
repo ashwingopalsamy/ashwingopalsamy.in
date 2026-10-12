@@ -12,13 +12,11 @@ interface Props {
 
 const { label, class: className } = Astro.props;
 
-const lowered = label.trim().toLowerCase();
-const text = lowered === "coming soon" ? "soon" : lowered;
+const text = label.trim().toLowerCase();
 
 const tones: Record<string, string> = {
   reading: "reading",
   watching: "reading",
-  soon: "soon",
   live: "live",
   new: "new",
   down: "down",

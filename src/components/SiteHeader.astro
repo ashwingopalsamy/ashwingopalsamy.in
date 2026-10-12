@@ -39,9 +39,7 @@ const backTarget = resolveBackTarget(path);
     </span>
   </a>
 
-  {/* The tooltip is the chip's sibling, not its child: the chip's own
-      backdrop-filter and transition name make it a backdrop root, which
-      would leave the tooltip's blur nothing to sample. */}
+  {/* Phones only: desktop opens the palette with ⌘K or /. */}
   <div class="header-actions">
     <a
       class="header-palette-trigger palette-trigger nav-glass chrome-surface"
@@ -50,10 +48,8 @@ const backTarget = resolveBackTarget(path);
       aria-keyshortcuts="Meta+K Control+K"
       data-palette-entry="directory"
     >
-      <Icon name="search" size={16} class="trigger-search" />
-      <Icon name="command" size={18} class="trigger-command" />
+      <Icon name="command" size={18} />
     </a>
-    <span class="ui-tip" role="tooltip">Search<span class="ui-kbd"><Icon name="command" size={12} strokeWidth={2.2} /></span><span class="ui-kbd">K</span></span>
   </div>
 
   <nav class="site-nav nav-glass chrome-surface" aria-label="Pages" data-no-active={desktopActiveIndex < 0 ? "true" : undefined} data-active-index={String(Math.max(0, desktopActiveIndex))}>
@@ -267,8 +263,7 @@ const backTarget = resolveBackTarget(path);
     block-size: var(--chrome-size);
     box-sizing: border-box;
     padding: var(--step-1);
-    /* 8px from the search chip; the header's own gap is 16 */
-    margin-inline-start: calc(var(--step-2) - var(--step-4));
+    margin-inline-start: auto;
     min-inline-size: 0;
     max-inline-size: 100%;
     font-size: var(--text-ui);
@@ -425,10 +420,8 @@ const backTarget = resolveBackTarget(path);
   }
 
   .header-actions {
-    position: relative;
-    display: flex;
+    display: none;
     align-items: center;
-    gap: var(--step-2);
     min-inline-size: 0;
     margin-inline-start: auto;
   }
@@ -441,11 +434,6 @@ const backTarget = resolveBackTarget(path);
     padding: 0;
     color: var(--muted);
     text-decoration: none;
-  }
-
-  /* Desktop searches; on phones the same chip opens the command directory. */
-  .header-palette-trigger :global(.trigger-command) {
-    display: none;
   }
 
   /* The veil: content dissolves under the chrome instead of sliding
@@ -563,17 +551,9 @@ const backTarget = resolveBackTarget(path);
       backdrop-filter: blur(20px) saturate(170%);
     }
 
-    .header-palette-trigger :global(.trigger-search) {
-      display: none;
-    }
-
-    .header-palette-trigger :global(.trigger-command) {
-      display: block;
-    }
-
-    /* no ⌘ on a phone, and the chip opens the directory here */
-    .header-actions > :global(.ui-tip) {
-      display: none;
+    /* the ⌘ chip opens the command directory */
+    .header-actions {
+      display: flex;
     }
 
     .site-nav-bottom {
@@ -681,8 +661,6 @@ const backTarget = resolveBackTarget(path);
 </style>
 
 <script>
-  import "../scripts/tooltip";
-
   /* The veil is on once the page has scrolled at all. A zero-height
      sentinel at the top of the document tells an IntersectionObserver;
      nothing listens to scroll. It lives in the persisted chrome, so it

@@ -40,7 +40,7 @@ const jsonLd = collectionPageJsonLd({
       <li>
         <a class="ui-row ui-row--multiline" data-fx="spot" href={tagHref(b.tag)}>
           <span class="ui-row__title">
-            #{b.tag}
+            <Icon name="hash" size={14} strokeWidth={2} class="ui-chip__hash ui-chip__hash--inline" />{b.tag}
             <span class="ui-row__sub">{tagPageDescription(b.tag, b.count)}</span>
           </span>
           <span class="ui-row__meta tag-count">{b.count}</span>

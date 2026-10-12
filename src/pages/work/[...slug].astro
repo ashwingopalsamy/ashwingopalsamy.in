@@ -4,7 +4,7 @@ import Page from "../../layouts/Page.astro";
 import { craftJsonLd } from "../../lib/jsonld";
 import { ogPath } from "../../lib/og-url";
 import { absUrl, slashPath } from "../../lib/urls";
-import Icon from "../../components/Icon.astro";
+import { profileIconPaths } from "../../lib/profile-icons";
 import DetailHeader from "../../components/DetailHeader.astro";
 import RowTags from "../../components/RowTags.astro";
 import "../../styles/prose.css";
@@ -39,12 +39,11 @@ const url = slashPath(`/work/${entry.data.slug}`);
       </Fragment>
       {github && (
         <Fragment slot="action">
-          <a class="ui-cap ui-cap--glass ui-cap--32 ui-cap--trail" href={github} target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
-            <span class="ui-cap__label">GitHub</span>
-            <span class="ui-arw ui-arw--ext">
-              <Icon name="arrow-up-right" size={14} strokeWidth={2} />
-              <Icon name="arrow-up-right" size={14} strokeWidth={2} />
-            </span>
+          <a class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon" href={github} target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+              <path d={profileIconPaths.github} />
+            </svg>
+            <span class="ui-tip" role="tooltip">GitHub repository</span>
           </a>
         </Fragment>
       )}

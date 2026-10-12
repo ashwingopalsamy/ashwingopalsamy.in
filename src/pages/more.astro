@@ -3,7 +3,6 @@ import Page from "../layouts/Page.astro";
 import { ogPath } from "../lib/og-url";
 import { moreDestinations } from "../data/more";
 import Icon from "../components/Icon.astro";
-import StatusPill from "../components/StatusPill.astro";
 import PageIntro from "../components/PageIntro.astro";
 import { getPhotoEntries } from "../data/photos";
 
@@ -34,21 +33,22 @@ const destinations = moreDestinations.map((destination) =>
           data-fx={soon ? undefined : "spot"}
           data-more-tile={soon ? undefined : ""}
           href={soon ? undefined : destination.href}
+          aria-disabled={soon ? "true" : undefined}
         >
           <span class="ui-tile__title">{destination.title}</span>
           <span class="ui-tile__desc">{destination.description}</span>
-          <span class="ui-tile__corner">
-            {soon ? (
-              <StatusPill label="soon" />
-            ) : (
+          {soon ? (
+            <span class="visually-hidden">Coming soon.</span>
+          ) : (
+            <span class="ui-tile__corner">
               <span class="ui-tile__go" aria-hidden="true">
                 <span class="ui-arw">
                   <Icon name="arrow-right" size={14} strokeWidth={2} />
                   <Icon name="arrow-right" size={14} strokeWidth={2} />
                 </span>
               </span>
-            )}
-          </span>
+            </span>
+          )}
           <div class="ui-tile__art" aria-hidden="true">
             {destination.id === "library" ? (
               <div class="spines">
@@ -150,11 +150,6 @@ const destinations = moreDestinations.map((destination) =>
 
   .ui-tile__desc {
     overflow-wrap: anywhere;
-  }
-
-  /* the badge sits on the arrow's line: no 1px optical lift in the corner */
-  .ui-tile__corner :global(.ui-badge) {
-    top: 0;
   }
 
   /* ---- illustrations: drawn in the art slot's colour (ghost at rest,
@@ -287,8 +282,8 @@ const destinations = moreDestinations.map((destination) =>
       min-block-size: calc(var(--step) * 31);
       padding: var(--step-4);
     }
-    /* a half-width tile leaves the badge 4px of air at 18px; 17px leaves
-       room, and a file name must never hyphenate or justify into rivers */
+    /* a half-width tile leaves the corner arrow 4px of air at 18px; 17px
+       leaves room, and a file name must never hyphenate or justify into rivers */
     .ui-tile__title {
       font-size: var(--text-md);
     }
@@ -298,7 +293,7 @@ const destinations = moreDestinations.map((destination) =>
     }
   }
 
-  /* below this a half-width tile cannot hold a title and its badge */
+  /* below this a half-width tile cannot hold a title and its arrow */
   @media (max-width: 23rem) {
     .bento { grid-template-columns: 1fr; }
     .t-library, .t-people { grid-column: auto; }
