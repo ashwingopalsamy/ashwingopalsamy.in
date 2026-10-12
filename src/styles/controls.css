@@ -13,11 +13,14 @@
      --chip --chip-selected           tag tiers (.ui-chip = cap + chip + 28)
      --48 --40 --32 --28 --20         height
      --lead --trail --icon            icon side gives 4px back; icon-only circle
+     --hang                           label, not box, sits on the column edge;
+                                      the arrow opens outward (quiet only)
      __label                          every capsule label (lift, magnet parallax)
    .ui-count                          mono tabular count in a cap or segment
    .ui-chip  __hash                   28px tag chip, "#" in ghost; .go-spec-pill
                                       is the same recipe for markdown-authored links
-   .ui-arw  --ext --back              conveyor: two identical registry icons
+   .ui-arw  --ext --back              registry arrow. Labelled cap: opens on hover
+                                      and focus. Icon cap, tile, pager: conveyor
    .ui-stk  --icon                    one grid cell, children carry data-when
    .ui-draw                           stroke icon (check) that draws itself
    .ui-link                           inline link, no underline; icon = external
@@ -65,6 +68,11 @@
   /* release is a spring; :active swaps in the 70ms press */
   --ui-move: var(--dur-spring-pop) var(--ease-spring-pop);
   --ui-drift: var(--dur-spring-snap) var(--ease-spring-snap);
+  /* arrow reveal (below): 0 closed, 1 open. Reduced motion keeps these
+     instant; the no-preference block gives them their curves. */
+  --arw-open: 0;
+  --arw-move: 0s;
+  --arw-fade: var(--t-color);
   position: relative;
   isolation: isolate;
   display: inline-flex;
@@ -95,7 +103,8 @@
     border-color var(--t-color),
     box-shadow var(--t-color),
     transform var(--ui-move),
-    translate var(--ui-drift);
+    translate var(--ui-drift),
+    margin-inline var(--arw-move);
 }
 
 .ui-cap--48 {
@@ -287,6 +296,119 @@
 
 .ui-arw--back > :nth-child(2) {
   translate: 100% 0;
+}
+
+/* ------------------------------------------------------------------
+   arrow reveal: on a labelled capsule the glyph answers the pointer; it
+   is not furniture. Closed, it has no width and no gap, so the capsule is
+   its label between two equal paddings. Hover and keyboard focus set
+   --arw-open to 1: the box opens to the glyph and the glyph travels its
+   last few pixels along its own vector. Leaving closes it in --dur-exit.
+   Touch never opens it, and reduced motion fades it in without moving
+   anything. Icon circles, tiles and pager cards keep the conveyor above;
+   the conveyor's twin icon is not used here.
+   ------------------------------------------------------------------ */
+
+/* what the capsule gains when it opens: the glyph and its gap, less the
+   whitespace the icon side gave back */
+.ui-cap {
+  --cap-open: calc(var(--cap-spin) + var(--cap-gap) - var(--cap-icon-trim));
+}
+
+.ui-cap:not(.ui-cap--icon) > .ui-arw {
+  inline-size: calc(var(--cap-spin) * var(--arw-open));
+  min-inline-size: 0;
+  transition:
+    inline-size var(--arw-move),
+    margin-inline var(--arw-move);
+}
+
+/* closed, the glyph's gap is cancelled and its trim is handed back, so
+   the padding is symmetric */
+.ui-cap--trail:not(.ui-cap--icon) > .ui-arw {
+  margin-inline:
+    calc(var(--cap-gap) * (var(--arw-open) - 1))
+    calc(var(--cap-icon-trim) * (1 - var(--arw-open)));
+}
+
+.ui-cap--lead:not(.ui-cap--icon) > .ui-arw {
+  margin-inline:
+    calc(var(--cap-icon-trim) * (1 - var(--arw-open)))
+    calc(var(--cap-gap) * (var(--arw-open) - 1));
+}
+
+.ui-cap:not(.ui-cap--icon) > .ui-arw > :nth-child(1) {
+  opacity: var(--arw-open);
+  transition: opacity var(--arw-fade);
+}
+
+.ui-cap:not(.ui-cap--icon) > .ui-arw > :nth-child(2) {
+  display: none;
+}
+
+/* A leading arrow opens into the capsule's start edge. The margin pays
+   for it, so the label stays where it was and nothing beside it moves. */
+.ui-cap--lead:not(.ui-cap--icon):has(> .ui-arw:first-child) {
+  margin-inline-start: calc(var(--cap-edge, 0px) - var(--cap-open) * var(--arw-open));
+}
+
+/* Hang: a quiet capsule is text until it is touched, so its label sits on
+   the column edge and its wash and glyph bleed into the gutter, the way a
+   row's hover surface bleeds past the rail. A trailing one pays for its
+   growth on the end side the same way. */
+.ui-cap--hang {
+  --cap-edge: calc((var(--cap-px) + 1px) * -1);
+}
+
+.ui-cap--hang.ui-cap--trail:not(.ui-cap--icon) {
+  margin-inline-end: calc(var(--cap-edge) - var(--cap-open) * var(--arw-open));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ui-cap {
+    --arw-move: var(--dur-exit) var(--ease-exit);
+    --arw-fade: var(--dur-exit) var(--ease-exit);
+  }
+
+  .ui-cap:not(.ui-cap--icon):focus-visible {
+    --arw-move: var(--dur-enter) var(--ease-spring-snap);
+    --arw-fade: var(--dur-enter) var(--ease-enter);
+  }
+
+  /* the last few pixels along the glyph's own vector */
+  .ui-cap:not(.ui-cap--icon) > .ui-arw > :nth-child(1) {
+    translate: calc(var(--step-1) * (var(--arw-open) - 1)) 0;
+    transition:
+      translate var(--arw-move),
+      opacity var(--arw-fade);
+  }
+
+  .ui-cap:not(.ui-cap--icon) > .ui-arw--ext > :nth-child(1) {
+    translate:
+      calc(var(--travel-nudge) * (var(--arw-open) - 1))
+      calc(var(--travel-nudge) * (1 - var(--arw-open)));
+  }
+
+  .ui-cap:not(.ui-cap--icon) > .ui-arw--back > :nth-child(1) {
+    translate: calc(var(--step-1) * (1 - var(--arw-open))) 0;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ui-cap:not(.ui-cap--icon):hover {
+      --arw-move: var(--dur-enter) var(--ease-spring-snap);
+      --arw-fade: var(--dur-enter) var(--ease-enter);
+    }
+  }
+}
+
+.ui-cap:not(.ui-cap--icon, :disabled, [aria-disabled="true"]):focus-visible {
+  --arw-open: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ui-cap:not(.ui-cap--icon, :disabled, [aria-disabled="true"]):hover {
+    --arw-open: 1;
+  }
 }
 
 /* ------------------------------------------------------------------
@@ -1478,21 +1600,21 @@
     transform: scale(var(--press-scale-inline));
   }
 
-  /* conveyor */
-  :is(.ui-cap, .ui-chip, .ui-pager__card, .ui-tile):hover .ui-arw > :nth-child(1) {
+  /* conveyor: icon circles, tiles, pager cards. Labelled capsules reveal. */
+  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):hover .ui-arw > :nth-child(1) {
     translate: 100% 0;
     opacity: 0;
   }
 
-  :is(.ui-cap, .ui-chip, .ui-pager__card, .ui-tile):hover .ui-arw--ext > :nth-child(1) {
+  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):hover .ui-arw--ext > :nth-child(1) {
     translate: 100% -100%;
   }
 
-  :is(.ui-cap, .ui-chip, .ui-pager__card, .ui-tile):hover .ui-arw--back > :nth-child(1) {
+  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):hover .ui-arw--back > :nth-child(1) {
     translate: -100% 0;
   }
 
-  :is(.ui-cap, .ui-chip, .ui-pager__card, .ui-tile):hover .ui-arw > :nth-child(2) {
+  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):hover .ui-arw > :nth-child(2) {
     translate: none;
     opacity: 1;
     transition:
@@ -1532,22 +1654,23 @@
   }
 }
 
-/* Touch has no hover: the conveyor plays once on press. */
+/* Touch has no hover: the conveyor plays once on press. A labelled capsule
+   keeps its arrow closed; its label carries the meaning. */
 @media (hover: none) and (prefers-reduced-motion: no-preference) {
-  :is(.ui-cap, .ui-chip, .ui-pager__card, .ui-tile):active .ui-arw > :nth-child(1) {
+  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):active .ui-arw > :nth-child(1) {
     translate: 100% 0;
     opacity: 0;
   }
 
-  :is(.ui-cap, .ui-chip, .ui-pager__card, .ui-tile):active .ui-arw--ext > :nth-child(1) {
+  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):active .ui-arw--ext > :nth-child(1) {
     translate: 100% -100%;
   }
 
-  :is(.ui-cap, .ui-chip, .ui-pager__card, .ui-tile):active .ui-arw--back > :nth-child(1) {
+  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):active .ui-arw--back > :nth-child(1) {
     translate: -100% 0;
   }
 
-  :is(.ui-cap, .ui-chip, .ui-pager__card, .ui-tile):active .ui-arw > :nth-child(2) {
+  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):active .ui-arw > :nth-child(2) {
     translate: none;
     opacity: 1;
     transition:

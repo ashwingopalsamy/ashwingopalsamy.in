@@ -24,7 +24,7 @@ const accents = {
   <SectionHeading id={id} title={label} accent={accents[shelf.kind]}>
     <Fragment slot="action">
       <a
-        class="library-all ui-cap ui-cap--quiet ui-cap--32 ui-cap--trail"
+        class="library-all ui-cap ui-cap--quiet ui-cap--32 ui-cap--trail ui-cap--hang"
         href={`/library/?view=${shelf.kind}`}
         data-library-show-all
         data-library-view={shelf.kind}
@@ -48,11 +48,5 @@ const accents = {
 
   .library-shelf + .library-shelf {
     margin-top: clamp(2.75rem, 6vw, 3.5rem);
-  }
-
-  /* the capsule's own trailing inset, so its arrow lands on the rail with
-     the rows' glyph column */
-  .library-all {
-    margin-inline-end: calc(var(--step-2) * -1);
   }
 </style>

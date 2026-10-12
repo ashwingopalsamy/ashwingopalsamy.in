@@ -14,7 +14,7 @@ const hasAction = Astro.slots.has("action");
 
 <header class="detail-header" data-enter>
   {back && (
-    <a class="ui-cap ui-cap--quiet ui-cap--32 ui-cap--lead detail-back" href={back.href}>
+    <a class="ui-cap ui-cap--quiet ui-cap--32 ui-cap--lead ui-cap--hang detail-back" href={back.href}>
       <span class="ui-arw ui-arw--back">
         <Icon name="arrow-left" size={14} strokeWidth={2} />
         <Icon name="arrow-left" size={14} strokeWidth={2} />
@@ -44,10 +44,9 @@ const hasAction = Astro.slots.has("action");
     transition: border-color var(--t-color);
   }
 
-  /* The arrow sits on the rail; the eyebrow is 12px above the title. */
+  /* The label sits on the rail; the eyebrow is 12px above the title. */
   .detail-back {
     align-self: flex-start;
-    margin-inline-start: calc(var(--step-2) * -1);
     margin-block-end: calc(var(--step-2) * -1);
   }
 
