@@ -487,7 +487,18 @@ function keepActiveRowInView(list: HTMLElement, row: HTMLElement) {
   }
 }
 
+function isSafeHref(href: string, external: boolean): boolean {
+  try {
+    const url = new URL(href, location.href);
+    if (url.protocol === "http:" || url.protocol === "https:") return external || url.origin === location.origin;
+    return external && url.protocol === "view-source:";
+  } catch {
+    return false;
+  }
+}
+
 function navigate(href: string) {
+  if (!isSafeHref(href, false)) return;
   closePalette(false, true);
   const signal = pageSignal();
   const session = paletteSession;
@@ -502,6 +513,7 @@ function navigate(href: string) {
 }
 
 function openExternal(href: string) {
+  if (!isSafeHref(href, true)) return;
   trackOutbound(href);
   window.open(href, "_blank", "noopener,noreferrer");
 }
@@ -1123,11 +1135,16 @@ function timeItem(label: string, zone: string, value: PaletteManifest | null): I
   return createItem({ id: `time:${zone}`, kind: "time", group: "Time", label: labelText, subtitle: "Live clock · select to copy", icon: "time", live: () => formatNativeTime(zone), keywords: ["time", "clock", "timezone", label], action: () => copyText(`${label}: ${formatNativeTime(zone)} (${zone})`, "Time copied"), actions: [{ id: `time:${zone}:copy`, label: "Copy time", icon: "copy", action: () => copyText(`${label}: ${formatNativeTime(zone)} (${zone})`, "Time copied") }, { id: `time:${zone}:copy-compare`, label: "Copy with Pollachi", icon: "compare", action: () => copyText(`${label}: ${formatNativeTime(zone)}\nPollachi: ${formatNativeTime(value?.profile.timeZone ?? "Asia/Kolkata")}`, "Times copied") }, { id: `time:${zone}:pin`, label: isPinned(`time:${zone}`) ? "Unpin command" : "Pin command", icon: isPinned(`time:${zone}`) ? "pin-off" : "pin", action: () => togglePin(`time:${zone}`), closeOnRun: false }] });
 }
 
+/* Pagefind excerpts arrive already entity-escaped with <mark> highlights. Keep only bare
+   <mark> tags and neutralise every other angle bracket, so no markup survives. */
 function sanitizeExcerpt(value: string): string {
   return value
-    .replace(/<mark\b[^>]*>/gi, "<mark>")
-    .replace(/<\/mark>/gi, "</mark>")
-    .replace(/<(?!\/?mark>)[^>]*>/gi, "");
+    .split(/(<\/?mark\b[^>]*>)/gi)
+    .map((part, index) => {
+      if (index % 2 === 0) return part.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      return part.startsWith("</") ? "</mark>" : "<mark>";
+    })
+    .join("");
 }
 
 function escapeHtml(value: string): string {
