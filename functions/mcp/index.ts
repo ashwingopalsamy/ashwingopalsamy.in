@@ -16,6 +16,7 @@ import {
   searchSite,
 } from "../_site-data";
 import type { RuntimeEnv } from "../_site-data";
+import { checkGoVersion, getEmudhraIncident, recoverKey } from "../../src/lib/incident/tools";
 import { applySecurityHeaders } from "../../src/lib/security-headers";
 import { MAX_BODY_BYTES } from "../_ingress";
 
@@ -144,6 +145,66 @@ function createServer(env: RuntimeEnv, requestUrl: string) {
         return textResult(markdown === null ? { error: "note_not_found" } : { slug, markdown });
       } catch (err) {
         recordMcpOp(env, "tools/call", MCP_TOOLS.getNoteMarkdown.name, false, performance.now() - t0, 0);
+        throw err;
+      }
+    },
+  );
+
+  server.registerTool(
+    MCP_TOOLS.getEmudhraIncident.name,
+    {
+      description: MCP_TOOLS.getEmudhraIncident.description,
+      inputSchema: MCP_TOOLS.getEmudhraIncident.inputSchema,
+      annotations: MCP_TOOLS.getEmudhraIncident.annotations,
+    },
+    async (input) => {
+      const t0 = performance.now();
+      try {
+        const result = getEmudhraIncident(input);
+        recordMcpOp(env, "tools/call", MCP_TOOLS.getEmudhraIncident.name, true, performance.now() - t0, 1);
+        return textResult(result);
+      } catch (err) {
+        recordMcpOp(env, "tools/call", MCP_TOOLS.getEmudhraIncident.name, false, performance.now() - t0, 0);
+        throw err;
+      }
+    },
+  );
+
+  server.registerTool(
+    MCP_TOOLS.checkGoVersion.name,
+    {
+      description: MCP_TOOLS.checkGoVersion.description,
+      inputSchema: MCP_TOOLS.checkGoVersion.inputSchema,
+      annotations: MCP_TOOLS.checkGoVersion.annotations,
+    },
+    async (input) => {
+      const t0 = performance.now();
+      try {
+        const result = checkGoVersion(input);
+        recordMcpOp(env, "tools/call", MCP_TOOLS.checkGoVersion.name, true, performance.now() - t0, result.results.length);
+        return textResult(result);
+      } catch (err) {
+        recordMcpOp(env, "tools/call", MCP_TOOLS.checkGoVersion.name, false, performance.now() - t0, 0);
+        throw err;
+      }
+    },
+  );
+
+  server.registerTool(
+    MCP_TOOLS.recoverKey.name,
+    {
+      description: MCP_TOOLS.recoverKey.description,
+      inputSchema: MCP_TOOLS.recoverKey.inputSchema,
+      annotations: MCP_TOOLS.recoverKey.annotations,
+    },
+    async (input) => {
+      const t0 = performance.now();
+      try {
+        const result = await recoverKey(input);
+        recordMcpOp(env, "tools/call", MCP_TOOLS.recoverKey.name, !("error" in result), performance.now() - t0, 1);
+        return textResult(result);
+      } catch (err) {
+        recordMcpOp(env, "tools/call", MCP_TOOLS.recoverKey.name, false, performance.now() - t0, 0);
         throw err;
       }
     },

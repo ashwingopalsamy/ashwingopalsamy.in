@@ -22,6 +22,9 @@ import CommandPalette from "../components/CommandPalette.astro";
 
 interface Props {
   title?: string;
+  /** Verbatim document title for <title>, og:title and twitter:title: no site
+      suffix is added. When omitted the title falls back to `title · site`. */
+  seoTitle?: string;
   description?: string;
   /** visible page heading ("{label}"). Optional; omit for pages that
       carry their own on-page title (e.g. article detail routes, homepage). */
@@ -49,10 +52,14 @@ interface Props {
   /** Article times for ogType=article notes. */
   publishedTime?: Date;
   modifiedTime?: Date;
+  /** article:tag (one per entry) and article:section for ogType=article notes. */
+  articleTags?: string[];
+  articleSection?: string;
 }
 
 const {
   title = site.title,
+  seoTitle,
   description = site.description,
   label,
   bodyClass,
@@ -69,6 +76,8 @@ const {
   pagefind = true,
   publishedTime,
   modifiedTime,
+  articleTags,
+  articleSection,
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, site.url);
 const explicitMarkdownAlternate = alternates?.find((alt) => alt.type === "text/markdown");
@@ -81,9 +90,11 @@ const structuredData = [personJsonLd(), organizationJsonLd()];
 const isHome = Astro.url.pathname === "/" || Astro.url.pathname === "";
 const documentTitle = isHome
   ? `${site.name} · Staff Software Engineer, Payments Infrastructure`
-  : title === site.title || title.includes(site.name)
-    ? title
-    : `${title} · ${site.name}`;
+  : seoTitle
+    ? seoTitle
+    : title === site.title || title.includes(site.name)
+      ? title
+      : `${title} · ${site.name}`;
 ---
 
 <!doctype html>
@@ -272,6 +283,12 @@ const documentTitle = isHome
     <meta property="og:image:type" content={ogImageType} />
     {ogImageAlt && <meta property="og:image:alt" content={ogImageAlt} />}
     {ogType === "article" && <meta property="article:author" content={site.name} />}
+    {ogType === "article" && articleSection && (
+      <meta property="article:section" content={articleSection} />
+    )}
+    {ogType === "article" && articleTags?.map((tag) => (
+      <meta property="article:tag" content={tag} />
+    ))}
     {publishedTime && (
       <meta property="article:published_time" content={publishedTime.toISOString()} />
     )}

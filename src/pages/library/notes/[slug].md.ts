@@ -2,6 +2,7 @@ import type { APIRoute, GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { absUrl } from "../../../lib/urls";
 
 export const prerender = true;
 
@@ -24,6 +25,8 @@ export const GET: APIRoute = async ({ props }) => {
   return new Response(raw, {
     headers: {
       "Content-Type": "text/markdown; charset=utf-8",
+      // The HTML page is the canonical; the mirror must not compete as a duplicate.
+      Link: `<${absUrl(`/blog/${id}`)}>; rel="canonical"`,
       "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
     },
   });

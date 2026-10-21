@@ -59,7 +59,7 @@ export function readingTimeMinutes(markdown: string): number {
   try {
     const seg = new Intl.Segmenter("en", { granularity: "word" });
     words = 0;
-    for (const _ of seg.segment(text)) words++;
+    for (const s of seg.segment(text)) if (s.isWordLike) words++;
   } catch {
     words = text.split(/\s+/).filter(Boolean).length;
   }

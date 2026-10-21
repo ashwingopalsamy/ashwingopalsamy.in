@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import type { CollectionEntry } from "astro:content";
 import { CANONICAL_KNOWLEDGE } from "../data/canonical-knowledge";
 import { site } from "../data/home";
@@ -225,6 +227,28 @@ export function watchJsonLd(entry: CollectionEntry<"watch">, url: string) {
   };
 }
 
+/** Hero crops that sit beside a note's 1200x630 social card (`<name>.png`) as
+ *  `<name>-16x9|4x3|1x1.png`. Search surfaces want several aspect ratios. */
+const NOTE_IMAGE_VARIANTS = [
+  { suffix: "-16x9", width: 1280, height: 720 },
+  { suffix: "-4x3", width: 1200, height: 900 },
+  { suffix: "-1x1", width: 1200, height: 1200 },
+  { suffix: "", width: 1200, height: 630 },
+] as const;
+
+/** ImageObjects for the variants that exist under public/ at build time; the
+ *  plain URL when none do or the image is off-site. */
+function noteImageObjects(image: string) {
+  const m = /^(\/.+)\.(png)$/i.exec(image);
+  if (!m) return absUrl(image);
+  const [, base, ext] = m;
+  const found = NOTE_IMAGE_VARIANTS
+    .map(({ suffix, width, height }) => ({ path: `${base}${suffix}.${ext}`, width, height }))
+    .filter(({ path }) => existsSync(join(process.cwd(), "public", path)))
+    .map(({ path, width, height }) => ({ "@type": "ImageObject", url: absUrl(path), width, height }));
+  return found.length ? found : absUrl(image);
+}
+
 export function noteJsonLd(
   entry: CollectionEntry<"notes">,
   url: string,
@@ -234,9 +258,11 @@ export function noteJsonLd(
     readingMinutes?: number;
     tags?: string[];
     image?: string;
+    section?: string;
   } = {},
 ) {
   const pageUrl = absUrl(url);
+  const image = entry.data.image ? noteImageObjects(entry.data.image) : opts.image;
   return {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -250,7 +276,9 @@ export function noteJsonLd(
     author: personRef,
     publisher: personRef,
     mainEntityOfPage: pageUrl,
-    ...(opts.image ? { image: opts.image } : {}),
+    isAccessibleForFree: true,
+    ...(opts.section ? { articleSection: opts.section } : {}),
+    ...(image ? { image } : {}),
     ...(opts.tags?.length ? { keywords: opts.tags.join(", ") } : {}),
     ...(typeof opts.wordCount === "number" ? { wordCount: opts.wordCount } : {}),
     ...(typeof opts.readingMinutes === "number"

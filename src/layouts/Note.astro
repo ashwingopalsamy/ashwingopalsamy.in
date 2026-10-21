@@ -28,6 +28,7 @@ import DetailHeader from "../components/DetailHeader.astro";
 import Pager from "../components/Pager.astro";
 import RowTags from "../components/RowTags.astro";
 import GoTourEnhancement from "../components/GoTourEnhancement.astro";
+import IncidentEnhancement from "../components/IncidentEnhancement.astro";
 import katexCss from "katex/dist/katex.min.css?url";
 import "../styles/prose.css";
 
@@ -49,6 +50,9 @@ const description = entry.data.description ?? autoExcerpt;
 const notePath = slashPath(`/blog/${entry.id}`);
 const mdPath = `/blog/${entry.id}.md`;
 const image = ogPath(`blog/${entry.id}`);
+const ogImage = entry.data.image ? absUrl(entry.data.image) : image;
+/** article:section / articleSection; the section notes live under. */
+const section = "Writings";
 const linkedTags = await linkedTagSet();
 
 /** True when the note body contains KaTeX-bound math ($…$ / $$…$$). */
@@ -57,7 +61,8 @@ function bodyHasMath(md: string): boolean {
   return /(?<!\$)\$(?!\$)[^$\n]+?\$(?!\$)/.test(md);
 }
 const hasMath = bodyHasMath(body);
-
+/** Posts that embed the /blog/emudhra/ figures load the incident enhancement. */
+const hasIncidentFigures = body.includes("](/blog/emudhra/");
 
 const writingsHref = "/library/?view=notes";
 const pagerItem = (n?: { id: string; title: string } | null) =>
@@ -65,6 +70,10 @@ const pagerItem = (n?: { id: string; title: string } | null) =>
 
 const fmtDate = (d: Date) =>
   d.toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" });
+/** The stamp adds nothing on the day of publication. dateModified is unchanged. */
+const showUpdated =
+  entry.data.updated !== undefined &&
+  entry.data.updated.toISOString().slice(0, 10) !== entry.data.date.toISOString().slice(0, 10);
 
 const jsonLd = [
   noteJsonLd(entry, notePath, {
@@ -73,6 +82,7 @@ const jsonLd = [
     tags: entry.data.tags,
     wordCount: words,
     image,
+    section,
   }),
   noteBreadcrumbJsonLd(entry.data.title, notePath),
 ];
@@ -81,12 +91,15 @@ const jsonLd = [
 
 <Page
   title={entry.data.title}
+  seoTitle={entry.data.seoTitle}
   description={description}
   ogType="article"
-  ogImage={image}
-  ogImageAlt={entry.data.title}
+  ogImage={ogImage}
+  ogImageAlt={entry.data.imageAlt ?? entry.data.title}
   publishedTime={entry.data.date}
   modifiedTime={entry.data.updated ?? entry.data.date}
+  articleTags={entry.data.tags}
+  articleSection={section}
   jsonLd={jsonLd}
   alternateFeeds={[
     { href: absUrl("/library/feed.xml"), title: "Library RSS", type: "application/rss+xml" },
@@ -97,7 +110,7 @@ const jsonLd = [
   ]}
 >
   {hasMath && <link slot="head" rel="stylesheet" href={katexCss} />}
-  <article class="note" data-note data-has-math={hasMath ? "true" : undefined} data-note-tour={isGoTour ? "go-1-27" : undefined}>
+  <article class="note" data-note data-has-math={hasMath ? "true" : undefined} data-note-tour={isGoTour ? "go-1-27" : undefined} data-incident={hasIncidentFigures ? "" : undefined}>
     <div class="note-progress" aria-hidden="true"><div class="note-progress-bar"></div></div>
 
     <div class="note-layout">
@@ -113,7 +126,7 @@ const jsonLd = [
                 {fmtDate(entry.data.date)}
               </time>
               <span class="note-read">{minutes} min read</span>
-              {entry.data.updated && <span class="note-updated">Updated {fmtDate(entry.data.updated)}</span>}
+              {showUpdated && entry.data.updated && <span class="note-updated">Updated {fmtDate(entry.data.updated)}</span>}
             </span>
             {entry.data.tags && <RowTags tags={entry.data.tags} linked={linkedTags} />}
           </Fragment>
@@ -201,6 +214,7 @@ const jsonLd = [
       </div>
     </div>
     {isGoTour && <GoTourEnhancement />}
+    {hasIncidentFigures && <IncidentEnhancement />}
   </article>
 </Page>
 

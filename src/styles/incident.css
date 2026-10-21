@@ -1,0 +1,198 @@
+/* ==================================================================
+   incident - the eMudhra post's figures.
+
+   Scoped to .note[data-incident], which Note.astro sets on posts that
+   embed the /blog/emudhra/ figures, so this sheet is inert elsewhere.
+   Headings, tables, callouts and code come from prose.css. Each figure's
+   SVG carries its own colours, its wide/compact swap (a container query
+   on .fig__art) and its entrance; boot.ts only toggles [data-play].
+   ================================================================== */
+
+.note[data-incident] .fig__title {
+  margin: 0 0 var(--step-2);
+  color: var(--ink);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  text-align: center;
+  text-wrap: balance;
+}
+
+.note[data-incident] .fig__art > svg {
+  inline-size: 100%;
+  max-inline-size: 100%;
+  block-size: auto;
+  vertical-align: top;
+}
+
+.note[data-incident] .fig__cap {
+  color: var(--ghost);
+  font-style: normal;
+}
+
+/* The key search's one status line; the line is reserved so filling it in moves nothing. */
+.note[data-incident] .fig__result {
+  min-block-size: 1lh;
+  margin: var(--step-2) 0 0;
+  color: var(--ink);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* boot.ts makes a figure focusable; the ring is the site's :focus-visible. */
+.note[data-incident] figure.fig[tabindex] {
+  border-radius: var(--r-4);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* keyspace.ts walks the grid by data-state; the SVG paints it too, this is the fallback. */
+.note[data-incident] .fig rect[data-state="tried"] {
+  fill: var(--edge-strong);
+}
+
+.note[data-incident] .fig rect[data-state="match"] {
+  stroke: var(--ink);
+  stroke-width: 1;
+}
+
+/* tables: one hairline block, rows ruled off, no cards. boot.ts adds data-label,
+   data-fmt (mono / num / ver) and data-tone (ok / bad / warn / mute) and sets
+   table[data-labeled]; without it this is still a plain table. */
+
+.note[data-incident] .prose .table-scroll {
+  border: var(--hairline) solid var(--edge);
+  border-radius: var(--r-4);
+}
+
+.note[data-incident] .prose table {
+  border-collapse: collapse;
+}
+
+.note[data-incident] .prose :is(th, td) {
+  padding: var(--step-3) var(--step-4);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  overflow-wrap: break-word;
+}
+
+.note[data-incident] .prose tbody tr + tr {
+  border-block-start: var(--hairline) solid var(--edge-soft);
+}
+
+.note[data-incident] .prose thead th {
+  border-block-end: var(--hairline) solid var(--edge);
+  background: var(--wash);
+  color: var(--ghost);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.note[data-incident] .prose thead :is(code, var) {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: none;
+}
+
+.note[data-incident] .prose td:first-child {
+  color: var(--ink);
+  font-weight: var(--font-medium);
+}
+
+.note[data-incident] .prose td[data-fmt] {
+  font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  font-size: 0.92em;
+  font-variant-numeric: tabular-nums;
+}
+
+.note[data-incident] .prose td[data-fmt]:not([data-fmt="ver"]) {
+  white-space: nowrap;
+}
+
+.note[data-incident] .prose :is(td, th)[data-fmt="num"] {
+  text-align: end;
+}
+
+/* status: a dot in the word's tone, then the word; colour never stands alone */
+.note[data-incident] .prose td[data-tone]::before {
+  content: "";
+  display: inline-block;
+  inline-size: var(--step-2);
+  block-size: var(--step-2);
+  margin-inline-end: var(--step-2);
+  border-radius: 50%;
+  background: var(--tone);
+  vertical-align: middle;
+}
+
+@media (min-width: 42.5rem) {
+  .note[data-incident] .prose td[data-tone] { white-space: nowrap; }
+}
+.note[data-incident] .prose td[data-tone="ok"] { --tone: var(--acc-green); }
+.note[data-incident] .prose td[data-tone="bad"] { --tone: var(--acc-red); }
+.note[data-incident] .prose td[data-tone="warn"] { --tone: var(--acc-amber); }
+.note[data-incident] .prose td[data-tone="mute"] { --tone: var(--ghost); }
+
+/* phones: a row is a block, its first cell the title, the rest label over value */
+@media (max-width: 42.5rem) {
+  .note[data-incident] .prose table[data-labeled],
+  .note[data-incident] .prose table[data-labeled] :is(tbody, tr, td) {
+    display: block;
+  }
+
+  .note[data-incident] .prose table[data-labeled] thead {
+    display: none;
+  }
+
+  .note[data-incident] .prose table[data-labeled] tr {
+    padding: var(--step-3) var(--step-4);
+  }
+
+  .note[data-incident] .prose table[data-labeled] td {
+    padding: 0;
+    text-align: start;
+  }
+
+  .note[data-incident] .prose table[data-labeled] td + td {
+    margin-block-start: var(--step-2);
+  }
+
+  .note[data-incident] .prose table[data-labeled] td code {
+    white-space: normal;
+  }
+
+  .note[data-incident] .prose table[data-labeled] td:not(:first-child, [data-tone])::before,
+  .note[data-incident] .prose table[data-labeled] td[data-tone]::after {
+    content: attr(data-label);
+    display: block;
+    grid-column: 1 / -1;
+    order: -2;
+    color: var(--ghost);
+    font-family: "Inter Variable", "Inter Fallback", system-ui, -apple-system, sans-serif;
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    line-height: var(--leading-snug);
+  }
+
+  .note[data-incident] .prose table[data-labeled] td[data-tone] {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .note[data-incident] .prose table[data-labeled] td[data-tone]::before {
+    order: -1;
+    align-self: start;
+    margin-block-start: calc((1lh - var(--step-2)) / 2);
+  }
+}

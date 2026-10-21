@@ -2,7 +2,7 @@
  * markdown pipeline - the satteri plugin assembly.
  *
  *   mdast:   [ diagrams ]
- *   hast:    [ callouts, math, headingAnchors, codeFigures, tables, externalLinks ]
+ *   hast:    [ callouts, math, headingAnchors, codeFigures, tables, externalLinks, inlineFigures ]
  *
  * Ordering rationale (see satteri-processor.js):
  *   - Shiki highlight runs BEFORE user hast plugins, so codeFigures sees
@@ -15,6 +15,8 @@
  *     adopts our ids (its `existingId` check) for the `headings` metadata.
  *   - `codeFigures` wraps the now-sole remaining highlighted <pre> blocks.
  *   - `tables`, `externalLinks` are independent leaf transforms.
+ *   - `inlineFigures` runs last: it serializes a figure caption itself, so a caption
+ *     link must already carry the external-link markup.
  *
  * `headingAnchors` is a factory so each document gets a fresh slugger; the rest
  * are stateless definitions.
@@ -27,6 +29,7 @@ import { headingAnchors } from "./heading-anchors";
 import { codeFigures } from "./code-figures";
 import { tables } from "./tables";
 import { externalLinks } from "./external-links";
+import { inlineFigures } from "./inline-figures";
 
 export const markdownProcessor = satteri({
   // mdast (pre-Shiki): diagrams and math both return rawHtml, bypassing the
@@ -35,6 +38,6 @@ export const markdownProcessor = satteri({
   mdastPlugins: [diagrams, math],
   // `headingAnchors` is a factory that satteri invokes once per document so
   // each note gets a fresh slugger (no cross-note slug contamination).
-  hastPlugins: [callouts, headingAnchors, codeFigures, tables, externalLinks],
+  hastPlugins: [callouts, headingAnchors, codeFigures, tables, externalLinks, inlineFigures],
   features: { math: true },
 });

@@ -1,0 +1,5 @@
+{
+  "id": "trust-basic",
+  "title": "Your device trusts your bank because the chain ends at a root on its list.",
+  "alt": "A locked-away root CA signs the everyday stamp, which signs your bank's certificate, and your device trusts it because that root is on its list."
+}

@@ -21,6 +21,9 @@ export const FIRST_PARTY_TOOL_NAMES = [
   "get_profile",
   "list_content",
   "get_note_markdown",
+  "get_emudhra_incident",
+  "check_go_version",
+  "recover_key",
 ] as const;
 
 export type FirstPartyToolName = (typeof FIRST_PARTY_TOOL_NAMES)[number];
@@ -42,6 +45,33 @@ export const listContentZodSchema = z.object({
 
 export const getNoteMarkdownZodSchema = z.object({
   slug: z.string().regex(/^[a-z0-9][a-z0-9-]*$/i).describe("Published note slug"),
+});
+
+export const INCIDENT_SECTIONS = ["summary", "timeline", "tracker", "intermediates", "go"] as const;
+
+export const getEmudhraIncidentZodSchema = z.object({
+  section: z.enum(INCIDENT_SECTIONS).describe("Which part of the eMudhra incident data to return"),
+  filter: z
+    .string()
+    .max(80)
+    .optional()
+    .describe("Optional case-insensitive text filter: tracker takes a package name, pending or patched; timeline a lane or label text; intermediates a name or mark id"),
+});
+
+export const checkGoVersionZodSchema = z.object({
+  goVersion: z
+    .string()
+    .min(1)
+    .max(4096)
+    .describe("Output of go version (or go version -m), or a version such as go1.27.2; one result per line"),
+});
+
+export const recoverKeyZodSchema = z.object({
+  intermediate: z
+    .string()
+    .min(1)
+    .max(80)
+    .describe("One of the eight eMudhra intermediates, by mark id (for example ov-tls-g3c), name or SPKI SHA-256"),
 });
 
 export function jsonSchemaFromZod(schema: z.ZodType): Record<string, unknown> {
@@ -103,6 +133,48 @@ export const TOOL_SCHEMAS = {
     },
     get jsonSchema() {
       return jsonSchemaFromZod(getNoteMarkdownZodSchema);
+    },
+  },
+  getEmudhraIncident: {
+    name: "get_emudhra_incident" as const,
+    description: "Return data on the October 2026 eMudhra CA key compromise (CVE-2026-111943): summary, timeline, tracker, intermediates or go.",
+    zodSchema: getEmudhraIncidentZodSchema,
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false,
+      untrustedContentHint: true,
+    },
+    get jsonSchema() {
+      return jsonSchemaFromZod(getEmudhraIncidentZodSchema);
+    },
+  },
+  checkGoVersion: {
+    name: "check_go_version" as const,
+    description: "Check whether a Go toolchain version carries the eMudhra distrust list (fixed in Go 1.27.3 and 1.26.10).",
+    zodSchema: checkGoVersionZodSchema,
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false,
+      untrustedContentHint: false,
+    },
+    get jsonSchema() {
+      return jsonSchemaFromZod(checkGoVersionZodSchema);
+    },
+  },
+  recoverKey: {
+    name: "recover_key" as const,
+    description: "Return the tiny private scalar d (at most 255) of one of the eight revoked, already-public eMudhra intermediate keys. The stored value was recovered at build time and is re-verified against the certificate's public key on every call. Never signs or exports a private key.",
+    zodSchema: recoverKeyZodSchema,
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false,
+      untrustedContentHint: false,
+    },
+    get jsonSchema() {
+      return jsonSchemaFromZod(recoverKeyZodSchema);
     },
   },
 } as const;

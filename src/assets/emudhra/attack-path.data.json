@@ -1,0 +1,5 @@
+{
+  "id": "attack-path",
+  "title": "A fake certificate only works on an app that skips blocklists.",
+  "alt": "A fake bank certificate needs an attacker on your network and an app that skips blocklists, so updated browsers reject it and old programs accept it."
+}

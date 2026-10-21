@@ -103,6 +103,37 @@ export function isKnownDuplicateRegistration(error: unknown): boolean {
   );
 }
 
+/** The eMudhra incident tools share their wiring: the data and the P-384 check
+ *  load on first call rather than with the page, then `run` answers locally. */
+function incidentTool(
+  schema: { name: string; description: string; annotations: Record<string, unknown>; jsonSchema: Record<string, unknown> },
+  signal: AbortSignal,
+  run: (incident: typeof import("../lib/incident/tools"), input: Record<string, unknown>) => unknown,
+): BrowserTool {
+  return {
+    name: schema.name,
+    description: schema.description,
+    inputSchema: schema.jsonSchema,
+    annotations: schema.annotations,
+    execute: async (input, options?: { signal?: AbortSignal }) => {
+      const operation = mergeSignals(signal, options?.signal);
+      const t0 = performance.now();
+      try {
+        const incident = await import("../lib/incident/tools");
+        requireActive(operation.signal);
+        const res = await run(incident, input);
+        trackWebMcp(schema.name, performance.now() - t0, true, 1);
+        return res;
+      } catch (err) {
+        trackWebMcp(schema.name, performance.now() - t0, false, 0);
+        throw err;
+      } finally {
+        operation.dispose();
+      }
+    },
+  };
+}
+
 export function tools(signal: AbortSignal): BrowserTool[] {
   return [
     {
@@ -201,6 +232,9 @@ export function tools(signal: AbortSignal): BrowserTool[] {
         }
       },
     },
+    incidentTool(TOOL_SCHEMAS.getEmudhraIncident, signal, (incident, input) => incident.getEmudhraIncident(input)),
+    incidentTool(TOOL_SCHEMAS.checkGoVersion, signal, (incident, input) => incident.checkGoVersion(input)),
+    incidentTool(TOOL_SCHEMAS.recoverKey, signal, (incident, input) => incident.recoverKey(input)),
   ];
 }
 
