@@ -48,6 +48,15 @@ const notes = defineCollection({
     /** drafts are excluded from production pages, the index, feeds, and
      *  sitemap, but still build in dev for previewing. */
     draft: z.boolean().optional(),
+    /** search-result title, used verbatim as <title>/og:title/twitter:title
+     *  (no site suffix). The H1 stays `title`. */
+    seoTitle: z.string().optional(),
+    /** social card PNG (1200x630), site-relative under public/ or absolute.
+     *  Siblings `<name>-16x9|4x3|1x1.png` that exist join the BlogPosting
+     *  `image` list. */
+    image: z.string().optional(),
+    /** alt text for `image`; falls back to the title. */
+    imageAlt: z.string().optional(),
   }),
 });
 

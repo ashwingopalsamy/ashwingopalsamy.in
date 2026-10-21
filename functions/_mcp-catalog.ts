@@ -43,6 +43,24 @@ export const MCP_TOOLS = {
     inputSchema: TOOL_SCHEMAS.getNoteMarkdown.zodSchema,
     annotations: TOOL_SCHEMAS.getNoteMarkdown.annotations,
   },
+  getEmudhraIncident: {
+    name: TOOL_SCHEMAS.getEmudhraIncident.name,
+    description: TOOL_SCHEMAS.getEmudhraIncident.description,
+    inputSchema: TOOL_SCHEMAS.getEmudhraIncident.zodSchema,
+    annotations: TOOL_SCHEMAS.getEmudhraIncident.annotations,
+  },
+  checkGoVersion: {
+    name: TOOL_SCHEMAS.checkGoVersion.name,
+    description: TOOL_SCHEMAS.checkGoVersion.description,
+    inputSchema: TOOL_SCHEMAS.checkGoVersion.zodSchema,
+    annotations: TOOL_SCHEMAS.checkGoVersion.annotations,
+  },
+  recoverKey: {
+    name: TOOL_SCHEMAS.recoverKey.name,
+    description: TOOL_SCHEMAS.recoverKey.description,
+    inputSchema: TOOL_SCHEMAS.recoverKey.zodSchema,
+    annotations: TOOL_SCHEMAS.recoverKey.annotations,
+  },
 } as const;
 
 export const MCP_RESOURCES = CANONICAL_RESOURCES;

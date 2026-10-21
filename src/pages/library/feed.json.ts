@@ -11,6 +11,10 @@ export const GET: APIRoute = async () => {
   const notes = await getCollection("notes");
   const visibleNotes = isProd ? notes.filter((e) => !e.data.draft) : notes;
   const htmlById = new Map<string, string>();
+  const modifiedById = new Map<string, string>();
+  for (const e of visibleNotes) {
+    if (e.data.updated) modifiedById.set(e.id, e.data.updated.toISOString());
+  }
   await Promise.all(
     visibleNotes.map(async (e) => {
       htmlById.set(e.id, await renderMarkdownHtml(e.body ?? ""));
@@ -46,7 +50,10 @@ export const GET: APIRoute = async () => {
       if (item.kind === "notes") {
         const id = item.url.replace(/\/$/, "").split("/").pop() ?? "";
         const html = htmlById.get(id);
-        if (html) return { ...base, content_html: html };
+        const modified = modifiedById.get(id);
+        const note = { ...base, ...(modified ? { date_modified: modified } : {}) };
+        if (html) return { ...note, content_html: html };
+        return note;
       }
       return base;
     }),

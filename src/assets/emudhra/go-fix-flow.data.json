@@ -1,0 +1,5 @@
+{
+  "id": "go-fix-flow",
+  "title": "Rebuild first. The deny-list is only a bridge.",
+  "alt": "Go teams find each binary's Go version, rebuild with 1.27.3 or 1.26.10, update ca-certificates, redeploy with a canary, and use the deny-list only if stuck."
+}

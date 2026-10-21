@@ -5,6 +5,7 @@
     "moduleResolution": "Bundler",
     "strict": true,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "lib": ["ESNext"],
     "types": ["@cloudflare/workers-types"],
     "skipLibCheck": true
