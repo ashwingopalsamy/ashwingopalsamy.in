@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Live tracker for the eMudhra CA key-compromise post. Syncs src/data/emudhra-incident.json from
-// https://github.com/galadran/we-have-a-problem.com and (optionally) rewrites the marker blocks in the post.
+// https://github.com/galadran/we-have-a-problem.com (index.html, checker.js and the two JSON files) and
+// (optionally) rewrites the marker blocks in the post.
 //
 //   node scripts/sync-emudhra-tracker.mjs                       fetch, validate, write the JSON if it changed
 //   node scripts/sync-emudhra-tracker.mjs --check               same, but write nothing; exit 1 if anything would change
@@ -44,7 +45,7 @@ const PINNED_SPKI = [
 ];
 
 const RE_NAME = /^[\w .+\-/:()~]{1,80}$/;
-const RE_VERSION = /^[\w.+~\-:]{1,64}$/;
+const RE_VERSION = /^(?=.{1,64}$)[\w.+~\-:]+(?: [\w.+~\-:]+)*$/;
 const RE_ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 const RE_HOST = /^[a-z0-9-]+\.we-have-a-problem\.com$/;
 const RE_WORD = /^[a-z_]{1,32}$/;
@@ -192,59 +193,81 @@ function httpsUrl(raw, label) {
 }
 
 // ---- parsers -----------------------------------------------------------------------------------------------
+// Upstream groups the rows into several <table class="patched"> (one per <details> group); rows keep page order.
 function parsePatchedTable(html) {
-  const opens = [...html.matchAll(/<table\b[^>]*\bid="patched"[^>]*>/g)];
-  if (opens.length !== 1) fail(`index.html: expected one <table id="patched">, found ${opens.length}`);
-  const from = opens[0].index + opens[0][0].length;
-  const to = html.indexOf('</table>', from);
-  if (to === -1) fail('index.html: unterminated patched table');
-  const table = html.slice(from, to);
-  if (!/^\s*<thead>\s*<tr>\s*<th>Software<\/th>\s*<th>Patched version<\/th>\s*<\/tr>\s*<\/thead>/.test(table)) fail('index.html: patched table header changed');
-  const body = /<tbody>([\s\S]*)<\/tbody>/.exec(table)?.[1];
-  if (body === undefined) fail('index.html: patched table has no <tbody>');
-  if (body.replace(/<tr>[\s\S]*?<\/tr>/g, '').trim() !== '') fail('index.html: unexpected markup between patched rows');
+  const opens = [...html.matchAll(/<table\b[^>]*\bclass="patched"[^>]*>/g)];
+  if (opens.length < 1 || opens.length > 12) fail(`index.html: expected 1..12 <table class="patched">, found ${opens.length}`);
 
   const rows = [];
-  for (const [, row] of body.matchAll(/<tr>([\s\S]*?)<\/tr>/g)) {
-    const cells = /^\s*<td>([\s\S]*?)<\/td>\s*<td>\s*(<a\s[^>]*>)([\s\S]*?)<\/a>\s*<\/td>\s*$/.exec(row);
-    if (!cells || cells[3].includes('<a')) fail(`index.html: patched row does not have the expected two-cell shape: ${clean(row).slice(0, 60)}`);
-    const name = str(clean(cells[1]), RE_NAME, 'patched name');
+  for (const open of opens) {
+    const from = open.index + open[0].length;
+    const to = html.indexOf('</table>', from);
+    if (to === -1) fail('index.html: unterminated patched table');
+    const table = html.slice(from, to);
+    if (!/^\s*<thead>\s*<tr>\s*<th>Software<\/th>\s*<th>Patched version<\/th>\s*<\/tr>\s*<\/thead>/.test(table)) fail('index.html: patched table header changed');
+    const body = /<tbody>([\s\S]*)<\/tbody>/.exec(table)?.[1];
+    if (body === undefined) fail('index.html: patched table has no <tbody>');
+    if (body.replace(/<tr>[\s\S]*?<\/tr>/g, '').trim() !== '') fail('index.html: unexpected markup between patched rows');
+    for (const [, row] of body.matchAll(/<tr>([\s\S]*?)<\/tr>/g)) rows.push(parsePatchedRow(row));
+  }
+  if (rows.length < 10 || rows.length > 200) fail(`patched tables have ${rows.length} rows, expected 10..200`);
+  if (new Set(rows.map((r) => r.name)).size !== rows.length) fail('patched table has duplicate names');
+  if (new Set(rows.map((r) => r.key)).size !== rows.length) fail('patched table has names that slug to the same key');
+  return rows;
+}
 
+// A name cell, then one or more links separated only by commas, whitespace and <br>. Each link gives its href to
+// the versions inside it (comma or <br> separated); any pending link makes the whole row pending.
+function parsePatchedRow(row) {
+  const cells = /^\s*<td>([\s\S]*?)<\/td>\s*<td>([\s\S]*?)<\/td>\s*$/.exec(row);
+  if (!cells) fail(`index.html: patched row does not have the expected two-cell shape: ${clean(row).slice(0, 60)}`);
+  const name = str(clean(cells[1]), RE_NAME, 'patched name');
+  const links = [...cells[2].matchAll(/(<a\s[^>]*>)([\s\S]*?)<\/a>/g)];
+  const between = cells[2].replace(/<a\s[^>]*>[\s\S]*?<\/a>/g, '');
+  if (links.length === 0 || links.some((m) => m[2].includes('<a')) || !/^(?:[\s,]|<br\s*\/?>)*$/i.test(between)) {
+    fail(`${name}: patched cell is not a list of links: ${clean(cells[2]).slice(0, 60)}`);
+  }
+
+  const versions = [];
+  const urls = [];
+  let first;
+  let pending = false;
+  for (const [, open, text] of links) {
     const attrs = {};
-    const remainder = cells[2].replace(/\s([a-zA-Z][\w-]*)="([^"]*)"/g, (_, key, value) => {
+    const remainder = open.replace(/\s([a-zA-Z][\w-]*)="([^"]*)"/g, (_, key, value) => {
       attrs[key] = value;
       return '';
     });
     if (!/^<a\s*>$/.test(remainder)) fail(`${name}: unparseable link attributes`);
     for (const key of Object.keys(attrs)) if (!['href', 'class', 'rel', 'target'].includes(key)) fail(`${name}: unexpected link attribute ${key}`);
     const url = httpsUrl(decodeEntities(attrs.href ?? ''), `${name} link`);
+    first ??= url;
     const classes = (attrs.class ?? '').split(/\s+/).filter(Boolean);
     if (classes.some((c) => c !== 'pending')) fail(`${name}: unexpected link class ${JSON.stringify(attrs.class)}`);
-    const pending = classes.includes('pending');
+    const linkPending = classes.includes('pending');
+    pending ||= linkPending;
 
-    let versions = clean(cells[3].replace(/<br\s*\/?>/gi, ',')).split(/[\s,]+/).filter(Boolean);
-    if (pending && versions.length === 1 && versions[0].toLowerCase() === 'pending') versions = [];
-    if (versions.length > 12) fail(`${name}: too many versions`);
-    for (const v of versions) {
+    // Commas only: "Oracle JDK 27.0.1.0.3" and "8u511 b33" are single values.
+    for (const v of clean(text.replace(/<br\s*\/?>/gi, ',')).split(',').map((s) => s.trim()).filter(Boolean)) {
+      if (linkPending && v.toLowerCase() === 'pending') continue;
       str(v, RE_VERSION, `${name} version`);
-      if (v.toLowerCase() === 'pending') fail(`${name}: "pending" without the pending class`);
+      if (!linkPending && /\bpending\b/i.test(v)) fail(`${name}: "pending" without the pending class`);
+      versions.push(v);
+      urls.push(url);
     }
-    if (versions.length === 0 && !pending) fail(`${name}: no versions and not pending`);
-    const key = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-    rows.push({ name, key, versions, url, status: pending ? 'pending' : 'patched' });
   }
-  if (rows.length < 10 || rows.length > 80) fail(`patched table has ${rows.length} rows, expected 10..80`);
-  if (new Set(rows.map((r) => r.name)).size !== rows.length) fail('patched table has duplicate names');
-  if (new Set(rows.map((r) => r.key)).size !== rows.length) fail('patched table has names that slug to the same key');
-  return rows;
+  if (versions.length > 12) fail(`${name}: too many versions`);
+  if (versions.length === 0 && !pending) fail(`${name}: no versions and not pending`);
+  const key = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return { name, key, versions, url: first, urls, status: pending ? 'pending' : 'patched' };
 }
 
-function parseHosts(html) {
-  if ((html.match(/const HOSTS = \[/g) ?? []).length !== 1) fail('index.html: expected exactly one HOSTS array');
-  const block = /const HOSTS = \[([\s\S]*?)\n\];/.exec(html)?.[1];
-  if (block === undefined) fail('index.html: could not delimit the HOSTS array');
+function parseHosts(js) {
+  if ((js.match(/const HOSTS = \[/g) ?? []).length !== 1) fail('checker.js: expected exactly one HOSTS array');
+  const block = /const HOSTS = \[([\s\S]*?)\n\];/.exec(js)?.[1];
+  if (block === undefined) fail('checker.js: could not delimit the HOSTS array');
   const hosts = [...block.matchAll(/\{\s*host:\s*'([^']*)'/g)].map((m) => str(m[1], RE_HOST, 'host'));
-  if ((block.match(/\bhost\s*:/g) ?? []).length !== hosts.length) fail('index.html: HOSTS entries do not all match the expected shape');
+  if ((block.match(/\bhost\s*:/g) ?? []).length !== hosts.length) fail('checker.js: HOSTS entries do not all match the expected shape');
   if (hosts.length < 1 || hosts.length > 40) fail(`HOSTS has ${hosts.length} entries`);
   if (new Set(hosts).size !== hosts.length) fail('HOSTS has duplicates');
   if (hosts.length !== 12) log(`warning: upstream lists ${hosts.length} test hosts, the post says 12`);
@@ -418,6 +441,7 @@ async function loadP384() {
 }
 
 // Rows whose status or versions changed (or that appeared / vanished), as changelog entries stamped `now`.
+// Status changes first, then version changes, additions, removals, so the changelog cap keeps the transitions.
 function rowChanges(oldRows, newRows, now) {
   const before = new Map(oldRows.map((r) => [r.name, r]));
   const after = new Map(newRows.map((r) => [r.name, r]));
@@ -428,7 +452,8 @@ function rowChanges(oldRows, newRows, now) {
     else if (old.status !== r.status || old.versions.join() !== r.versions.join()) entries.push({ t: now, name: r.name, from: old.status, to: r.status, versions: r.versions });
   }
   for (const r of oldRows) if (!after.has(r.name)) entries.push({ t: now, name: r.name, from: r.status, to: null, versions: [] });
-  return entries;
+  const rank = (e) => (e.from === null ? 2 : e.to === null ? 3 : e.from !== e.to ? 0 : 1);
+  return entries.sort((a, b) => rank(a) - rank(b));
 }
 
 async function buildData(existing, now) {
@@ -436,12 +461,12 @@ async function buildData(existing, now) {
   const commit = parseJson(await fetchText(COMMIT_API), 'commit API');
   const sha = str(commit?.sha, /^[0-9a-f]{40}$/, 'commit sha');
   // Fetch every file at that commit so sourceSha always describes the data, even if upstream moves mid-run.
-  const [html, intermediatesText, rootsText] = await Promise.all(
-    ['index.html', 'impacted-intermediates.json', 'roots.json'].map((file) => fetchText(`${RAW_BASE}/${sha}/${file}`)),
+  const [html, checkerJs, intermediatesText, rootsText] = await Promise.all(
+    ['index.html', 'checker.js', 'impacted-intermediates.json', 'roots.json'].map((file) => fetchText(`${RAW_BASE}/${sha}/${file}`)),
   );
 
   const patched = parsePatchedTable(html);
-  const hosts = parseHosts(html);
+  const hosts = parseHosts(checkerJs);
   const intermediates = await mapIntermediates(parseJson(intermediatesText, 'impacted-intermediates.json'), p384);
   const roots = mapRoots(parseJson(rootsText, 'roots.json'));
 
@@ -498,7 +523,8 @@ function summarize(old, next) {
   const counts = ['total', 'patched', 'pending'].map(c).filter(Boolean);
   if (counts.length) lines.push(`Counts: ${counts.join(', ')}`);
 
-  const rowSig = (r) => JSON.stringify([r.versions, r.url, r.status]);
+  // Rows synced before `urls` existed share `url` across all their versions.
+  const rowSig = (r) => JSON.stringify([r.versions, r.url, r.urls ?? r.versions.map(() => r.url), r.status]);
   const oldRows = new Map((old.patched ?? []).map((r) => [r.name, r]));
   const newRows = new Map(next.patched.map((r) => [r.name, r]));
   const show = (r) => `${r.versions.join(', ') || 'no version'} [${r.status}]`;
@@ -546,7 +572,7 @@ function renderBlocks(data) {
   const sha = data.sourceSha;
   const stats = `**${data.counts.patched} of ${data.counts.total}** packages patched · **${data.counts.pending}** pending${pending.length ? ` (${pending.map(shortName).join(', ')})` : ''} · synced ${stamp(data.syncedAt)} UTC from [${REPO}@${sha}](${linkUrl(`${data.sourceUrl}/commit/${sha}`)})`;
 
-  const versionCell = (r) => (r.versions.length ? r.versions.map((v) => `[${esc(v)}](${linkUrl(r.url)})`).join(', ') : `[tracking](${linkUrl(r.url)})`);
+  const versionCell = (r) => (r.versions.length ? r.versions.map((v, i) => `[${esc(v)}](${linkUrl(r.urls?.[i] ?? r.url)})`).join(', ') : `[tracking](${linkUrl(r.url)})`);
   const patchedTable = [
     '| Software | Patched version | Status |',
     '| --- | --- | --- |',
