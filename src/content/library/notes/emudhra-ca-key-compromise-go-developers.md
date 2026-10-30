@@ -2,7 +2,7 @@
 title: "Lets talk about eMudhra Certificate Vulnerability"
 seoTitle: "Lets talk about eMudhra Certificate Vulnerability"
 date: 2026-10-21
-updated: 2026-10-21
+updated: 2026-10-30
 tags: ["security", "go", "fintech"]
 description: "Eight eMudhra CA keys were guessable, one was just 4. Who's exposed, how an attack works, and what fintech and Go teams must do (CVE-2026-111943)."
 image: /blog/emudhra/og-hero.png
@@ -395,7 +395,7 @@ These rows come from [Dennis Jackson's tracker](https://emudhra.we-have-a-proble
 
 <!-- tracker:stats:start -->
 
-**20 of 24** packages patched · **4** pending (FreeBSD, Node.js, Bun, Composer) · synced 2026-10-21 05:50 UTC from [galadran/we-have-a-problem.com@bb7c2a8](https://github.com/galadran/we-have-a-problem.com/commit/bb7c2a8)
+**68 of 75** packages patched · **7** pending (Bottlerocket, OpenHarmony/HarmonyOS, Java, certbot, containerd, Godot, LibreOffice) · synced 2026-10-30 01:01 UTC from [galadran/we-have-a-problem.com@c3173f2](https://github.com/galadran/we-have-a-problem.com/commit/c3173f2)
 
 <!-- tracker:stats:end -->
 
@@ -403,30 +403,81 @@ These rows come from [Dennis Jackson's tracker](https://emudhra.we-have-a-proble
 
 | Software | Patched version | Status |
 | --- | --- | --- |
-| FreeBSD ca\_root\_nss | [tracking](https://reviews.freebsd.org/D60905) | Pending |
-| Node.js | [tracking](https://github.com/nodejs/node/pull/66871) | Pending |
-| Bun | [tracking](https://github.com/oven-sh/bun/pull/46159) | Pending |
-| Composer ca-bundle | [1.4.16](https://github.com/composer/ca-bundle/pull/154), [1.6.0](https://github.com/composer/ca-bundle/pull/154) | Pending |
-| Ubuntu ca-certificates | [20260816ubuntu0.22.04.1](https://bugs.launchpad.net/ubuntu/+source/ca-certificates/+bug/2171507), [20260816ubuntu0.24.04.1](https://bugs.launchpad.net/ubuntu/+source/ca-certificates/+bug/2171507), [20260816ubuntu0.26.04.1](https://bugs.launchpad.net/ubuntu/+source/ca-certificates/+bug/2171507), [20260816ubuntu0.26.10.1](https://bugs.launchpad.net/ubuntu/+source/ca-certificates/+bug/2171507) | Patched |
-| Debian ca-certificates | [20250419\~deb12u2](https://bugs.debian.org/1151413), [20250419+deb13u1](https://bugs.debian.org/1151413), [20260816+nmu1](https://bugs.debian.org/1151413) | Patched |
-| Arch Linux ca-certificates-mozilla | [3.131.1-1](https://archlinux.org/packages/core/x86_64/ca-certificates-mozilla/) | Patched |
-| Gentoo ca-certificates | [20260816.3.125](https://bugs.gentoo.org/984601) | Patched |
-| Fedora ca-certificates | [2026.2.92\_v9.0.319](https://bugzilla.redhat.com/show_bug.cgi?id=2556376) | Patched |
-| Chainguard ca-certificates | [20260909-r3](https://images.chainguard.dev/security/CVE-2026-111943) | Patched |
+| Bottlerocket | [tracking](https://github.com/bottlerocket-os/bottlerocket/issues/4976) | Pending |
+| OpenHarmony/HarmonyOS NEXT | [tracking](https://gitcode.com/openharmony/security_certificate_manager/pull/722) | Pending |
+| Java | [Pending for OpenJDK](https://openjdk.org/emudhra), [Oracle JDK 27.0.1.0.3](https://ops.java/emudhra), [25.0.5.0.3](https://ops.java/emudhra), [21.0.13.0.3](https://ops.java/emudhra), [17.0.21.0.3](https://ops.java/emudhra), [11.0.33.0.3](https://ops.java/emudhra), [8u511 b33](https://ops.java/emudhra) | Pending |
+| certbot | [tracking](https://github.com/certbot/certbot/pull/10812) | Pending |
+| containerd | [tracking](https://github.com/containerd/containerd/pull/14439) | Pending |
+| Godot | [tracking](https://github.com/godotengine/godot/pull/124724) | Pending |
+| LibreOffice | [tracking](https://gerrit.libreoffice.org/c/core/+/212892) | Pending |
+| Alma Linux ca-certificates | [2026.2.92\_v9.0.319-81.3.el8\_10](https://errata.almalinux.org/8/ALSA-2026-88550.html), [2026.2.92\_v9.0.319-90.3.el9\_8](https://errata.almalinux.org/9/ALSA-2026-88459.html), [2026.2.92\_v9.0.319-100.3.el10\_2](https://errata.almalinux.org/10/ALSA-2026-88455.html) | Patched |
 | Alpine Linux ca-certificates | [20261020-r0](https://pkgs.alpinelinux.org/packages?name=ca-certificates&arch=) | Patched |
-| NSS | [3.131.1](https://groups.google.com/a/mozilla.org/g/dev-tech-crypto/c/vSxZxnOMMvs) | Patched |
-| curl CA bundle | [2026-10-20](https://curl.se/docs/caextract.html) | Patched |
-| Cloudflare CFSSL trust store | [2026.10.1](https://github.com/cloudflare/cfssl_trust/releases/tag/trust-store-2026.10.1) | Patched |
+| Amazon Linux ca-certificates | [2025.2.76-1.amzn2.0.3](https://explore.alas.aws.amazon.com/CVE-2026-113470.html), [2025.2.76-1.0.amzn2023.0.4](https://explore.alas.aws.amazon.com/CVE-2026-113470.html) | Patched |
+| Arch Linux ca-certificates-mozilla | [3.131.1-1](https://archlinux.org/packages/core/x86_64/ca-certificates-mozilla/) | Patched |
+| Chainguard ca-certificates | [20260909-r3](https://images.chainguard.dev/security/CVE-2026-111943) | Patched |
+| Debian ca-certificates | [20250419\~deb12u2](https://bugs.debian.org/1151413), [20250419+deb13u1](https://bugs.debian.org/1151413), [20260816+nmu1](https://bugs.debian.org/1151413) | Patched |
+| Devuan ca-certificates | [Same as Debian](https://bugs.debian.org/1151413) | Patched |
+| Fedora ca-certificates | [2026.2.92\_v9.0.319](https://bugzilla.redhat.com/show_bug.cgi?id=2556376) | Patched |
+| FreeBSD ca\_root\_nss | [1.131.1](https://cgit.freebsd.org/ports/commit/security/ca_root_nss?id=7051196b4a0c66d6d556e77e5f892b74a84e12c3) | Patched |
+| FreeBSD caroot | [15.1-RELEASE-p6](https://www.freebsd.org/security/advisories/FreeBSD-SA-26:73.caroot.asc), [14.5-RELEASE-p3](https://www.freebsd.org/security/advisories/FreeBSD-SA-26:73.caroot.asc), [14.4-RELEASE-p12](https://www.freebsd.org/security/advisories/FreeBSD-SA-26:73.caroot.asc) | Patched |
+| Freedesktop SDK | [25.08.19](https://gitlab.com/freedesktop-sdk/freedesktop-sdk/-/work_items/2090), [26.08.3](https://gitlab.com/freedesktop-sdk/freedesktop-sdk/-/work_items/2090) | Patched |
+| Gentoo ca-certificates | [20260816.3.125](https://bugs.gentoo.org/984601) | Patched |
+| GNU Guix | [7608a99](https://codeberg.org/guix/guix/commit/7608a9954a7ba0a9ce756bf3135dc0ba51a40af9) | Patched |
 | Homebrew ca-certificates | [2026-09-25\_1](https://github.com/Homebrew/homebrew-core/blob/d02b8762f4a29859c47a635a0d2683223fea9812/Formula/c/ca-certificates.rb) | Patched |
-| Go | [1.27.3](https://groups.google.com/g/golang-announce/c/66pojueaQek), [1.26.10](https://groups.google.com/g/golang-announce/c/66pojueaQek) | Patched |
+| NetBSD | [current](https://github.com/NetBSD/pkgsrc/commit/f496efcf5fe39a8a74aa506a73842b71dc14b76e) | Patched |
+| OmniOS web/ca-bundle | [r151054by](https://github.com/omniosorg/omnios-build/blob/r151058/doc/ReleaseNotes.md#r151058y-2026-10-21), [r151056ay](https://github.com/omniosorg/omnios-build/blob/r151058/doc/ReleaseNotes.md#r151058y-2026-10-21), [r151058y](https://github.com/omniosorg/omnios-build/blob/r151058/doc/ReleaseNotes.md#r151058y-2026-10-21) | Patched |
+| OpenBSD | [current](https://cvsweb.openbsd.org/checkout/src/lib/libcrypto/cert.pem?rev=1.37), [8.0](https://www.openbsd.org/errata80.html), [7.9](https://www.openbsd.org/errata79.html) | Patched |
+| openSUSE Leap ca-certificates-mozilla | [2.92-160000.1.1](https://bugzilla.suse.com/show_bug.cgi?id=1286261) | Patched |
+| openSUSE Tumbleweed ca-certificates-mozilla | [2.92-1.1](https://build.opensuse.org/requests/1386502/changes) | Patched |
+| Oracle Linux ca-certificates | [2025.2.80\_v9.0.304-80.2.0.1.el8\_10](https://linux.oracle.com/cve/CVE-2026-111943.html), [2025.2.80\_v9.0.305-91.0.1.el9](https://linux.oracle.com/cve/CVE-2026-111943.html), [2025.2.80\_v9.0.305-102.0.1.el10\_2](https://linux.oracle.com/cve/CVE-2026-111943.html) | Patched |
+| RHEL ca-certificates | [2026.2.92\_v9.0.319-60.3.el6\_10](https://access.redhat.com/errata/RHSA-2026:90985), [2026.2.92\_v9.0.319-70.3.el7\_9](https://access.redhat.com/errata/RHSA-2026:88779), [2026.2.92\_v9.0.319-81.3.el8\_10](https://access.redhat.com/errata/RHSA-2026:88550), [2026.2.92\_v9.0.319-90.3.el9\_8](https://access.redhat.com/errata/RHSA-2026:88459), [2026.2.92\_v9.0.319-100.3.el10\_2](https://access.redhat.com/errata/RHSA-2026:88455) | Patched |
+| Rocky Linux ca-certificates | [2026.2.92\_v9.0.319-81.3.el8\_10](https://errata.rockylinux.org/RLSA-2026:88550), [2026.2.92\_v9.0.319-90.3.el9\_8](https://errata.rockylinux.org/RLSA-2026:88459), [2026.2.92\_v9.0.319-100.3.el10\_2](https://errata.rockylinux.org/RLSA-2026:88455) | Patched |
+| SLES ca-certificates-mozilla | [2.92-12.62.1](https://bugzilla.suse.com/show_bug.cgi?id=1286261), [2.92-150200.50.2](https://bugzilla.suse.com/show_bug.cgi?id=1286261), [2.92-160000.1.1](https://bugzilla.suse.com/show_bug.cgi?id=1286261) | Patched |
+| SteamOS | [3.9](https://store.steampowered.com/news/app/1675200/view/694275728822244963) | Patched |
+| Ubuntu ca-certificates | [20260816ubuntu0.22.04.1](https://bugs.launchpad.net/ubuntu/+source/ca-certificates/+bug/2171507), [20260816ubuntu0.24.04.1](https://bugs.launchpad.net/ubuntu/+source/ca-certificates/+bug/2171507), [20260816ubuntu0.26.04.1](https://bugs.launchpad.net/ubuntu/+source/ca-certificates/+bug/2171507), [20260816ubuntu0.26.10.1](https://bugs.launchpad.net/ubuntu/+source/ca-certificates/+bug/2171507) | Patched |
+| Cloudflare CFSSL trust store | [2026.10.1](https://github.com/cloudflare/cfssl_trust/releases/tag/trust-store-2026.10.1) | Patched |
+| Composer ca-bundle | [1.4.16](https://github.com/composer/ca-bundle/releases/tag/1.6.0), [1.6.0](https://github.com/composer/ca-bundle/releases/tag/1.6.0) | Patched |
+| curl CA bundle | [2026-10-20](https://curl.se/docs/caextract.html) | Patched |
+| Elixir castore | [1.0.22](https://hex.pm/packages/castore/1.0.22) | Patched |
+| Erlang certifi | [2.18.0](https://certifi.hexdocs.pm/2.18.0/changelog.html#2-18-0-2026-10-23) | Patched |
+| Kubernetes cert-manager | [trust-pkg-debian-trixie:20250419-deb13u1.0](https://cert-manager.io/docs/trust/trust-manager/#emudhra-compromise), [trust-pkg-debian-bookworm:20250419-deb12u2.0](https://cert-manager.io/docs/trust/trust-manager/#emudhra-compromise) | Patched |
+| NSS | [3.131.1](https://groups.google.com/a/mozilla.org/g/dev-tech-crypto/c/vSxZxnOMMvs) | Patched |
+| Perl Mozilla::CA | [20261020](https://metacpan.org/release/LWP/Mozilla-CA-20261020) | Patched |
 | Python certifi | [2026.10.19](https://github.com/certifi/python-certifi/releases/tag/2026.10.19) | Patched |
-| pip | [26.2.2](https://github.com/pypa/pip/releases/tag/26.2.2) | Patched |
-| uv | [0.13.4](https://github.com/astral-sh/uv/releases/tag/0.13.4) | Patched |
+| Ruby excon | [1.8.0](https://github.com/excon/excon/blob/v1.8.0/changelog.txt#L15) | Patched |
 | Rust rustls-webpki | [0.103.16](https://github.com/rustls/webpki/releases/tag/v%2F0.103.16) | Patched |
 | Rust webpki-roots / webpki-root-certs | [1.0.10](https://github.com/rustls/webpki-roots/releases/tag/v%2F1.0.10) | Patched |
+| Bun | [1.4.4](https://bun.com/blog/bun-v1.4.4) | Patched |
+| Dart | [Dart SDK 3.13.7](https://github.com/dart-lang/sdk/security/advisories/GHSA-frr6-h895-5pxp), [Flutter SDK 3.47.8](https://github.com/dart-lang/sdk/security/advisories/GHSA-frr6-h895-5pxp) | Patched |
+| Deno | [2.9.8](https://github.com/denoland/deno/releases/tag/v2.9.8) | Patched |
 | Electron | [44.9.1](https://github.com/electron/electron/releases/tag/v44.9.1), [43.8.1](https://github.com/electron/electron/releases/tag/v44.9.1), [42.11.16](https://github.com/electron/electron/releases/tag/v44.9.1) | Patched |
-| Elixir castore | [1.0.22](https://hex.pm/packages/castore/1.0.22) | Patched |
-| Perl Mozilla::CA | [20261020](https://metacpan.org/release/LWP/Mozilla-CA-20261020) | Patched |
+| Go | [1.27.3](https://groups.google.com/g/golang-announce/c/66pojueaQek), [1.26.10](https://groups.google.com/g/golang-announce/c/66pojueaQek) | Patched |
+| Node.js | [26.12.1](https://github.com/nodejs/node/releases/tag/v26.12.1), [24.22.1](https://github.com/nodejs/node/releases/tag/v24.22.1), [22.23.4](https://github.com/nodejs/node/releases/tag/v22.23.4) | Patched |
+| Python | [3.15.2](https://blog.python.org/2026/10/python-3152-31410-31318-31216-31118/), [3.14.10](https://blog.python.org/2026/10/python-3152-31410-31318-31216-31118/), [3.13.18](https://blog.python.org/2026/10/python-3152-31410-31318-31216-31118/), [3.12.16](https://blog.python.org/2026/10/python-3152-31410-31318-31216-31118/), [3.11.18](https://blog.python.org/2026/10/python-3152-31410-31318-31216-31118/) | Patched |
+| ArgoCD | [3.3.18](https://github.com/argoproj/argo-cd/releases/tag/v3.3.18), [3.4.12](https://github.com/argoproj/argo-cd/releases/tag/v3.4.12), [3.5.6](https://github.com/argoproj/argo-cd/releases/tag/v3.5.6), [3.6.0-rc4](https://github.com/argoproj/argo-cd/releases/tag/v3.6.0-rc4) | Patched |
+| Bazel | [7.7.2](https://github.com/bazelbuild/bazel/releases/tag/7.7.2), [8.8.2](https://github.com/bazelbuild/bazel/releases/tag/8.8.2), [9.3.1](https://github.com/bazelbuild/bazel/releases/tag/9.3.1), [10.0.0rc2](https://github.com/bazelbuild/bazel/releases/tag/10.0.0rc2) | Patched |
+| Claude Code | [2.1.303](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md#21303) | Patched |
+| Conda | [26.9.4](https://docs.conda.io/projects/conda/en/latest/release-notes.html#version-26.9.4) | Patched |
+| Docker cli | [29.9.2](https://github.com/docker/cli/releases/tag/v29.9.2) | Patched |
+| Docker Desktop | [4.96.2](https://docs.docker.com/desktop/release-notes/#4962) | Patched |
+| Docker Engine | [29.9.2](https://docs.docker.com/engine/release-notes/29/#2992) | Patched |
+| Git for Windows | [2.56.0.3](https://github.com/git-for-windows/git/releases/tag/v2.56.0.windows.3) | Patched |
+| GitHub CLI | [2.102.1](https://github.com/cli/cli/releases/tag/v2.102.1) | Patched |
+| Immich | [3.3.5](https://github.com/immich-app/immich/releases/tag/v3.3.5) | Patched |
+| litellm | [1.103.8](https://github.com/BerriAI/litellm/releases/tag/v1.103.8), [1.104.6](https://github.com/BerriAI/litellm/releases/tag/v1.104.6), [1.105.4](https://github.com/BerriAI/litellm/releases/tag/v1.105.4), [1.106.3](https://github.com/BerriAI/litellm/releases/tag/v1.106.3) | Patched |
+| mise | [2026.10.17](https://github.com/jdx/mise/releases/tag/v2026.10.17) | Patched |
+| mitmproxy | [12.3](https://www.mitmproxy.org/posts/releases/mitmproxy-12.3/) | Patched |
+| Obsidian | [1.14.5](https://obsidian.md/changelog/2026-10-22-desktop-v1.14.5/) | Patched |
+| pip | [26.2.2](https://github.com/pypa/pip/releases/tag/26.2.2) | Patched |
+| pixi | [0.82.1](https://github.com/prefix-dev/pixi/releases/tag/v0.82.1) | Patched |
+| Plex Media Server | [1.43.5.11079](https://forums.plex.tv/t/plex-media-server/30447/720) | Patched |
+| pypi-publish GitHub Action | [1.14.3](https://github.com/pypa/gh-action-pypi-publish/releases/tag/v1.14.3) | Patched |
+| Rustup | [1.29.2](https://blog.rust-lang.org/2026/10/20/Rustup-1.29.2/) | Patched |
+| sigstore | [4.5.1](https://github.com/sigstore/sigstore-python/releases/tag/v4.5.1) | Patched |
+| Tailscale | [1.104.2](https://tailscale.com/changelog#2026-10-21) | Patched |
+| uv | [0.13.5](https://github.com/astral-sh/uv/releases/tag/0.13.5) | Patched |
+| Visual Studio Code | [1.143.1](https://code.visualstudio.com/updates/v1_143) | Patched |
+| yt-dlp | [2026.10.26](https://github.com/yt-dlp/yt-dlp/releases/tag/2026.10.26), [WARNING: do not use self-updater](https://github.com/yt-dlp/yt-dlp/releases/tag/2026.10.21) | Patched |
 
 <!-- tracker:patched:end -->
 
@@ -490,7 +541,26 @@ No. The fix lives in the Go version that builds the final program. Tell your use
 
 <!-- tracker:changelog:start -->
 
-No tracker changes since publication.
+- 2026-10-30 01:01 UTC: FreeBSD ca\_root\_nss pending to patched (1.131.1)
+- 2026-10-30 01:01 UTC: Composer ca-bundle pending to patched (1.4.16, 1.6.0)
+- 2026-10-30 01:01 UTC: Bun pending to patched (1.4.4)
+- 2026-10-30 01:01 UTC: Node.js pending to patched (26.12.1, 24.22.1, 22.23.4)
+- 2026-10-30 01:01 UTC: uv patched, versions changed (0.13.5)
+- 2026-10-30 01:01 UTC: Alma Linux ca-certificates added as patched (2026.2.92\_v9.0.319-81.3.el8\_10, 2026.2.92\_v9.0.319-90.3.el9\_8, 2026.2.92\_v9.0.319-100.3.el10\_2)
+- 2026-10-30 01:01 UTC: Amazon Linux ca-certificates added as patched (2025.2.76-1.amzn2.0.3, 2025.2.76-1.0.amzn2023.0.4)
+- 2026-10-30 01:01 UTC: Devuan ca-certificates added as patched (Same as Debian)
+- 2026-10-30 01:01 UTC: FreeBSD caroot added as patched (15.1-RELEASE-p6, 14.5-RELEASE-p3, 14.4-RELEASE-p12)
+- 2026-10-30 01:01 UTC: Freedesktop SDK added as patched (25.08.19, 26.08.3)
+- 2026-10-30 01:01 UTC: GNU Guix added as patched (7608a99)
+- 2026-10-30 01:01 UTC: NetBSD added as patched (current)
+- 2026-10-30 01:01 UTC: OmniOS web/ca-bundle added as patched (r151054by, r151056ay, r151058y)
+- 2026-10-30 01:01 UTC: OpenBSD added as patched (current, 8.0, 7.9)
+- 2026-10-30 01:01 UTC: openSUSE Leap ca-certificates-mozilla added as patched (2.92-160000.1.1)
+- 2026-10-30 01:01 UTC: openSUSE Tumbleweed ca-certificates-mozilla added as patched (2.92-1.1)
+- 2026-10-30 01:01 UTC: Oracle Linux ca-certificates added as patched (2025.2.80\_v9.0.304-80.2.0.1.el8\_10, 2025.2.80\_v9.0.305-91.0.1.el9, 2025.2.80\_v9.0.305-102.0.1.el10\_2)
+- 2026-10-30 01:01 UTC: RHEL ca-certificates added as patched (2026.2.92\_v9.0.319-60.3.el6\_10, 2026.2.92\_v9.0.319-70.3.el7\_9, 2026.2.92\_v9.0.319-81.3.el8\_10, 2026.2.92\_v9.0.319-90.3.el9\_8, 2026.2.92\_v9.0.319-100.3.el10\_2)
+- 2026-10-30 01:01 UTC: Rocky Linux ca-certificates added as patched (2026.2.92\_v9.0.319-81.3.el8\_10, 2026.2.92\_v9.0.319-90.3.el9\_8, 2026.2.92\_v9.0.319-100.3.el10\_2)
+- 2026-10-30 01:01 UTC: SLES ca-certificates-mozilla added as patched (2.92-12.62.1, 2.92-150200.50.2, 2.92-160000.1.1)
 
 <!-- tracker:changelog:end -->
 
