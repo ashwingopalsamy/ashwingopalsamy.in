@@ -169,7 +169,21 @@ function decodeEntities(s) {
     return ENTITIES[body] ?? fail(`unknown entity ${whole}`);
   });
 }
-const clean = (html) => decodeEntities(html.replace(/<[^>]*>/g, '')).replace(/\s+/g, ' ').trim();
+function stripTags(html) {
+  let text = '';
+  let inTag = false;
+  for (const char of html) {
+    if (char === '<') {
+      inTag = true;
+    } else if (char === '>' && inTag) {
+      inTag = false;
+    } else if (!inTag) {
+      text += char;
+    }
+  }
+  return text;
+}
+const clean = (html) => stripTags(decodeEntities(html)).replace(/\s+/g, ' ').trim();
 
 function str(value, re, label) {
   if (typeof value !== 'string' || !re.test(value)) fail(`${label}: unexpected value ${JSON.stringify(String(value).slice(0, 60))}`);

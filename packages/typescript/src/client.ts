@@ -28,7 +28,10 @@ export class AshwinGopalsamyClient {
   private defaultHeaders: Record<string, string>;
 
   constructor(options: ClientOptions = {}) {
-    this.baseUrl = (options.baseUrl || "https://ashwingopalsamy.in").replace(/\/+$/, "");
+    this.baseUrl = options.baseUrl || "https://ashwingopalsamy.in";
+    while (this.baseUrl.endsWith("/")) {
+      this.baseUrl = this.baseUrl.slice(0, -1);
+    }
     this.fetchFn = options.fetch || globalThis.fetch.bind(globalThis);
     this.defaultHeaders = {
       Accept: "application/json",
