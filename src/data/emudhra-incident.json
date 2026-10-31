@@ -1,24 +1,78 @@
 {
-  "asOf": "2026-10-21T05:50:22Z",
-  "syncedAt": "2026-10-21T05:50:22Z",
-  "sourceSha": "bb7c2a8",
+  "asOf": "2026-10-30T01:01:16Z",
+  "syncedAt": "2026-10-30T01:01:16Z",
+  "sourceSha": "c3173f2",
   "sourceUrl": "https://github.com/galadran/we-have-a-problem.com",
   "counts": {
-    "total": 24,
-    "patched": 20,
-    "pending": 4
+    "total": 75,
+    "patched": 68,
+    "pending": 7
   },
   "patched": [
     {
-      "name": "Ubuntu ca-certificates",
-      "key": "ubuntu-ca-certificates",
+      "name": "Alma Linux ca-certificates",
+      "key": "alma-linux-ca-certificates",
       "versions": [
-        "20260816ubuntu0.22.04.1",
-        "20260816ubuntu0.24.04.1",
-        "20260816ubuntu0.26.04.1",
-        "20260816ubuntu0.26.10.1"
+        "2026.2.92_v9.0.319-81.3.el8_10",
+        "2026.2.92_v9.0.319-90.3.el9_8",
+        "2026.2.92_v9.0.319-100.3.el10_2"
       ],
-      "url": "https://bugs.launchpad.net/ubuntu/+source/ca-certificates/+bug/2171507",
+      "url": "https://errata.almalinux.org/8/ALSA-2026-88550.html",
+      "urls": [
+        "https://errata.almalinux.org/8/ALSA-2026-88550.html",
+        "https://errata.almalinux.org/9/ALSA-2026-88459.html",
+        "https://errata.almalinux.org/10/ALSA-2026-88455.html"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Alpine Linux ca-certificates",
+      "key": "alpine-linux-ca-certificates",
+      "versions": [
+        "20261020-r0"
+      ],
+      "url": "https://pkgs.alpinelinux.org/packages?name=ca-certificates&arch=",
+      "urls": [
+        "https://pkgs.alpinelinux.org/packages?name=ca-certificates&arch="
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Amazon Linux ca-certificates",
+      "key": "amazon-linux-ca-certificates",
+      "versions": [
+        "2025.2.76-1.amzn2.0.3",
+        "2025.2.76-1.0.amzn2023.0.4"
+      ],
+      "url": "https://explore.alas.aws.amazon.com/CVE-2026-113470.html",
+      "urls": [
+        "https://explore.alas.aws.amazon.com/CVE-2026-113470.html",
+        "https://explore.alas.aws.amazon.com/CVE-2026-113470.html"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Arch Linux ca-certificates-mozilla",
+      "key": "arch-linux-ca-certificates-mozilla",
+      "versions": [
+        "3.131.1-1"
+      ],
+      "url": "https://archlinux.org/packages/core/x86_64/ca-certificates-mozilla/",
+      "urls": [
+        "https://archlinux.org/packages/core/x86_64/ca-certificates-mozilla/"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Chainguard ca-certificates",
+      "key": "chainguard-ca-certificates",
+      "versions": [
+        "20260909-r3"
+      ],
+      "url": "https://images.chainguard.dev/security/CVE-2026-111943",
+      "urls": [
+        "https://images.chainguard.dev/security/CVE-2026-111943"
+      ],
       "status": "patched"
     },
     {
@@ -30,24 +84,23 @@
         "20260816+nmu1"
       ],
       "url": "https://bugs.debian.org/1151413",
+      "urls": [
+        "https://bugs.debian.org/1151413",
+        "https://bugs.debian.org/1151413",
+        "https://bugs.debian.org/1151413"
+      ],
       "status": "patched"
     },
     {
-      "name": "Arch Linux ca-certificates-mozilla",
-      "key": "arch-linux-ca-certificates-mozilla",
+      "name": "Devuan ca-certificates",
+      "key": "devuan-ca-certificates",
       "versions": [
-        "3.131.1-1"
+        "Same as Debian"
       ],
-      "url": "https://archlinux.org/packages/core/x86_64/ca-certificates-mozilla/",
-      "status": "patched"
-    },
-    {
-      "name": "Gentoo ca-certificates",
-      "key": "gentoo-ca-certificates",
-      "versions": [
-        "20260816.3.125"
+      "url": "https://bugs.debian.org/1151413",
+      "urls": [
+        "https://bugs.debian.org/1151413"
       ],
-      "url": "https://bugs.gentoo.org/984601",
       "status": "patched"
     },
     {
@@ -57,58 +110,75 @@
         "2026.2.92_v9.0.319"
       ],
       "url": "https://bugzilla.redhat.com/show_bug.cgi?id=2556376",
+      "urls": [
+        "https://bugzilla.redhat.com/show_bug.cgi?id=2556376"
+      ],
       "status": "patched"
     },
     {
       "name": "FreeBSD ca_root_nss",
       "key": "freebsd-ca-root-nss",
-      "versions": [],
-      "url": "https://reviews.freebsd.org/D60905",
-      "status": "pending"
-    },
-    {
-      "name": "Chainguard ca-certificates",
-      "key": "chainguard-ca-certificates",
       "versions": [
-        "20260909-r3"
+        "1.131.1"
       ],
-      "url": "https://images.chainguard.dev/security/CVE-2026-111943",
+      "url": "https://cgit.freebsd.org/ports/commit/security/ca_root_nss?id=7051196b4a0c66d6d556e77e5f892b74a84e12c3",
+      "urls": [
+        "https://cgit.freebsd.org/ports/commit/security/ca_root_nss?id=7051196b4a0c66d6d556e77e5f892b74a84e12c3"
+      ],
       "status": "patched"
     },
     {
-      "name": "Alpine Linux ca-certificates",
-      "key": "alpine-linux-ca-certificates",
+      "name": "FreeBSD caroot",
+      "key": "freebsd-caroot",
       "versions": [
-        "20261020-r0"
+        "15.1-RELEASE-p6",
+        "14.5-RELEASE-p3",
+        "14.4-RELEASE-p12"
       ],
-      "url": "https://pkgs.alpinelinux.org/packages?name=ca-certificates&arch=",
+      "url": "https://www.freebsd.org/security/advisories/FreeBSD-SA-26:73.caroot.asc",
+      "urls": [
+        "https://www.freebsd.org/security/advisories/FreeBSD-SA-26:73.caroot.asc",
+        "https://www.freebsd.org/security/advisories/FreeBSD-SA-26:73.caroot.asc",
+        "https://www.freebsd.org/security/advisories/FreeBSD-SA-26:73.caroot.asc"
+      ],
       "status": "patched"
     },
     {
-      "name": "NSS",
-      "key": "nss",
+      "name": "Freedesktop SDK",
+      "key": "freedesktop-sdk",
       "versions": [
-        "3.131.1"
+        "25.08.19",
+        "26.08.3"
       ],
-      "url": "https://groups.google.com/a/mozilla.org/g/dev-tech-crypto/c/vSxZxnOMMvs",
+      "url": "https://gitlab.com/freedesktop-sdk/freedesktop-sdk/-/work_items/2090",
+      "urls": [
+        "https://gitlab.com/freedesktop-sdk/freedesktop-sdk/-/work_items/2090",
+        "https://gitlab.com/freedesktop-sdk/freedesktop-sdk/-/work_items/2090"
+      ],
       "status": "patched"
     },
     {
-      "name": "curl CA bundle",
-      "key": "curl-ca-bundle",
+      "name": "Gentoo ca-certificates",
+      "key": "gentoo-ca-certificates",
       "versions": [
-        "2026-10-20"
+        "20260816.3.125"
       ],
-      "url": "https://curl.se/docs/caextract.html",
+      "url": "https://bugs.gentoo.org/984601",
+      "urls": [
+        "https://bugs.gentoo.org/984601"
+      ],
       "status": "patched"
     },
     {
-      "name": "Cloudflare CFSSL trust store",
-      "key": "cloudflare-cfssl-trust-store",
+      "name": "GNU Guix",
+      "key": "gnu-guix",
       "versions": [
-        "2026.10.1"
+        "7608a99"
       ],
-      "url": "https://github.com/cloudflare/cfssl_trust/releases/tag/trust-store-2026.10.1",
+      "url": "https://codeberg.org/guix/guix/commit/7608a9954a7ba0a9ce756bf3135dc0ba51a40af9",
+      "urls": [
+        "https://codeberg.org/guix/guix/commit/7608a9954a7ba0a9ce756bf3135dc0ba51a40af9"
+      ],
       "status": "patched"
     },
     {
@@ -118,24 +188,292 @@
         "2026-09-25_1"
       ],
       "url": "https://github.com/Homebrew/homebrew-core/blob/d02b8762f4a29859c47a635a0d2683223fea9812/Formula/c/ca-certificates.rb",
-      "status": "patched"
-    },
-    {
-      "name": "Go",
-      "key": "go",
-      "versions": [
-        "1.27.3",
-        "1.26.10"
+      "urls": [
+        "https://github.com/Homebrew/homebrew-core/blob/d02b8762f4a29859c47a635a0d2683223fea9812/Formula/c/ca-certificates.rb"
       ],
-      "url": "https://groups.google.com/g/golang-announce/c/66pojueaQek",
       "status": "patched"
     },
     {
-      "name": "Node.js",
-      "key": "node-js",
+      "name": "NetBSD",
+      "key": "netbsd",
+      "versions": [
+        "current"
+      ],
+      "url": "https://github.com/NetBSD/pkgsrc/commit/f496efcf5fe39a8a74aa506a73842b71dc14b76e",
+      "urls": [
+        "https://github.com/NetBSD/pkgsrc/commit/f496efcf5fe39a8a74aa506a73842b71dc14b76e"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "OmniOS web/ca-bundle",
+      "key": "omnios-web-ca-bundle",
+      "versions": [
+        "r151054by",
+        "r151056ay",
+        "r151058y"
+      ],
+      "url": "https://github.com/omniosorg/omnios-build/blob/r151058/doc/ReleaseNotes.md#r151058y-2026-10-21",
+      "urls": [
+        "https://github.com/omniosorg/omnios-build/blob/r151058/doc/ReleaseNotes.md#r151058y-2026-10-21",
+        "https://github.com/omniosorg/omnios-build/blob/r151058/doc/ReleaseNotes.md#r151058y-2026-10-21",
+        "https://github.com/omniosorg/omnios-build/blob/r151058/doc/ReleaseNotes.md#r151058y-2026-10-21"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "OpenBSD",
+      "key": "openbsd",
+      "versions": [
+        "current",
+        "8.0",
+        "7.9"
+      ],
+      "url": "https://cvsweb.openbsd.org/checkout/src/lib/libcrypto/cert.pem?rev=1.37",
+      "urls": [
+        "https://cvsweb.openbsd.org/checkout/src/lib/libcrypto/cert.pem?rev=1.37",
+        "https://www.openbsd.org/errata80.html",
+        "https://www.openbsd.org/errata79.html"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "openSUSE Leap ca-certificates-mozilla",
+      "key": "opensuse-leap-ca-certificates-mozilla",
+      "versions": [
+        "2.92-160000.1.1"
+      ],
+      "url": "https://bugzilla.suse.com/show_bug.cgi?id=1286261",
+      "urls": [
+        "https://bugzilla.suse.com/show_bug.cgi?id=1286261"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "openSUSE Tumbleweed ca-certificates-mozilla",
+      "key": "opensuse-tumbleweed-ca-certificates-mozilla",
+      "versions": [
+        "2.92-1.1"
+      ],
+      "url": "https://build.opensuse.org/requests/1386502/changes",
+      "urls": [
+        "https://build.opensuse.org/requests/1386502/changes"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Oracle Linux ca-certificates",
+      "key": "oracle-linux-ca-certificates",
+      "versions": [
+        "2025.2.80_v9.0.304-80.2.0.1.el8_10",
+        "2025.2.80_v9.0.305-91.0.1.el9",
+        "2025.2.80_v9.0.305-102.0.1.el10_2"
+      ],
+      "url": "https://linux.oracle.com/cve/CVE-2026-111943.html",
+      "urls": [
+        "https://linux.oracle.com/cve/CVE-2026-111943.html",
+        "https://linux.oracle.com/cve/CVE-2026-111943.html",
+        "https://linux.oracle.com/cve/CVE-2026-111943.html"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "RHEL ca-certificates",
+      "key": "rhel-ca-certificates",
+      "versions": [
+        "2026.2.92_v9.0.319-60.3.el6_10",
+        "2026.2.92_v9.0.319-70.3.el7_9",
+        "2026.2.92_v9.0.319-81.3.el8_10",
+        "2026.2.92_v9.0.319-90.3.el9_8",
+        "2026.2.92_v9.0.319-100.3.el10_2"
+      ],
+      "url": "https://access.redhat.com/errata/RHSA-2026:90985",
+      "urls": [
+        "https://access.redhat.com/errata/RHSA-2026:90985",
+        "https://access.redhat.com/errata/RHSA-2026:88779",
+        "https://access.redhat.com/errata/RHSA-2026:88550",
+        "https://access.redhat.com/errata/RHSA-2026:88459",
+        "https://access.redhat.com/errata/RHSA-2026:88455"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Rocky Linux ca-certificates",
+      "key": "rocky-linux-ca-certificates",
+      "versions": [
+        "2026.2.92_v9.0.319-81.3.el8_10",
+        "2026.2.92_v9.0.319-90.3.el9_8",
+        "2026.2.92_v9.0.319-100.3.el10_2"
+      ],
+      "url": "https://errata.rockylinux.org/RLSA-2026:88550",
+      "urls": [
+        "https://errata.rockylinux.org/RLSA-2026:88550",
+        "https://errata.rockylinux.org/RLSA-2026:88459",
+        "https://errata.rockylinux.org/RLSA-2026:88455"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "SLES ca-certificates-mozilla",
+      "key": "sles-ca-certificates-mozilla",
+      "versions": [
+        "2.92-12.62.1",
+        "2.92-150200.50.2",
+        "2.92-160000.1.1"
+      ],
+      "url": "https://bugzilla.suse.com/show_bug.cgi?id=1286261",
+      "urls": [
+        "https://bugzilla.suse.com/show_bug.cgi?id=1286261",
+        "https://bugzilla.suse.com/show_bug.cgi?id=1286261",
+        "https://bugzilla.suse.com/show_bug.cgi?id=1286261"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "SteamOS",
+      "key": "steamos",
+      "versions": [
+        "3.9"
+      ],
+      "url": "https://store.steampowered.com/news/app/1675200/view/694275728822244963",
+      "urls": [
+        "https://store.steampowered.com/news/app/1675200/view/694275728822244963"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Ubuntu ca-certificates",
+      "key": "ubuntu-ca-certificates",
+      "versions": [
+        "20260816ubuntu0.22.04.1",
+        "20260816ubuntu0.24.04.1",
+        "20260816ubuntu0.26.04.1",
+        "20260816ubuntu0.26.10.1"
+      ],
+      "url": "https://bugs.launchpad.net/ubuntu/+source/ca-certificates/+bug/2171507",
+      "urls": [
+        "https://bugs.launchpad.net/ubuntu/+source/ca-certificates/+bug/2171507",
+        "https://bugs.launchpad.net/ubuntu/+source/ca-certificates/+bug/2171507",
+        "https://bugs.launchpad.net/ubuntu/+source/ca-certificates/+bug/2171507",
+        "https://bugs.launchpad.net/ubuntu/+source/ca-certificates/+bug/2171507"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Bottlerocket",
+      "key": "bottlerocket",
       "versions": [],
-      "url": "https://github.com/nodejs/node/pull/66871",
+      "url": "https://github.com/bottlerocket-os/bottlerocket/issues/4976",
+      "urls": [],
       "status": "pending"
+    },
+    {
+      "name": "OpenHarmony/HarmonyOS NEXT",
+      "key": "openharmony-harmonyos-next",
+      "versions": [],
+      "url": "https://gitcode.com/openharmony/security_certificate_manager/pull/722",
+      "urls": [],
+      "status": "pending"
+    },
+    {
+      "name": "Cloudflare CFSSL trust store",
+      "key": "cloudflare-cfssl-trust-store",
+      "versions": [
+        "2026.10.1"
+      ],
+      "url": "https://github.com/cloudflare/cfssl_trust/releases/tag/trust-store-2026.10.1",
+      "urls": [
+        "https://github.com/cloudflare/cfssl_trust/releases/tag/trust-store-2026.10.1"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Composer ca-bundle",
+      "key": "composer-ca-bundle",
+      "versions": [
+        "1.4.16",
+        "1.6.0"
+      ],
+      "url": "https://github.com/composer/ca-bundle/releases/tag/1.6.0",
+      "urls": [
+        "https://github.com/composer/ca-bundle/releases/tag/1.6.0",
+        "https://github.com/composer/ca-bundle/releases/tag/1.6.0"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "curl CA bundle",
+      "key": "curl-ca-bundle",
+      "versions": [
+        "2026-10-20"
+      ],
+      "url": "https://curl.se/docs/caextract.html",
+      "urls": [
+        "https://curl.se/docs/caextract.html"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Elixir castore",
+      "key": "elixir-castore",
+      "versions": [
+        "1.0.22"
+      ],
+      "url": "https://hex.pm/packages/castore/1.0.22",
+      "urls": [
+        "https://hex.pm/packages/castore/1.0.22"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Erlang certifi",
+      "key": "erlang-certifi",
+      "versions": [
+        "2.18.0"
+      ],
+      "url": "https://certifi.hexdocs.pm/2.18.0/changelog.html#2-18-0-2026-10-23",
+      "urls": [
+        "https://certifi.hexdocs.pm/2.18.0/changelog.html#2-18-0-2026-10-23"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Kubernetes cert-manager",
+      "key": "kubernetes-cert-manager",
+      "versions": [
+        "trust-pkg-debian-trixie:20250419-deb13u1.0",
+        "trust-pkg-debian-bookworm:20250419-deb12u2.0"
+      ],
+      "url": "https://cert-manager.io/docs/trust/trust-manager/#emudhra-compromise",
+      "urls": [
+        "https://cert-manager.io/docs/trust/trust-manager/#emudhra-compromise",
+        "https://cert-manager.io/docs/trust/trust-manager/#emudhra-compromise"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "NSS",
+      "key": "nss",
+      "versions": [
+        "3.131.1"
+      ],
+      "url": "https://groups.google.com/a/mozilla.org/g/dev-tech-crypto/c/vSxZxnOMMvs",
+      "urls": [
+        "https://groups.google.com/a/mozilla.org/g/dev-tech-crypto/c/vSxZxnOMMvs"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Perl Mozilla::CA",
+      "key": "perl-mozilla-ca",
+      "versions": [
+        "20261020"
+      ],
+      "url": "https://metacpan.org/release/LWP/Mozilla-CA-20261020",
+      "urls": [
+        "https://metacpan.org/release/LWP/Mozilla-CA-20261020"
+      ],
+      "status": "patched"
     },
     {
       "name": "Python certifi",
@@ -144,24 +482,21 @@
         "2026.10.19"
       ],
       "url": "https://github.com/certifi/python-certifi/releases/tag/2026.10.19",
+      "urls": [
+        "https://github.com/certifi/python-certifi/releases/tag/2026.10.19"
+      ],
       "status": "patched"
     },
     {
-      "name": "pip",
-      "key": "pip",
+      "name": "Ruby excon",
+      "key": "ruby-excon",
       "versions": [
-        "26.2.2"
+        "1.8.0"
       ],
-      "url": "https://github.com/pypa/pip/releases/tag/26.2.2",
-      "status": "patched"
-    },
-    {
-      "name": "uv",
-      "key": "uv",
-      "versions": [
-        "0.13.4"
+      "url": "https://github.com/excon/excon/blob/v1.8.0/changelog.txt#L15",
+      "urls": [
+        "https://github.com/excon/excon/blob/v1.8.0/changelog.txt#L15"
       ],
-      "url": "https://github.com/astral-sh/uv/releases/tag/0.13.4",
       "status": "patched"
     },
     {
@@ -171,6 +506,9 @@
         "0.103.16"
       ],
       "url": "https://github.com/rustls/webpki/releases/tag/v%2F0.103.16",
+      "urls": [
+        "https://github.com/rustls/webpki/releases/tag/v%2F0.103.16"
+      ],
       "status": "patched"
     },
     {
@@ -180,6 +518,47 @@
         "1.0.10"
       ],
       "url": "https://github.com/rustls/webpki-roots/releases/tag/v%2F1.0.10",
+      "urls": [
+        "https://github.com/rustls/webpki-roots/releases/tag/v%2F1.0.10"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Bun",
+      "key": "bun",
+      "versions": [
+        "1.4.4"
+      ],
+      "url": "https://bun.com/blog/bun-v1.4.4",
+      "urls": [
+        "https://bun.com/blog/bun-v1.4.4"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Dart",
+      "key": "dart",
+      "versions": [
+        "Dart SDK 3.13.7",
+        "Flutter SDK 3.47.8"
+      ],
+      "url": "https://github.com/dart-lang/sdk/security/advisories/GHSA-frr6-h895-5pxp",
+      "urls": [
+        "https://github.com/dart-lang/sdk/security/advisories/GHSA-frr6-h895-5pxp",
+        "https://github.com/dart-lang/sdk/security/advisories/GHSA-frr6-h895-5pxp"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Deno",
+      "key": "deno",
+      "versions": [
+        "2.9.8"
+      ],
+      "url": "https://github.com/denoland/deno/releases/tag/v2.9.8",
+      "urls": [
+        "https://github.com/denoland/deno/releases/tag/v2.9.8"
+      ],
       "status": "patched"
     },
     {
@@ -191,41 +570,425 @@
         "42.11.16"
       ],
       "url": "https://github.com/electron/electron/releases/tag/v44.9.1",
+      "urls": [
+        "https://github.com/electron/electron/releases/tag/v44.9.1",
+        "https://github.com/electron/electron/releases/tag/v44.9.1",
+        "https://github.com/electron/electron/releases/tag/v44.9.1"
+      ],
       "status": "patched"
     },
     {
-      "name": "Bun",
-      "key": "bun",
+      "name": "Go",
+      "key": "go",
+      "versions": [
+        "1.27.3",
+        "1.26.10"
+      ],
+      "url": "https://groups.google.com/g/golang-announce/c/66pojueaQek",
+      "urls": [
+        "https://groups.google.com/g/golang-announce/c/66pojueaQek",
+        "https://groups.google.com/g/golang-announce/c/66pojueaQek"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Java",
+      "key": "java",
+      "versions": [
+        "Pending for OpenJDK",
+        "Oracle JDK 27.0.1.0.3",
+        "25.0.5.0.3",
+        "21.0.13.0.3",
+        "17.0.21.0.3",
+        "11.0.33.0.3",
+        "8u511 b33"
+      ],
+      "url": "https://openjdk.org/emudhra",
+      "urls": [
+        "https://openjdk.org/emudhra",
+        "https://ops.java/emudhra",
+        "https://ops.java/emudhra",
+        "https://ops.java/emudhra",
+        "https://ops.java/emudhra",
+        "https://ops.java/emudhra",
+        "https://ops.java/emudhra"
+      ],
+      "status": "pending"
+    },
+    {
+      "name": "Node.js",
+      "key": "node-js",
+      "versions": [
+        "26.12.1",
+        "24.22.1",
+        "22.23.4"
+      ],
+      "url": "https://github.com/nodejs/node/releases/tag/v26.12.1",
+      "urls": [
+        "https://github.com/nodejs/node/releases/tag/v26.12.1",
+        "https://github.com/nodejs/node/releases/tag/v24.22.1",
+        "https://github.com/nodejs/node/releases/tag/v22.23.4"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Python",
+      "key": "python",
+      "versions": [
+        "3.15.2",
+        "3.14.10",
+        "3.13.18",
+        "3.12.16",
+        "3.11.18"
+      ],
+      "url": "https://blog.python.org/2026/10/python-3152-31410-31318-31216-31118/",
+      "urls": [
+        "https://blog.python.org/2026/10/python-3152-31410-31318-31216-31118/",
+        "https://blog.python.org/2026/10/python-3152-31410-31318-31216-31118/",
+        "https://blog.python.org/2026/10/python-3152-31410-31318-31216-31118/",
+        "https://blog.python.org/2026/10/python-3152-31410-31318-31216-31118/",
+        "https://blog.python.org/2026/10/python-3152-31410-31318-31216-31118/"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "ArgoCD",
+      "key": "argocd",
+      "versions": [
+        "3.3.18",
+        "3.4.12",
+        "3.5.6",
+        "3.6.0-rc4"
+      ],
+      "url": "https://github.com/argoproj/argo-cd/releases/tag/v3.3.18",
+      "urls": [
+        "https://github.com/argoproj/argo-cd/releases/tag/v3.3.18",
+        "https://github.com/argoproj/argo-cd/releases/tag/v3.4.12",
+        "https://github.com/argoproj/argo-cd/releases/tag/v3.5.6",
+        "https://github.com/argoproj/argo-cd/releases/tag/v3.6.0-rc4"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Bazel",
+      "key": "bazel",
+      "versions": [
+        "7.7.2",
+        "8.8.2",
+        "9.3.1",
+        "10.0.0rc2"
+      ],
+      "url": "https://github.com/bazelbuild/bazel/releases/tag/7.7.2",
+      "urls": [
+        "https://github.com/bazelbuild/bazel/releases/tag/7.7.2",
+        "https://github.com/bazelbuild/bazel/releases/tag/8.8.2",
+        "https://github.com/bazelbuild/bazel/releases/tag/9.3.1",
+        "https://github.com/bazelbuild/bazel/releases/tag/10.0.0rc2"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "certbot",
+      "key": "certbot",
       "versions": [],
-      "url": "https://github.com/oven-sh/bun/pull/46159",
+      "url": "https://github.com/certbot/certbot/pull/10812",
+      "urls": [],
       "status": "pending"
     },
     {
-      "name": "Composer ca-bundle",
-      "key": "composer-ca-bundle",
+      "name": "Claude Code",
+      "key": "claude-code",
       "versions": [
-        "1.4.16",
-        "1.6.0"
+        "2.1.303"
       ],
-      "url": "https://github.com/composer/ca-bundle/pull/154",
-      "status": "pending"
-    },
-    {
-      "name": "Elixir castore",
-      "key": "elixir-castore",
-      "versions": [
-        "1.0.22"
+      "url": "https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md#21303",
+      "urls": [
+        "https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md#21303"
       ],
-      "url": "https://hex.pm/packages/castore/1.0.22",
       "status": "patched"
     },
     {
-      "name": "Perl Mozilla::CA",
-      "key": "perl-mozilla-ca",
+      "name": "Conda",
+      "key": "conda",
       "versions": [
-        "20261020"
+        "26.9.4"
       ],
-      "url": "https://metacpan.org/release/LWP/Mozilla-CA-20261020",
+      "url": "https://docs.conda.io/projects/conda/en/latest/release-notes.html#version-26.9.4",
+      "urls": [
+        "https://docs.conda.io/projects/conda/en/latest/release-notes.html#version-26.9.4"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "containerd",
+      "key": "containerd",
+      "versions": [],
+      "url": "https://github.com/containerd/containerd/pull/14439",
+      "urls": [],
+      "status": "pending"
+    },
+    {
+      "name": "Docker cli",
+      "key": "docker-cli",
+      "versions": [
+        "29.9.2"
+      ],
+      "url": "https://github.com/docker/cli/releases/tag/v29.9.2",
+      "urls": [
+        "https://github.com/docker/cli/releases/tag/v29.9.2"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Docker Desktop",
+      "key": "docker-desktop",
+      "versions": [
+        "4.96.2"
+      ],
+      "url": "https://docs.docker.com/desktop/release-notes/#4962",
+      "urls": [
+        "https://docs.docker.com/desktop/release-notes/#4962"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Docker Engine",
+      "key": "docker-engine",
+      "versions": [
+        "29.9.2"
+      ],
+      "url": "https://docs.docker.com/engine/release-notes/29/#2992",
+      "urls": [
+        "https://docs.docker.com/engine/release-notes/29/#2992"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Git for Windows",
+      "key": "git-for-windows",
+      "versions": [
+        "2.56.0.3"
+      ],
+      "url": "https://github.com/git-for-windows/git/releases/tag/v2.56.0.windows.3",
+      "urls": [
+        "https://github.com/git-for-windows/git/releases/tag/v2.56.0.windows.3"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "GitHub CLI",
+      "key": "github-cli",
+      "versions": [
+        "2.102.1"
+      ],
+      "url": "https://github.com/cli/cli/releases/tag/v2.102.1",
+      "urls": [
+        "https://github.com/cli/cli/releases/tag/v2.102.1"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Godot",
+      "key": "godot",
+      "versions": [],
+      "url": "https://github.com/godotengine/godot/pull/124724",
+      "urls": [],
+      "status": "pending"
+    },
+    {
+      "name": "Immich",
+      "key": "immich",
+      "versions": [
+        "3.3.5"
+      ],
+      "url": "https://github.com/immich-app/immich/releases/tag/v3.3.5",
+      "urls": [
+        "https://github.com/immich-app/immich/releases/tag/v3.3.5"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "LibreOffice",
+      "key": "libreoffice",
+      "versions": [],
+      "url": "https://gerrit.libreoffice.org/c/core/+/212892",
+      "urls": [],
+      "status": "pending"
+    },
+    {
+      "name": "litellm",
+      "key": "litellm",
+      "versions": [
+        "1.103.8",
+        "1.104.6",
+        "1.105.4",
+        "1.106.3"
+      ],
+      "url": "https://github.com/BerriAI/litellm/releases/tag/v1.103.8",
+      "urls": [
+        "https://github.com/BerriAI/litellm/releases/tag/v1.103.8",
+        "https://github.com/BerriAI/litellm/releases/tag/v1.104.6",
+        "https://github.com/BerriAI/litellm/releases/tag/v1.105.4",
+        "https://github.com/BerriAI/litellm/releases/tag/v1.106.3"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "mise",
+      "key": "mise",
+      "versions": [
+        "2026.10.17"
+      ],
+      "url": "https://github.com/jdx/mise/releases/tag/v2026.10.17",
+      "urls": [
+        "https://github.com/jdx/mise/releases/tag/v2026.10.17"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "mitmproxy",
+      "key": "mitmproxy",
+      "versions": [
+        "12.3"
+      ],
+      "url": "https://www.mitmproxy.org/posts/releases/mitmproxy-12.3/",
+      "urls": [
+        "https://www.mitmproxy.org/posts/releases/mitmproxy-12.3/"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Obsidian",
+      "key": "obsidian",
+      "versions": [
+        "1.14.5"
+      ],
+      "url": "https://obsidian.md/changelog/2026-10-22-desktop-v1.14.5/",
+      "urls": [
+        "https://obsidian.md/changelog/2026-10-22-desktop-v1.14.5/"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "pip",
+      "key": "pip",
+      "versions": [
+        "26.2.2"
+      ],
+      "url": "https://github.com/pypa/pip/releases/tag/26.2.2",
+      "urls": [
+        "https://github.com/pypa/pip/releases/tag/26.2.2"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "pixi",
+      "key": "pixi",
+      "versions": [
+        "0.82.1"
+      ],
+      "url": "https://github.com/prefix-dev/pixi/releases/tag/v0.82.1",
+      "urls": [
+        "https://github.com/prefix-dev/pixi/releases/tag/v0.82.1"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Plex Media Server",
+      "key": "plex-media-server",
+      "versions": [
+        "1.43.5.11079"
+      ],
+      "url": "https://forums.plex.tv/t/plex-media-server/30447/720",
+      "urls": [
+        "https://forums.plex.tv/t/plex-media-server/30447/720"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "pypi-publish GitHub Action",
+      "key": "pypi-publish-github-action",
+      "versions": [
+        "1.14.3"
+      ],
+      "url": "https://github.com/pypa/gh-action-pypi-publish/releases/tag/v1.14.3",
+      "urls": [
+        "https://github.com/pypa/gh-action-pypi-publish/releases/tag/v1.14.3"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Rustup",
+      "key": "rustup",
+      "versions": [
+        "1.29.2"
+      ],
+      "url": "https://blog.rust-lang.org/2026/10/20/Rustup-1.29.2/",
+      "urls": [
+        "https://blog.rust-lang.org/2026/10/20/Rustup-1.29.2/"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "sigstore",
+      "key": "sigstore",
+      "versions": [
+        "4.5.1"
+      ],
+      "url": "https://github.com/sigstore/sigstore-python/releases/tag/v4.5.1",
+      "urls": [
+        "https://github.com/sigstore/sigstore-python/releases/tag/v4.5.1"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Tailscale",
+      "key": "tailscale",
+      "versions": [
+        "1.104.2"
+      ],
+      "url": "https://tailscale.com/changelog#2026-10-21",
+      "urls": [
+        "https://tailscale.com/changelog#2026-10-21"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "uv",
+      "key": "uv",
+      "versions": [
+        "0.13.5"
+      ],
+      "url": "https://github.com/astral-sh/uv/releases/tag/0.13.5",
+      "urls": [
+        "https://github.com/astral-sh/uv/releases/tag/0.13.5"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "Visual Studio Code",
+      "key": "visual-studio-code",
+      "versions": [
+        "1.143.1"
+      ],
+      "url": "https://code.visualstudio.com/updates/v1_143",
+      "urls": [
+        "https://code.visualstudio.com/updates/v1_143"
+      ],
+      "status": "patched"
+    },
+    {
+      "name": "yt-dlp",
+      "key": "yt-dlp",
+      "versions": [
+        "2026.10.26",
+        "WARNING: do not use self-updater"
+      ],
+      "url": "https://github.com/yt-dlp/yt-dlp/releases/tag/2026.10.26",
+      "urls": [
+        "https://github.com/yt-dlp/yt-dlp/releases/tag/2026.10.26",
+        "https://github.com/yt-dlp/yt-dlp/releases/tag/2026.10.21"
+      ],
       "status": "patched"
     }
   ],
@@ -669,7 +1432,9 @@
     "ov-g3b-aaa-emudhra.we-have-a-problem.com",
     "ov-g3c-aaa-emudhra.we-have-a-problem.com",
     "ev-g3b-aaa-emudhra.we-have-a-problem.com",
-    "ev-g3c-aaa-emudhra.we-have-a-problem.com"
+    "ev-g3c-aaa-emudhra.we-have-a-problem.com",
+    "dv-g3b-noct-emudhra.we-have-a-problem.com",
+    "dv-g3b-aaa-noct-emudhra.we-have-a-problem.com"
   ],
   "events": [
     {
@@ -933,5 +1698,209 @@
       "92c063d67e8f14db71d288e11266ffdaf69cbf115f7bab14f3bc2f68d25e0e30"
     ]
   },
-  "changelog": []
+  "changelog": [
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "FreeBSD ca_root_nss",
+      "from": "pending",
+      "to": "patched",
+      "versions": [
+        "1.131.1"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "Composer ca-bundle",
+      "from": "pending",
+      "to": "patched",
+      "versions": [
+        "1.4.16",
+        "1.6.0"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "Bun",
+      "from": "pending",
+      "to": "patched",
+      "versions": [
+        "1.4.4"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "Node.js",
+      "from": "pending",
+      "to": "patched",
+      "versions": [
+        "26.12.1",
+        "24.22.1",
+        "22.23.4"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "uv",
+      "from": "patched",
+      "to": "patched",
+      "versions": [
+        "0.13.5"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "Alma Linux ca-certificates",
+      "from": null,
+      "to": "patched",
+      "versions": [
+        "2026.2.92_v9.0.319-81.3.el8_10",
+        "2026.2.92_v9.0.319-90.3.el9_8",
+        "2026.2.92_v9.0.319-100.3.el10_2"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "Amazon Linux ca-certificates",
+      "from": null,
+      "to": "patched",
+      "versions": [
+        "2025.2.76-1.amzn2.0.3",
+        "2025.2.76-1.0.amzn2023.0.4"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "Devuan ca-certificates",
+      "from": null,
+      "to": "patched",
+      "versions": [
+        "Same as Debian"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "FreeBSD caroot",
+      "from": null,
+      "to": "patched",
+      "versions": [
+        "15.1-RELEASE-p6",
+        "14.5-RELEASE-p3",
+        "14.4-RELEASE-p12"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "Freedesktop SDK",
+      "from": null,
+      "to": "patched",
+      "versions": [
+        "25.08.19",
+        "26.08.3"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "GNU Guix",
+      "from": null,
+      "to": "patched",
+      "versions": [
+        "7608a99"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "NetBSD",
+      "from": null,
+      "to": "patched",
+      "versions": [
+        "current"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "OmniOS web/ca-bundle",
+      "from": null,
+      "to": "patched",
+      "versions": [
+        "r151054by",
+        "r151056ay",
+        "r151058y"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "OpenBSD",
+      "from": null,
+      "to": "patched",
+      "versions": [
+        "current",
+        "8.0",
+        "7.9"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "openSUSE Leap ca-certificates-mozilla",
+      "from": null,
+      "to": "patched",
+      "versions": [
+        "2.92-160000.1.1"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "openSUSE Tumbleweed ca-certificates-mozilla",
+      "from": null,
+      "to": "patched",
+      "versions": [
+        "2.92-1.1"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "Oracle Linux ca-certificates",
+      "from": null,
+      "to": "patched",
+      "versions": [
+        "2025.2.80_v9.0.304-80.2.0.1.el8_10",
+        "2025.2.80_v9.0.305-91.0.1.el9",
+        "2025.2.80_v9.0.305-102.0.1.el10_2"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "RHEL ca-certificates",
+      "from": null,
+      "to": "patched",
+      "versions": [
+        "2026.2.92_v9.0.319-60.3.el6_10",
+        "2026.2.92_v9.0.319-70.3.el7_9",
+        "2026.2.92_v9.0.319-81.3.el8_10",
+        "2026.2.92_v9.0.319-90.3.el9_8",
+        "2026.2.92_v9.0.319-100.3.el10_2"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "Rocky Linux ca-certificates",
+      "from": null,
+      "to": "patched",
+      "versions": [
+        "2026.2.92_v9.0.319-81.3.el8_10",
+        "2026.2.92_v9.0.319-90.3.el9_8",
+        "2026.2.92_v9.0.319-100.3.el10_2"
+      ]
+    },
+    {
+      "t": "2026-10-30T01:01:16Z",
+      "name": "SLES ca-certificates-mozilla",
+      "from": null,
+      "to": "patched",
+      "versions": [
+        "2.92-12.62.1",
+        "2.92-150200.50.2",
+        "2.92-160000.1.1"
+      ]
+    }
+  ]
 }
