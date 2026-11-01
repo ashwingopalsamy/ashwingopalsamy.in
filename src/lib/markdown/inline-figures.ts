@@ -30,8 +30,8 @@ import type { Element, ElementContent, Properties } from "hast";
 import type { HastVisitorContext } from "satteri";
 import { escapeHtml, rawNode } from "./hast";
 
-const SRC = /^\/blog\/emudhra\/([a-z0-9-]+)\.svg$/;
-const DIR = join(process.cwd(), "src/assets/emudhra");
+const SRC = /^\/blog\/(emudhra|abliterated)\/([a-z0-9-]+)\.svg$/;
+const ASSETS = join(process.cwd(), "src/assets");
 
 interface Figure {
   id: string;
@@ -44,18 +44,19 @@ interface Figure {
 const cache = new Map<string, Figure | null>();
 const warned = new Set<string>();
 
-function load(id: string): Figure | null {
-  if (cache.has(id)) return cache.get(id) ?? null;
-  const files = [`${id}.data.json`, `${id}.wide.svg`, `${id}.compact.svg`].map((f) => join(DIR, f));
+function load(post: string, id: string): Figure | null {
+  const key = `${post}/${id}`;
+  if (cache.has(key)) return cache.get(key) ?? null;
+  const files = [`${id}.data.json`, `${id}.wide.svg`, `${id}.compact.svg`].map((f) => join(ASSETS, post, f));
   let figure: Figure | null = null;
   if (files.every((f) => existsSync(f))) {
     const data = JSON.parse(readFileSync(files[0], "utf8")) as { id: string; title: string; alt: string };
     figure = { ...data, wide: readFileSync(files[1], "utf8").trim(), compact: readFileSync(files[2], "utf8").trim() };
-  } else if (!warned.has(id)) {
-    warned.add(id);
-    console.warn(`[inline-figures] ${id}: source SVG or data file is missing in src/assets/emudhra; leaving the image as is.`);
+  } else if (!warned.has(key)) {
+    warned.add(key);
+    console.warn(`[inline-figures] ${id}: source SVG or data file is missing in src/assets/${post}; leaving the image as is.`);
   }
-  cache.set(id, figure);
+  cache.set(key, figure);
   return figure;
 }
 
@@ -117,7 +118,7 @@ export const inlineFigures = {
       const src = img.properties?.src;
       const m = typeof src === "string" ? src.match(SRC) : null;
       if (!m) return;
-      const fig = load(m[1]);
+      const fig = load(m[1], m[2]);
       if (!fig) return;
       const alt = typeof img.properties?.alt === "string" ? (img.properties.alt as string) : fig.alt;
 
