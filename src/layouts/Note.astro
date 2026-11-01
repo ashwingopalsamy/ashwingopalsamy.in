@@ -29,6 +29,7 @@ import Pager from "../components/Pager.astro";
 import RowTags from "../components/RowTags.astro";
 import GoTourEnhancement from "../components/GoTourEnhancement.astro";
 import IncidentEnhancement from "../components/IncidentEnhancement.astro";
+import PostFigures from "../components/PostFigures.astro";
 import katexCss from "katex/dist/katex.min.css?url";
 import "../styles/prose.css";
 
@@ -63,6 +64,8 @@ function bodyHasMath(md: string): boolean {
 const hasMath = bodyHasMath(body);
 /** Posts that embed the /blog/emudhra/ figures load the incident enhancement. */
 const hasIncidentFigures = body.includes("](/blog/emudhra/");
+/** Posts that embed the /blog/abliterated/ figures load their open figure styles. */
+const hasPostFigures = body.includes("](/blog/abliterated/");
 
 const writingsHref = "/library/?view=notes";
 const pagerItem = (n?: { id: string; title: string } | null) =>
@@ -110,7 +113,7 @@ const jsonLd = [
   ]}
 >
   {hasMath && <link slot="head" rel="stylesheet" href={katexCss} />}
-  <article class="note" data-note data-has-math={hasMath ? "true" : undefined} data-note-tour={isGoTour ? "go-1-27" : undefined} data-incident={hasIncidentFigures ? "" : undefined}>
+  <article class="note" data-note data-has-math={hasMath ? "true" : undefined} data-note-tour={isGoTour ? "go-1-27" : undefined} data-incident={hasIncidentFigures ? "" : undefined} data-post-figures={hasPostFigures ? "" : undefined}>
     <div class="note-progress" aria-hidden="true"><div class="note-progress-bar"></div></div>
 
     <div class="note-layout">
@@ -131,6 +134,18 @@ const jsonLd = [
             {entry.data.tags && <RowTags tags={entry.data.tags} linked={linkedTags} />}
           </Fragment>
           <Fragment slot="action">
+            {hasPostFigures && (
+              <button
+                type="button"
+                class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
+                data-font-toggle
+                aria-pressed="true"
+                aria-label="Switch to the sans font"
+              >
+                <span class="font-toggle__glyph" aria-hidden="true">Aa</span>
+                <span class="ui-tip" role="tooltip">Switch to sans</span>
+              </button>
+            )}
             <button
               type="button"
               class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
@@ -215,6 +230,7 @@ const jsonLd = [
     </div>
     {isGoTour && <GoTourEnhancement />}
     {hasIncidentFigures && <IncidentEnhancement />}
+    {hasPostFigures && <PostFigures />}
   </article>
 </Page>
 

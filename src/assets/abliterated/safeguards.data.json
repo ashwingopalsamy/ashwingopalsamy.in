@@ -1,0 +1,5 @@
+{
+  "id": "safeguards",
+  "title": "What surrounds the model",
+  "alt": "Three sets of rings around a dot. A hosted model has monitoring, classifiers and refusal. A downloaded model has refusal only. An abliterated model has none of them, and its refusal ring is dashed."
+}

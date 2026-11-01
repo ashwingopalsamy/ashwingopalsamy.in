@@ -1,0 +1,182 @@
+/* ==================================================================
+   post-figures - open figures and the reading font for posts under
+   /blog/abliterated/.
+
+   Scoped to .note[data-post-figures], which Note.astro sets on those
+   posts, so this sheet is inert elsewhere. Marks sit on the page itself:
+   no card, border or fill behind a figure. Palette checked with the
+   dataviz validator in both themes.
+   ================================================================== */
+
+.note[data-post-figures] {
+  --post-link-ink: oklch(0.1 0 0);
+  --viz-violet: #7844f0;
+  --viz-amber: #f59926;
+  --viz-blue: #0278e7;
+  --viz-green: #20b46b;
+}
+
+:root[data-theme="dark"] .note[data-post-figures] {
+  --post-link-ink: oklch(1 0 0);
+  --viz-violet: #8f69ff;
+  --viz-amber: #dd8a28;
+  --viz-blue: #3792fd;
+  --viz-green: #2fae6b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .note[data-post-figures] {
+    --post-link-ink: oklch(1 0 0);
+    --viz-violet: #8f69ff;
+    --viz-amber: #dd8a28;
+    --viz-blue: #3792fd;
+    --viz-green: #2fae6b;
+  }
+}
+
+.note[data-post-figures] .fig {
+  margin-block: var(--step-6);
+}
+
+.note[data-post-figures] .fig__title {
+  margin: 0 0 var(--step-3);
+  color: var(--ink);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.note[data-post-figures] .fig__art > svg {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+
+.note[data-post-figures] .fig__art > svg[data-layout="compact"] {
+  display: none;
+}
+
+@container fig (max-width: 520px) {
+  .note[data-post-figures] .fig__art > svg[data-layout="wide"] {
+    display: none;
+  }
+
+  .note[data-post-figures] .fig__art > svg[data-layout="compact"] {
+    display: block;
+  }
+}
+
+.note[data-post-figures] .fig__cap {
+  margin-block-start: var(--step-3);
+  color: var(--ghost);
+  font-size: var(--text-xs);
+  font-style: normal;
+}
+
+/* what post-figures.ts adds: a line the figure writes to, and hover / tap states */
+.note[data-post-figures] .fig__live {
+  min-block-size: 3em;
+  margin: var(--step-2) 0 0;
+  color: var(--ghost);
+  font-size: var(--text-sm);
+  text-align: start;
+}
+
+.note[data-post-figures] .fig__art :is([data-row], [data-col], [data-v]) {
+  transition: opacity 0.2s ease;
+}
+
+.note[data-post-figures] .fig__art :is([data-row], [data-col], [data-after]) {
+  cursor: pointer;
+  outline-offset: 2px;
+}
+
+.note[data-post-figures] .fig__art .is-dim {
+  opacity: 0.25;
+}
+
+.note[data-post-figures] .fig__art [data-solid] {
+  transition: opacity 0.6s ease;
+}
+
+.note[data-post-figures] .fig__art [data-ray-solid],
+.note[data-post-figures] .fig__art [data-ray-dashed] {
+  transition: none;
+}
+
+.note[data-post-figures] .fig__hit {
+  cursor: crosshair;
+  touch-action: pan-y;
+}
+
+.note[data-post-figures] .fig__art :is([data-after-title], [data-after-note]) {
+  pointer-events: none;
+}
+
+/* ---- reading font: Newsreader by default, the site's sans through the toggle.
+   fonts.css only carries Newsreader's italics, so the upright faces live here. */
+@font-face {
+  font-family: "Newsreader Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url("@fontsource-variable/newsreader/files/newsreader-latin-ext-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Newsreader Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url("@fontsource-variable/newsreader/files/newsreader-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+.note[data-post-figures]:not([data-font="sans"]) :is(.prose, .detail-title, .detail-lede, .font-toggle__glyph) {
+  font-family: "Newsreader Variable", Georgia, serif;
+}
+
+/* Newsreader runs small next to the sans, so its whole type scale steps up. The sans keeps the site's. */
+.note[data-post-figures]:not([data-font="sans"]) .prose {
+  --text-xs: clamp(0.8rem, 0.78rem + 0.1vw, 0.875rem);
+  --text-sm: clamp(0.95rem, 0.93rem + 0.12vw, 1.03rem);
+  --text-base: clamp(1.1875rem, 1.15rem + 0.2vw, 1.25rem);
+  --text-lg: clamp(1.32rem, 1.25rem + 0.35vw, 1.5rem);
+  --text-xl: clamp(1.48rem, 1.38rem + 0.5vw, 1.65rem);
+  /* prose.css fixes phones at 1rem, so the size has to be restated */
+  font-size: var(--text-base);
+}
+
+.note[data-post-figures]:not([data-font="sans"]) .detail-title {
+  font-size: calc(var(--type-detail-title-size) * 1.15);
+}
+
+.note[data-post-figures]:not([data-font="sans"]) .detail-lede {
+  font-size: clamp(1.15rem, 1.12rem + 0.15vw, 1.25rem);
+}
+
+/* links: darker and a notch heavier than the body, with the arrow always showing, touch included */
+.note[data-post-figures] .prose a.external {
+  --ext-open: 1;
+  --font-hover-lift: 650;
+  color: var(--post-link-ink);
+  font-weight: var(--link-lift, 600);
+}
+
+.note[data-post-figures] .prose .external-icon {
+  display: inline;
+}
+
+.note[data-post-figures] .prose .external-icon > svg {
+  color: var(--ghost);
+}
+
+/* chart labels stay in the sans whichever font is on, for legibility at small sizes */
+.note[data-post-figures] .fig__art svg {
+  font-family: "Inter Variable", "Inter Fallback", system-ui, -apple-system, sans-serif;
+}
+
+.note[data-post-figures] .prose > :is(p, ul, ol) {
+  text-align: justify;
+  hyphens: auto;
+}
