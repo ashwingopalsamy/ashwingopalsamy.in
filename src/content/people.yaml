@@ -1,0 +1,110 @@
+# One row per person. `field` files them; `met` is the year we met.
+# Rows marked placeholder are invented samples: they show in `astro dev`
+# and never build for production.
+
+- id: meera-raghunathan
+  name: Meera Raghunathan
+  role: Distributed systems engineer
+  place: Bengaluru
+  field: engineering
+  note: Explains consensus with two coffee cups and a napkin, and it sticks.
+  met: 2019
+  links:
+    - { kind: github, href: "https://example.com/meera/github" }
+    - { kind: site, href: "https://example.com/meera" }
+  placeholder: true
+
+- id: arjun-venkatesh
+  name: Arjun Venkatesh
+  role: Payments engineer, ex-bank core
+  place: Chennai
+  field: engineering
+  note: Knows why every settlement file has that one strange column.
+  met: 2021
+  links:
+    - { kind: linkedin, href: "https://example.com/arjun/linkedin" }
+    - { kind: x, href: "https://example.com/arjun/x" }
+  placeholder: true
+
+- id: leela-narayanan
+  name: Leela Narayanan
+  role: Type designer
+  place: Mumbai
+  field: design
+  note: Draws Tamil letterforms that hold up at nine pixels and on a billboard.
+  met: 2022
+  links:
+    - { kind: site, href: "https://example.com/leela" }
+    - { kind: x, href: "https://example.com/leela/x" }
+  placeholder: true
+
+- id: tomas-reyes
+  name: Tomás Reyes
+  role: Staff engineer, observability
+  place: Lisbon
+  field: engineering
+  note: Turned my 3 a.m. pages into dashboards I actually trust.
+  met: 2023
+  links:
+    - { kind: github, href: "https://example.com/tomas/github" }
+    - { kind: site, href: "https://example.com/tomas" }
+  placeholder: true
+
+- id: kavya-iyer
+  name: Kavya Iyer
+  role: Writes about money and systems
+  place: Pune
+  field: writing
+  note: The one newsletter I read the day it lands.
+  met: 2020
+  links:
+    - { kind: substack, href: "https://example.com/kavya/substack" }
+    - { kind: x, href: "https://example.com/kavya/x" }
+  placeholder: true
+
+- id: daniel-okafor
+  name: Daniel Okafor
+  role: Teaches compilers
+  place: Toronto
+  field: teaching
+  note: Office hours that felt like a jam session, not a lecture.
+  met: 2024
+  links:
+    - { kind: site, href: "https://example.com/daniel" }
+    - { kind: youtube, href: "https://example.com/daniel/youtube" }
+  placeholder: true
+
+- id: ananya-krishnan
+  name: Ananya Krishnan
+  role: Product designer
+  place: Bengaluru
+  field: design
+  note: Removes one screen from every flow she touches.
+  met: 2018
+  links:
+    - { kind: linkedin, href: "https://example.com/ananya/linkedin" }
+    - { kind: site, href: "https://example.com/ananya" }
+  placeholder: true
+
+- id: rafael-monteiro
+  name: Rafael Monteiro
+  role: Engineering manager
+  place: São Paulo
+  field: teaching
+  note: Asks the one question that makes a design doc half as long.
+  met: 2022
+  links:
+    - { kind: linkedin, href: "https://example.com/rafael/linkedin" }
+  placeholder: true
+
+- id: saanvi-rao
+  name: Saanvi Rao
+  role: Historian, temple architecture
+  place: Thanjavur
+  field: writing
+  note: Reads a gopuram like a commit log, one layer at a time.
+  met: 2025
+  links:
+    - { kind: site, href: "https://example.com/saanvi" }
+    - { kind: youtube, href: "https://example.com/saanvi/youtube" }
+  placeholder: true

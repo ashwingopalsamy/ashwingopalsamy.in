@@ -1,0 +1,104 @@
+# One row per someday. `added` is when it went on the list, `done` when it
+# came off. Rows marked placeholder are invented samples: they show in
+# `astro dev` and never build for production.
+
+- id: dhanushkodi-at-sunrise
+  title: Drive the old Dhanushkodi road at sunrise
+  note: Before the sea takes the rest of it.
+  kind: places
+  added: 2023-02
+  placeholder: true
+
+- id: watch-a-launch
+  title: Watch a launch from the Sriharikota gallery
+  note: Booked once and the launch slipped. Next window, then.
+  kind: do
+  added: 2022-07
+  status: planned
+  placeholder: true
+
+- id: nilgiri-railway
+  title: Ride the Nilgiri mountain railway end to end
+  note: Rack and pinion, five hours, worth every one of them.
+  kind: places
+  added: 2019-11
+  status: done
+  done: 2024-12
+  placeholder: true
+
+- id: rebuild-a-carburettor
+  title: Rebuild a carburettor on an old Enfield
+  note: With the manual open and nobody watching.
+  kind: make
+  added: 2021-03
+  placeholder: true
+
+- id: ledger-in-go
+  title: Write a double-entry ledger in Go from scratch
+  note: Small, correct, and boring on purpose.
+  kind: make
+  added: 2024-05
+  status: planned
+  placeholder: true
+
+- id: tamil-brahmi
+  title: Read Tamil Brahmi off a real cave wall
+  note: Learn the script first, then the caves near Madurai.
+  kind: learn
+  added: 2020-08
+  placeholder: true
+
+- id: finish-sicp
+  title: Finish SICP, every exercise
+  note: Chapter three keeps winning.
+  kind: learn
+  added: 2018-06
+  placeholder: true
+
+- id: spiti-sky
+  title: Sleep under the Spiti sky
+  note: Did it. Took a photo to prove it.
+  kind: places
+  added: 2021-01
+  status: done
+  done: 2025-09
+  href: /more/photos/spiti-milky-way/
+  placeholder: true
+
+- id: sail-a-dinghy
+  title: Learn to sail a dinghy
+  note: Wind first, then everything else.
+  kind: learn
+  added: 2023-09
+  placeholder: true
+
+- id: suzuka-hairpin
+  title: See Suzuka from the hairpin
+  note: Race weekend, rain or not.
+  kind: places
+  added: 2022-03
+  placeholder: true
+
+- id: split-keyboard
+  title: Build a split mechanical keyboard
+  note: Soldered eighty-four switches. Two are still crooked.
+  kind: make
+  added: 2020-02
+  status: done
+  done: 2023-06
+  placeholder: true
+
+- id: week-offline
+  title: Spend a week offline on a tea estate
+  note: No laptop, one notebook.
+  kind: do
+  added: 2024-11
+  placeholder: true
+
+- id: tirukkural
+  title: Read the Tirukkural, all 1,330 couplets
+  note: Ten a day. Somewhere around day forty-one.
+  kind: learn
+  added: 2019-04
+  status: planned
+  placeholder: true

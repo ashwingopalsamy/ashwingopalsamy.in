@@ -1,18 +1,451 @@
 ---
+import { getCollection, type CollectionEntry } from "astro:content";
 import ComingSoon from "../../components/ComingSoon.astro";
+import EngineBar, { type EngineSort } from "../../components/EngineBar.astro";
+import Icon from "../../components/Icon.astro";
+import PageIntro from "../../components/PageIntro.astro";
 import Page from "../../layouts/Page.astro";
+import { facets, mapsHref, monthYear, tagSlug } from "../../lib/engine-format";
 import { ogPath } from "../../lib/og-url";
 
-const description = "I am still gathering the places I would confidently send a friend. This page will arrive when the list is worth trusting.";
+type Cafe = CollectionEntry<"cafes">;
+
+const comingSoon = "I am still gathering the places I would confidently send a friend. This page will arrive when the list is worth trusting.";
+const all = await getCollection("cafes");
+const cafes = import.meta.env.PROD ? all.filter(({ data }) => !data.placeholder) : all;
+const hasPlaceholders = cafes.some(({ data }) => data.placeholder);
+const isLive = cafes.some(({ data }) => !data.placeholder);
+const STAMPS = 10;
+
+const byRecent = (left: Cafe, right: Cafe) => right.data.last.localeCompare(left.data.last);
+const byCity = new Map<string, Cafe[]>();
+for (const cafe of cafes) byCity.set(cafe.data.city, [...(byCity.get(cafe.data.city) ?? []), cafe]);
+// Cities with the most cafes first; within a city, the latest visit first.
+const cities = [...byCity]
+  .map(([city, entries]) => ({ city, slug: tagSlug(city), cafes: [...entries].sort(byRecent) }))
+  .sort((left, right) => right.cafes.length - left.cafes.length || left.city.localeCompare(right.city));
+
+const cityFacets = facets(cafes, ({ data }) => tagSlug(data.city), (slug) =>
+  cafes.find(({ data }) => tagSlug(data.city) === slug)?.data.city ?? slug,
+  (left, right) => right.count - left.count || left.label.localeCompare(right.label),
+);
+const sorts: EngineSort[] = [
+  { id: "recent", label: "Recent", key: "last", dir: "desc" },
+  { id: "regulars", label: "Regulars", key: "visits", dir: "desc" },
+  { id: "az", label: "A–Z", key: "name", dir: "asc" },
+];
+
+/* A city's cafes as dots on a small dotted field: an equirectangular
+   projection scaled by cos(latitude), centred, the wider span fitted. */
+const MAP_W = 120;
+const MAP_H = 64;
+const MAP_PAD = 14;
+function cityPins(entries: Cafe[]) {
+  const meanLat = entries.reduce((sum, { data }) => sum + data.lat, 0) / entries.length;
+  const k = Math.cos((meanLat * Math.PI) / 180);
+  const xs = entries.map(({ data }) => data.lon * k);
+  const ys = entries.map(({ data }) => data.lat);
+  const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+  const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+  const span = Math.max(
+    (Math.max(...xs) - Math.min(...xs)) / (MAP_W - MAP_PAD * 2),
+    (Math.max(...ys) - Math.min(...ys)) / (MAP_H - MAP_PAD * 2),
+    1e-4,
+  );
+  return entries.map(({ id }, index) => ({
+    id,
+    x: Number((MAP_W / 2 + (xs[index] - cx) / span).toFixed(2)),
+    y: Number((MAP_H / 2 - (ys[index] - cy) / span).toFixed(2)),
+  }));
+}
 ---
 
 <Page
   title="Cafe"
-  description={`${description} Coming soon.`}
+  description={isLive ? "Cafes Ashwin Gopalsamy tries, filed by city." : `${comingSoon} Coming soon.`}
   ogImage={ogPath("more/cafe")}
   ogImageAlt="Cafe · Ashwin Gopalsamy"
-  pagefind={false}
-  robots="noindex,follow"
+  pagefind={isLive && !import.meta.env.DEV}
+  robots={isLive && !import.meta.env.DEV ? undefined : "noindex,follow"}
 >
-  <ComingSoon title="Cafe" description={description} />
+  {cafes.length === 0 ? (
+    <ComingSoon title="Cafe" description={comingSoon} />
+  ) : (
+    <section class="cafe-index" aria-label="Cafes" data-engine data-cafes>
+      <PageIntro title="cafe" lede="Cafes I try, filed by city." />
+      {hasPlaceholders && <p class="engine-draft-note">Sample entries · not real recommendations</p>}
+      <EngineBar label="cafes" facets={cityFacets} sorts={sorts} noun={["cafe", "cafes"]} />
+      <div class="cafe-cities">
+        {cities.map(({ city, slug, cafes: entries }) => {
+          const visits = entries.reduce((sum, { data }) => sum + data.visits, 0);
+          return (
+            <section class="cafe-city" data-engine-group aria-labelledby={`city-${slug}`}>
+              <header class="cafe-city__head">
+                <div class="cafe-city__title">
+                  <h2 id={`city-${slug}`}>{city}</h2>
+                  <p class="cafe-city__meta">
+                    {entries.length} {entries.length === 1 ? "cafe" : "cafes"} · {visits} visits
+                  </p>
+                </div>
+                <svg class="cafe-map" viewBox={`0 0 ${MAP_W} ${MAP_H}`} width={MAP_W} height={MAP_H} aria-hidden="true">
+                  <defs>
+                    <pattern id={`cafe-dots-${slug}`} width="8" height="8" patternUnits="userSpaceOnUse">
+                      <circle class="cafe-map__lattice" cx="4" cy="4" r="0.75" />
+                    </pattern>
+                  </defs>
+                  <rect class="cafe-map__field" width={MAP_W} height={MAP_H} rx="12" fill={`url(#cafe-dots-${slug})`} />
+                  {cityPins(entries).map((pin) => (
+                    <g class="cafe-map__pin" data-pin={pin.id} transform={`translate(${pin.x} ${pin.y})`}>
+                      <circle class="cafe-map__halo" r="7" />
+                      <circle class="cafe-map__dot" r="2.75" />
+                    </g>
+                  ))}
+                </svg>
+              </header>
+              <ol class="cafe-list" data-engine-list>
+                {entries.map(({ id, data }) => (
+                  <li
+                    class="cafe"
+                    data-engine-item
+                    data-cafe={id}
+                    data-tags={slug}
+                    data-k-last={data.last}
+                    data-k-visits={data.visits}
+                    data-k-name={data.name}
+                  >
+                    <article class="ui-card cafe-card" aria-labelledby={`cafe-${id}`}>
+                      <div class="cafe-card__top">
+                        <div class="cafe-card__id">
+                          <h3 id={`cafe-${id}`} class="cafe-card__name">
+                            {data.name}
+                            {data.for && <span class="ui-badge cafe-card__for"><span class="visually-hidden">, good for </span>{data.for}</span>}
+                          </h3>
+                          <p class="cafe-card__area">
+                            {data.area}<span aria-hidden="true"> · </span><span class="visually-hidden">, last visited </span>{monthYear(data.last)}
+                          </p>
+                        </div>
+                        <a
+                          class="ui-cap ui-cap--glass ui-cap--32 ui-cap--trail cafe-card__map"
+                          href={mapsHref(data.lat, data.lon, `${data.name}, ${data.area}, ${data.city}`)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <span class="ui-cap__label">Map<span class="visually-hidden"> for {data.name}</span></span>
+                          <span class="ui-arw ui-arw--ext" aria-hidden="true"><Icon name="arrow-up-right" size={14} strokeWidth={2} /><Icon name="arrow-up-right" size={14} strokeWidth={2} /></span>
+                        </a>
+                      </div>
+                      <p class="cafe-card__note">{data.note}</p>
+                      <div class="cafe-card__foot">
+                        <p class="cafe-card__order">
+                          <span class="cafe-card__cup" aria-hidden="true"><Icon name="coffee" size={14} /></span>
+                          <span class="visually-hidden">Order: </span>{data.order}
+                        </p>
+                        <p class="cafe-card__visits">
+                          <span class="cafe-stamps" aria-hidden="true">
+                            {Array.from({ length: STAMPS }, (_, index) => (
+                              <span class="cafe-stamp" data-on={index < data.visits ? "" : undefined} style={`--i: ${index}`} />
+                            ))}
+                          </span>
+                          <span class="cafe-card__count">{data.visits}×</span>
+                          <span class="visually-hidden"> {data.visits === 1 ? "visit" : "visits"}</span>
+                        </p>
+                      </div>
+                    </article>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          );
+        })}
+      </div>
+    </section>
+  )}
 </Page>
+
+<script>
+  import { onPageCleanup, pageSignal } from "../../scripts/lifecycle";
+  import "../../scripts/engine";
+
+  /* A card under the pointer, or holding focus, lights its dot on the
+     city's map. One delegated listener; nothing is read from layout. */
+  function linkPins() {
+    const root = document.querySelector<HTMLElement>("[data-cafes]");
+    if (!root || root.dataset.pinsReady === "true") return;
+    const signal = pageSignal();
+    root.dataset.pinsReady = "true";
+    let hot: Element | null = null;
+    const light = (target: EventTarget | null) => {
+      const id = (target as Element | null)?.closest?.<HTMLElement>("[data-cafe]")?.dataset.cafe;
+      const pin = id ? root.querySelector(`[data-pin="${CSS.escape(id)}"]`) : null;
+      if (pin === hot) return;
+      hot?.removeAttribute("data-hot");
+      pin?.setAttribute("data-hot", "");
+      hot = pin;
+    };
+    root.addEventListener("pointerover", (event) => light(event.target), { signal });
+    root.addEventListener("pointerleave", () => light(null), { signal });
+    root.addEventListener("focusin", (event) => light(event.target), { signal });
+    root.addEventListener("focusout", (event) => { if (!root.contains(event.relatedTarget as Node | null)) light(null); }, { signal });
+    onPageCleanup(() => { delete root.dataset.pinsReady; }, signal);
+  }
+
+  linkPins();
+  document.addEventListener("astro:page-load", linkPins);
+</script>
+
+<style>
+  .engine-draft-note {
+    margin: 0 0 var(--step-4);
+    color: var(--muted);
+    font-size: var(--text-xs);
+  }
+
+  .cafe-cities {
+    display: grid;
+    gap: var(--step-8);
+  }
+
+  .cafe-city {
+    display: grid;
+    gap: var(--step-4);
+    margin-top: 0;
+  }
+
+  .cafe-city__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--step-4);
+    padding-block-end: var(--step-3);
+    border-block-end: var(--hairline) solid var(--rule);
+  }
+
+  .cafe-city__title {
+    display: grid;
+    gap: var(--step-1);
+    min-inline-size: 0;
+  }
+
+  .cafe-city__title h2 {
+    margin: 0;
+    color: var(--ink);
+    font-size: var(--text-xl);
+    font-weight: var(--font-semibold);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .cafe-city__meta {
+    margin: 0;
+    color: var(--ghost);
+    font-size: var(--text-ui-sm);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cafe-map {
+    flex: none;
+    inline-size: calc(var(--step) * 30);
+    block-size: auto;
+    overflow: visible;
+  }
+
+  .cafe-map__field {
+    stroke: var(--edge-soft);
+    stroke-width: 1;
+  }
+
+  .cafe-map__lattice {
+    fill: var(--rule-strong);
+  }
+
+  .cafe-map__dot {
+    fill: var(--ink);
+  }
+
+  .cafe-map__halo {
+    fill: color-mix(in oklch, var(--ink) 14%, transparent);
+    opacity: 0;
+    transform: scale(0.4);
+    transform-box: fill-box;
+    transform-origin: center;
+    transition:
+      opacity var(--dur-exit) var(--ease-exit),
+      transform var(--dur-exit) var(--ease-exit);
+  }
+
+  .cafe-map__pin[data-hot] .cafe-map__halo {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--dur-enter) var(--ease-enter),
+      transform var(--dur-spring-pop) var(--ease-spring-pop);
+  }
+
+  .cafe-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--step-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cafe {
+    display: grid;
+    min-inline-size: 0;
+  }
+
+  .cafe-card {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: var(--step-3);
+    padding: var(--step-4);
+    border-radius: var(--tile-r);
+  }
+
+  .cafe-card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--step-3);
+  }
+
+  .cafe-card__id {
+    display: grid;
+    gap: var(--step-1);
+    min-inline-size: 0;
+  }
+
+  .cafe-card__name,
+  .cafe-card__area,
+  .cafe-card__note,
+  .cafe-card__order,
+  .cafe-card__visits {
+    margin: 0;
+  }
+
+  /* the badge rides the name's line, and starts the next one flush when
+     the name is long */
+  .cafe-card__name {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--step-1) var(--step-2);
+    color: var(--ink);
+    font-size: var(--text-md);
+    font-weight: var(--font-semibold);
+    line-height: 1.3;
+    letter-spacing: -0.012em;
+  }
+
+  .cafe-card__area {
+    color: var(--ghost);
+    font-size: var(--text-ui-sm);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cafe-card__note {
+    color: var(--muted);
+    font-size: var(--text-sm);
+    line-height: 1.55;
+    text-wrap: pretty;
+  }
+
+  .cafe-card__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--step-3);
+    padding-block-start: var(--step-3);
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  .cafe-card__order {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--step-2);
+    min-inline-size: 0;
+    color: var(--ink);
+    font-size: var(--text-ui-sm);
+    font-weight: var(--font-medium);
+  }
+
+  .cafe-card__cup {
+    display: inline-flex;
+    flex: none;
+    color: var(--ghost);
+  }
+
+  .cafe-card__visits {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: var(--step-2);
+  }
+
+  /* A loyalty card: one stamp a visit, ten to a card. */
+  .cafe-stamps {
+    display: inline-flex;
+    gap: var(--step-1);
+  }
+
+  .cafe-stamp {
+    inline-size: var(--dot-6);
+    block-size: var(--dot-6);
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px var(--edge-strong);
+  }
+
+  .cafe-stamp[data-on] {
+    background: var(--ink);
+    box-shadow: none;
+  }
+
+  .cafe-card__count {
+    position: relative;
+    top: var(--mono-optical-shift);
+    min-inline-size: 3ch;
+    color: var(--muted);
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: calc(var(--text-xs) * 0.95);
+    text-align: end;
+  }
+
+  .cafe-card__for {
+    top: 0;
+    font-weight: var(--font-medium);
+    letter-spacing: 0;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    /* the stamps land one after another, as if inked */
+    .cafe-card:hover .cafe-stamp[data-on] {
+      animation: cafe-stamp-ink var(--dur-spring-pop) var(--ease-snap) calc(var(--i) * 24ms) both;
+    }
+  }
+
+  @keyframes cafe-stamp-ink {
+    40% { transform: scale(1.5); }
+  }
+
+  @media (max-width: 38rem) {
+    .cafe-cities {
+      gap: var(--step-7);
+    }
+
+    .cafe-map {
+      inline-size: calc(var(--step) * 24);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cafe-map__halo {
+      transition: none;
+    }
+
+    .cafe-card:hover .cafe-stamp[data-on] {
+      animation: none;
+    }
+  }
+</style>

@@ -1,0 +1,213 @@
+---
+/**
+ * PhotoInfo - the capture record as the phone's info panel shows it: camera
+ * and format, lens and capture size, the exposure strip, then the place.
+ * Rendered on the photo page, and into a <template> per photo on the wall
+ * for the viewer's info sheet.
+ */
+import type { PhotoEntry } from "../data/photos";
+import {
+  cameraName,
+  captureLine,
+  coordinates,
+  exposureCells,
+  lensLine,
+  mapsHref,
+  placeLine,
+} from "../lib/engine-format";
+import Icon from "./Icon.astro";
+
+interface Props {
+  data: PhotoEntry["data"];
+}
+
+const { camera, place } = Astro.props.data;
+const lens = camera ? lensLine(camera) : undefined;
+const capture = camera ? captureLine(camera) : undefined;
+const exposure = camera ? exposureCells(camera) : [];
+const hasCoordinates = place?.lat !== undefined && place?.lon !== undefined;
+---
+
+{(camera || place) && (
+  <section class="photo-info" aria-label="Photo details">
+    {camera && (
+      <div class="ui-card photo-exif">
+        <div class="photo-exif__head">
+          <p class="photo-exif__camera">{cameraName(camera)}</p>
+          <p class="photo-exif__badges">
+            {camera.mode && <span class="ui-badge">{camera.mode}</span>}
+            {camera.format && <span class="ui-badge ui-badge--mono">{camera.format}</span>}
+          </p>
+        </div>
+        {(lens || capture) && (
+          <div class="photo-exif__body">
+            {lens && <p class="photo-exif__lens">{lens}</p>}
+            {capture && <p class="photo-exif__capture">{capture}</p>}
+          </div>
+        )}
+        {exposure.length > 0 && (
+          <dl class="photo-exif__strip" style={`--cells: ${exposure.length}`}>
+            {exposure.map((cell) => (
+              <div class="photo-exif__cell">
+                <dt class="visually-hidden">{cell.label}</dt>
+                <dd>{cell.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </div>
+    )}
+    {place && (
+      hasCoordinates ? (
+        <a
+          class="ui-row photo-place"
+          href={mapsHref(place.lat!, place.lon!, place.name)}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span class="photo-place__pin" aria-hidden="true"><Icon name="location" size={16} /></span>
+          <span class="photo-place__text">
+            <span class="ui-row__title">{place.name}</span>
+            <span class="ui-row__sub">{placeLine(place)}</span>
+          </span>
+          <span class="ui-row__meta photo-place__coords">{coordinates(place.lat!, place.lon!)}</span>
+          <span class="ui-arw ui-arw--ext ui-row__glyph"><Icon name="arrow-up-right" /><Icon name="arrow-up-right" /></span>
+        </a>
+      ) : (
+        <div class="ui-row ui-row--static photo-place">
+          <span class="photo-place__pin" aria-hidden="true"><Icon name="location" size={16} /></span>
+          <span class="photo-place__text">
+            <span class="ui-row__title">{place.name}</span>
+            <span class="ui-row__sub">{placeLine(place)}</span>
+          </span>
+        </div>
+      )
+    )}
+  </section>
+)}
+
+<style>
+  .photo-info {
+    display: grid;
+    gap: var(--step-2);
+    margin-block-start: var(--step-2);
+  }
+
+  .photo-exif {
+    overflow: hidden;
+    border-radius: var(--r-5);
+  }
+
+  .photo-exif__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--step-3);
+    min-block-size: var(--cap-48);
+    padding-inline: var(--step-4) var(--step-3);
+    border-block-end: var(--hairline) solid var(--rule);
+  }
+
+  .photo-exif__camera,
+  .photo-exif__badges,
+  .photo-exif__lens,
+  .photo-exif__capture {
+    margin: 0;
+  }
+
+  .photo-exif__camera {
+    min-inline-size: 0;
+    overflow: hidden;
+    color: var(--ink);
+    font-size: var(--text-ui);
+    font-weight: var(--font-semibold);
+    letter-spacing: -0.006em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .photo-exif__badges {
+    display: inline-flex;
+    flex: none;
+    gap: var(--step-1);
+  }
+
+  .photo-exif__body {
+    display: grid;
+    gap: var(--step-1);
+    padding: var(--step-3) var(--step-4);
+  }
+
+  .photo-exif__lens {
+    color: var(--ink);
+    font-size: var(--text-ui-sm);
+    font-weight: var(--font-medium);
+  }
+
+  .photo-exif__capture {
+    color: var(--ghost);
+    font-size: var(--text-ui-sm);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .photo-exif__strip {
+    display: grid;
+    grid-template-columns: repeat(var(--cells), minmax(0, 1fr));
+    margin: 0;
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  .photo-exif__cell {
+    display: grid;
+    place-items: center;
+    min-inline-size: 0;
+    min-block-size: var(--cap-40);
+    padding-inline: var(--step-1);
+  }
+
+  .photo-exif__cell + .photo-exif__cell {
+    border-inline-start: var(--hairline) solid var(--rule);
+  }
+
+  .photo-exif__cell dd {
+    position: relative;
+    top: var(--mono-optical-shift);
+    margin: 0;
+    overflow: hidden;
+    color: var(--muted);
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: calc(var(--text-xs) * 0.95);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .photo-place__pin {
+    display: grid;
+    flex: none;
+    place-items: center;
+    inline-size: var(--cap-32);
+    block-size: var(--cap-32);
+    border-radius: var(--r-pill);
+    background: var(--wash);
+    color: var(--muted);
+  }
+
+  .photo-place__text {
+    display: grid;
+    flex: 1;
+    min-inline-size: 0;
+  }
+
+  .photo-place__coords {
+    position: relative;
+    top: var(--mono-optical-shift);
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: calc(var(--text-xs) * 0.92);
+  }
+
+  @media (max-width: 38rem) {
+    .photo-place__coords {
+      display: none;
+    }
+  }
+</style>

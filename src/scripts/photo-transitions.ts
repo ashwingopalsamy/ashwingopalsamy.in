@@ -313,6 +313,12 @@ function clearTransitionNames(root: ParentNode = document): void {
   });
 }
 
+/** The swap's direction and a swipe's release offset outlive one transition only. */
+function clearSwapDirection(): void {
+  delete document.documentElement.dataset.photoDir;
+  document.documentElement.style.removeProperty("--photo-drag");
+}
+
 function setTransitionName(element: HTMLElement | null, name: string): void {
   if (element) element.style.viewTransitionName = name;
 }
@@ -409,6 +415,9 @@ function handleBeforePreparation(rawEvent: Event): void {
 
   if (fromId && toId && fromId !== toId) {
     activeTransitionKind = "swap";
+    // the direction of travel: the pager's rel, else the history direction
+    const rel = (event.sourceElement as Element | undefined)?.closest?.("a")?.getAttribute("rel");
+    document.documentElement.dataset.photoDir = rel === "prev" || (!rel && event.direction === "back") ? "prev" : "next";
     setTransitionName(mediaForId(document, fromId), "photo-swap");
     setTransitionName(document.querySelector<HTMLElement>("[data-photo-caption]"), "photo-caption");
   } else if (fromId && toGallery) {
@@ -426,6 +435,7 @@ function handleBeforePreparation(rawEvent: Event): void {
   event.signal.addEventListener("abort", () => {
     if (epoch !== navigationEpoch) return;
     clearTransitionNames();
+    clearSwapDirection();
     if (activeRequest?.started && new URL(activeRequest.href).pathname === toPath) clearActiveRequest();
   }, { once: true });
 }
@@ -474,12 +484,14 @@ function handleBeforeSwap(rawEvent: Event): void {
     () => {
       if (epoch === navigationEpoch) {
         clearTransitionNames();
+        clearSwapDirection();
         activeTransitionKind = null;
       }
     },
     () => {
       if (epoch === navigationEpoch) {
         clearTransitionNames();
+        clearSwapDirection();
         activeTransitionKind = null;
       }
     },
@@ -501,6 +513,7 @@ function handleAfterSwap(): void {
 function handlePageShow(event: PageTransitionEvent): void {
   if (!event.persisted) return;
   clearTransitionNames();
+  clearSwapDirection();
   clearActiveRequest();
 }
 

@@ -1,0 +1,285 @@
+---
+/**
+ * PhotoViewer - the wall's full-screen viewer shell. A modal <dialog> (top
+ * layer, focus trapped, the page inert behind it) holding an opaque scrim,
+ * a stage whose track carries three recycled slides, the chrome, and an
+ * info sheet. scripts/photo-viewer.ts builds the slides and drives every
+ * motion; without script the wall's links simply open each photo's page.
+ */
+import Icon from "./Icon.astro";
+---
+
+<dialog class="pv" data-pv aria-label="Photo viewer" aria-roledescription="carousel">
+  <div class="pv-scrim" data-pv-scrim></div>
+  <div class="pv-stage" data-pv-stage>
+    <div class="pv-track" data-pv-track></div>
+  </div>
+  <div class="pv-chrome" data-pv-chrome>
+    <div class="pv-top">
+      <button type="button" class="ui-cap ui-cap--glass ui-cap--icon ui-cap--40" data-pv-close aria-label="Close photo">
+        <Icon name="close" size={16} strokeWidth={2} />
+      </button>
+      <p class="pv-count" data-pv-count></p>
+      <button
+        type="button"
+        class="ui-cap ui-cap--glass ui-cap--icon ui-cap--40"
+        data-pv-info
+        aria-label="Photo details"
+        aria-expanded="false"
+        aria-controls="pv-sheet"
+      >
+        <Icon name="info" size={16} strokeWidth={2} />
+      </button>
+    </div>
+    <button type="button" class="ui-cap ui-cap--glass ui-cap--icon ui-cap--40 pv-nav pv-nav--prev" data-pv-prev aria-label="Previous photo">
+      <Icon name="chevron-left" size={16} strokeWidth={2} />
+    </button>
+    <button type="button" class="ui-cap ui-cap--glass ui-cap--icon ui-cap--40 pv-nav pv-nav--next" data-pv-next aria-label="Next photo">
+      <Icon name="chevron-right" size={16} strokeWidth={2} />
+    </button>
+    <div class="pv-caption" data-pv-caption>
+      <p class="pv-caption__title" data-pv-title></p>
+      <p class="pv-caption__meta" data-pv-meta></p>
+      <p class="pv-caption__exposure" data-pv-exposure></p>
+    </div>
+  </div>
+  <section class="pv-sheet" id="pv-sheet" data-pv-sheet aria-label="Photo details" inert>
+    <span class="pv-sheet__grip" aria-hidden="true"></span>
+    <div class="pv-sheet__body" data-pv-sheet-body></div>
+  </section>
+  <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true" data-pv-status></p>
+</dialog>
+
+<style>
+  .pv {
+    position: fixed;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    max-inline-size: none;
+    max-block-size: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    touch-action: none;
+    overscroll-behavior: contain;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .pv:not([open]) {
+    display: none;
+  }
+
+  .pv::backdrop {
+    background: transparent;
+  }
+
+  /* opaque at rest, so the wall behind can scroll unseen */
+  .pv-scrim {
+    position: absolute;
+    inset: 0;
+    background: var(--canvas);
+    opacity: 0;
+  }
+
+  .pv-stage,
+  .pv-track {
+    position: absolute;
+    inset: 0;
+  }
+
+  .pv-track {
+    will-change: transform;
+  }
+
+  /* built by the script: slide > frame (open, close, dismiss) > zoom (pinch,
+     pan) > the thumbnail's pixels under the full-size picture */
+  .pv :global(.pv-slide) {
+    position: absolute;
+    inset: 0;
+    contain: layout style;
+  }
+
+  .pv :global(.pv-frame) {
+    position: absolute;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+
+  .pv :global(.pv-zoom) {
+    position: absolute;
+    inset: 0;
+    transform-origin: 0 0;
+  }
+
+  .pv :global(:is(.pv-lo, .pv-hi, .pv-hi img)) {
+    position: absolute;
+    inset: 0;
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    border-radius: var(--pv-r, var(--r-4));
+    object-fit: cover;
+    -webkit-user-drag: none;
+  }
+
+  .pv :global(.pv-lo) {
+    background: var(--surface-inline-bg);
+  }
+
+  /* the full-size picture replaces the thumbnail's pixels in one frame once
+     decoded: the same image, only sharper */
+  .pv :global(.pv-hi) {
+    opacity: 0;
+  }
+
+  .pv :global(.pv-slide[data-hi="ready"] .pv-hi) {
+    opacity: 1;
+  }
+
+  .pv-chrome {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .pv-top {
+    position: absolute;
+    inset-block-start: max(var(--step-4), env(safe-area-inset-top));
+    inset-inline: var(--step-4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .pv-top > button,
+  .pv-nav {
+    pointer-events: auto;
+  }
+
+  .pv[data-chrome="off"] :is(.pv-top > button, .pv-nav) {
+    pointer-events: none;
+  }
+
+  .pv-count {
+    position: absolute;
+    inset-inline: 0;
+    inline-size: fit-content;
+    margin: 0 auto;
+    color: var(--muted);
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: calc(var(--text-xs) * 0.95);
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+  }
+
+  .pv-nav {
+    position: absolute;
+    inset-block-start: 50%;
+    translate: 0 -50%;
+  }
+
+  .pv-nav--prev {
+    inset-inline-start: var(--step-6);
+  }
+
+  .pv-nav--next {
+    inset-inline-end: var(--step-6);
+  }
+
+  .pv-nav:disabled {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .pv-caption {
+    position: absolute;
+    inset-inline: var(--step-4);
+    inset-block-end: max(var(--step-6), calc(env(safe-area-inset-bottom) + var(--step-4)));
+    display: grid;
+    justify-items: center;
+    gap: var(--step-1);
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .pv-caption p {
+    max-inline-size: 36rem;
+    margin: 0;
+  }
+
+  .pv-caption__title {
+    color: var(--ink);
+    font-size: var(--text-base);
+    font-weight: var(--font-medium);
+    line-height: 1.4;
+    letter-spacing: -0.008em;
+    text-wrap: balance;
+  }
+
+  .pv-caption__meta {
+    color: var(--ghost);
+    font-size: var(--text-ui-sm);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pv-caption__exposure {
+    position: relative;
+    top: var(--mono-optical-shift);
+    color: var(--muted);
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: calc(var(--text-xs) * 0.95);
+  }
+
+  .pv-caption__exposure:empty {
+    display: none;
+  }
+
+  .pv-sheet {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    inline-size: min(100%, 34rem);
+    max-block-size: 72%;
+    margin-inline: auto;
+    padding: var(--step-2) var(--step-4) calc(var(--step-4) + env(safe-area-inset-bottom));
+    overflow: auto;
+    overscroll-behavior: contain;
+    border-radius: var(--r-6) var(--r-6) 0 0;
+    background: var(--canvas);
+    box-shadow: 0 0 0 1px var(--edge-soft), var(--lift-2);
+    transform: translate3d(0, calc(100% + var(--step-6)), 0);
+    touch-action: pan-y;
+  }
+
+  .pv-sheet__grip {
+    display: block;
+    inline-size: var(--step-8);
+    block-size: var(--step-1);
+    margin: 0 auto var(--step-2);
+    border-radius: var(--r-pill);
+    background: var(--edge-strong);
+  }
+
+  .pv-sheet__body :global(.photo-info) {
+    margin-block-start: 0;
+  }
+
+  @media (hover: none), (max-width: 38rem) {
+    .pv-nav {
+      display: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .pv-scrim {
+      background: Canvas;
+    }
+  }
+</style>

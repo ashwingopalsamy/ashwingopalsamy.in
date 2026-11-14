@@ -443,27 +443,57 @@
 /* Opening and closing use the browser's shared-element geometry animation
    on the uncropped image itself. Its intrinsic ratio stays constant. */
 ::view-transition-group(photo-open) {
-  animation-duration: var(--dur-overlay);
-  animation-timing-function: var(--ease-travel);
+  animation-duration: var(--dur-spring-snap);
+  animation-timing-function: var(--ease-spring-snap);
 }
 
 ::view-transition-old(photo-open),
 ::view-transition-new(photo-open) {
-  animation-duration: var(--dur-overlay);
-  animation-timing-function: var(--ease-travel);
+  animation-duration: var(--dur-spring-snap);
+  animation-timing-function: var(--ease-spring-snap);
 }
 
-/* A fixed-size stage gives viewer-to-viewer navigation identical geometry;
-   only its image pixels dissolve. */
-@keyframes photo-fade-out {
+/* A fixed-size stage gives viewer-to-viewer navigation identical geometry.
+   The photo pages sideways in the direction of travel: the old one leaves
+   from wherever a swipe let go of it (--photo-drag, set by
+   photo-detail.ts), faster than the new one arrives on the snap spring. */
+:root {
+  --photo-dir: 1;
+}
+
+:root[data-photo-dir="prev"] {
+  --photo-dir: -1;
+}
+
+@keyframes photo-swap-out {
+  from {
+    transform: translate3d(var(--photo-drag, 0px), 0, 0);
+  }
+
   to {
     opacity: 0;
+    transform: translate3d(calc(var(--photo-dir) * -14%), 0, 0) scale(0.97);
   }
 }
 
-@keyframes photo-fade-in {
+@keyframes photo-swap-in {
   from {
     opacity: 0;
+    transform: translate3d(calc(var(--photo-dir) * 14%), 0, 0) scale(0.97);
+  }
+}
+
+@keyframes photo-caption-out {
+  to {
+    opacity: 0;
+    transform: translate3d(calc(var(--photo-dir) * -6px), 0, 0);
+  }
+}
+
+@keyframes photo-caption-in {
+  from {
+    opacity: 0;
+    transform: translate3d(calc(var(--photo-dir) * 6px), 0, 0);
   }
 }
 
@@ -472,14 +502,20 @@
   animation: none;
 }
 
-::view-transition-old(photo-swap),
-::view-transition-old(photo-caption) {
-  animation: photo-fade-out var(--dur-exit) var(--ease-exit) both;
+::view-transition-old(photo-swap) {
+  animation: photo-swap-out var(--dur-shift) var(--ease-exit) both;
 }
 
-::view-transition-new(photo-swap),
+::view-transition-new(photo-swap) {
+  animation: photo-swap-in var(--dur-spring-snap) var(--ease-spring-snap) both;
+}
+
+::view-transition-old(photo-caption) {
+  animation: photo-caption-out var(--dur-exit) var(--ease-exit) both;
+}
+
 ::view-transition-new(photo-caption) {
-  animation: photo-fade-in var(--dur-shift) var(--ease-enter) both;
+  animation: photo-caption-in var(--dur-shift) var(--ease-enter) both;
 }
 
 :root[data-astro-transition-fallback] .column-body.photo-page > main[data-route-content] {
