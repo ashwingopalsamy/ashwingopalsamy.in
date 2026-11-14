@@ -1,18 +1,240 @@
 ---
+import { getCollection } from "astro:content";
 import ComingSoon from "../../components/ComingSoon.astro";
+import EngineBar, { type EngineSort } from "../../components/EngineBar.astro";
+import Icon from "../../components/Icon.astro";
+import PageIntro from "../../components/PageIntro.astro";
 import Page from "../../layouts/Page.astro";
+import { facets, initials, nameHue } from "../../lib/engine-format";
 import { ogPath } from "../../lib/og-url";
+import { profileIconPaths } from "../../lib/profile-icons";
 
-const description = "I am taking time with this list because the people on it deserve more than a row of names. It will arrive when every introduction has earned its place.";
+const comingSoon = "I am taking time with this list because the people on it deserve more than a row of names. It will arrive when every introduction has earned its place.";
+const all = await getCollection("people");
+const people = (import.meta.env.PROD ? all.filter(({ data }) => !data.placeholder) : all)
+  .sort((left, right) => left.data.name.localeCompare(right.data.name));
+const hasPlaceholders = people.some(({ data }) => data.placeholder);
+const isLive = people.some(({ data }) => !data.placeholder);
+
+const fieldFacets = facets(people, ({ data }) => data.field, undefined,
+  (left, right) => right.count - left.count || left.label.localeCompare(right.label));
+const sorts: EngineSort[] = [
+  { id: "az", label: "A–Z", key: "name", dir: "asc" },
+  { id: "recent", label: "Recent", key: "met", dir: "desc" },
+];
+const linkLabels = {
+  site: "Website",
+  github: "GitHub",
+  x: "X",
+  linkedin: "LinkedIn",
+  substack: "Substack",
+  youtube: "YouTube",
+} as const;
 ---
 
 <Page
   title="People"
-  description={`${description} Coming soon.`}
+  description={isLive ? "Good people worth knowing, by Ashwin Gopalsamy." : `${comingSoon} Coming soon.`}
   ogImage={ogPath("more/people")}
   ogImageAlt="People · Ashwin Gopalsamy"
-  pagefind={false}
-  robots="noindex,follow"
+  pagefind={isLive && !import.meta.env.DEV}
+  robots={isLive && !import.meta.env.DEV ? undefined : "noindex,follow"}
 >
-  <ComingSoon title="People" description={description} />
+  {people.length === 0 ? (
+    <ComingSoon title="People" description={comingSoon} />
+  ) : (
+    <section class="people-index" aria-label="People" data-engine>
+      <PageIntro title="people" lede="Good people worth knowing." />
+      {hasPlaceholders && <p class="engine-draft-note">Sample entries · invented people, not real introductions</p>}
+      <EngineBar label="people" facets={fieldFacets} sorts={sorts} noun={["person", "people"]} />
+      <ol class="people-grid" data-engine-list>
+        {people.map(({ id, data }) => (
+          <li class="person" data-engine-item data-tags={data.field} data-k-name={data.name} data-k-met={data.met}>
+            <article class="ui-card person-card" aria-labelledby={`person-${id}`}>
+              <div class="person-card__top">
+                <span class="person-card__avatar" style={`--hue: ${nameHue(data.name)}`} aria-hidden="true">
+                  {initials(data.name)}
+                </span>
+                <div class="person-card__id">
+                  <h2 id={`person-${id}`} class="person-card__name">{data.name}</h2>
+                  <p class="person-card__role">
+                    {data.role}{data.place && <><span aria-hidden="true"> · </span><span class="visually-hidden">, </span>{data.place}</>}
+                  </p>
+                </div>
+              </div>
+              <p class="person-card__note">{data.note}</p>
+              <div class="person-card__foot">
+                <p class="person-card__met"><span class="visually-hidden">Known </span>since {data.met}</p>
+                {data.links.length > 0 && (
+                  <p class="person-card__links">
+                    {data.links.map((link) => (
+                      <a
+                        class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`${data.name} on ${linkLabels[link.kind]}`}
+                      >
+                        {link.kind === "site" ? (
+                          <Icon name="link" size={14} strokeWidth={2} />
+                        ) : (
+                          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="currentColor">
+                            <path d={profileIconPaths[link.kind]} />
+                          </svg>
+                        )}
+                      </a>
+                    ))}
+                  </p>
+                )}
+              </div>
+            </article>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )}
 </Page>
+
+<script>
+  import "../../scripts/engine";
+</script>
+
+<style>
+  .engine-draft-note {
+    margin: 0 0 var(--step-4);
+    color: var(--muted);
+    font-size: var(--text-xs);
+  }
+
+  .people-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--step-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .person {
+    display: grid;
+    min-inline-size: 0;
+  }
+
+  .person-card {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: var(--step-4);
+    padding: var(--step-4);
+    border-radius: var(--tile-r);
+  }
+
+  .person-card__top {
+    display: flex;
+    align-items: center;
+    gap: var(--step-3);
+    min-inline-size: 0;
+  }
+
+  /* A monogram, as a contact card draws one: a hue of its own per name,
+     mixed into the canvas so it sits as quietly in dark as in light. */
+  .person-card__avatar {
+    display: grid;
+    flex: none;
+    place-items: center;
+    inline-size: var(--cap-48);
+    block-size: var(--cap-48);
+    border-radius: 50%;
+    background: linear-gradient(
+      150deg,
+      color-mix(in oklch, oklch(0.84 0.09 var(--hue)) 46%, var(--canvas)),
+      color-mix(in oklch, oklch(0.7 0.13 calc(var(--hue) + 36)) 58%, var(--canvas))
+    );
+    box-shadow: inset 0 0 0 1px var(--edge-soft);
+    color: color-mix(in oklch, oklch(0.5 0.14 var(--hue)) 38%, var(--ink));
+    font-size: var(--text-ui);
+    font-weight: var(--font-semibold);
+    line-height: 1;
+    letter-spacing: 0.01em;
+    transition: transform var(--dur-spring-pop) var(--ease-spring-pop);
+  }
+
+  .person-card__id {
+    display: grid;
+    gap: var(--step-1);
+    min-inline-size: 0;
+  }
+
+  .person-card__name,
+  .person-card__role,
+  .person-card__note,
+  .person-card__met,
+  .person-card__links {
+    margin: 0;
+  }
+
+  .person-card__name {
+    color: var(--ink);
+    font-size: var(--text-md);
+    font-weight: var(--font-semibold);
+    line-height: 1.3;
+    letter-spacing: -0.012em;
+  }
+
+  .person-card__role {
+    overflow: hidden;
+    color: var(--ghost);
+    font-size: var(--text-ui-sm);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .person-card__note {
+    color: var(--muted);
+    font-size: var(--text-sm);
+    line-height: 1.55;
+    text-wrap: pretty;
+  }
+
+  .person-card__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--step-3);
+    min-block-size: var(--cap-32);
+  }
+
+  .person-card__met {
+    position: relative;
+    top: var(--mono-optical-shift);
+    color: var(--ghost);
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: calc(var(--text-xs) * 0.95);
+  }
+
+  .person-card__links {
+    display: inline-flex;
+    gap: var(--step-2);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .person-card:hover .person-card__avatar {
+      transform: rotate(-8deg);
+    }
+  }
+
+  @media (min-width: 42.5rem) {
+    .people-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .person-card__avatar {
+      transition: none;
+    }
+
+    .person-card:hover .person-card__avatar {
+      transform: none;
+    }
+  }
+</style>

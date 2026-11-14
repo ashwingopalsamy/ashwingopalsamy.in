@@ -1,0 +1,106 @@
+---
+/**
+ * The filter and sort row shared by photos, cafe and people. Markup only:
+ * scripts/engine.ts does the filtering, sorting and motion, segmented.ts
+ * the ink. Without script the first filter and sort are simply what shows.
+ */
+import type { EngineFacet } from "../lib/engine-format";
+
+export interface EngineSort {
+  id: string;
+  label: string;
+  /** item attribute data-k-<key> to compare */
+  key: string;
+  dir: "asc" | "desc";
+}
+
+interface Props {
+  /** plural noun for labels: "photos" */
+  label: string;
+  facets: EngineFacet[];
+  sorts: EngineSort[];
+  /** singular and plural, for the live status */
+  noun: [string, string];
+}
+
+const { label, facets, sorts, noun } = Astro.props;
+const filterable = facets.length > 2;
+---
+
+<div class="engine-bar">
+  {filterable && (
+    <div class="ui-seg ui-seg--sm engine-filter" data-engine-filter>
+      <div class="ui-seg__track" role="group" aria-label={`Filter ${label}`}>
+        <span class="ui-seg__ind" aria-hidden="true"></span>
+        {facets.map((facet, index) => (
+          <button type="button" class="ui-seg__item" data-value={facet.id} aria-pressed={index === 0 ? "true" : "false"}>
+            <span class="ui-cap__label">{facet.label}{" "}<span class="ui-count">{facet.count}</span></span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )}
+  <div class="ui-seg ui-seg--sm engine-sort" data-engine-sort>
+    <div class="ui-seg__track" role="group" aria-label={`Sort ${label}`}>
+      <span class="ui-seg__ind" aria-hidden="true"></span>
+      {sorts.map((sort, index) => (
+        <button
+          type="button"
+          class="ui-seg__item"
+          data-value={sort.id}
+          data-sort-key={sort.key}
+          data-sort-dir={sort.dir}
+          aria-pressed={index === 0 ? "true" : "false"}
+        >
+          <span class="ui-cap__label">{sort.label}</span>
+        </button>
+      ))}
+    </div>
+  </div>
+  <p class="visually-hidden" role="status" aria-live="polite" aria-atomic="true" data-engine-status data-noun-one={noun[0]} data-noun-many={noun[1]}></p>
+</div>
+
+<style>
+  .engine-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--step-3);
+    margin-block: 0 var(--step-6);
+  }
+
+  /* The rims hang outside the rail, so the first and last ink sit on it. */
+  .engine-filter {
+    margin-inline-start: calc(var(--track-inset) * -1);
+  }
+
+  .engine-sort {
+    margin-inline-end: calc(var(--track-inset) * -1);
+  }
+
+  .engine-bar .ui-count {
+    margin-inline-start: var(--step-1);
+  }
+
+  @media (max-width: 38rem) {
+    .engine-bar {
+      gap: var(--step-2);
+    }
+
+    .engine-filter {
+      max-inline-size: calc(100% + var(--track-inset) * 2);
+    }
+
+    .engine-sort {
+      margin-inline: calc(var(--track-inset) * -1) 0;
+    }
+  }
+</style>
+
+<style is:global>
+  /* Items and groups are display-styled by their pages; [hidden] must win. */
+  [data-engine] :is([data-engine-item], [data-engine-group])[hidden] {
+    display: none !important;
+  }
+</style>

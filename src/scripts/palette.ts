@@ -1201,7 +1201,7 @@ function renderList() {
     const context = item.context ? `<span class="palette-meta ui-row__meta">${escapeHtml(item.context)}</span>` : "";
     const external = item.external ? `<span class="ui-row__glyph ui-row__glyph--ext" role="img" aria-label="External link">${iconMarkup("external")}</span>` : "";
     const disabled = item.disabled ? ' aria-disabled="true"' : "";
-    html += `<div class="palette-item ui-row" data-fx="spot" role="option" id="palette-opt-${index}" data-index="${index}" aria-selected="${selected}"${disabled}><span class="palette-icon">${icon}</span><span class="palette-item-main ui-row__title">${label}${subtitle}${excerpt}</span>${context}${external}${hint}</div>`;
+    html += `<div class="palette-item ui-row" role="option" id="palette-opt-${index}" data-index="${index}" aria-selected="${selected}"${disabled}><span class="palette-icon">${icon}</span><span class="palette-item-main ui-row__title">${label}${subtitle}${excerpt}</span>${context}${external}${hint}</div>`;
   });
   list.innerHTML = html;
   hydratePaletteIcons(list);

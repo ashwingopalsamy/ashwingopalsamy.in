@@ -4,14 +4,11 @@ import { ogPath } from "../lib/og-url";
 import { moreDestinations } from "../data/more";
 import Icon from "../components/Icon.astro";
 import PageIntro from "../components/PageIntro.astro";
-import { getPhotoEntries } from "../data/photos";
+import { liveMoreDestinations } from "../lib/more-availability";
 
-const photos = await getPhotoEntries();
-const hasPublishedPhotos = photos.some(({ data }) => !data.draft);
+const live = await liveMoreDestinations();
 const destinations = moreDestinations.map((destination) =>
-  destination.id === "photos" && hasPublishedPhotos
-    ? { ...destination, status: "live" as const }
-    : destination,
+  live.has(destination.id) ? { ...destination, status: "live" as const } : destination,
 );
 ---
 
@@ -30,7 +27,6 @@ const destinations = moreDestinations.map((destination) =>
           class={classes}
           data-enter
           data-status={destination.status}
-          data-fx={soon ? undefined : "spot"}
           data-more-tile={soon ? undefined : ""}
           href={soon ? undefined : destination.href}
           aria-disabled={soon ? "true" : undefined}

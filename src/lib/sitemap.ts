@@ -1,6 +1,7 @@
 import { getCollection } from "astro:content";
 import { CANONICAL_KNOWLEDGE } from "../data/canonical-knowledge";
 import { moreDestinations } from "../data/more";
+import { liveMoreDestinations } from "./more-availability";
 import { getPhotoEntries, photoHref } from "../data/photos";
 import { bookHref, noteHref, watchHref } from "./library";
 import { getTagBuckets, tagHref } from "./tags";
@@ -46,11 +47,12 @@ export async function getSitemapEntries(): Promise<SitemapEntry[]> {
   const isProd = import.meta.env.PROD;
   const visibleNotes = isProd ? notes.filter((entry) => !entry.data.draft) : notes;
   const publishedPhotos = photos.filter((entry) => !entry.data.draft);
+  const live = await liveMoreDestinations();
   const entries: SitemapEntry[] = [
     ...staticEntries,
     ...moreDestinations
       .filter((destination) =>
-        destination.status === "live" &&
+        (destination.status === "live" || live.has(destination.id)) &&
         destination.id !== "library" &&
         destination.id !== "ai" &&
         destination.id !== "photos",

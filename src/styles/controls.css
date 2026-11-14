@@ -15,13 +15,12 @@
      --lead --trail --icon            icon side gives 4px back; icon-only circle
      --hang                           label, not box, sits on the column edge;
                                       the arrow opens outward (quiet only)
-     __label                          every capsule label (lift, magnet parallax)
+     __label                          every capsule label (optical lift)
    .ui-count                          mono tabular count in a cap or segment
    .ui-chip  __hash                   28px tag chip, registry hash icon in ghost,
                                       then the bare name; .go-spec-pill is the same
                                       recipe for markdown-authored links
-   .ui-arw  --ext --back              registry arrow. Labelled cap: opens on hover
-                                      and focus. Icon cap, tile, pager: conveyor
+   .ui-arw  --ext --back              registry arrow, always shown, never moves
    .ui-stk  --icon                    one grid cell, children carry data-when
    .ui-draw                           stroke icon (check) that draws itself
    .ui-link  __ext                    inline link: paragraph weight, lifts with
@@ -39,9 +38,6 @@
    .ui-tile  --soon  __title __desc __corner __go __art
 
    attribute                          on            effect
-   data-fx="spot"                     row tile      pointer-fx.ts writes --mx/--my
-                                      pager card    (glass caps, docks, cards: none)
-   data-fx="magnet"                   ink cap       --tx/--ty, --lx/--ly
    data-state=idle|done|error|loading action cap    ok/err fill, .ui-stk cell, spinner
    data-when=idle|done|error|loading  .ui-stk child shown while parent state matches
    aria-busy="true"                   cap           spinner, contents hidden
@@ -71,9 +67,9 @@
   /* release is a spring; :active swaps in the 70ms press */
   --ui-move: var(--dur-spring-pop) var(--ease-spring-pop);
   --ui-drift: var(--dur-spring-snap) var(--ease-spring-snap);
-  /* arrow reveal (below): 0 closed, 1 open. Reduced motion keeps these
-     instant; the no-preference block gives them their curves. */
-  --arw-open: 0;
+  /* arrow (below): always open. A capsule never changes size or moves
+     under the pointer; hover is a change of fill, nothing else. */
+  --arw-open: 1;
   --arw-move: 0s;
   --arw-fade: var(--t-color);
   position: relative;
@@ -261,28 +257,9 @@
   box-shadow: var(--glass-spec), var(--glass-lift);
 }
 
-/* Spotlight, on the wide surfaces only (tiles, pager cards): pointer-fx.ts
-   moves it on [data-fx~="spot"]; without it, it rests at the top centre.
-   Capsules, docks and cards have none. */
-:is(.ui-pager__card, .ui-tile)::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: radial-gradient(
-    var(--spot-size) circle at var(--mx, 50%) var(--my, 0%),
-    var(--spot),
-    transparent 70%
-  );
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--t-color);
-}
-
 /* ------------------------------------------------------------------
-   arrow conveyor: the glyph leaves along its own vector and its twin
-   arrives behind it. Box is the icons' own size.
+   arrow: a registry glyph in a box of its own size. The second child
+   (an older conveyor twin) stays hidden; arrows never travel.
    ------------------------------------------------------------------ */
 
 .ui-arw {
@@ -314,14 +291,10 @@
 }
 
 /* ------------------------------------------------------------------
-   arrow reveal: on a labelled capsule the glyph answers the pointer; it
-   is not furniture. Closed, it has no width and no gap, so the capsule is
-   its label between two equal paddings. Hover and keyboard focus set
-   --arw-open to 1: the box opens to the glyph and the glyph travels its
-   last few pixels along its own vector. Leaving closes it in --dur-exit.
-   Touch never opens it, and reduced motion fades it in without moving
-   anything. Icon circles, tiles and pager cards keep the conveyor above;
-   the conveyor's twin icon is not used here.
+   arrow on a labelled capsule: always shown, at rest and under the
+   pointer, so the capsule has one width. --arw-open is fixed at 1; the
+   arithmetic below keeps a --hang capsule's label on the column edge with
+   its glyph out in the gutter.
    ------------------------------------------------------------------ */
 
 /* what the capsule gains when it opens: the glyph and its gap, less the
@@ -379,52 +352,6 @@
   margin-inline-end: calc(var(--cap-edge) - var(--cap-open) * var(--arw-open));
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .ui-cap {
-    --arw-move: var(--dur-exit) var(--ease-exit);
-    --arw-fade: var(--dur-exit) var(--ease-exit);
-  }
-
-  .ui-cap:not(.ui-cap--icon):focus-visible {
-    --arw-move: var(--dur-enter) var(--ease-spring-snap);
-    --arw-fade: var(--dur-enter) var(--ease-enter);
-  }
-
-  /* the last few pixels along the glyph's own vector */
-  .ui-cap:not(.ui-cap--icon) > .ui-arw > :nth-child(1) {
-    translate: calc(var(--step-1) * (var(--arw-open) - 1)) 0;
-    transition:
-      translate var(--arw-move),
-      opacity var(--arw-fade);
-  }
-
-  .ui-cap:not(.ui-cap--icon) > .ui-arw--ext > :nth-child(1) {
-    translate:
-      calc(var(--travel-nudge) * (var(--arw-open) - 1))
-      calc(var(--travel-nudge) * (1 - var(--arw-open)));
-  }
-
-  .ui-cap:not(.ui-cap--icon) > .ui-arw--back > :nth-child(1) {
-    translate: calc(var(--step-1) * (1 - var(--arw-open))) 0;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .ui-cap:not(.ui-cap--icon):hover {
-      --arw-move: var(--dur-enter) var(--ease-spring-snap);
-      --arw-fade: var(--dur-enter) var(--ease-enter);
-    }
-  }
-}
-
-.ui-cap:not(.ui-cap--icon, :disabled, [aria-disabled="true"]):focus-visible {
-  --arw-open: 1;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .ui-cap:not(.ui-cap--icon, :disabled, [aria-disabled="true"]):hover {
-    --arw-open: 1;
-  }
-}
 
 /* ------------------------------------------------------------------
    stacked state cells: a copy circle's copy / check / alert glyphs share
@@ -693,13 +620,7 @@
   inset: 0;
   z-index: -1;
   border-radius: inherit;
-  background:
-    radial-gradient(
-      var(--spot-size) var(--step-8) at var(--mx, 50%) 50%,
-      color-mix(in oklch, var(--ink) 5%, transparent),
-      transparent 72%
-    ),
-    var(--wash);
+  background: var(--wash);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--dur-afterglow) var(--ease-morph);
@@ -1377,7 +1298,7 @@
 }
 
 .ui-tile--soon {
-  border-color: var(--edge-soft);
+  border: 1px dashed var(--edge);
   background: none;
   box-shadow: none;
   cursor: default;
@@ -1398,7 +1319,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .ui-cap--ink:hover {
-    box-shadow: var(--ink-edge), var(--ink-bloom);
+    background: var(--ink-fill-hover) border-box;
   }
 
   /* the nav item's answer: a tint and a firmer hairline, nothing moves */
@@ -1424,9 +1345,9 @@
   .ui-cap--chip-selected:hover,
   :is(.ui-cap--chip, .ui-chip):is([aria-pressed="true"], [aria-current="page"]):hover {
     color: var(--canvas);
-    background: var(--ink-fill) border-box;
+    background: var(--ink-fill-hover) border-box;
     border-color: transparent;
-    box-shadow: var(--ink-edge), var(--ink-bloom);
+    box-shadow: var(--ink-edge);
   }
 
   :is(.ui-cap, .ui-chip):hover .ui-count {
@@ -1435,11 +1356,6 @@
 
   .ui-cap--ink:hover .ui-count {
     color: color-mix(in oklch, var(--canvas) 58%, transparent);
-  }
-
-  .ui-pager__card:hover::after,
-  .ui-tile:not(.ui-tile--soon):hover::after {
-    opacity: 1;
   }
 
   .ui-row:not(.ui-row--static):hover::before {
@@ -1474,7 +1390,7 @@
       var(--glass-sheen) padding-box,
       linear-gradient(var(--glass-fill-hover), var(--glass-fill-hover)) padding-box,
       var(--glass-rim-hover) border-box;
-    box-shadow: var(--glass-spec), var(--lift-2);
+    box-shadow: var(--glass-spec), var(--glass-lift);
   }
 
   .ui-pager__card:hover .ui-pager__key {
@@ -1491,7 +1407,7 @@
 
   .ui-tile:not(.ui-tile--soon):hover .ui-tile__go {
     background: var(--ink-fill) border-box;
-    box-shadow: var(--ink-edge), var(--ink-bloom);
+    box-shadow: var(--ink-edge);
     color: var(--canvas);
   }
 
@@ -1660,101 +1576,6 @@
   }
 }
 
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .ui-cap--ink:hover {
-    transform: translateY(-1px);
-  }
-
-  .ui-pager__card:hover,
-  .ui-tile:not(.ui-tile--soon):hover {
-    transform: translateY(calc(var(--travel-hair) * -1));
-  }
-
-  /* pressing while hovered drops the lift */
-  :is(.ui-cap, .ui-chip, .go-spec-pill):active {
-    transform: scale(var(--press-scale));
-  }
-
-  .ui-pager__card:active,
-  .ui-tile:not(.ui-tile--soon):active {
-    transform: scale(var(--press-scale-inline));
-  }
-
-  /* conveyor: icon circles, tiles, pager cards. Labelled capsules reveal. */
-  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):hover .ui-arw > :nth-child(1) {
-    translate: 100% 0;
-    opacity: 0;
-  }
-
-  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):hover .ui-arw--ext > :nth-child(1) {
-    translate: 100% -100%;
-  }
-
-  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):hover .ui-arw--back > :nth-child(1) {
-    translate: -100% 0;
-  }
-
-  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):hover .ui-arw > :nth-child(2) {
-    translate: none;
-    opacity: 1;
-    transition:
-      translate var(--dur-enter) var(--ease-spring-snap),
-      opacity var(--dur-enter) var(--ease-enter);
-  }
-
-  /* dense lists nudge instead of conveying */
-  .ui-row:not(.ui-row--static):hover .ui-row__glyph {
-    translate: var(--travel-nudge) 0;
-  }
-
-  .ui-row:not(.ui-row--static):hover .ui-row__glyph--ext {
-    translate: var(--travel-hair) calc(var(--travel-hair) * -1);
-  }
-
-  .ui-row:not(.ui-row--static):hover .ui-row__glyph--back {
-    translate: calc(var(--travel-nudge) * -1) 0;
-  }
-
-  /* Magnetic primary (ink, one per view): follows on --ease-enter, returns
-     on the spring once pointer-fx.ts clears the props. */
-  [data-fx~="magnet"] {
-    translate: var(--tx, 0px) var(--ty, 0px);
-  }
-
-  [data-fx~="magnet"]:hover {
-    --ui-drift: var(--dur-nudge) var(--ease-enter);
-  }
-
-  [data-fx~="magnet"] .ui-cap__label {
-    translate: var(--lx, 0px) var(--ly, 0px);
-  }
-}
-
-/* Touch has no hover: the conveyor plays once on press. A labelled capsule
-   keeps its arrow closed; its label carries the meaning. */
-@media (hover: none) and (prefers-reduced-motion: no-preference) {
-  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):active .ui-arw > :nth-child(1) {
-    translate: 100% 0;
-    opacity: 0;
-  }
-
-  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):active .ui-arw--ext > :nth-child(1) {
-    translate: 100% -100%;
-  }
-
-  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):active .ui-arw--back > :nth-child(1) {
-    translate: -100% 0;
-  }
-
-  :is(.ui-cap--icon, .ui-pager__card, .ui-tile):active .ui-arw > :nth-child(2) {
-    translate: none;
-    opacity: 1;
-    transition:
-      translate var(--dur-enter) var(--ease-spring-snap),
-      opacity var(--dur-enter) var(--ease-enter);
-  }
-}
-
 @keyframes ui-disc-in {
   from {
     opacity: 0;
@@ -1784,18 +1605,6 @@
    check appears whole, and the spotlight sits at the centre at half
    strength. Colour, opacity and the puddle stay. */
 @media (prefers-reduced-motion: reduce) {
-  :is(.ui-pager__card, .ui-tile)::after {
-    --mx: 50%;
-    --my: 50%;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .ui-pager__card:hover::after,
-    .ui-tile:not(.ui-tile--soon):hover::after {
-      opacity: 0.5;
-    }
-  }
-
   .ui-stk .ui-draw path {
     stroke-dashoffset: 0;
     transition: none;

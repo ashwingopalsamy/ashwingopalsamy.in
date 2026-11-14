@@ -41,7 +41,6 @@ const tail = cut > 0 ? item.title.slice(cut + 1) : item.title;
   {isLinked ? (
     <a
       class="ui-row"
-      data-fx="spot"
       href={item.href!}
       aria-label={label}
       {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}

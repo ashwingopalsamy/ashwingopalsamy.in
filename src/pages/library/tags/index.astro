@@ -38,7 +38,7 @@ const jsonLd = collectionPageJsonLd({
   <ul class="surface-stack" data-enter>
     {buckets.map((b) => (
       <li>
-        <a class="ui-row ui-row--multiline" data-fx="spot" href={tagHref(b.tag)}>
+        <a class="ui-row ui-row--multiline" href={tagHref(b.tag)}>
           <span class="ui-row__title">
             <Icon name="hash" size={14} strokeWidth={2} class="ui-chip__hash ui-chip__hash--inline" />{b.tag}
             <span class="ui-row__sub">{tagPageDescription(b.tag, b.count)}</span>

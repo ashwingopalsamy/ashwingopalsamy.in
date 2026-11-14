@@ -80,7 +80,7 @@ const profiles = (["github", "linkedin", "x", "scholar", "researchgate"] as cons
         {
           profiles.map((profile) => (
             <li>
-              <a class="ui-row" data-fx="spot" href={profile.href} target="_blank" rel="noopener noreferrer">
+              <a class="ui-row" href={profile.href} target="_blank" rel="noopener noreferrer">
                 <svg class="contact-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor">
                   <path d={profileIconPaths[profile.id]} />
                 </svg>

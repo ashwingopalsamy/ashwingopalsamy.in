@@ -3,6 +3,8 @@ import { getImage, Picture } from "astro:assets";
 import Icon from "../../../components/Icon.astro";
 import { getPhotoEntries, photoHref, photoWidths, type PhotoEntry } from "../../../data/photos";
 import Page from "../../../layouts/Page.astro";
+import PhotoInfo from "../../../components/PhotoInfo.astro";
+import { longDateTime, photoDateLabel, photoLocationLabel } from "../../../lib/engine-format";
 import { getPhotoImageSources, PHOTO_DETAIL_SIZES } from "../../../lib/photo-image-sources";
 import { absUrl } from "../../../lib/urls";
 
@@ -30,7 +32,10 @@ export async function getStaticPaths() {
 }
 
 const { photo, index, total, previous, next } = Astro.props;
-const { caption, date, location, alt, source } = photo.data;
+const { caption, alt, source, taken } = photo.data;
+const date = photoDateLabel(photo.data);
+const location = photoLocationLabel(photo.data);
+const when = photo.data.date ?? (taken ? longDateTime(taken) : undefined);
 const pageTitle = caption ?? `Photo ${String(index + 1).padStart(2, "0")}`;
 const pageDescription = [caption, date, location].filter(Boolean).join(" · ") || alt;
 const sizes = PHOTO_DETAIL_SIZES;
@@ -78,12 +83,12 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
           <p class="photo-position">{String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}</p>
         </div>
         {photo.data.generatedPreview && (
-          <p class="photo-origin">AI-generated preview · not a personal photograph</p>
+          <p class="photo-origin">Generated preview · not a personal photograph</p>
         )}
-        {date || location ? (
+        {when || location ? (
           <p class="photo-detail-meta">
-            {date && <span>{date}</span>}
-            {date && location && <span aria-hidden="true"> · </span>}
+            {when && <span>{when}</span>}
+            {when && location && <span aria-hidden="true"> · </span>}
             {location && <span>{location}</span>}
           </p>
         ) : null}
@@ -148,6 +153,7 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
         </div>
       </div>
     </figure>
+    <PhotoInfo data={photo.data} />
     <p class="photo-status" role="status" aria-live="polite" aria-atomic="true" data-photo-status></p>
 
   </article>
@@ -155,6 +161,7 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
 
 <script>
   import "../../../scripts/photo-transitions";
+  import "../../../scripts/photo-detail";
 </script>
 
 <style>
@@ -196,6 +203,7 @@ const socialImageHeight = socialImage.options.height ?? Math.round(source.height
   }
 
   .photo-stage {
+    touch-action: pan-y pinch-zoom;
     grid-column: 1 / -1;
     grid-row: 2;
     display: grid;

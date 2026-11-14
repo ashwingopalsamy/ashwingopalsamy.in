@@ -1,18 +1,390 @@
 ---
+import { getCollection, type CollectionEntry } from "astro:content";
 import ComingSoon from "../../components/ComingSoon.astro";
+import EngineBar, { type EngineSort } from "../../components/EngineBar.astro";
+import Icon from "../../components/Icon.astro";
+import PageIntro from "../../components/PageIntro.astro";
 import Page from "../../layouts/Page.astro";
+import { facets, monthYear } from "../../lib/engine-format";
 import { ogPath } from "../../lib/og-url";
 
-const description = "I keep rereading this list while deciding what genuinely belongs here. It will appear when it feels useful rather than aspirational.";
+type Wish = CollectionEntry<"someday">;
+
+const comingSoon = "I keep rereading this list while deciding what genuinely belongs here. It will appear when it feels useful rather than aspirational.";
+const all = await getCollection("someday");
+const wishes = (import.meta.env.PROD ? all.filter(({ data }) => !data.placeholder) : all)
+  .sort((left, right) => right.data.added.localeCompare(left.data.added));
+const hasPlaceholders = wishes.some(({ data }) => data.placeholder);
+const isLive = wishes.some(({ data }) => !data.placeholder);
+
+const RANK = { done: 0, planned: 1, someday: 2 } as const;
+const tally = {
+  done: wishes.filter(({ data }) => data.status === "done").length,
+  planned: wishes.filter(({ data }) => data.status === "planned").length,
+  someday: wishes.filter(({ data }) => data.status === "someday").length,
+};
+// the meter reads left to right: what happened, what is booked, what waits
+const meter = [...wishes].sort((left, right) => RANK[left.data.status] - RANK[right.data.status]);
+const since = wishes.reduce((first, { data }) => (data.added < first ? data.added : first), wishes[0]?.data.added ?? "");
+
+const kindFacets = facets(wishes, ({ data }) => data.kind, undefined,
+  (left, right) => right.count - left.count || left.label.localeCompare(right.label));
+const sorts: EngineSort[] = [
+  { id: "recent", label: "Recent", key: "added", dir: "desc" },
+  { id: "oldest", label: "Oldest", key: "added", dir: "asc" },
+  { id: "done", label: "Done", key: "done", dir: "desc" },
+];
+
+function when({ data }: Wish): { label: string; spoken: string } {
+  if (data.status === "done" && data.done) return { label: `done ${monthYear(data.done)}`, spoken: `Done in ${monthYear(data.done)}.` };
+  if (data.status === "planned") return { label: "planned", spoken: "Planned." };
+  return { label: `since ${data.added.slice(0, 4)}`, spoken: `On the list since ${monthYear(data.added)}.` };
+}
 ---
 
 <Page
   title="Someday"
-  description={`${description} Coming soon.`}
+  description={isLive ? "The list Ashwin Gopalsamy rereads more than acts on." : `${comingSoon} Coming soon.`}
   ogImage={ogPath("more/someday")}
   ogImageAlt="Someday · Ashwin Gopalsamy"
-  pagefind={false}
-  robots="noindex,follow"
+  pagefind={isLive && !import.meta.env.DEV}
+  robots={isLive && !import.meta.env.DEV ? undefined : "noindex,follow"}
 >
-  <ComingSoon title="Someday" description={description} />
+  {wishes.length === 0 ? (
+    <ComingSoon title="Someday" description={comingSoon} />
+  ) : (
+    <section class="someday-index" aria-label="Someday list" data-engine>
+      <PageIntro title="someday" lede="The list I reread more than act on." />
+      {hasPlaceholders && <p class="engine-draft-note">Sample entries · not a real list</p>}
+
+      <div class="someday-tally">
+        <p class="someday-tally__line">
+          <span><span class="someday-tally__n">{tally.done}</span> done</span>
+          <span aria-hidden="true">·</span>
+          <span><span class="someday-tally__n">{tally.planned}</span> planned</span>
+          <span aria-hidden="true">·</span>
+          <span><span class="someday-tally__n">{tally.someday}</span> waiting</span>
+          {since && <span class="someday-tally__since">since {since.slice(0, 4)}</span>}
+        </p>
+        <div class="someday-meter" role="img" aria-label={`${tally.done} of ${wishes.length} done, ${tally.planned} planned.`}>
+          {meter.map(({ data }, index) => (
+            <span class="someday-meter__tick" data-state={data.status} style={`--i: ${index}`}></span>
+          ))}
+        </div>
+      </div>
+
+      <EngineBar label="the list" facets={kindFacets} sorts={sorts} noun={["item", "items"]} />
+
+      <ol class="someday-list" data-engine-list>
+        {wishes.map((wish) => {
+          const { data } = wish;
+          const stamp = when(wish);
+          const Row = data.href ? "a" : "div";
+          return (
+            <li
+              class="wish"
+              data-engine-item
+              data-state={data.status}
+              data-tags={data.kind}
+              data-k-added={data.added}
+              data-k-done={data.done ?? (data.status === "planned" ? "0" : "")}
+            >
+              <Row class:list={["wish__row", data.href && "wish__row--link"]} href={data.href}>
+                <span class="wish__mark" data-state={data.status} aria-hidden="true">
+                  {data.status === "done" && <Icon name="check" size={12} strokeWidth={2.75} />}
+                </span>
+                <span class="wish__text">
+                  <span class="wish__title">{data.title}</span>
+                  {data.note && <span class="wish__note">{data.note}</span>}
+                </span>
+                <span class="wish__meta">
+                  <span class="ui-badge">{data.kind}</span>
+                  <span class="wish__when" aria-hidden="true">{stamp.label}</span>
+                  <span class="visually-hidden">{stamp.spoken}</span>
+                </span>
+                {data.href && (
+                  <span class="wish__go" aria-hidden="true">
+                    <span class="ui-arw"><Icon name="arrow-right" size={14} strokeWidth={2} /><Icon name="arrow-right" size={14} strokeWidth={2} /></span>
+                  </span>
+                )}
+              </Row>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  )}
 </Page>
+
+<script>
+  import "../../scripts/engine";
+</script>
+
+<style>
+  .engine-draft-note {
+    margin: 0 0 var(--step-4);
+    color: var(--muted);
+    font-size: var(--text-xs);
+  }
+
+  .someday-tally {
+    display: grid;
+    gap: var(--step-3);
+    margin-block: var(--step-2) var(--step-6);
+  }
+
+  .someday-tally__line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--step-1) var(--step-2);
+    margin: 0;
+    color: var(--ghost);
+    font-size: var(--text-ui-sm);
+  }
+
+  .someday-tally__n {
+    color: var(--ink);
+    font-weight: var(--font-semibold);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .someday-tally__since {
+    margin-inline-start: auto;
+    position: relative;
+    top: var(--mono-optical-shift);
+    color: var(--muted);
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: calc(var(--text-xs) * 0.95);
+  }
+
+  /* One tick an item: ink for done, half ink for planned, a hairline
+     outline for the rest. Ticks fill in, left to right, once. */
+  .someday-meter {
+    display: flex;
+    gap: var(--step-1);
+    block-size: var(--step-2);
+  }
+
+  .someday-meter__tick {
+    flex: 1;
+    border-radius: var(--r-pill);
+    box-shadow: inset 0 0 0 1px var(--edge);
+  }
+
+  .someday-meter__tick[data-state="done"] {
+    background: var(--ink);
+    box-shadow: none;
+  }
+
+  .someday-meter__tick[data-state="planned"] {
+    background: color-mix(in oklch, var(--ink) 34%, transparent);
+    box-shadow: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .someday-meter__tick:is([data-state="done"], [data-state="planned"]) {
+      transform-origin: left center;
+      animation: someday-tick var(--dur-spring-soft) var(--ease-spring-soft) calc(var(--i) * 40ms + 120ms) both;
+    }
+  }
+
+  @keyframes someday-tick {
+    from {
+      opacity: 0;
+      transform: scaleX(0.2);
+    }
+  }
+
+  /* Hairlines above every row and under the last: the lines stay put
+     whatever the filter hides. */
+  .someday-list {
+    margin: 0;
+    padding: 0;
+    border-block-end: var(--hairline) solid var(--rule);
+    list-style: none;
+  }
+
+  .wish {
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  .wish__row {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--step-1) var(--step-3);
+    padding-block: var(--step-4);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .wish__row--link {
+    grid-template-columns: auto minmax(0, 1fr) auto var(--step-4);
+    margin-inline: calc(var(--row-bleed) * -1);
+    padding-inline: var(--row-bleed);
+    border-radius: var(--r-4);
+    transition: transform var(--dur-spring-soft) var(--ease-spring-soft);
+  }
+
+  .wish__row--link::before {
+    content: "";
+    position: absolute;
+    inset: var(--step-1) 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--wash);
+    opacity: 0;
+    transition: opacity var(--dur-afterglow) var(--ease-morph);
+  }
+
+  .wish__row--link:focus-visible {
+    outline-offset: 0;
+  }
+
+  .wish__row--link:focus-visible::before {
+    opacity: 1;
+  }
+
+  .wish__row--link:active {
+    transform: scale(var(--press-scale-inline));
+    transition-duration: var(--dur-press);
+    transition-timing-function: var(--ease-snap);
+  }
+
+  /* someday: an empty ring; planned: a ring holding a dot; done: filled,
+     with the check in canvas */
+  .wish__mark {
+    display: grid;
+    place-items: center;
+    inline-size: var(--step-5);
+    block-size: var(--step-5);
+    margin-block-start: calc(var(--step) / -4);
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1.5px var(--edge-strong);
+    color: var(--canvas);
+  }
+
+  .wish__mark[data-state="planned"] {
+    box-shadow: inset 0 0 0 1.5px var(--ink);
+  }
+
+  .wish__mark[data-state="planned"]::after {
+    content: "";
+    inline-size: var(--dot-6);
+    block-size: var(--dot-6);
+    border-radius: 50%;
+    background: var(--ink);
+  }
+
+  .wish__mark[data-state="done"] {
+    background: var(--ink);
+    box-shadow: none;
+  }
+
+  .wish__text {
+    display: grid;
+    gap: var(--step-1);
+    min-inline-size: 0;
+  }
+
+  .wish__title {
+    color: var(--ink);
+    font-size: var(--text-ui);
+    font-weight: var(--font-medium);
+    line-height: 1.4;
+    letter-spacing: -0.006em;
+    text-wrap: pretty;
+  }
+
+  .wish[data-state="done"] .wish__title {
+    color: var(--muted);
+  }
+
+  .wish__note {
+    color: var(--ghost);
+    font-size: var(--text-ui-sm);
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .wish__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--step-2);
+    padding-block-start: calc(var(--step) / 2);
+    white-space: nowrap;
+  }
+
+  .wish__meta .ui-badge {
+    top: 0;
+  }
+
+  .wish__when {
+    position: relative;
+    top: var(--mono-optical-shift);
+    /* "done Sep 2025" is the longest stamp: badges line up in one column */
+    min-inline-size: 13ch;
+    color: var(--muted);
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: calc(var(--text-xs) * 0.95);
+    text-align: end;
+  }
+
+  .wish[data-state="done"] .wish__when {
+    color: var(--ink);
+  }
+
+  .wish__go {
+    display: flex;
+    justify-content: center;
+    padding-block-start: calc(var(--step) / 2);
+    color: var(--ghost);
+    transition: color var(--t-color);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .wish__row--link:hover::before {
+      opacity: 1;
+      transition: opacity var(--dur-tint) var(--ease-morph);
+    }
+
+    .wish__row--link:hover .wish__go {
+      color: var(--ink);
+    }
+  }
+
+  @media (max-width: 38rem) {
+    .wish__row {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .wish__row--link {
+      grid-template-columns: auto minmax(0, 1fr) var(--step-4);
+    }
+
+    .wish__meta {
+      grid-column: 2;
+      grid-row: 2;
+      padding-block-start: var(--step-1);
+    }
+
+    .wish__when {
+      min-inline-size: 0;
+      text-align: start;
+    }
+
+    .wish__go {
+      grid-column: 3;
+      grid-row: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wish__row--link {
+      transition: none;
+    }
+  }
+</style>

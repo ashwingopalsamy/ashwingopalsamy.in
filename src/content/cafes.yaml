@@ -1,0 +1,133 @@
+# One row per cafe. Coordinates to two decimals (about a kilometre).
+# `last` is the month of the most recent visit. Rows marked placeholder are
+# invented samples: they show in `astro dev` and never build for production.
+
+- id: slow-pour-room
+  name: Slow Pour Room
+  area: Indiranagar
+  city: Bengaluru
+  lat: 12.97
+  lon: 77.64
+  note: Quiet before ten; the window bar gets the first light.
+  order: Cortado, cardamom bun
+  for: mornings
+  visits: 9
+  last: 2026-10
+  placeholder: true
+
+- id: kiln-and-crema
+  name: Kiln & Crema
+  area: Koramangala
+  city: Bengaluru
+  lat: 12.93
+  lon: 77.62
+  note: Big tables, slow Wi-Fi, which is rather the point.
+  order: Iced filter, no sugar
+  for: reading
+  visits: 4
+  last: 2026-08
+  placeholder: true
+
+- id: corner-decoction
+  name: Corner Decoction
+  area: Malleshwaram
+  city: Bengaluru
+  lat: 13.00
+  lon: 77.57
+  note: Steel tumblers, brass dabaras, a queue that moves fast.
+  order: Filter coffee, by-two
+  for: conversation
+  visits: 12
+  last: 2026-11
+  placeholder: true
+
+- id: north-light-coffee
+  name: North Light Coffee
+  area: Jayanagar
+  city: Bengaluru
+  lat: 12.93
+  lon: 77.58
+  note: Good light, a long counter, and nobody rushes you.
+  order: Flat white
+  for: work
+  visits: 3
+  last: 2026-05
+  placeholder: true
+
+- id: tidewater-roasters
+  name: Tidewater Roasters
+  area: Besant Nagar
+  city: Chennai
+  lat: 13.00
+  lon: 80.27
+  note: Ten minutes from the sea. Sit outside after five.
+  order: Cold brew tonic
+  for: evenings
+  visits: 7
+  last: 2026-09
+  placeholder: true
+
+- id: kapi-kalai
+  name: Kapi Kalai
+  area: Mylapore
+  city: Chennai
+  lat: 13.03
+  lon: 80.27
+  note: Filter coffee made with temple-street patience.
+  order: Filter coffee, extra strong
+  for: mornings
+  visits: 15
+  last: 2026-10
+  placeholder: true
+
+- id: the-quiet-annexe
+  name: The Quiet Annexe
+  area: Nungambakkam
+  city: Chennai
+  lat: 13.06
+  lon: 80.24
+  note: A room upstairs with a plug at every table.
+  order: Long black, banana bread
+  for: work
+  visits: 5
+  last: 2026-03
+  placeholder: true
+
+- id: estate-grind
+  name: Estate Grind
+  area: RS Puram
+  city: Coimbatore
+  lat: 11.01
+  lon: 76.95
+  note: Beans from the hills an hour away, roasted out back.
+  order: Pour-over, single estate
+  for: tasting
+  visits: 6
+  last: 2026-07
+  placeholder: true
+
+- id: courtyard-kaapi
+  name: Courtyard Kaapi
+  area: Race Course
+  city: Coimbatore
+  lat: 11.00
+  lon: 76.98
+  note: A neem tree, a courtyard, and long afternoons.
+  order: Masala chai, onion pakoda
+  for: conversation
+  visits: 8
+  last: 2026-06
+  placeholder: true
+
+- id: harbour-hours
+  name: Harbour Hours
+  area: Fort Kochi
+  city: Kochi
+  lat: 9.97
+  lon: 76.24
+  note: An old warehouse that still smells faintly of pepper.
+  order: Cardamom latte
+  for: evenings
+  visits: 2
+  last: 2025-12
+  placeholder: true

@@ -1,9 +1,13 @@
 ---
 import { getImage, Picture } from "astro:assets";
 import ComingSoon from "../../components/ComingSoon.astro";
+import EngineBar, { type EngineSort } from "../../components/EngineBar.astro";
 import PageIntro from "../../components/PageIntro.astro";
+import PhotoInfo from "../../components/PhotoInfo.astro";
+import PhotoViewer from "../../components/PhotoViewer.astro";
 import Page from "../../layouts/Page.astro";
 import { getPhotoEntries, photoHref, photoWidths } from "../../data/photos";
+import { exposureSummary, facets, longDateTime, photoDateLabel, photoLocationLabel, takenEpoch } from "../../lib/engine-format";
 import { getPhotoImageSources } from "../../lib/photo-image-sources";
 import { ogPath } from "../../lib/og-url";
 import { absUrl } from "../../lib/urls";
@@ -38,7 +42,22 @@ const socialImageAlt = photos[0]?.data.alt ?? "Photos · Ashwin Gopalsamy";
 const photoCards = await Promise.all(photos.map(async (photo) => ({
   photo,
   detailSources: await getPhotoImageSources(photo.data.source),
+  dateLabel: photoDateLabel(photo.data),
+  locationLabel: photoLocationLabel(photo.data),
+  exposure: exposureSummary(photo.data.camera),
+  viewerMeta: [photo.data.date ?? (photo.data.taken ? longDateTime(photo.data.taken) : undefined), photoLocationLabel(photo.data)]
+    .filter(Boolean)
+    .join(" · "),
 })));
+// The wall opens newest first; `order` still decides the detail pager.
+const byNewest = [...photoCards].sort(
+  (left, right) => takenEpoch(right.photo.data.taken) - takenEpoch(left.photo.data.taken),
+);
+const photoFacets = facets(photos, (photo) => photo.data.tags, undefined, (left, right) => right.count - left.count);
+const photoSorts: EngineSort[] = [
+  { id: "newest", label: "Newest", key: "taken", dir: "desc" },
+  { id: "oldest", label: "Oldest", key: "taken", dir: "asc" },
+];
 ---
 
 <Page
@@ -56,18 +75,24 @@ const photoCards = await Promise.all(photos.map(async (photo) => ({
   {photos.length === 0 ? (
     <ComingSoon title="Photos" description={comingSoonDescription} />
   ) : (
-    <section class="photo-index" aria-label="Photo gallery">
+    <section class="photo-index" aria-label="Photo gallery" data-engine data-photo-wall-root>
       <PageIntro title="photos" lede="Frames worth a second look." />
       {import.meta.env.DEV && hasDraftPhotos && (
         <p class="photo-draft-note">
           {hasGeneratedPreviews
-            ? "AI-generated previews · not personal photographs"
+            ? "Generated previews · not personal photographs"
             : "Unpublished photos are shown only in this local preview."}
         </p>
       )}
-      <ol class="photo-wall">
-        {photoCards.map(({ photo, detailSources }, index) => (
-          <li class="photo-wall-item">
+      <EngineBar label="photos" facets={photoFacets} sorts={photoSorts} noun={["photo", "photos"]} />
+      <ol class="photo-wall" data-engine-list data-masonry-list>
+        {byNewest.map(({ photo, detailSources, dateLabel, locationLabel, exposure, viewerMeta }, index) => (
+          <li
+            class="photo-wall-item"
+            data-engine-item
+            data-tags={photo.data.tags.join(" ")}
+            data-k-taken={takenEpoch(photo.data.taken)}
+          >
             <figure class="photo-figure">
               <a
                 class="photo-link"
@@ -78,6 +103,10 @@ const photoCards = await Promise.all(photos.map(async (photo) => ({
                 data-photo-jpeg={detailSources.jpeg}
                 data-photo-jpeg-src={detailSources.jpegSrc}
                 data-photo-sizes={detailSources.sizes}
+                data-pv-ratio={(photo.data.source.width / photo.data.source.height).toFixed(4)}
+                data-pv-title={photo.data.caption}
+                data-pv-meta={viewerMeta}
+                data-pv-exposure={exposure}
               >
                 <div class="photo-media" data-photo-media data-photo-id={photo.id}>
                   <Picture
@@ -94,25 +123,33 @@ const photoCards = await Promise.all(photos.map(async (photo) => ({
                     pictureAttributes={{ class: "photo-picture" }}
                   />
                 </div>
+                {exposure && (
+                  <span class="photo-exposure" aria-hidden="true">
+                    {photo.data.camera?.mode && <span class="photo-exposure__mode">{photo.data.camera.mode}</span>}
+                    <span class="photo-exposure__values">{exposure}</span>
+                  </span>
+                )}
               </a>
-              {(photo.data.caption || photo.data.date || photo.data.location) && (
+              {(photo.data.caption || dateLabel || locationLabel) && (
                 <figcaption class="photo-caption-area">
                   {photo.data.caption && <p class="photo-caption">{photo.data.caption}</p>}
-                  {(photo.data.date || photo.data.location) && (
+                  {(dateLabel || locationLabel) && (
                     <p class="photo-meta">
-                      {photo.data.date && (
-                        <span>{photo.data.date}</span>
+                      {dateLabel && (
+                        <span>{dateLabel}</span>
                       )}
-                      {photo.data.date && photo.data.location && <span aria-hidden="true"> · </span>}
-                      {photo.data.location && <span>{photo.data.location}</span>}
+                      {dateLabel && locationLabel && <span aria-hidden="true"> · </span>}
+                      {locationLabel && <span>{locationLabel}</span>}
                     </p>
                   )}
                 </figcaption>
               )}
             </figure>
+            <template data-pv-sheet-for={photo.id}><PhotoInfo data={photo.data} /></template>
           </li>
         ))}
       </ol>
+      <PhotoViewer />
     </section>
   )}
   {photos.length > 0 && <p class="photo-status" role="status" aria-live="polite" aria-atomic="true" data-photo-status />}
@@ -120,6 +157,9 @@ const photoCards = await Promise.all(photos.map(async (photo) => ({
 
 <script>
   import "../../scripts/photo-transitions";
+  import "../../scripts/masonry";
+  import "../../scripts/engine";
+  import "../../scripts/photo-viewer";
 </script>
 
 <style>
@@ -149,12 +189,29 @@ const photoCards = await Promise.all(photos.map(async (photo) => ({
     padding-block-end: var(--step-6);
   }
 
+  /* masonry.ts: row-major lanes, each item placed by `translate` */
+  .photo-wall[data-masonry] {
+    position: relative;
+    columns: auto;
+    row-gap: var(--step-6);
+  }
+
+  .photo-wall[data-masonry] > .photo-wall-item {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    display: block;
+    inline-size: calc((100% - var(--step-5)) / 2);
+    padding-block-end: 0;
+  }
+
   .photo-figure {
     min-inline-size: 0;
     margin: 0;
   }
 
   .photo-link {
+    position: relative;
     display: block;
     overflow: hidden;
     border-radius: var(--r-3);
@@ -178,6 +235,11 @@ const photoCards = await Promise.all(photos.map(async (photo) => ({
 
   .photo-link :global(.photo-image) {
     block-size: auto;
+  }
+
+  /* lifted into the viewer: the slot stays, empty, until it lands back */
+  .photo-wall-item[data-pv-hidden] .photo-link {
+    visibility: hidden;
   }
 
   .photo-link[data-photo-pending="true"] {
@@ -217,9 +279,68 @@ const photoCards = await Promise.all(photos.map(async (photo) => ({
     font-size: var(--text-xs);
   }
 
+  /* The exposure, as the camera saw it, under a fine pointer or focus. The
+     scrim is a painted gradient, never a backdrop: the wall scrolls. */
+  .photo-exposure {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--step-2);
+    padding: var(--step-6) var(--step-3) var(--step-3);
+    background: linear-gradient(180deg, transparent, oklch(0 0 0 / 0.46));
+    color: oklch(1 0 0 / 0.94);
+    font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+    font-size: calc(var(--text-xs) * 0.92);
+    line-height: 1;
+    letter-spacing: 0;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(var(--step-1));
+    pointer-events: none;
+    transition:
+      opacity var(--dur-exit) var(--ease-exit),
+      transform var(--dur-exit) var(--ease-exit);
+  }
+
+  .photo-exposure__mode {
+    display: inline-flex;
+    align-items: center;
+    block-size: var(--cap-20);
+    padding-inline: var(--cap-px-20);
+    border-radius: var(--r-pill);
+    background: oklch(1 0 0 / 0.18);
+    box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.22);
+    font-family: inherit;
+  }
+
+  .photo-exposure__values {
+    position: relative;
+    top: var(--mono-optical-shift);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .photo-link:focus-visible .photo-exposure {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity var(--dur-enter) var(--ease-enter),
+      transform var(--dur-enter) var(--ease-enter);
+  }
+
   @media (hover: hover) and (pointer: fine) {
     .photo-link:hover:not(:focus-visible) {
       outline-color: var(--edge-strong);
+    }
+
+    .photo-link:hover .photo-exposure {
+      opacity: 1;
+      transform: none;
+      transition:
+        opacity var(--dur-enter) var(--ease-enter),
+        transform var(--dur-enter) var(--ease-enter);
     }
   }
 
@@ -232,6 +353,10 @@ const photoCards = await Promise.all(photos.map(async (photo) => ({
   @media (prefers-reduced-motion: reduce) {
     .photo-link {
       transition: none;
+    }
+
+    .photo-exposure {
+      transform: none;
     }
   }
 </style>

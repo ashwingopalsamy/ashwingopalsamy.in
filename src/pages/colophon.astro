@@ -167,7 +167,7 @@ const endpoints = [
         const ext = href.endsWith(".json") ? "JSON" : href.endsWith(".xml") ? "XML" : href.endsWith(".txt") ? "TXT" : href.endsWith(".md") ? "MD" : "HTML";
         return (
           <li class="col-endpoint-item">
-            <a class="ui-row ui-row--multiline" data-fx="spot" href={href} data-astro-prefetch="false">
+            <a class="ui-row ui-row--multiline" href={href} data-astro-prefetch="false">
               <span class="col-row-main">
                 <span class="ui-row__title col-endpoint-name">
                   <span class="ui-badge ui-badge--mono">{ext}</span>
