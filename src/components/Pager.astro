@@ -29,7 +29,6 @@ const { prev, next, label = "Previous and next", noteNav = false } = Astro.props
         class="ui-pager__card"
         href={prev.href}
         rel="prev"
-        data-fx="spot"
         data-note-nav={noteNav ? "prev" : undefined}
       >
         <span class="ui-pager__key">
@@ -47,7 +46,6 @@ const { prev, next, label = "Previous and next", noteNav = false } = Astro.props
         class="ui-pager__card ui-pager__card--next"
         href={next.href}
         rel="next"
-        data-fx="spot"
         data-note-nav={noteNav ? "next" : undefined}
       >
         <span class="ui-pager__key">

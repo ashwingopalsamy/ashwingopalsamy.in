@@ -73,7 +73,7 @@ function formatDate(iso: string): string {
           return (
             <li>
               {item.href ? (
-                <a class:list={["ui-row", { "ui-row--multiline": Boolean(sub) }]} data-fx="spot" href={item.href}>
+                <a class:list={["ui-row", { "ui-row--multiline": Boolean(sub) }]} href={item.href}>
                   {inner}
                 </a>
               ) : (

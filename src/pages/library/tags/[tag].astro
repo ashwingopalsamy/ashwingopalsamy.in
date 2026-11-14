@@ -59,7 +59,7 @@ const fmt = (d: Date) =>
   <ul class="surface-stack" data-enter>
     {notes.map((n) => (
       <li>
-        <a class="ui-row" data-fx="spot" href={slashPath(`/blog/${n.id}`)}>
+        <a class="ui-row" href={slashPath(`/blog/${n.id}`)}>
           <span class="ui-row__title">{n.title}</span>
           <time class="ui-row__meta" datetime={n.date.toISOString()}>{fmt(n.date)}</time>
           <span class="ui-row__glyph" aria-hidden="true"><Icon name="arrow-right" size={16} /></span>

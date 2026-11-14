@@ -186,7 +186,7 @@ const truth: Array<[string, string]> = [
             {
               group.endpoints.map((e) => (
                 <li class="endpoint-catalog-item" data-endpoint={e.href} data-status={e.status}>
-                  <a class="ui-row ui-row--multiline" data-fx="spot" href={e.href} data-astro-prefetch="false">
+                  <a class="ui-row ui-row--multiline" href={e.href} data-astro-prefetch="false">
                     <span class="ui-row__title">
                       <span class="endpoint-path mono">/{e.name}</span>
                       {e.status && <>&nbsp;<StatusPill label={endpointStatusLabels[e.status]} /></>}
@@ -212,7 +212,7 @@ const truth: Array<[string, string]> = [
     {
       notes.map((e) => (
         <li class="endpoint">
-          <a class="ui-row" data-fx="spot" href={`/blog/${e.id}.md`} data-astro-prefetch="false">
+          <a class="ui-row" href={`/blog/${e.id}.md`} data-astro-prefetch="false">
             <span class="ui-row__title">{e.data.title}</span>
             <span class="ui-badge ui-badge--mono">.md</span>
             <span class="ui-row__glyph" aria-hidden="true"><Icon name="arrow-right" size={16} /></span>

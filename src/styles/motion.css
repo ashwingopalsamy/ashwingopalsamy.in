@@ -157,14 +157,6 @@
   --dur-hold: 1.6s;     /* how long Copied / Retry holds before reverting */
   --dur-toast: 4s;      /* undoable toast lifetime; its ring drains over it */
 
-  /* Magnetic primary: the capsule drifts this far toward the pointer, and
-     its label this much further. Plain lengths: pointer-fx.ts reads them. */
-  --magnet-max: 3px;
-  --magnet-label: 1.5px;
-
-  /* Pointer-led specular on glass: the radius of its radial gradient
-     (tiles, pager cards). Capsules derive theirs from their height. */
-  --spot-size: calc(var(--step) * 50);
 }
 
 /* ------------------------------------------------------------------

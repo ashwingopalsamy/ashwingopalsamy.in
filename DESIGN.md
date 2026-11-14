@@ -34,7 +34,6 @@ colors:
   edge-soft: "color-mix(in oklch, var(--ink) 8%, transparent)"
   edge: "color-mix(in oklch, var(--ink) 11%, transparent)"
   edge-strong: "color-mix(in oklch, var(--ink) 20%, transparent)"
-  spot: "color-mix(in oklch, var(--color-1) 95%, transparent)"
   ok-ink: "oklch(0.47 0.12 155)"
   ok-wash: "color-mix(in oklch, var(--acc-green) 13%, transparent)"
   ok-edge: "color-mix(in oklch, var(--acc-green) 42%, transparent)"
@@ -178,9 +177,6 @@ motion:
   dur-dwell: 400ms
   dur-hold: 1.6s
   dur-toast: 4s
-  magnet-max: 3px
-  magnet-label: 1.5px
-  spot-size: 200px
 components:
   desktop-navigation:
     backgroundColor: "{colors.neutral-01}"
@@ -357,7 +353,7 @@ The whole page sits on an inset card above a slightly darker base (the viewport 
 
 Depth is used to separate persistent chrome, overlays, and feedback. A surface gets either a border or a shadow strong enough to explain its elevation.
 
-Glass is a recipe; blur is a privilege. In-flow glass (capsules, segmented tracks, docks, cards, tiles, pager cards) is layers only, painted once. In the light theme it is the header nav's surface, flat: an opaque `--glass-fill` (the canvas), one solid hairline (`--chrome-surface-border`; `--edge-strong` on hover) and the nav's one soft drop (`--glass-lift`). There is no sheen, no gradient rim and no specular edge: `--glass-sheen` is `none`, `--glass-spec` is empty and `--glass-rim` is a flat colour. Hover is `--glass-fill-hover` and the firmer hairline; nothing lifts. The dark theme keeps all five layers: a sheen, the fill, a gradient rim, a specular top edge and a `--lift-0` shadow. Its primary ink button (white) is near-flat: under 1.5% of lightness top to bottom, no chroma, no inner highlight. The rim is a `border-box` layer under a `padding-box` fill, so it only works when the fill is opaque; a translucent fill (wash, chips, ok, err, disabled) takes a solid `border-color` instead, or the rim bleeds through the whole surface. Only tiles, pager cards and rows take the pointer spotlight (`data-fx="spot"`); capsules, docks and cards do not.
+Glass is a recipe; blur is a privilege. In-flow glass (capsules, segmented tracks, docks, cards, tiles, pager cards) is layers only, painted once. In the light theme it is the header nav's surface, flat: an opaque `--glass-fill` (the canvas), one solid hairline (`--chrome-surface-border`; `--edge-strong` on hover) and the nav's one soft drop (`--glass-lift`). There is no sheen, no gradient rim and no specular edge: `--glass-sheen` is `none`, `--glass-spec` is empty and `--glass-rim` is a flat colour. Hover is `--glass-fill-hover` and the firmer hairline; nothing lifts. The dark theme keeps all five layers: a sheen, the fill, a gradient rim, a specular top edge and a `--lift-0` shadow. Its primary ink button (white) is near-flat: under 1.5% of lightness top to bottom, no chroma, no inner highlight. The rim is a `border-box` layer under a `padding-box` fill, so it only works when the fill is opaque; a translucent fill (wash, chips, ok, err, disabled) takes a solid `border-color` instead, or the rim bleeds through the whole surface. Nothing follows the pointer: no spotlight, no magnet. Ink hover is a lighter fill (`--ink-fill-hover`), never a bloom or a lift. A coming-soon tile is a dashed outline with no fill.
 
 `backdrop-filter` is only correct where something non-uniform actually sits behind the element:
 
@@ -396,9 +392,9 @@ Pill or nothing: every single-line control is a capsule (see Components). Multi-
 
 ## Components
 
-Every single-line control is a capsule at one of five heights: 48 (page CTAs, header chips, the nav track), 40 (segments, footer links, the clock, dock circles), 32 (inline actions such as the copy circle, All N and the labelled back), 28 (tag chips) and 20 (badges, which are never pressable). Tiers are ink (one primary per view), glass, quiet and chip. Width follows the content and never animates on press or state change. Copy carries no label: it is an icon-only 32 glass circle (44 hit area) whose copy, check and alert glyphs share one grid cell, named by its `aria-label` (and a tooltip where there is room) and confirmed by a live region. The one capsule that grows is a labelled arrow capsule, by the glyph's width, on hover and keyboard focus.
+Every single-line control is a capsule at one of five heights: 48 (page CTAs, header chips, the nav track), 40 (segments, footer links, the clock, dock circles), 32 (inline actions such as the copy circle, All N and the labelled back), 28 (tag chips) and 20 (badges, which are never pressable). Tiers are ink (one primary per view), glass, quiet and chip. Width follows the content and never animates on press or state change. Copy carries no label: it is an icon-only 32 glass circle (44 hit area) whose copy, check and alert glyphs share one grid cell, named by its `aria-label` (and a tooltip where there is room) and confirmed by a live region. No capsule grows, shrinks or travels on hover or focus.
 
-The shared icon registry is the only source for interface symbols, and each meaning has one glyph: `arrow-right` for internal destinations, `arrow-up-right` for external ones (or a file) and nothing else, `arrow-left` for back and previous, `chevron-down` for disclosure. Chevrons left and right are for carousels only. On labelled capsules the arrow appears on hover and keyboard focus: the capsule opens by the glyph's width, the label stays where it was, and the glyph travels its last 3 to 4px along its own vector; at rest the capsule is its label with equal padding, touch never shows the arrow, and reduced motion fades it in without movement. A quiet capsule on a column edge (`--hang`: the labelled back, All N) sits its label on the edge and lets the arrow open into the gutter. Rows, chips and icon-only controls keep theirs visible: on an icon circle or tile chip the glyph leaves along its own vector and a twin arrives behind it, and dense lists nudge it 3px instead.
+The shared icon registry is the only source for interface symbols, and each meaning has one glyph: `arrow-right` for internal destinations, `arrow-up-right` for external ones (or a file) and nothing else, `arrow-left` for back and previous, `chevron-down` for disclosure. Chevrons left and right are for carousels only. Arrows are always visible and never move: a control has one width and one position at rest, under the pointer and on focus, and hover answers with fill, hairline and colour only. A quiet capsule on a column edge (`--hang`: the labelled back, All N) sits its label on the edge with its arrow in the gutter. The only movement a control makes is the press.
 
 No underlines anywhere: not at rest, not on hover, not on focus, and no wash behind an inline link either; the focus ring is the only box it ever gets. An inline link is ink on its paragraph's weight; the hovered paragraph lifts it (see Typography). Its external glyph (`arrow-up-right`, 0.72em) is the same idea inside a sentence: hidden at rest and taking no space, so a justified paragraph does not move, it opens with its space and eases in along its own vector when the paragraph or link is under a fine pointer or the link has keyboard focus. A wrapped link keeps the glyph on its last line fragment; touch never shows it, and reduced motion fades it without movement.
 

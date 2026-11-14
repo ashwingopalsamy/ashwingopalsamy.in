@@ -273,7 +273,6 @@ const developersJsonLd = [
     <div class="quick-cta-row">
       <a
         class="ui-cap ui-cap--ink ui-cap--48 ui-cap--trail"
-        data-fx="magnet"
         href="/openapi.json"
         target="_blank"
         rel="noopener noreferrer"
@@ -535,7 +534,7 @@ const developersJsonLd = [
                 {
                   group.items.map((item) => (
                     <li class="discovery-item">
-                      <a class="ui-row ui-row--multiline" data-fx="spot" href={item.path} data-astro-prefetch="false">
+                      <a class="ui-row ui-row--multiline" href={item.path} data-astro-prefetch="false">
                         <span class="ui-row__title">
                           <span class="discovery-path mono">{item.path}</span>
                           <span class="ui-row__sub">{item.desc}</span>
