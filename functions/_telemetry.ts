@@ -235,13 +235,18 @@ export function classifyRepresentation(contentType: string | null | undefined): 
   return "other";
 }
 
+/** Hosts that serve this same site; referrals between them count as internal. */
+const SITE_ALIAS_HOSTS = ["ashwin.here"];
+
 export function sanitizeReferrer(referrer: string | null | undefined, siteOrigin = "https://ashwingopalsamy.in"): string {
   if (!referrer) return "direct";
   try {
     const url = new URL(referrer);
     const host = url.hostname.toLowerCase();
     const siteHost = new URL(siteOrigin).hostname.toLowerCase();
-    if (host === siteHost || host.endsWith(`.${siteHost}`)) return "self";
+    for (const site of [siteHost, ...SITE_ALIAS_HOSTS]) {
+      if (host === site || host.endsWith(`.${site}`)) return "self";
+    }
     return host.slice(0, 96);
   } catch {
     return "direct";
