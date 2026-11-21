@@ -65,10 +65,16 @@ const contributions = await getGithubContributions();
     margin: 1.5em 0 0;
     color: var(--ghost);
     line-height: var(--leading-relaxed);
-    text-align: justify;
-    hyphens: auto;
-    -webkit-hyphens: auto;
+    text-align: start;
+    hyphens: manual;
+    -webkit-hyphens: manual;
     text-wrap: pretty;
+  }
+
+  /* a link's words stay together on the ragged line, so "UT Austin" never
+     splits across two */
+  .refined-context .ui-link {
+    white-space: nowrap;
   }
 
   .refined-home > .page-rule {

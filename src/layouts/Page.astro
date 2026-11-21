@@ -180,9 +180,26 @@ const documentTitle = isHome
           try { return sessionStorage.getItem("intro-animated") === "true"; } catch (e) {}
           return false;
         }
+        // The sky light (global.css) follows Pollachi's hour. IST is a fixed
+        // UTC+05:30, so the day-part is arithmetic on the clock.
+        var SKY_X = { dawn: "22%", day: "50%", dusk: "78%", night: "50%" };
+        function skyPart(now) {
+          var minute = (Math.floor(now.getTime() / 60000) + 330) % 1440;
+          if (minute >= 300 && minute < 480) return "dawn";
+          if (minute >= 480 && minute < 1020) return "day";
+          if (minute >= 1020 && minute < 1170) return "dusk";
+          return "night";
+        }
+        function stampSky(target) {
+          var root = target.documentElement;
+          var part = skyPart(new Date());
+          if (root.getAttribute("data-sky") !== part) root.setAttribute("data-sky", part);
+          if (root.style.getPropertyValue("--sky-x") !== SKY_X[part]) root.style.setProperty("--sky-x", SKY_X[part]);
+        }
         function sync(target) {
           target = target || document;
           apply(current, false, target);
+          stampSky(target);
           if (target !== document && introHasAnimated()) target.documentElement.dataset.introAnimated = "true";
         }
 
@@ -196,9 +213,25 @@ const documentTitle = isHome
         try {
           if (sessionStorage.getItem("intro-animated") === "true") document.documentElement.dataset.introAnimated = "true";
         } catch (e) {}
+        // Entrances belong to the first page of a visit: a reload, or a page
+        // not reached from elsewhere on the site. Set before paint for the
+        // entrance in global.css; the layout's script reads it for the
+        // reveal. Swaps rebuild <html> from the incoming page, so it never
+        // survives a client navigation.
+        var navEntry = performance.getEntriesByType("navigation")[0];
+        var internal = false;
+        try {
+          internal = Boolean(document.referrer) && new URL(document.referrer).origin === location.origin;
+        } catch (e) {}
+        var navType = navEntry && navEntry.type;
+        if (navType === "reload" || (navType !== "back_forward" && !internal)) {
+          document.documentElement.setAttribute("data-first-visit", "");
+        }
+        // The day-part can turn while a page is open.
+        window.setInterval(function () { stampSky(document); }, 60000);
         // The document outlives every navigation, so the router's swap events
-        // do what a fresh load used to: theme, motion and intro state are
-        // re-applied to the incoming document before it is adopted.
+        // do what a fresh load used to: theme, motion, sky and intro state
+        // are re-applied to the incoming document before it is adopted.
         var NONCE = (document.currentScript && document.currentScript.nonce) || "";
         function liveNonce() {
           if (!NONCE) {
@@ -435,18 +468,13 @@ const documentTitle = isHome
         const items = document.querySelectorAll<HTMLElement>("[data-enter]:not(.entered)");
         // Entrances belong to the first page of a visit, not to every
         // navigation inside it. A swapped-in page is by definition not the
-        // first; only the document's own page asks the navigation entry and
-        // referrer whether it was reached from elsewhere on the site.
+        // first; for the document's own page the boot in <head> has already
+        // asked the navigation entry and referrer, and left data-first-visit.
         if (!firstPage) {
           items.forEach((el) => el.classList.add("entered"));
           return;
         }
-        const navEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-        let internal = false;
-        try {
-          internal = Boolean(document.referrer) && new URL(document.referrer).origin === location.origin;
-        } catch {}
-        const firstOfVisit = navEntry?.type === "reload" || (navEntry?.type !== "back_forward" && !internal);
+        const firstOfVisit = document.documentElement.hasAttribute("data-first-visit");
         if (!firstOfVisit) {
           items.forEach((el) => el.classList.add("entered"));
           return;
