@@ -3,6 +3,7 @@ import Page from "../layouts/Page.astro";
 import { site } from "../data/home";
 import { ogPath } from "../lib/og-url";
 import PageIntro from "../components/PageIntro.astro";
+import SectionHeading from "../components/SectionHeading.astro";
 import Icon from "../components/Icon.astro";
 
 /**
@@ -43,7 +44,7 @@ const endpoints = [
     action, stays brief, and disappears when reduced motion is requested.
   </p>
 
-  <h2 class="col-h">Built with</h2>
+  <SectionHeading title="Built with" />
   <ul class="col-list">
     <li><span class="col-k">Astro</span>, statically generated. No client framework, just a little vanilla JavaScript for progressive enhancement. With scripts off, the whole site still reads.</li>
     <li><span class="col-k">TypeScript</span> for the data and components.</li>
@@ -55,16 +56,16 @@ const endpoints = [
     <li>The notes engine: build-time <span class="col-k">KaTeX</span> for math, dual-theme <span class="col-k">Shiki</span> syntax highlighting, lazy <span class="col-k">Mermaid</span> diagrams that re-render on theme toggle. All built on Astro's satteri markdown processor with custom plugins. No client framework.</li>
   </ul>
 
-  <h2 class="col-h">Type</h2>
+  <SectionHeading title="Type" />
   <p class="col-p">
-    Set in <span class="col-k">Inter</span>, with <span class="col-k">Newsreader</span> Italic for the one serif moment and <span class="col-k">JetBrains Mono</span> for code,
-    paths, hashes, and timestamps. Inter uses 400 for reading, 450 for active navigation,
+    Set in <span class="col-k">Geist</span>, with <span class="col-k">JetBrains Mono</span> for code,
+    paths, hashes, and timestamps. Geist uses 400 for reading, 450 for active navigation,
     500 for controls, 550 for section hierarchy, and a rare 600 for strong emphasis.
-    JetBrains Mono is moved down one optical pixel when it shares a baseline with Inter or
+    JetBrains Mono is moved down one optical pixel when it shares a baseline with Geist or
     an icon; full code blocks stay on their natural baseline.
   </p>
 
-  <h2 class="col-h">Structure and motion</h2>
+  <SectionHeading title="Structure and motion" />
   <p class="col-p">
     Header, content, and the centre-viewed footer share one fixed rail: <span class="col-k">640 to 720 pixels</span> wide, with 20 pixel gutters. The home introduction is deliberately justified at every
     supported width. Below 38rem the top page navigation becomes a fixed, safe-area-aware
@@ -83,7 +84,7 @@ const endpoints = [
     reference is available at <a class="ui-link mono" href="/design.md" data-astro-prefetch="false">/design.md</a>.
   </p>
 
-  <h2 class="col-h">Carbon footprint</h2>
+  <SectionHeading title="Carbon footprint" />
   <p class="col-p">
     Static, script-light architecture produces a tangible physical footprint.
     Tested on 22 Aug, 2026 via <a class="ui-link" href="https://www.websitecarbon.com/website/ashwingopalsamy-in/" target="_blank" rel="noopener noreferrer">Website Carbon<span class="ui-link__ext"><Icon name="arrow-up-right" size={12} strokeWidth={2.2} /></span></a>,
@@ -156,7 +157,7 @@ const endpoints = [
     </div>
   </div>
 
-  <h2 class="col-h">For machines</h2>
+  <SectionHeading title="For machines" />
   <p class="col-p">
     If an agent is reading, start at <a class="ui-link" href="/ai/">/ai</a>. Everything is meant to be
     parsed, not just read:
@@ -183,13 +184,13 @@ const endpoints = [
     }
   </ul>
 
-  <h2 class="col-h">Source</h2>
+  <SectionHeading title="Source" />
   <p class="col-p">
     Open, and public: <a class="ui-link" href={site.repoUrl} target="_blank" rel="noopener noreferrer">{site.repo}<span class="ui-link__ext"><Icon name="arrow-up-right" size={12} strokeWidth={2.2} /></span></a>.
     Read it, borrow from it, tell me what I got wrong.
   </p>
 
-  <h2 class="col-h">Thanks</h2>
+  <SectionHeading title="Thanks" />
   <p class="col-p">
     The look owes a debt to the people who make the plain web feel considered: the crowd
     behind <a class="ui-link" href="https://deadsimplesites.com" target="_blank" rel="noopener noreferrer">Dead Simple Sites<span class="ui-link__ext"><Icon name="arrow-up-right" size={12} strokeWidth={2.2} /></span></a>,
@@ -222,11 +223,10 @@ const endpoints = [
     }
   }
 
-  .col-h {
-    font-size: var(--text-ui);
-    font-weight: 600;
-    color: var(--ink);
-    margin: 2.25rem 0 0.75rem;
+  /* sections here are a heading and what follows it, so the gap sits on
+     the heading */
+  .page-prose > :global(.section-heading) {
+    margin-block-start: var(--space-section);
   }
 
   .col-list {
@@ -313,7 +313,7 @@ const endpoints = [
     padding: var(--step-5) calc(var(--step) * 7);
     border-radius: var(--r-4);
     background: var(--canvas);
-    border: 1px solid var(--rule);
+    border: var(--hairline) solid var(--rule);
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
@@ -326,7 +326,7 @@ const endpoints = [
     gap: 1.25rem;
     flex-wrap: wrap;
     padding-bottom: 1.25rem;
-    border-bottom: 1px solid var(--rule);
+    border-bottom: var(--hairline) solid var(--rule);
   }
 
   .carbon-hero {
@@ -450,7 +450,7 @@ const endpoints = [
     justify-content: space-between;
     gap: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--rule);
+    border-top: var(--hairline) solid var(--rule);
     font-size: var(--text-xs);
     color: var(--ghost);
     flex-wrap: wrap;

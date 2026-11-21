@@ -1,22 +1,4 @@
 @font-face {
-  font-family: "Inter Variable";
-  font-style: normal;
-  font-display: swap;
-  font-weight: 100 900;
-  src: url("@fontsource-variable/inter/files/inter-latin-ext-wght-normal.woff2") format("woff2-variations");
-  unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-
-@font-face {
-  font-family: "Inter Variable";
-  font-style: normal;
-  font-display: swap;
-  font-weight: 100 900;
-  src: url("@fontsource-variable/inter/files/inter-latin-wght-normal.woff2") format("woff2-variations");
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-@font-face {
   font-family: "Geist Variable";
   font-style: normal;
   font-display: swap;
@@ -31,24 +13,6 @@
   font-display: swap;
   font-weight: 100 900;
   src: url("@fontsource-variable/geist/files/geist-latin-wght-normal.woff2") format("woff2-variations");
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-@font-face {
-  font-family: "Newsreader Variable";
-  font-style: italic;
-  font-display: swap;
-  font-weight: 200 800;
-  src: url("@fontsource-variable/newsreader/files/newsreader-latin-ext-wght-italic.woff2") format("woff2-variations");
-  unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-
-@font-face {
-  font-family: "Newsreader Variable";
-  font-style: italic;
-  font-display: swap;
-  font-weight: 200 800;
-  src: url("@fontsource-variable/newsreader/files/newsreader-latin-wght-italic.woff2") format("woff2-variations");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
@@ -71,16 +35,7 @@
 }
 
 /* Metric-matched system fallbacks - near-zero CLS while variable fonts swap in.
-   Tuned against Inter / JetBrains Mono latin metrics (Arial / Courier New). */
-
-@font-face {
-  font-family: "Inter Fallback";
-  src: local("Arial"), local("Helvetica Neue"), local("Helvetica");
-  size-adjust: 107%;
-  ascent-override: 90%;
-  descent-override: 22.5%;
-  line-gap-override: 0%;
-}
+   Tuned against Geist / JetBrains Mono latin metrics (Arial / Courier New). */
 
 @font-face {
   font-family: "JetBrains Mono Fallback";
@@ -91,22 +46,9 @@
   line-gap-override: 0%;
 }
 
-/* Newsreader italic (unitsPerEm 2000, hhea 1470/-530/0) over Georgia Italic:
-   lowercase average advance 0.4279em vs 0.4939em gives size-adjust 86.6%;
-   ascent/descent are divided by it, as for Inter Fallback. */
-@font-face {
-  font-family: "Newsreader Fallback";
-  font-style: italic;
-  src: local("Georgia Italic"), local("Georgia-Italic");
-  size-adjust: 86.6%;
-  ascent-override: 84.8%;
-  descent-override: 30.6%;
-  line-gap-override: 0%;
-}
-
 /* Geist (unitsPerEm 1000, hhea 1005/-295/0) over Arial, measured from the
    shipped woff2: lowercase-weighted advance gives size-adjust 107.5%;
-   ascent/descent are divided by it, as for Inter Fallback. */
+   ascent/descent are divided by it. */
 @font-face {
   font-family: "Geist Fallback";
   src: local("Arial"), local("Helvetica Neue"), local("Helvetica");

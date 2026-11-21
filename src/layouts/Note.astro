@@ -27,6 +27,7 @@ import Icon from "../components/Icon.astro";
 import DetailHeader from "../components/DetailHeader.astro";
 import Pager from "../components/Pager.astro";
 import RowTags from "../components/RowTags.astro";
+import SectionHeading from "../components/SectionHeading.astro";
 import GoTourEnhancement from "../components/GoTourEnhancement.astro";
 import IncidentEnhancement from "../components/IncidentEnhancement.astro";
 import PostFigures from "../components/PostFigures.astro";
@@ -121,7 +122,6 @@ const jsonLd = [
         <DetailHeader
           title={entry.data.title}
           lede={entry.data.description}
-          back={{ href: writingsHref, label: "Writings" }}
         >
           <Fragment slot="meta">
             <span class="note-facts">
@@ -134,18 +134,6 @@ const jsonLd = [
             {entry.data.tags && <RowTags tags={entry.data.tags} linked={linkedTags} />}
           </Fragment>
           <Fragment slot="action">
-            {hasPostFigures && (
-              <button
-                type="button"
-                class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
-                data-font-toggle
-                aria-pressed="true"
-                aria-label="Switch to the sans font"
-              >
-                <span class="font-toggle__glyph" aria-hidden="true">Aa</span>
-                <span class="ui-tip" role="tooltip">Switch to sans</span>
-              </button>
-            )}
             <button
               type="button"
               class="ui-cap ui-cap--glass ui-cap--32 ui-cap--icon"
@@ -212,7 +200,7 @@ const jsonLd = [
 
           {related.length > 0 && (
             <section class="note-related">
-              <h2 class="note-related-title">Related</h2>
+              <SectionHeading title="Related" />
               <ul class="note-related-list surface-stack">
                 {related.map((r) => (
                   <li>
@@ -316,7 +304,7 @@ const jsonLd = [
     flex-wrap: wrap;
     align-items: center;
     gap: var(--step-2);
-    font-size: var(--text-sm);
+    font-size: var(--text-ui-sm);
     color: var(--ghost);
   }
 
@@ -330,7 +318,7 @@ const jsonLd = [
   .note-date {
     color: var(--muted);
     font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
-    font-size: var(--text-sm);
+    font-size: var(--text-ui-sm);
     font-variant-numeric: tabular-nums;
   }
 
@@ -350,7 +338,7 @@ const jsonLd = [
     align-items: center;
     gap: var(--step-2);
     padding-block: var(--step-4);
-    border-top: 1px solid var(--rule);
+    border-top: var(--hairline) solid var(--rule);
     transition: border-color var(--t-color);
   }
 
@@ -385,14 +373,6 @@ const jsonLd = [
 
   .note-related {
     margin-top: clamp(2.75rem, 6vw, 4rem);
-  }
-  .note-related-title {
-    margin: 0 0 var(--step-1);
-    color: var(--ghost);
-    font-size: var(--text-sm);
-    font-weight: 580;
-    letter-spacing: -0.01em;
-    line-height: var(--leading-snug);
   }
   .note-related-list {
     --surface-row-gap: 0;

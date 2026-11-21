@@ -174,19 +174,31 @@ function iconPath(link: SocialLink): string {
     width: 0;
     height: 0;
     overflow: hidden;
-    border: 1px solid var(--rule-strong);
+    border: 1px solid var(--edge);
     border-radius: var(--r-5);
     background: var(--canvas);
-    box-shadow: var(--shadow-2);
+    box-shadow: var(--lift-2);
     opacity: 0;
     pointer-events: none;
     transform: translateX(-50%);
+    /* sized on the soft spring */
     transition:
-      inset-inline-start var(--dur-shift) var(--ease-enter),
-      width var(--dur-shift) var(--ease-enter),
-      height var(--dur-shift) var(--ease-enter),
+      inset-inline-start var(--dur-spring-soft) var(--ease-spring-soft),
+      width var(--dur-spring-soft) var(--ease-spring-soft),
+      height var(--dur-spring-soft) var(--ease-spring-soft),
       opacity var(--dur-tint) var(--ease-enter);
     isolation: isolate;
+  }
+
+  /* the cards fill the panel opaquely, so the specular edge sits above them */
+  .social-preview__panel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+    box-shadow: var(--glass-spec);
+    pointer-events: none;
   }
 
   .social-preview__panel.is-open {

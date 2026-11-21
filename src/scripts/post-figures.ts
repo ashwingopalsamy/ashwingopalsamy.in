@@ -1,5 +1,5 @@
 /**
- * post-figures - the reading-font toggle and the live figures for /blog/abliterated/ posts.
+ * post-figures - the live figures for /blog/abliterated/ posts.
  *
  * Each figure is complete as a static SVG; this only adds to it:
  *   one-direction  the refusal line erases once on view; tap the model to erase or restore it
@@ -13,48 +13,7 @@ import { pageSignal } from "./lifecycle";
 
 let started: AbortSignal | null = null;
 
-const FONT_KEY = "reading-font";
 const SVG_NS = "http://www.w3.org/2000/svg";
-
-function readFont(): string | null {
-  try {
-    return localStorage.getItem(FONT_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function saveFont(value: string) {
-  try {
-    localStorage.setItem(FONT_KEY, value);
-  } catch {
-    /* the choice just lasts for this page */
-  }
-}
-
-function mountFontToggle(root: HTMLElement, signal: AbortSignal) {
-  const button = root.querySelector<HTMLButtonElement>("[data-font-toggle]");
-  const apply = (font: string) => {
-    if (font === "sans") root.dataset.font = "sans";
-    else delete root.dataset.font;
-    if (!button) return;
-    const serif = font !== "sans";
-    button.setAttribute("aria-pressed", String(serif));
-    button.setAttribute("aria-label", serif ? "Switch to the sans font" : "Switch to Newsreader");
-    const tip = button.querySelector(".ui-tip");
-    if (tip) tip.textContent = serif ? "Switch to sans" : "Switch to serif";
-  };
-  apply(readFont() ?? "serif");
-  button?.addEventListener(
-    "click",
-    () => {
-      const next = root.dataset.font === "sans" ? "serif" : "sans";
-      saveFont(next);
-      apply(next);
-    },
-    { signal },
-  );
-}
 
 /** A line under the art that the figure writes to; the space is reserved so nothing jumps. */
 function addLine(fig: HTMLElement, text: string): HTMLParagraphElement {
@@ -295,7 +254,6 @@ function init() {
   const signal = pageSignal();
   if (started === signal || signal.aborted) return;
   started = signal;
-  mountFontToggle(root, signal);
   if (typeof IntersectionObserver === "undefined") return;
   const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
   // a page restored from the router's store may still carry what the last visit added

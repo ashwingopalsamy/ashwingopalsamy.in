@@ -1,6 +1,7 @@
 ---
 import Page from "../layouts/Page.astro";
 import PageIntro from "../components/PageIntro.astro";
+import SectionHeading from "../components/SectionHeading.astro";
 import Icon from "../components/Icon.astro";
 import { CANONICAL_KNOWLEDGE } from "../data/canonical-knowledge";
 import { profileLinks } from "../data/profile-links";
@@ -28,7 +29,7 @@ const profiles = (["github", "linkedin", "x", "scholar", "researchgate"] as cons
 
   <div class="page-prose" data-enter>
     <section class="contact-section">
-      <h2 class="contact-h">Email</h2>
+      <SectionHeading title="Email" />
       <p class="contact-p">Email is best. I reply within two days.</p>
       <div class="contact-mail">
         <a class="ui-link contact-addr mono" href={canonicalLinks.email}>{email}</a>
@@ -56,7 +57,7 @@ const profiles = (["github", "linkedin", "x", "scholar", "researchgate"] as cons
     </section>
 
     <section class="contact-section">
-      <h2 class="contact-h">Calls</h2>
+      <SectionHeading title="Calls" />
       <p class="contact-p">
         Payment infrastructure, card networks, agent systems or a collaboration: pick a slot that suits you.
       </p>
@@ -75,7 +76,7 @@ const profiles = (["github", "linkedin", "x", "scholar", "researchgate"] as cons
     </section>
 
     <section class="contact-section">
-      <h2 class="contact-h">Elsewhere</h2>
+      <SectionHeading title="Elsewhere" />
       <ul class="contact-profiles surface-stack" role="list">
         {
           profiles.map((profile) => (
@@ -95,7 +96,7 @@ const profiles = (["github", "linkedin", "x", "scholar", "researchgate"] as cons
     </section>
 
     <section class="contact-section">
-      <h2 class="contact-h">Location and Time Zone</h2>
+      <SectionHeading title="Location and Time Zone" />
       <p class="contact-p">
         I am based in <span class="contact-k">Pollachi, Tamil Nadu</span> operating in the{" "}
         <span class="contact-k">IST (UTC+05:30)</span> timezone.
@@ -104,7 +105,7 @@ const profiles = (["github", "linkedin", "x", "scholar", "researchgate"] as cons
     </section>
 
     <section class="contact-section">
-      <h2 class="contact-h">Security and Vulnerability Disclosure</h2>
+      <SectionHeading title="Security and Vulnerability Disclosure" />
       <p class="contact-p">
         To report security vulnerabilities or technical issues regarding this website and its endpoints,
         refer to our RFC 9116 security disclosure guidelines at{" "}
@@ -121,13 +122,6 @@ const profiles = (["github", "linkedin", "x", "scholar", "researchgate"] as cons
 <style>
   .contact-section {
     margin-bottom: 2rem;
-  }
-
-  .contact-h {
-    font-size: var(--text-ui);
-    font-weight: 600;
-    color: var(--ink);
-    margin: 2rem 0 0.75rem;
   }
 
   .contact-p {

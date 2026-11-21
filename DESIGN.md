@@ -44,34 +44,29 @@ colors:
   toast-ink: "oklch(1 0 0)"
   link-wash-press: "color-mix(in oklch, var(--ink) 14%, transparent)"
 typography:
-  inter-400:
-    fontFamily: Inter Variable, Inter Fallback, system-ui, sans-serif
+  geist-400:
+    fontFamily: Geist Variable, Geist Fallback, system-ui, sans-serif
     fontWeight: 400
     lineHeight: 1.68
     letterSpacing: 0em
-    fontFeature: '"cv05", "cv08", "calt", "liga"'
-  inter-450:
-    fontFamily: Inter Variable, Inter Fallback, system-ui, sans-serif
+    fontFeature: '"calt", "liga"'
+  geist-450:
+    fontFamily: Geist Variable, Geist Fallback, system-ui, sans-serif
     fontWeight: 450
     lineHeight: 1
-  inter-500:
-    fontFamily: Inter Variable, Inter Fallback, system-ui, sans-serif
+  geist-500:
+    fontFamily: Geist Variable, Geist Fallback, system-ui, sans-serif
     fontWeight: 500
     lineHeight: 1.4
-  inter-550:
-    fontFamily: Inter Variable, Inter Fallback, system-ui, sans-serif
+  geist-550:
+    fontFamily: Geist Variable, Geist Fallback, system-ui, sans-serif
     fontWeight: 550
     lineHeight: 1.3
     letterSpacing: -0.012em
-  inter-600:
-    fontFamily: Inter Variable, Inter Fallback, system-ui, sans-serif
+  geist-600:
+    fontFamily: Geist Variable, Geist Fallback, system-ui, sans-serif
     fontWeight: 600
     lineHeight: 1.3
-  newsreader-italic:
-    fontFamily: Newsreader Variable, Iowan Old Style, Georgia, serif
-    fontWeight: 400
-    lineHeight: 1.55
-    letterSpacing: -0.005em
   jetbrains-mono-400:
     fontFamily: JetBrains Mono, JetBrains Mono Fallback, ui-monospace, monospace
     fontWeight: 400
@@ -181,20 +176,20 @@ components:
   desktop-navigation:
     backgroundColor: "{colors.neutral-01}"
     textColor: "{colors.neutral-09}"
-    typography: "{typography.inter-400}"
+    typography: "{typography.geist-400}"
     rounded: "{rounded.r-pill}"
     padding: 4px
     height: 46px
   desktop-navigation-active:
     backgroundColor: "{colors.neutral-09}"
     textColor: "{colors.neutral-01}"
-    typography: "{typography.inter-450}"
+    typography: "{typography.geist-450}"
     rounded: "{rounded.r-pill}"
     padding: 8px
   mobile-navigation:
     backgroundColor: "{colors.neutral-01}"
     textColor: "{colors.neutral-09}"
-    typography: "{typography.inter-400}"
+    typography: "{typography.geist-400}"
     rounded: "{rounded.r-pill}"
     padding: 4px
     height: 52px
@@ -202,82 +197,82 @@ components:
   toast:
     backgroundColor: "{colors.neutral-09}"
     textColor: "{colors.neutral-01}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-pill}"
     padding: 8px
     height: 48px
   capsule-ink:
     backgroundColor: "{colors.neutral-09}"
     textColor: "{colors.neutral-01}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-pill}"
     padding: 20px
     height: 48px
   capsule-glass:
     backgroundColor: "{colors.neutral-01}"
     textColor: "{colors.neutral-09}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-pill}"
     padding: 20px
     height: 48px
   capsule-quiet:
     textColor: "{colors.neutral-06}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-pill}"
     padding: 16px
     height: 40px
   capsule-action:
     backgroundColor: "{colors.neutral-01}"
     textColor: "{colors.neutral-09}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-pill}"
     padding: 12px
     height: 32px
   chip:
     backgroundColor: "{colors.neutral-02}"
     textColor: "{colors.neutral-08}"
-    typography: "{typography.inter-450}"
+    typography: "{typography.geist-450}"
     rounded: "{rounded.r-pill}"
     padding: 12px
     height: 28px
   chip-selected:
     backgroundColor: "{colors.neutral-09}"
     textColor: "{colors.neutral-01}"
-    typography: "{typography.inter-450}"
+    typography: "{typography.geist-450}"
     rounded: "{rounded.r-pill}"
     padding: 12px
     height: 28px
   badge:
     backgroundColor: "{colors.neutral-02}"
     textColor: "{colors.neutral-08}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-pill}"
     padding: 8px
     height: 20px
   row:
     textColor: "{colors.neutral-09}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-4}"
     padding: 12px
     height: 48px
   segmented:
     backgroundColor: "{colors.neutral-01}"
     textColor: "{colors.neutral-08}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-pill}"
     padding: 4px
     height: 48px
   segmented-active:
     backgroundColor: "{colors.neutral-09}"
     textColor: "{colors.neutral-01}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-pill}"
     padding: 16px
     height: 40px
   tooltip:
     backgroundColor: "{colors.neutral-01}"
     textColor: "{colors.neutral-09}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-pill}"
     padding: 12px
     height: 28px
@@ -311,13 +306,15 @@ The five semantic colors are Green (available, success), Amber (warning, winding
 
 Light and dark themes receive equal attention. A mechanical inversion is not enough if secondary text, chrome, shadows, or focus become weaker.
 
+The canvas carries one faint light at its top, coloured by the hour in Pollachi (IST): dawn 05:00 to 07:59, day 08:00 to 16:59, dusk 17:00 to 19:29, night 19:30 to 04:59 (`--sky-*`). It is a single radial gradient on the root background, centred above the top edge (22% across at dawn, 78% at dusk, 50% otherwise) and fading to plain canvas, mixed in at 14% in light and 26% in dark; `body` is transparent so the root shows through. No blur and nothing running: the boot stamps `data-sky` before paint, on every swap and once a minute, and the tone eases over `--t-color` only when the day-part turns. Without JS it is the day tone.
+
 Controls draw on a derived layer in `global.css`: `--glass-*` for in-flow glass, `--ink-fill` for the one primary per view, `--wash` and `--wash-press` behind hovered and pressed rows, `--edge-soft`, `--edge` and `--edge-strong` for borders, `--ok-*` and `--err-*` for outcomes, and an inverted `--toast-*` pair. Each is written in all three theme blocks (light, dark, and the no-JS dark mirror); nothing else mixes a raw ink tint. State is never colour alone: a copy control is a symbol and never a word, so its glyph becomes a check that draws itself or an alert, a tag's hash and a brand are marks and never letters, a soon tile is simply dim with no badge, and selection moves the ink.
 
 ## Typography
 
-Inter carries navigation and prose on desktop; compact viewports (38rem and below) set the same roles in Geist, each preloading only its own face. Newsreader Italic is used sparingly for literary interruptions. JetBrains Mono is limited to code, tokens, times, hashes, and measurements.
+Geist carries navigation, prose, and UI at every width. There is no serif and no italic; emphasis comes from weight and value. JetBrains Mono is limited to code, tokens, times, hashes, and measurements.
 
-Body copy uses a readable 65 to 75 character measure. Headings are balanced, tracking never goes below `-0.04em`, and long editorial paragraphs may use deliberate justification. The one-pixel mono offset is an optical correction, not layout spacing.
+Body copy uses a readable 65 to 75 character measure. Headings are balanced, tracking never goes below `-0.04em`, and below 38rem ledes and body paragraphs are justified with automatic hyphenation. The home page's context paragraphs are ragged with manual hyphenation from 38rem up and justified below it, and a link's words never split across two lines in them. The one-pixel mono offset is an optical correction, not layout spacing.
 
 Capsule labels are 15px (`--text-ui`) at 500 on 48 and 40, and 13px (`--text-ui-sm`) on 32 and 28. An inline link takes its paragraph's own weight at rest and differs from the surrounding text by colour alone (ink on the ghost paragraph). Inside `.prose`, where body text is ink already, it rests at `--font-medium` (500) so it stays findable. With a fine pointer over the paragraph, not only the link, every link in it lifts to `--font-hover-lift` (550) on the colour curve, and `<strong>` in a hovered prose block to `--font-hover-bold` (680). Weight is the one thing in the system that may reflow a line on hover; touch never lifts.
 
@@ -343,7 +340,9 @@ Optical corrections are named (`--mono-optical-shift`, `--optical-icon-inset`, `
 
 ## Layout
 
-Header, main content, and footer share the same centered rail. Space above a section heading is larger than the space below it. The Library groups its newest entries into four shelves and keeps author, platform, source, date, and tags in one readable supporting line.
+Header, main content, and footer share the same centered rail. Space above a section heading is larger than the space below it.
+
+Every titled page is built on one skeleton. The head is `PageIntro`: the title (44px, 620, balanced within 26ch) sits the same distance under the header on every page, with the lede 20px below it. Work and post pages and tag pages use the same head; the header chip is their way back, so the head carries no back link and no rule. Under the head sits at most one control row, `.page-bar`: a start slot and an end slot on one centred line (an engine page's filter and sort, the Library's tabs in the end slot, a detail page's meta and actions, a tag's count). The head ends `--step-6` (32px, home's distance) above the next block, and the control row ends `--step-6` above the content. Page-level section headings are `SectionHeading` (16px, 580, an optional count or badge at the end) and sections stand `--space-section` apart; where a page divides them with a rule, it is one hairline with `--space-rule` on each side. The Library groups its newest entries into four shelves and keeps author, platform, source, date, and tags in one readable supporting line.
 
 Mobile has its own physical constraints. Home, Work, AI, More, and Links stay in five fixed tracks above the safe area, while desktop keeps the quieter Home, Work, and More set. Content reserves space beneath the mobile bar, and horizontal tab lists contain their own overscroll.
 
@@ -353,7 +352,9 @@ The whole page sits on an inset card above a slightly darker base (the viewport 
 
 Depth is used to separate persistent chrome, overlays, and feedback. A surface gets either a border or a shadow strong enough to explain its elevation.
 
-Glass is a recipe; blur is a privilege. In-flow glass (capsules, segmented tracks, docks, cards, tiles, pager cards) is layers only, painted once. In the light theme it is the header nav's surface, flat: an opaque `--glass-fill` (the canvas), one solid hairline (`--chrome-surface-border`; `--edge-strong` on hover) and the nav's one soft drop (`--glass-lift`). There is no sheen, no gradient rim and no specular edge: `--glass-sheen` is `none`, `--glass-spec` is empty and `--glass-rim` is a flat colour. Hover is `--glass-fill-hover` and the firmer hairline; nothing lifts. The dark theme keeps all five layers: a sheen, the fill, a gradient rim, a specular top edge and a `--lift-0` shadow. Its primary ink button (white) is near-flat: under 1.5% of lightness top to bottom, no chroma, no inner highlight. The rim is a `border-box` layer under a `padding-box` fill, so it only works when the fill is opaque; a translucent fill (wash, chips, ok, err, disabled) takes a solid `border-color` instead, or the rim bleeds through the whole surface. Nothing follows the pointer: no spotlight, no magnet. Ink hover is a lighter fill (`--ink-fill-hover`), never a bloom or a lift. A coming-soon tile is a dashed outline with no fill.
+Glass is a recipe; blur is a privilege. In-flow glass (capsules, segmented tracks, docks, cards, tiles, pager cards) is layers only, painted once. In the light theme it is lit: an opaque fill 1.5% of ink over the canvas, a sheen from the canvas to clear at 58%, a gradient rim that firms toward the foot (8% to 15% ink; 14% to 24% on hover), a specular edge (a near-canvas top line over a 3% ink bottom line) and a two-step contact drop. Those values sit on the recipe consumers under `[data-theme="light"]`, not on `:root`. The root tokens stay flat, the header nav's surface (the canvas, one solid hairline, the nav's one soft drop, no sheen and no spec), because the blurred overlays and the profile preview's edge read them and an opaque sheen would blank their top. So light without JS, which has no `data-theme`, keeps the flat glass. The header chip and nav take a brighter top edge over a contact shadow. Hover is `--glass-fill-hover` and the firmer rim; nothing lifts. The dark theme keeps all five layers: a sheen, the fill, a gradient rim, a specular top edge and a `--lift-0` shadow. Its primary ink button (white) is near-flat: under 1.5% of lightness top to bottom, no chroma, no inner highlight. The rim is a `border-box` layer under a `padding-box` fill, so it only works when the fill is opaque; a translucent fill (wash, chips, ok, err, disabled) takes a solid `border-color` instead, or the rim bleeds through the whole surface. Nothing follows the pointer: no spotlight, no magnet. Ink hover is a lighter fill (`--ink-fill-hover`) and a soft bloom of the ink beneath it (`--ink-bloom`: 55% of ink in light, 30% in dark), gone while pressed; it never lifts. A coming-soon tile is a dashed outline with no fill.
+
+Two surfaces outside the recipe share its depth. The location card rests on `--lift-1`, and because the map covers the card's own edge, its hairline is drawn above the map, under the pill and the credit. Its pin is a steady dot whose ring leaves it outward; while Pollachi sleeps (00:00 to 06:00 IST) the dot dims to `--faint` and the ring stops. The profile preview panel is the canvas with an `--edge` hairline on `--lift-2`, and its specular edge (`--glass-spec`) is drawn above the cards, which fill it opaquely.
 
 `backdrop-filter` is only correct where something non-uniform actually sits behind the element:
 
@@ -361,7 +362,7 @@ Glass is a recipe; blur is a privilege. In-flow glass (capsules, segmented track
 |---|---|---|
 | Header chips and nav, mobile bottom navigation | `blur(20px) saturate(170%)` | fixed and short |
 | Veil under the header | `blur(10px)`, masked | one fixed band at a constant radius, hidden at the top of the page |
-| Library tabs, only while stuck | `blur(20px) saturate(170%)` | a 48px strip, off when not stuck |
+| Library tabs, only while stuck | `blur(20px) saturate(170%)` | a 40px strip, off when not stuck |
 | Tooltip, toast | `blur(16px) saturate(180%)` | small and transient |
 | Command palette, location pill over its map | unchanged | an overlay; a map |
 | In-flow glass | none | the canvas behind is flat |
@@ -378,9 +379,11 @@ Movement is a system, not a set of durations. Four rules decide everything in `s
 
 **Duration scales with how much changes.** A colour swap is 110ms, a 3px nudge is 150ms, a panel is 280ms. Nothing takes 250ms because 250ms is the token.
 
-**Springs are real springs.** `--ease-spring-*` are damped harmonic oscillators sampled into `linear()`, with their physics recorded in the comment so they can be regenerated rather than guessed at. The header's nav pill and the Library's tab indicator share one, deliberately: they are the same control wearing two hats. Every press springs: down in 70ms on `--ease-snap` to `--press-scale` (0.96, controls 48px and under) or `--press-scale-inline` (0.99, rows, tiles, pager cards), then back up on `--ease-spring-pop` for small controls and `--ease-spring-soft` for wide ones, each over its own settle time (`--dur-spring-*`). A `linear()` spring played over another duration is a different spring.
+**Springs are real springs.** `--ease-spring-*` are damped harmonic oscillators sampled into `linear()`, with their physics recorded in the comment so they can be regenerated rather than guessed at. The header's nav pill and the Library's tab indicator share one, deliberately: they are the same control wearing two hats. Every press springs: down in 70ms on `--ease-snap` to `--press-scale` (0.96, controls 48px and under) or `--press-scale-inline` (0.99, rows, tiles, pager cards), then back up on `--ease-spring-pop` for small controls and `--ease-spring-soft` for wide ones, each over its own settle time (`--dur-spring-*`). The profile preview panel moves and resizes between profiles on the soft spring. A `linear()` spring played over another duration is a different spring.
 
 Route handoffs use the View Transitions API. The outgoing document blurs and fades over 90ms while the incoming one resolves from blur over 200ms, overlapping. Back navigation reverses the axis.
+
+Only the first page of a visit (a reload, or a page not reached from elsewhere on the site) makes an entrance. On the home page the lede, the two context paragraphs, the contact row and the Meanwhile section rise in on `@keyframes enter` over `--dur-enter`, 40ms apart (`--enter-step`). The boot sets `data-first-visit` before paint and every swap drops it, so a client navigation never replays it. Content below the fold keeps its scroll reveal.
 
 The blur belongs to the page, never to the furniture. Every frosted chrome surface is lifted out of the root snapshot by name (`chrome-logo`, `chrome-nav`, `chrome-action`, `chrome-bottom`) and given no animation at all, so the header, its pills and the selection indicator are pixel-stable across a navigation while the content behind them resolves. Those names must sit on the frosted element itself and never on a wrapper: `view-transition-name` makes an element a backdrop root, which severs its descendants from the page behind them and renders any pill inside as flat transparency.
 

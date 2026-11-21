@@ -66,13 +66,25 @@ const PIN_LON = 76.9558;
     height: 100%;
     border-radius: var(--r-5);
     overflow: hidden;
-    box-shadow: inset 0 0 0 1px var(--edge);
+    box-shadow: var(--lift-1);
     background: linear-gradient(
       135deg,
       color-mix(in oklch, var(--ink) 6%, var(--canvas)),
       color-mix(in oklch, var(--ink) 10%, var(--canvas))
     );
     transition: box-shadow var(--t-color);
+  }
+
+  /* The map covers the card's own inset edge, so the edge is drawn above
+     it, under the pill and the credit (both z-index 2). */
+  .loc-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px var(--edge);
+    pointer-events: none;
   }
 
   @media (max-width: 38rem) {
@@ -175,6 +187,15 @@ const PIN_LON = 76.9558;
     transform: scale(1);
     animation: loc-beacon var(--dur-beacon) var(--ease-enter) infinite;
     pointer-events: none;
+  }
+
+  /* the pin sleeps when Pollachi does: a faint dot, no ring */
+  .loc-dot[data-presence="asleep"] {
+    --loc-beacon: var(--faint);
+  }
+
+  .loc-dot[data-presence="asleep"]::after {
+    animation: none;
   }
 
   @keyframes loc-beacon {

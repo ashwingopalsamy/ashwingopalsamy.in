@@ -1,6 +1,7 @@
 ---
 import Page from "../layouts/Page.astro";
 import PageIntro from "../components/PageIntro.astro";
+import SectionHeading from "../components/SectionHeading.astro";
 import { CANONICAL_KNOWLEDGE } from "../data/canonical-knowledge";
 import { ogPath } from "../lib/og-url";
 
@@ -20,7 +21,7 @@ const ogImage = ogPath("privacy");
 
   <div class="page-prose" data-enter>
     <section class="privacy-section">
-      <h2 class="privacy-h">Overview and Philosophy</h2>
+      <SectionHeading title="Overview and Philosophy" />
       <p class="privacy-p">
         This personal website is designed to be a quiet, static, and privacy-respecting space on the web.
         I believe the web should function without surveillance, invasive telemetry, or monetization of visitor attention.
@@ -28,7 +29,7 @@ const ogImage = ogPath("privacy");
     </section>
 
     <section class="privacy-section">
-      <h2 class="privacy-h">Cookies and Identifiers</h2>
+      <SectionHeading title="Cookies and Identifiers" />
       <p class="privacy-p">
         This website does not set any tracking cookies, local storage tracking identifiers, or third-party marketing beacons.
         There are no advertising networks or cross-site tracking mechanisms present.
@@ -40,7 +41,7 @@ const ogImage = ogPath("privacy");
     </section>
 
     <section class="privacy-section">
-      <h2 class="privacy-h">Edge Infrastructure and First-Party Observability</h2>
+      <SectionHeading title="Edge Infrastructure and First-Party Observability" />
       <p class="privacy-p">
         The website is hosted on Cloudflare Pages. Requests are processed at edge points of presence
         to deliver content, enforce security headers, and prevent denial-of-service attacks.
@@ -59,7 +60,7 @@ const ogImage = ogPath("privacy");
     </section>
 
     <section class="privacy-section">
-      <h2 class="privacy-h">AI Agents and Machine Interfaces</h2>
+      <SectionHeading title="AI Agents and Machine Interfaces" />
       <p class="privacy-p">
         AI systems, automated scrapers, and agents accessing machine-readable surfaces (such as <a class="ui-link" href="/llms.txt">/llms.txt</a>,{" "}
         <a class="ui-link" href="/mcp">/mcp</a>, <a class="ui-link" href="/a2a">/a2a</a>, and <a class="ui-link" href="/openapi.json">/openapi.json</a>)
@@ -72,7 +73,7 @@ const ogImage = ogPath("privacy");
     </section>
 
     <section class="privacy-section">
-      <h2 class="privacy-h">Contact Inquiries</h2>
+      <SectionHeading title="Contact Inquiries" />
       <p class="privacy-p">
         If you contact me by email, your email address and message contents are used solely for direct communication
         between us and are never shared, sold, or used for automated marketing.
@@ -80,7 +81,7 @@ const ogImage = ogPath("privacy");
     </section>
 
     <section class="privacy-section">
-      <h2 class="privacy-h">Contact Information</h2>
+      <SectionHeading title="Contact Information" />
       <p class="privacy-p">
         For any privacy questions or data requests, contact me at{" "}
         <a class="ui-link mono" href={CANONICAL_KNOWLEDGE.canonicalLinks.email}>{CANONICAL_KNOWLEDGE.email}</a>.
@@ -92,13 +93,6 @@ const ogImage = ogPath("privacy");
 <style>
   .privacy-section {
     margin-bottom: 2rem;
-  }
-
-  .privacy-h {
-    font-size: var(--text-ui);
-    font-weight: 600;
-    color: var(--ink);
-    margin: 2rem 0 0.75rem;
   }
 
   .privacy-p {

@@ -10,17 +10,18 @@ const { title, lede, eyebrow } = Astro.props;
 
 <header class="page-intro" data-enter>
   {eyebrow && <p class="page-intro-eyebrow">{eyebrow}</p>}
-  <h1>{title}</h1>
+  <h1><slot name="mark" />{title}</h1>
   <slot />
   {lede && <p class="page-intro-lede">{lede}</p>}
 </header>
 
 <style>
+  /* The one head: every titled page, detail pages and tags included. */
   .page-intro {
     display: grid;
-    gap: 1.25rem;
+    gap: calc(var(--step) * 5);
     max-inline-size: 100%;
-    margin: 0 0 1.25rem;
+    margin: 0 0 var(--step-6);
   }
 
   .page-intro-eyebrow,
@@ -37,13 +38,15 @@ const { title, lede, eyebrow } = Astro.props;
     text-transform: uppercase;
   }
 
+  /* one measure for a page name and a long post title alike */
   .page-intro h1 {
-    max-inline-size: 18ch;
+    max-inline-size: 26ch;
     color: var(--ink);
     font-size: var(--type-page-title-size);
     font-weight: var(--type-page-title-weight);
     letter-spacing: var(--type-page-title-tracking);
     line-height: var(--type-page-title-leading);
+    overflow-wrap: anywhere;
     text-wrap: balance;
   }
 

@@ -1,8 +1,8 @@
 ---
 import { ClientRouter } from "astro:transitions";
-import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 import geistLatin from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import fontStyles from "../styles/fonts.css?inline";
+import labStyles from "../styles/lab.css?inline";
 // geometry first (global.css consumes --step-*/--r-*), motion last so its
 // retuned duration and easing tokens win over the legacy values.
 import "../styles/geometry.css";
@@ -19,6 +19,7 @@ import { coreMarkdownMirrorPath } from "../lib/urls";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import CommandPalette from "../components/CommandPalette.astro";
+import LabPanel from "../components/LabPanel.astro";
 
 interface Props {
   title?: string;
@@ -112,21 +113,12 @@ const documentTitle = isHome
          head merge never re-parses them on a swap. -->
     <style is:inline data-astro-transition-persist="site-fonts" set:html={fontStyles} />
 
-    <!-- Each viewport preloads only the face it sets body text in. -->
-    <link
-      rel="preload"
-      href={interLatin}
-      as="font"
-      type="font/woff2"
-      media="(min-width: 38.0625rem)"
-      crossorigin
-    />
+    <!-- Body text is set in Geist at every width. -->
     <link
       rel="preload"
       href={geistLatin}
       as="font"
       type="font/woff2"
-      media="(max-width: 38rem)"
       crossorigin
     />
     <script
@@ -180,9 +172,26 @@ const documentTitle = isHome
           try { return sessionStorage.getItem("intro-animated") === "true"; } catch (e) {}
           return false;
         }
+        // The sky light (global.css) follows Pollachi's hour. IST is a fixed
+        // UTC+05:30, so the day-part is arithmetic on the clock.
+        var SKY_X = { dawn: "22%", day: "50%", dusk: "78%", night: "50%" };
+        function skyPart(now) {
+          var minute = (Math.floor(now.getTime() / 60000) + 330) % 1440;
+          if (minute >= 300 && minute < 480) return "dawn";
+          if (minute >= 480 && minute < 1020) return "day";
+          if (minute >= 1020 && minute < 1170) return "dusk";
+          return "night";
+        }
+        function stampSky(target) {
+          var root = target.documentElement;
+          var part = skyPart(new Date());
+          if (root.getAttribute("data-sky") !== part) root.setAttribute("data-sky", part);
+          if (root.style.getPropertyValue("--sky-x") !== SKY_X[part]) root.style.setProperty("--sky-x", SKY_X[part]);
+        }
         function sync(target) {
           target = target || document;
           apply(current, false, target);
+          stampSky(target);
           if (target !== document && introHasAnimated()) target.documentElement.dataset.introAnimated = "true";
         }
 
@@ -196,9 +205,25 @@ const documentTitle = isHome
         try {
           if (sessionStorage.getItem("intro-animated") === "true") document.documentElement.dataset.introAnimated = "true";
         } catch (e) {}
+        // Entrances belong to the first page of a visit: a reload, or a page
+        // not reached from elsewhere on the site. Set before paint for the
+        // entrance in global.css; the layout's script reads it for the
+        // reveal. Swaps rebuild <html> from the incoming page, so it never
+        // survives a client navigation.
+        var navEntry = performance.getEntriesByType("navigation")[0];
+        var internal = false;
+        try {
+          internal = Boolean(document.referrer) && new URL(document.referrer).origin === location.origin;
+        } catch (e) {}
+        var navType = navEntry && navEntry.type;
+        if (navType === "reload" || (navType !== "back_forward" && !internal)) {
+          document.documentElement.setAttribute("data-first-visit", "");
+        }
+        // The day-part can turn while a page is open.
+        window.setInterval(function () { stampSky(document); }, 60000);
         // The document outlives every navigation, so the router's swap events
-        // do what a fresh load used to: theme, motion and intro state are
-        // re-applied to the incoming document before it is adopted.
+        // do what a fresh load used to: theme, motion, sky and intro state
+        // are re-applied to the incoming document before it is adopted.
         var NONCE = (document.currentScript && document.currentScript.nonce) || "";
         function liveNonce() {
           if (!NONCE) {
@@ -264,6 +289,93 @@ const documentTitle = isHome
         });
       })();`}
     />
+    {import.meta.env.DEV && (
+      <script
+        is:inline
+        set:html={`(function () {
+          if (window.__siteLab) {
+            window.__siteLab.stamp(document);
+            return;
+          }
+          var NAMES = ["sans", "quiet", "surfaces", "pager", "arrive"];
+          function load() {
+            try { return localStorage.getItem("lab"); } catch (e) {}
+            return null;
+          }
+          function save(value) {
+            try {
+              if (value) localStorage.setItem("lab", value);
+              else localStorage.removeItem("lab");
+            } catch (e) {}
+          }
+          function only(list) {
+            return NAMES.filter(function (name) { return list.indexOf(name) !== -1; });
+          }
+          var on = only((load() || "").split(/\\s+/));
+          function stamp(target) {
+            var root = target.documentElement;
+            if (on.length) root.setAttribute("data-lab", on.join(" "));
+            else root.removeAttribute("data-lab");
+          }
+          // quiet hides the photo filter, and engine.ts re-reads ?filter= on
+          // init, so a kept value would leave the wall filtered with no
+          // control to clear it. Dropped before the engine runs.
+          function unfilter() {
+            if (on.indexOf("quiet") === -1 || location.pathname.replace(/\\/$/, "") !== "/more/photos") return false;
+            var url = new URL(location.href);
+            if (!url.searchParams.has("filter")) return false;
+            url.searchParams.delete("filter");
+            history.replaceState(history.state, "", url.pathname + url.search + url.hash);
+            return true;
+          }
+          // The panel's markup selects nothing; this is the only writer of
+          // its state, run as soon as the panel is parsed (LabPanel.astro).
+          function render() {
+            document.querySelectorAll("[data-lab-toggle]").forEach(function (el) {
+              el.setAttribute("aria-pressed", String(on.indexOf(el.getAttribute("data-lab-toggle")) !== -1));
+            });
+          }
+          window.__siteLab = { stamp: stamp, render: render };
+          stamp(document);
+          unfilter();
+          document.addEventListener("astro:before-swap", function (event) {
+            stamp(event.newDocument);
+          }, { capture: true });
+          document.addEventListener("astro:after-swap", unfilter);
+          // A toggle applies live; segmented's and masonry's ResizeObservers
+          // re-place the ink and the wall. It reloads only when live cannot
+          // show the result: arrive plays on the first page of a visit, and
+          // a hidden photo filter is dropped before the engine starts.
+          document.addEventListener("click", function (event) {
+            var el = event.target instanceof Element
+              ? event.target.closest("[data-lab-toggle], [data-lab-set]")
+              : null;
+            if (!el) return;
+            var name = el.getAttribute("data-lab-toggle");
+            var set = el.getAttribute("data-lab-set");
+            var was = on.join(" ");
+            if (name) on = on.indexOf(name) === -1 ? only(on.concat(name)) : on.filter(function (n) { return n !== name; });
+            else on = set === "all" ? NAMES.slice() : [];
+            save(on.join(" "));
+            stamp(document);
+            render();
+            var arrived = on.indexOf("arrive") !== -1 && was.split(" ").indexOf("arrive") === -1;
+            if (unfilter() || arrived) location.reload();
+          });
+          document.addEventListener("keydown", function (event) {
+            if (event.key !== "l" && event.key !== "L") return;
+            if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
+            var target = event.target;
+            if (target instanceof Element && target.closest("input, textarea, select, [contenteditable]:not([contenteditable='false'])")) return;
+            var panel = document.querySelector("[data-lab-panel]");
+            if (panel) panel.hidden = !panel.hidden;
+          });
+          document.addEventListener("astro:page-load", render);
+          if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", render, { once: true });
+          else render();
+        })();`}
+      />
+    )}
 
     <title>{documentTitle}</title>
     <meta name="description" content={description} />
@@ -349,6 +461,7 @@ const documentTitle = isHome
     <meta name="theme-color" content={CANVAS_DARK} media="(prefers-color-scheme: dark)" />
     <ClientRouter />
     <slot name="head" />
+    {import.meta.env.DEV && <style is:inline data-astro-transition-persist="lab-styles" set:html={labStyles} />}
   </head>
   <body>
     <a href="#main" class="skip-link">Skip to content</a>
@@ -373,6 +486,7 @@ const documentTitle = isHome
     </div>
     <div class="viewport-frame" transition:persist="viewport-frame" aria-hidden="true"></div>
     <div class="page-scrollbar" transition:persist="page-scrollbar" aria-hidden="true"><div class="page-scrollbar-thumb"></div></div>
+    {import.meta.env.DEV && <LabPanel />}
 
     <script>
       import { onPageCleanup, pageSignal } from "../scripts/lifecycle";
@@ -435,18 +549,13 @@ const documentTitle = isHome
         const items = document.querySelectorAll<HTMLElement>("[data-enter]:not(.entered)");
         // Entrances belong to the first page of a visit, not to every
         // navigation inside it. A swapped-in page is by definition not the
-        // first; only the document's own page asks the navigation entry and
-        // referrer whether it was reached from elsewhere on the site.
+        // first; for the document's own page the boot in <head> has already
+        // asked the navigation entry and referrer, and left data-first-visit.
         if (!firstPage) {
           items.forEach((el) => el.classList.add("entered"));
           return;
         }
-        const navEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-        let internal = false;
-        try {
-          internal = Boolean(document.referrer) && new URL(document.referrer).origin === location.origin;
-        } catch {}
-        const firstOfVisit = navEntry?.type === "reload" || (navEntry?.type !== "back_forward" && !internal);
+        const firstOfVisit = document.documentElement.hasAttribute("data-first-visit");
         if (!firstOfVisit) {
           items.forEach((el) => el.classList.add("entered"));
           return;

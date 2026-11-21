@@ -10,6 +10,7 @@ import { collectionPageJsonLd } from "../../../lib/jsonld";
 import { ogPath } from "../../../lib/og-url";
 import { absUrl, slashPath } from "../../../lib/urls";
 import Icon from "../../../components/Icon.astro";
+import PageIntro from "../../../components/PageIntro.astro";
 
 export async function getStaticPaths() {
   const buckets = await getTagBuckets();
@@ -48,13 +49,14 @@ const fmt = (d: Date) =>
     { href: absUrl("/library/feed.json"), title: "Library JSON Feed", type: "application/feed+json" },
   ]}
 >
-  <header class="tag-header" data-enter>
-    <h1 class="tag-title"><Icon name="hash" size={14} strokeWidth={2} class="ui-chip__hash ui-chip__hash--inline" />{bucket.tag}</h1>
-    {description && <p class="tag-lede">{description}</p>}
-    <div class="tag-meta-bar">
+  <PageIntro title={bucket.tag} lede={description}>
+    <Icon slot="mark" name="hash" size={14} strokeWidth={2} class="ui-chip__hash ui-chip__hash--inline" />
+  </PageIntro>
+  <div class="page-bar tag-meta-bar" data-enter>
+    <div class="page-bar__start">
       <span class="ui-badge">{bucket.count} {bucket.count === 1 ? "entry" : "entries"}</span>
     </div>
-  </header>
+  </div>
 
   <ul class="surface-stack" data-enter>
     {notes.map((n) => (
@@ -70,49 +72,11 @@ const fmt = (d: Date) =>
 </Page>
 
 <style>
-  .tag-header {
-    display: grid;
-    max-inline-size: 65ch;
-    gap: clamp(1rem, 2.5vw, 1.25rem);
-    margin-bottom: clamp(1.25rem, 3vw, 1.5rem);
-  }
-
-  .tag-title,
-  .tag-lede {
-    margin: 0;
-  }
-
-  .tag-title {
-    max-inline-size: 22ch;
-    font-size: var(--type-detail-title-size);
-    font-weight: 640;
-    letter-spacing: -0.035em;
-    line-height: 1.08;
-    color: var(--ink);
-    text-wrap: balance;
-    overflow-wrap: anywhere;
-  }
-
   /* the title's own symbol: it scales with the title (14px would read as a
      subscript at this size), stays ghost, and sits on the x-height */
-  .tag-title :global(.ui-chip__hash--inline) {
+  :global(.page-intro h1 > .ui-chip__hash--inline) {
     inline-size: 0.6em;
     block-size: 0.6em;
     vertical-align: 0.04em;
-  }
-
-  .tag-lede {
-    max-inline-size: 56ch;
-    color: var(--muted);
-    font-size: var(--text-base);
-    line-height: 1.6;
-    text-wrap: pretty;
-  }
-
-  .tag-meta-bar {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding-top: 0.25rem;
   }
 </style>

@@ -245,9 +245,10 @@
 
 /* Glass: sheen, opaque fill and spec over a border-box rim, then one drop.
    The fill must be opaque or the rim shows through it. No backdrop-filter:
-   the canvas behind in-flow glass is flat. Light glass is the header nav's
-   surface (the tokens leave sheen and spec empty and the rim one solid
-   hairline); dark keeps all five layers. */
+   the canvas behind in-flow glass is flat. Light glass is lit on these
+   consumers (global.css, under the light theme; the root tokens stay flat
+   for the blurred overlays and for light without JS); dark keeps all five
+   layers. */
 :is(.ui-cap--glass, .ui-seg, .ui-dock, .ui-card, .ui-pager__card, .ui-tile, .ui-tile__go) {
   border: 1px solid transparent;
   background:
@@ -485,6 +486,13 @@
 .ui-link:focus-visible {
   --link-lift: var(--font-hover-lift);
   --ext-open: 1;
+}
+
+/* press: an inline link cannot scale without breaking its line, so it
+   answers in colour */
+.ui-link:active {
+  color: var(--muted);
+  transition-duration: var(--dur-press);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -1265,7 +1273,8 @@
   max-inline-size: 24ch;
   margin-block-start: var(--step-1);
   color: var(--ghost);
-  font-size: var(--text-sm);
+  font-size: var(--text-ui-sm);
+  font-weight: var(--font-normal);
   line-height: 1.5;
 }
 
@@ -1320,6 +1329,11 @@
 @media (hover: hover) and (pointer: fine) {
   .ui-cap--ink:hover {
     background: var(--ink-fill-hover) border-box;
+  }
+
+  /* and a bloom of its own ink beneath it, gone while pressed */
+  .ui-cap--ink:hover:not(:active) {
+    box-shadow: var(--ink-edge), var(--ink-bloom);
   }
 
   /* the nav item's answer: a tint and a firmer hairline, nothing moves */

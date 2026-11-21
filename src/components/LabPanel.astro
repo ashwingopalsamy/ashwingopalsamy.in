@@ -1,0 +1,18 @@
+---
+/* Dev-only switches for the v2 lab. No <style> and no bundled <script>, so
+   nothing here reaches a production build: the styles are in styles/lab.css
+   and the behaviour is in the lab boot in layouts/Page.astro. */
+const switches = ["sans", "quiet", "surfaces", "pager", "arrive"];
+---
+
+<div class="lab-panel" data-lab-panel transition:persist="lab-panel">
+  <div class="lab-panel__row" role="group" aria-label="Lab switches">
+    {switches.map((name) => (
+      <button type="button" class="lab-panel__chip" data-lab-toggle={name} aria-pressed="false">{name}</button>
+    ))}
+    <span class="lab-panel__sep" aria-hidden="true"></span>
+    <button type="button" class="lab-panel__chip" data-lab-set="all">all</button>
+    <button type="button" class="lab-panel__chip" data-lab-set="none">none</button>
+  </div>
+  <script is:inline>window.__siteLab && window.__siteLab.render();</script>
+</div>

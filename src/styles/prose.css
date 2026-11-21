@@ -134,7 +134,7 @@
   color: var(--ink);
   transition: font-weight var(--t-color);
 }
-.prose em { font-style: italic; }
+.prose em { font-style: normal; font-weight: var(--font-medium); }
 
 /* Inline links: ink, no underline, no wash. The body text here is ink too,
    so colour cannot find a link; it rests a notch heavier (--font-medium)
@@ -403,8 +403,9 @@
   }
 }
 /* italics/bold from theme palettes follow the same variable swap */
-:root[data-theme="dark"] .prose .astro-code span[style*="font-style:italic"] {
-  font-style: italic;
+/* shiki palettes may mark spans italic; the site has no italic */
+.prose .astro-code span[style*="font-style:italic"] {
+  font-style: normal !important;
 }
 
 /* ------------------------------------------------------------------ */
@@ -470,7 +471,6 @@
   padding: var(--step-1) 0 var(--step-1) var(--step-4);
   border-inline-start: 2px solid var(--rule-strong);
   color: var(--muted);
-  font-style: italic;
   transition: border-color var(--t-color), color var(--t-color);
 }
 .prose blockquote p { color: inherit; }
@@ -651,7 +651,7 @@
 .prose .diagram-canvas foreignObject,
 .diagram-overlay-stage .label,
 .diagram-overlay-stage foreignObject {
-  font-family: "Inter Variable", system-ui, -apple-system, sans-serif;
+  font-family: "Geist Variable", system-ui, -apple-system, sans-serif;
   font-size: 0.8125rem;
   color: var(--ink);
 }
@@ -917,7 +917,7 @@
   display: none;                       /* shown until enhanced / on failure */
   margin: 0;
   border: 0;
-  border-top: 1px solid var(--rule);
+  border-top: var(--hairline) solid var(--rule);
   padding: var(--step-3) var(--step-4);
   overflow-x: auto;
   max-inline-size: 100%;
@@ -980,7 +980,7 @@
   display: flex;
   justify-content: flex-end;
   padding: var(--step-1) var(--step-2) var(--step-2);
-  border-top: 1px solid var(--rule);
+  border-top: var(--hairline) solid var(--rule);
 }
 .prose .diagram-expand[data-pending] { visibility: hidden; }
 

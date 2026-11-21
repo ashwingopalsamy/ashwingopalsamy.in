@@ -1,5 +1,5 @@
 /* ==================================================================
-   post-figures - open figures and the reading font for posts under
+   post-figures - open figures for posts under
    /blog/abliterated/.
 
    Scoped to .note[data-post-figures], which Note.astro sets on those
@@ -112,49 +112,6 @@
   pointer-events: none;
 }
 
-/* ---- reading font: Newsreader by default, the site's sans through the toggle.
-   fonts.css only carries Newsreader's italics, so the upright faces live here. */
-@font-face {
-  font-family: "Newsreader Variable";
-  font-style: normal;
-  font-display: swap;
-  font-weight: 200 800;
-  src: url("@fontsource-variable/newsreader/files/newsreader-latin-ext-wght-normal.woff2") format("woff2-variations");
-  unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-
-@font-face {
-  font-family: "Newsreader Variable";
-  font-style: normal;
-  font-display: swap;
-  font-weight: 200 800;
-  src: url("@fontsource-variable/newsreader/files/newsreader-latin-wght-normal.woff2") format("woff2-variations");
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-.note[data-post-figures]:not([data-font="sans"]) :is(.prose, .detail-title, .detail-lede, .font-toggle__glyph) {
-  font-family: "Newsreader Variable", Georgia, serif;
-}
-
-/* Newsreader runs small next to the sans, so its whole type scale steps up. The sans keeps the site's. */
-.note[data-post-figures]:not([data-font="sans"]) .prose {
-  --text-xs: clamp(0.8rem, 0.78rem + 0.1vw, 0.875rem);
-  --text-sm: clamp(0.95rem, 0.93rem + 0.12vw, 1.03rem);
-  --text-base: clamp(1.1875rem, 1.15rem + 0.2vw, 1.25rem);
-  --text-lg: clamp(1.32rem, 1.25rem + 0.35vw, 1.5rem);
-  --text-xl: clamp(1.48rem, 1.38rem + 0.5vw, 1.65rem);
-  /* prose.css fixes phones at 1rem, so the size has to be restated */
-  font-size: var(--text-base);
-}
-
-.note[data-post-figures]:not([data-font="sans"]) .detail-title {
-  font-size: calc(var(--type-detail-title-size) * 1.15);
-}
-
-.note[data-post-figures]:not([data-font="sans"]) .detail-lede {
-  font-size: clamp(1.15rem, 1.12rem + 0.15vw, 1.25rem);
-}
-
 /* links: darker and a notch heavier than the body, with the arrow always showing, touch included */
 .note[data-post-figures] .prose a.external {
   --ext-open: 1;
@@ -171,9 +128,9 @@
   color: var(--ghost);
 }
 
-/* chart labels stay in the sans whichever font is on, for legibility at small sizes */
+/* chart labels keep the sans, for legibility at small sizes */
 .note[data-post-figures] .fig__art svg {
-  font-family: "Inter Variable", "Inter Fallback", system-ui, -apple-system, sans-serif;
+  font-family: "Geist Variable", "Geist Fallback", system-ui, -apple-system, sans-serif;
 }
 
 .note[data-post-figures] .prose > :is(p, ul, ol) {
