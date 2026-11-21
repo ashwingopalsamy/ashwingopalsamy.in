@@ -314,7 +314,7 @@ Controls draw on a derived layer in `global.css`: `--glass-*` for in-flow glass,
 
 Geist carries navigation, prose, and UI at every width. There is no serif and no italic; emphasis comes from weight and value. JetBrains Mono is limited to code, tokens, times, hashes, and measurements.
 
-Body copy uses a readable 65 to 75 character measure. Headings are balanced, tracking never goes below `-0.04em`, and prose is ragged on every page: start-aligned, never justified, no automatic hyphenation. In the home page's context paragraphs a link's words never split across two lines. The one-pixel mono offset is an optical correction, not layout spacing.
+Body copy uses a readable 65 to 75 character measure. Headings are balanced, tracking never goes below `-0.04em`, and below 38rem ledes and body paragraphs are justified with automatic hyphenation. The home page's context paragraphs are ragged with manual hyphenation from 38rem up and justified below it, and a link's words never split across two lines in them. The one-pixel mono offset is an optical correction, not layout spacing.
 
 Capsule labels are 15px (`--text-ui`) at 500 on 48 and 40, and 13px (`--text-ui-sm`) on 32 and 28. An inline link takes its paragraph's own weight at rest and differs from the surrounding text by colour alone (ink on the ghost paragraph). Inside `.prose`, where body text is ink already, it rests at `--font-medium` (500) so it stays findable. With a fine pointer over the paragraph, not only the link, every link in it lifts to `--font-hover-lift` (550) on the colour curve, and `<strong>` in a hovered prose block to `--font-hover-bold` (680). Weight is the one thing in the system that may reflow a line on hover; touch never lifts.
 

@@ -132,3 +132,8 @@
 .note[data-post-figures] .fig__art svg {
   font-family: "Geist Variable", "Geist Fallback", system-ui, -apple-system, sans-serif;
 }
+
+.note[data-post-figures] .prose > :is(p, ul, ol) {
+  text-align: justify;
+  hyphens: auto;
+}

@@ -129,12 +129,24 @@ const contributions = await getGithubContributions();
   }
 
   @media (max-width: 38rem) {
+    /* Phones keep the justified column: at this width a ragged edge reads as
+       uneven against the full-width actions under it. */
+    .refined-context {
+      text-align: justify;
+      hyphens: auto;
+      -webkit-hyphens: auto;
+    }
+
+    .refined-context .ui-link {
+      white-space: normal;
+    }
+
     /* The actions always fill the row exactly, so nothing is left hanging at
        the right edge at any phone width. One row while it fits: the two
        capsules absorb the spare width equally and the three profile circles
        (44px here, 48 on larger screens) keep their size. Below ~380px they no
-       longer fit, so the capsules share the first row and the circles spread
-       edge to edge on the second. */
+       longer fit, so the capsules share the first row and the circles widen
+       into capsules that share the second. */
     .refined-contact__row {
       flex-wrap: nowrap;
       gap: var(--step-2);
@@ -197,7 +209,13 @@ const contributions = await getGithubContributions();
     .refined-socials :global(.social-preview),
     .refined-socials :global(.social-preview__triggers) {
       inline-size: 100%;
-      justify-content: space-between;
+    }
+
+    /* Equal capsules on both rows and one gap: two halves, then three
+       thirds, instead of three circles floating apart. */
+    .refined-cta-row > :global(.ui-cap),
+    .refined-socials :global(.ui-cap--icon) {
+      flex: 1 1 0;
     }
   }
 </style>

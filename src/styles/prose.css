@@ -1204,6 +1204,10 @@
 @media (max-width: 38rem) {
   .prose { font-size: 1rem; line-height: 1.68; }
   .prose p {
+    text-align: justify;
+    text-justify: inter-word;
+    hyphens: auto;
+    -webkit-hyphens: auto;
     text-wrap: pretty;
   }
   .prose h2 { font-size: var(--text-lg); --h2-mt: 2.25rem; }
