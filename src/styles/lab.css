@@ -1,0 +1,286 @@
+/* v2 lab. Emitted only by `astro dev` (layouts/Page.astro); every rule is
+   inert unless its switch is named in <html data-lab>. */
+
+/* ------------------------------------------------------------------ */
+/*  the control                                                        */
+/* ------------------------------------------------------------------ */
+
+/* Level with the header chips, centred in the gap between the wordmark
+   (48px) and the nav pill (234px: three 72px slots, two 4px gaps, 4px of
+   padding and the rim), 16px clear of each, and wrapping inside that gap,
+   so the panel ends above an inner page's title (62px under the header). */
+.lab-panel {
+  --lab-rail: min(var(--rail-max), 100vw);
+  --lab-nav: calc(var(--step) * 58.5);
+  --lab-start: calc((100vw - var(--lab-rail)) / 2 + var(--rail-gutter) + var(--cap-48) + var(--step-4));
+  --lab-end: calc((100vw - var(--lab-rail)) / 2 + var(--rail-gutter) + var(--lab-nav) + var(--step-4));
+  position: fixed;
+  inset-block-start: calc(var(--step) * 11);
+  inset-inline: var(--lab-start) var(--lab-end);
+  inline-size: fit-content;
+  max-inline-size: max(calc(var(--step) * 24), calc(100vw - var(--lab-start) - var(--lab-end)));
+  margin-inline: auto;
+  z-index: calc(var(--z-frame) + 1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--step-1);
+  padding: var(--step-1);
+  border: var(--hairline) solid var(--edge);
+  border-radius: calc(var(--cap-20) / 2 + var(--step-1));
+  background: var(--canvas);
+  box-shadow: var(--lift-1);
+  color: var(--ghost);
+  font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
+  font-size: var(--text-2xs);
+  line-height: 1;
+}
+
+.lab-panel[hidden] {
+  display: none;
+}
+
+.lab-panel__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--step-1);
+}
+
+.lab-panel__chip {
+  display: inline-flex;
+  align-items: center;
+  block-size: var(--cap-20);
+  padding-inline: var(--step-2);
+  border: 0;
+  border-radius: var(--r-pill);
+  margin: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.lab-panel__chip:hover {
+  color: var(--ink);
+  background: var(--wash);
+}
+
+.lab-panel__chip[aria-pressed="true"] {
+  color: var(--canvas);
+  background: var(--ink);
+}
+
+.lab-panel__chip:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--hairline);
+}
+
+.lab-panel__sep {
+  inline-size: var(--hairline);
+  block-size: var(--step-3);
+  background: var(--edge);
+}
+
+/* Page styles load after this sheet in dev, so every override below wins
+   on specificity: the :root[data-lab] prefix adds two classes, which beats
+   a scoped one-class rule; deeper page selectors are restated in full. */
+
+/* ------------------------------------------------------------------ */
+/*  sans: mono only for the clock and for code                         */
+/* ------------------------------------------------------------------ */
+
+/* inherit, not a family name: these follow whatever the body is set in.
+   Mono's optical corrections (a smaller size, a 1px drop) go with it. */
+:root[data-lab~="sans"] :is(
+  .ui-count,
+  .ui-badge--mono:not(code, .design-guide *, .carbon-specimen *),
+  .note-date,
+  .detail-meta-left :is(time, .detail-date),
+  .cafe-card__count,
+  .person-card__met,
+  .photo-exposure,
+  .photo-exif .photo-exif__cell dd,
+  .photo-place__coords,
+  .someday-tally__since,
+  .wish__when,
+  .pv-count,
+  .pv-caption__exposure,
+  .contact-section a.mono,
+  .privacy-section a.mono
+) {
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+:root[data-lab~="sans"] :is(
+  .ui-badge--mono:not(code, .design-guide *, .carbon-specimen *),
+  .cafe-card__count,
+  .person-card__met,
+  .photo-exposure,
+  .photo-exif .photo-exif__cell dd,
+  .photo-place__coords,
+  .someday-tally__since,
+  .wish__when,
+  .pv-count,
+  .pv-caption__exposure
+) {
+  font-size: var(--text-xs);
+}
+
+:root[data-lab~="sans"] :is(.contact-section a.mono, .privacy-section a.mono) {
+  font-size: inherit;
+}
+
+:root[data-lab~="sans"] :is(
+  .note-date,
+  .contact-section a.mono,
+  .privacy-section a.mono,
+  .cafe-card__count,
+  .person-card__met,
+  .photo-exposure__values,
+  .photo-exif .photo-exif__cell dd,
+  .photo-place__coords,
+  .someday-tally__since,
+  .wish__when,
+  .pv-caption__exposure
+) {
+  top: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/*  quiet: less metadata                                               */
+/* ------------------------------------------------------------------ */
+
+/* Clipped, not removed: a segment's count is part of its tab's name
+   ("All 56"), and the cafe count is read with its hidden "visits". */
+:root[data-lab~="quiet"] :is(.ui-count, .cafe-card__count) {
+  --lab-clip: 1px;
+  position: absolute;
+  inline-size: var(--lab-clip);
+  block-size: var(--lab-clip);
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* status badges, by container: the developers, colophon, design, cafe and
+   photo badges are facts, not states, and stay. Of the arrows only the
+   internal ones repeat; an external arrow says where a link goes, and
+   stays (DESIGN.md: internal and external look different). */
+:root[data-lab~="quiet"] :is(
+  .library-row-tail .ui-badge,
+  .endpoint-catalog-list .ui-row__title > .ui-badge,
+  .tag-meta-bar,
+  .wish__meta,
+  .tag-count,
+  .photo-index [data-engine-filter],
+  .library-all,
+  .note-back,
+  .ui-tile__corner,
+  .wish__go
+),
+:root[data-lab~="quiet"] .column-body:not(.home) :is(.ui-row time.ui-row__meta, .ui-row__glyph:not(.ui-row__glyph--ext)) {
+  display: none;
+}
+
+/* the photos sort keeps its place at the end of the bar */
+:root[data-lab~="quiet"] .photo-index .engine-bar .engine-sort {
+  margin-inline-start: auto;
+}
+
+/* someday: the meta and arrow columns go with their content */
+:root[data-lab~="quiet"] .someday-list .wish__row {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+/* ------------------------------------------------------------------ */
+/*  surfaces: one card recipe                                          */
+/* ------------------------------------------------------------------ */
+
+/* The lit light glass lives on the recipe's consumers (global.css), not
+   on :root, so it is restated for these. */
+:root[data-theme="light"][data-lab~="surfaces"] :is(.prose .code-figure, .prose blockquote.callout, .carbon-specimen, .tonal-showcase, .semantic-card, .route-mockup, .egg-block, .cmd-bar) {
+  --glass-fill: color-mix(in oklch, var(--ink) 1.5%, var(--canvas));
+  --glass-sheen: linear-gradient(180deg, var(--canvas), transparent 58%);
+  --glass-rim: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--ink) 8%, transparent),
+    color-mix(in oklch, var(--ink) 15%, transparent)
+  );
+  --glass-spec:
+    inset 0 1px 0 color-mix(in oklch, var(--canvas) 92%, transparent),
+    inset 0 -1px 0 color-mix(in oklch, var(--ink) 3%, transparent);
+  --glass-lift:
+    0 1px 1px color-mix(in oklch, oklch(0 0 0) 5%, transparent),
+    0 3px 8px -3px color-mix(in oklch, oklch(0 0 0) 10%, transparent);
+}
+
+:root[data-lab~="surfaces"] :is(.prose .code-figure, .prose blockquote.callout, .carbon-specimen, .tonal-showcase, .semantic-card, .route-mockup, .egg-block, .cmd-bar) {
+  border-color: transparent;
+  border-radius: var(--tile-r);
+  box-shadow: var(--glass-spec), var(--glass-lift);
+}
+
+:root[data-lab~="surfaces"] :is(.prose blockquote.callout, .carbon-specimen, .tonal-showcase, .semantic-card, .route-mockup, .egg-block, .cmd-bar) {
+  background:
+    var(--glass-sheen) padding-box,
+    linear-gradient(var(--glass-fill), var(--glass-fill)) padding-box,
+    var(--glass-rim) border-box;
+}
+
+/* the recipe's 1px rim (controls.css); the egg block had no border */
+:root[data-lab~="surfaces"] :is(.carbon-specimen, .tonal-showcase, .semantic-card, .route-mockup, .egg-block, .cmd-bar) {
+  --lab-glass-edge: 1px;
+  border-style: solid;
+  border-width: var(--lab-glass-edge);
+}
+
+/* the code keeps its own fill; the callout keeps its tone edge */
+:root[data-lab~="surfaces"] .prose .code-figure {
+  background:
+    linear-gradient(var(--surface-inline-bg), var(--surface-inline-bg)) padding-box,
+    var(--glass-rim) border-box;
+}
+
+:root[data-lab~="surfaces"] .prose blockquote.callout {
+  border-inline-start-color: var(--cx);
+}
+
+:root[data-lab~="surfaces"] .code-card {
+  border-radius: var(--tile-r);
+}
+
+/* ------------------------------------------------------------------ */
+/*  pager: no previous / next under a post                             */
+/* ------------------------------------------------------------------ */
+
+:root[data-lab~="pager"] .ui-pager {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ */
+/*  arrive: every page arrives the way home does                       */
+/* ------------------------------------------------------------------ */
+
+/* First page of a visit only (the boot's data-first-visit). The title,
+   then the lede, then the first block, on home's keyframes and step. A
+   block the reveal holds back below the fold (.initial-enter) is left to
+   it; above the fold the reveal only marks .entered, so nothing plays
+   twice. */
+:root[data-motion="on"][data-first-visit][data-lab~="arrive"] :is(
+  .page-intro > *,
+  .page-intro + :not(.initial-enter),
+  .photo-detail-caption > *,
+  .photo-stage
+) {
+  --enter-step: 40ms;
+  animation: enter var(--dur-enter) var(--ease-enter) calc(var(--lab-enter-order, 1) * var(--enter-step)) backwards;
+}
+
+:root[data-lab~="arrive"] :is(.page-intro > :is(h1, .page-intro-eyebrow), .photo-detail-heading) {
+  --lab-enter-order: 0;
+}
+
+:root[data-lab~="arrive"] :is(.page-intro + *, .photo-stage) {
+  --lab-enter-order: 2;
+}

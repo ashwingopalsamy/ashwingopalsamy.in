@@ -65,7 +65,6 @@ const sections = profileLinkSections.map((sec) => ({
   .links-sections {
     display: flex;
     flex-direction: column;
-    margin-top: 2.25rem;
   }
 
   .links-group {
@@ -74,10 +73,11 @@ const sections = profileLinkSections.map((sec) => ({
     margin-top: 0;
   }
 
+  /* one rule between groups, --space-rule on each side */
   .links-group + .links-group {
-    border-top: 1px solid var(--rule);
-    padding-top: 2.25rem;
-    margin-top: 2.25rem;
+    border-top: var(--hairline) solid var(--rule);
+    padding-top: var(--space-rule);
+    margin-top: var(--space-rule);
   }
 
   .links-grid {

@@ -488,6 +488,13 @@
   --ext-open: 1;
 }
 
+/* press: an inline link cannot scale without breaking its line, so it
+   answers in colour */
+.ui-link:active {
+  color: var(--muted);
+  transition-duration: var(--dur-press);
+}
+
 @media (hover: hover) and (pointer: fine) {
   :is(p, li, dd, td, blockquote, figcaption):hover,
   .ui-link:hover {
@@ -1266,7 +1273,8 @@
   max-inline-size: 24ch;
   margin-block-start: var(--step-1);
   color: var(--ghost);
-  font-size: var(--text-sm);
+  font-size: var(--text-ui-sm);
+  font-weight: var(--font-normal);
   line-height: 1.5;
 }
 

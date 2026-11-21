@@ -86,23 +86,25 @@ const collectionPage = libraryCollectionPageJsonLd([
   <div class="library-tabs" data-library>
     <span class="library-sentinel" aria-hidden="true"></span>
     <div class="library-veil" aria-hidden="true"></div>
-    <div class="ui-seg library-seg">
-      <div class="ui-seg__track" role="tablist" aria-label="Library sections">
-        <span class="ui-seg__ind" aria-hidden="true"></span>
-        {tabs.map((tab) => (
-          <button
-            type="button"
-            class="ui-seg__item"
-            role="tab"
-            id={`library-tab-${tab.id}`}
-            data-value={tab.id}
-            aria-selected={tab.id === initialView ? "true" : "false"}
-            aria-controls={`library-panel-${tab.id}`}
-            tabindex={tab.id === initialView ? 0 : -1}
-          >
-            <span class="ui-cap__label">{tab.label}{" "}<span class="ui-count">{tab.count}</span></span>
-          </button>
-        ))}
+    <div class="page-bar library-bar">
+      <div class="ui-seg page-bar__end library-seg">
+        <div class="ui-seg__track" role="tablist" aria-label="Library sections">
+          <span class="ui-seg__ind" aria-hidden="true"></span>
+          {tabs.map((tab) => (
+            <button
+              type="button"
+              class="ui-seg__item"
+              role="tab"
+              id={`library-tab-${tab.id}`}
+              data-value={tab.id}
+              aria-selected={tab.id === initialView ? "true" : "false"}
+              aria-controls={`library-panel-${tab.id}`}
+              tabindex={tab.id === initialView ? 0 : -1}
+            >
+              <span class="ui-cap__label">{tab.label}{" "}<span class="ui-count">{tab.count}</span></span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
 
@@ -174,10 +176,11 @@ const collectionPage = libraryCollectionPageJsonLd([
 
     /* A switch made below the tabs starts the new panel right under them,
        not wherever the old panel happened to be scrolled. The line is the
-       sticky offset where the tabs dock, and the header zone on phones,
-       where nothing docks. */
+       sticky offset where the tabs' row docks, and the header zone on
+       phones, where nothing docks. */
+    const bar = seg.closest<HTMLElement>(".library-bar") ?? seg;
     const dock = () => {
-      const sticky = parseFloat(getComputedStyle(seg).top);
+      const sticky = parseFloat(getComputedStyle(bar).top);
       const line = Number.isFinite(sticky)
         ? sticky
         : parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
@@ -260,8 +263,9 @@ const collectionPage = libraryCollectionPageJsonLd([
     pointer-events: none;
   }
 
-  /* The rim and padding hang outside the rail, so the first segment's ink
-     sits on it. */
+  /* The row is .page-bar (global.css). The rim and padding hang outside
+     the rail, so the first segment's ink sits on it; from 42.5rem the
+     segment takes the end slot and its last ink sits on the rail's end. */
   .library-seg {
     display: flex;
     inline-size: fit-content;
@@ -275,10 +279,6 @@ const collectionPage = libraryCollectionPageJsonLd([
     margin-inline-start: var(--step-1);
   }
 
-  .library-panels {
-    margin-top: clamp(2rem, 4vw, 2.75rem);
-  }
-
   .library-panel {
     margin-top: 0;
   }
@@ -287,13 +287,38 @@ const collectionPage = libraryCollectionPageJsonLd([
     display: none;
   }
 
-  /* Docked under the header. The glass turns to chrome (blur and all) only
-     while stuck: segmented's data-stuck, set by the sentinel above. */
+  /* Docked under the header: the row sticks, and only the segment takes
+     the pointer, so rows passing under the empty start stay live. The
+     glass turns to chrome (blur and all) only while stuck: segmented's
+     data-stuck, set by the sentinel above. At the small size, as every
+     other page's bar. */
   @media (min-width: 42.5rem) {
-    .library-seg {
+    .library-bar {
       position: sticky;
       inset-block-start: var(--library-dock);
       z-index: var(--z-raised);
+      pointer-events: none;
+    }
+
+    .library-seg {
+      margin-inline: auto calc(var(--track-inset) * -1);
+      pointer-events: auto;
+    }
+
+    .library-seg .ui-seg__item {
+      gap: var(--cap-gap-sm);
+      block-size: var(--cap-32);
+      padding-inline: var(--cap-px-32);
+      font-size: var(--text-ui-sm);
+    }
+
+    /* 32 to look at, 44 to hit, as .ui-seg--sm */
+    .library-seg .ui-seg__item::before {
+      content: "";
+      position: absolute;
+      inset-block: calc((var(--cap-32) - var(--hit)) / 2);
+      inset-inline: calc(var(--step-1) / -2);
+      border-radius: var(--r-pill);
     }
 
     /* Docked, the tabs are chrome too, so the header's veil carries on
@@ -308,7 +333,7 @@ const collectionPage = libraryCollectionPageJsonLd([
       inset-inline: 0;
       z-index: var(--z-veil);
       display: block;
-      block-size: calc(var(--library-dock) + var(--cap-48) + var(--step-6));
+      block-size: calc(var(--library-dock) + var(--cap-40) + var(--step-6));
       background: linear-gradient(
         180deg,
         color-mix(in oklch, var(--canvas) 78%, transparent),
@@ -326,7 +351,7 @@ const collectionPage = libraryCollectionPageJsonLd([
         visibility 0s linear var(--dur-shift);
     }
 
-    .library-tabs:has(> .library-seg[data-stuck]) > .library-veil {
+    .library-tabs:has(> .library-bar > .library-seg[data-stuck]) > .library-veil {
       visibility: visible;
       opacity: 1;
       transition:

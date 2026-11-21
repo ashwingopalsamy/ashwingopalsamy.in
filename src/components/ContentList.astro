@@ -1,6 +1,7 @@
 ---
 import type { CraftItem, NoteItem, PersonItem } from "../data/home";
 import Icon from "./Icon.astro";
+import SectionHeading from "./SectionHeading.astro";
 
 /**
  * ContentList - one row pattern for craft, notes, and good people, on the
@@ -35,11 +36,7 @@ function formatDate(iso: string): string {
 {
   items.length > 0 && (
     <section id={id} aria-labelledby={label ? `${id}-label` : undefined} data-enter>
-      {label && (
-        <h2 id={`${id}-label`} class="content-list-heading">
-          {label}
-        </h2>
-      )}
+      {label && <SectionHeading id={`${id}-label`} title={label} />}
       <ul class="rows surface-stack" data-variant={variant} role="list">
         {items.map((item) => {
           const title = isNote(item)
@@ -92,15 +89,6 @@ function formatDate(iso: string): string {
 <style>
   section {
     margin-top: 0;
-  }
-
-  .content-list-heading {
-    margin: 0 0 1.25rem;
-    font-size: var(--type-section-size);
-    font-weight: 580;
-    letter-spacing: -0.015em;
-    color: var(--ink);
-    line-height: var(--leading-tight);
   }
 
   .row-main {

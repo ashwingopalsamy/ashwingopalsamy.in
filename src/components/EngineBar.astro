@@ -27,9 +27,9 @@ const { label, facets, sorts, noun } = Astro.props;
 const filterable = facets.length > 2;
 ---
 
-<div class="engine-bar">
+<div class="page-bar engine-bar">
   {filterable && (
-    <div class="ui-seg ui-seg--sm engine-filter" data-engine-filter>
+    <div class="ui-seg ui-seg--sm page-bar__start engine-filter" data-engine-filter>
       <div class="ui-seg__track" role="group" aria-label={`Filter ${label}`}>
         <span class="ui-seg__ind" aria-hidden="true"></span>
         {facets.map((facet, index) => (
@@ -40,7 +40,7 @@ const filterable = facets.length > 2;
       </div>
     </div>
   )}
-  <div class="ui-seg ui-seg--sm engine-sort" data-engine-sort>
+  <div class="ui-seg ui-seg--sm page-bar__end engine-sort" data-engine-sort>
     <div class="ui-seg__track" role="group" aria-label={`Sort ${label}`}>
       <span class="ui-seg__ind" aria-hidden="true"></span>
       {sorts.map((sort, index) => (
@@ -61,16 +61,8 @@ const filterable = facets.length > 2;
 </div>
 
 <style>
-  .engine-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--step-3);
-    margin-block: 0 var(--step-6);
-  }
-
-  /* The rims hang outside the rail, so the first and last ink sit on it. */
+  /* The row is .page-bar (global.css). The rims hang outside the rail, so
+     the first and last ink sit on it. */
   .engine-filter {
     margin-inline-start: calc(var(--track-inset) * -1);
   }
@@ -84,10 +76,6 @@ const filterable = facets.length > 2;
   }
 
   @media (max-width: 38rem) {
-    .engine-bar {
-      gap: var(--step-2);
-    }
-
     .engine-filter {
       max-inline-size: calc(100% + var(--track-inset) * 2);
     }

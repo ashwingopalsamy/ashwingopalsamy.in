@@ -32,7 +32,7 @@ const url = slashPath(`/work/${entry.data.slug}`);
   ]}
 >
   <article>
-    <DetailHeader title={title} lede={description || note} back={{ href: "/work/", label: "Work" }}>
+    <DetailHeader title={title} lede={description || note}>
       <Fragment slot="meta">
         <time datetime={new Date(date).toISOString()}>{new Date(date).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" })}</time>
         <RowTags tags={tech} linked={new Set<string>()} label="Built with" />

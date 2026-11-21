@@ -44,34 +44,29 @@ colors:
   toast-ink: "oklch(1 0 0)"
   link-wash-press: "color-mix(in oklch, var(--ink) 14%, transparent)"
 typography:
-  inter-400:
-    fontFamily: Inter Variable, Inter Fallback, system-ui, sans-serif
+  geist-400:
+    fontFamily: Geist Variable, Geist Fallback, system-ui, sans-serif
     fontWeight: 400
     lineHeight: 1.68
     letterSpacing: 0em
-    fontFeature: '"cv05", "cv08", "calt", "liga"'
-  inter-450:
-    fontFamily: Inter Variable, Inter Fallback, system-ui, sans-serif
+    fontFeature: '"calt", "liga"'
+  geist-450:
+    fontFamily: Geist Variable, Geist Fallback, system-ui, sans-serif
     fontWeight: 450
     lineHeight: 1
-  inter-500:
-    fontFamily: Inter Variable, Inter Fallback, system-ui, sans-serif
+  geist-500:
+    fontFamily: Geist Variable, Geist Fallback, system-ui, sans-serif
     fontWeight: 500
     lineHeight: 1.4
-  inter-550:
-    fontFamily: Inter Variable, Inter Fallback, system-ui, sans-serif
+  geist-550:
+    fontFamily: Geist Variable, Geist Fallback, system-ui, sans-serif
     fontWeight: 550
     lineHeight: 1.3
     letterSpacing: -0.012em
-  inter-600:
-    fontFamily: Inter Variable, Inter Fallback, system-ui, sans-serif
+  geist-600:
+    fontFamily: Geist Variable, Geist Fallback, system-ui, sans-serif
     fontWeight: 600
     lineHeight: 1.3
-  newsreader-italic:
-    fontFamily: Newsreader Variable, Iowan Old Style, Georgia, serif
-    fontWeight: 400
-    lineHeight: 1.55
-    letterSpacing: -0.005em
   jetbrains-mono-400:
     fontFamily: JetBrains Mono, JetBrains Mono Fallback, ui-monospace, monospace
     fontWeight: 400
@@ -181,20 +176,20 @@ components:
   desktop-navigation:
     backgroundColor: "{colors.neutral-01}"
     textColor: "{colors.neutral-09}"
-    typography: "{typography.inter-400}"
+    typography: "{typography.geist-400}"
     rounded: "{rounded.r-pill}"
     padding: 4px
     height: 46px
   desktop-navigation-active:
     backgroundColor: "{colors.neutral-09}"
     textColor: "{colors.neutral-01}"
-    typography: "{typography.inter-450}"
+    typography: "{typography.geist-450}"
     rounded: "{rounded.r-pill}"
     padding: 8px
   mobile-navigation:
     backgroundColor: "{colors.neutral-01}"
     textColor: "{colors.neutral-09}"
-    typography: "{typography.inter-400}"
+    typography: "{typography.geist-400}"
     rounded: "{rounded.r-pill}"
     padding: 4px
     height: 52px
@@ -202,82 +197,82 @@ components:
   toast:
     backgroundColor: "{colors.neutral-09}"
     textColor: "{colors.neutral-01}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-pill}"
     padding: 8px
     height: 48px
   capsule-ink:
     backgroundColor: "{colors.neutral-09}"
     textColor: "{colors.neutral-01}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-pill}"
     padding: 20px
     height: 48px
   capsule-glass:
     backgroundColor: "{colors.neutral-01}"
     textColor: "{colors.neutral-09}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-pill}"
     padding: 20px
     height: 48px
   capsule-quiet:
     textColor: "{colors.neutral-06}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-pill}"
     padding: 16px
     height: 40px
   capsule-action:
     backgroundColor: "{colors.neutral-01}"
     textColor: "{colors.neutral-09}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-pill}"
     padding: 12px
     height: 32px
   chip:
     backgroundColor: "{colors.neutral-02}"
     textColor: "{colors.neutral-08}"
-    typography: "{typography.inter-450}"
+    typography: "{typography.geist-450}"
     rounded: "{rounded.r-pill}"
     padding: 12px
     height: 28px
   chip-selected:
     backgroundColor: "{colors.neutral-09}"
     textColor: "{colors.neutral-01}"
-    typography: "{typography.inter-450}"
+    typography: "{typography.geist-450}"
     rounded: "{rounded.r-pill}"
     padding: 12px
     height: 28px
   badge:
     backgroundColor: "{colors.neutral-02}"
     textColor: "{colors.neutral-08}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-pill}"
     padding: 8px
     height: 20px
   row:
     textColor: "{colors.neutral-09}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-4}"
     padding: 12px
     height: 48px
   segmented:
     backgroundColor: "{colors.neutral-01}"
     textColor: "{colors.neutral-08}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-pill}"
     padding: 4px
     height: 48px
   segmented-active:
     backgroundColor: "{colors.neutral-09}"
     textColor: "{colors.neutral-01}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-pill}"
     padding: 16px
     height: 40px
   tooltip:
     backgroundColor: "{colors.neutral-01}"
     textColor: "{colors.neutral-09}"
-    typography: "{typography.inter-500}"
+    typography: "{typography.geist-500}"
     rounded: "{rounded.r-pill}"
     padding: 12px
     height: 28px
@@ -317,9 +312,9 @@ Controls draw on a derived layer in `global.css`: `--glass-*` for in-flow glass,
 
 ## Typography
 
-Inter carries navigation and prose on desktop; compact viewports (38rem and below) set the same roles in Geist, each preloading only its own face. Newsreader Italic is used sparingly for literary interruptions. JetBrains Mono is limited to code, tokens, times, hashes, and measurements.
+Geist carries navigation, prose, and UI at every width. There is no serif and no italic; emphasis comes from weight and value. JetBrains Mono is limited to code, tokens, times, hashes, and measurements.
 
-Body copy uses a readable 65 to 75 character measure. Headings are balanced, tracking never goes below `-0.04em`, and long editorial paragraphs may use deliberate justification. The home page's context paragraphs are ragged instead: start-aligned, no automatic hyphenation, and a link's words never split across two lines. The one-pixel mono offset is an optical correction, not layout spacing.
+Body copy uses a readable 65 to 75 character measure. Headings are balanced, tracking never goes below `-0.04em`, and prose is ragged on every page: start-aligned, never justified, no automatic hyphenation. In the home page's context paragraphs a link's words never split across two lines. The one-pixel mono offset is an optical correction, not layout spacing.
 
 Capsule labels are 15px (`--text-ui`) at 500 on 48 and 40, and 13px (`--text-ui-sm`) on 32 and 28. An inline link takes its paragraph's own weight at rest and differs from the surrounding text by colour alone (ink on the ghost paragraph). Inside `.prose`, where body text is ink already, it rests at `--font-medium` (500) so it stays findable. With a fine pointer over the paragraph, not only the link, every link in it lifts to `--font-hover-lift` (550) on the colour curve, and `<strong>` in a hovered prose block to `--font-hover-bold` (680). Weight is the one thing in the system that may reflow a line on hover; touch never lifts.
 
@@ -345,7 +340,9 @@ Optical corrections are named (`--mono-optical-shift`, `--optical-icon-inset`, `
 
 ## Layout
 
-Header, main content, and footer share the same centered rail. Space above a section heading is larger than the space below it. The Library groups its newest entries into four shelves and keeps author, platform, source, date, and tags in one readable supporting line.
+Header, main content, and footer share the same centered rail. Space above a section heading is larger than the space below it.
+
+Every titled page is built on one skeleton. The head is `PageIntro`: the title (44px, 620, balanced within 26ch) sits the same distance under the header on every page, with the lede 20px below it. Work and post pages and tag pages use the same head; the header chip is their way back, so the head carries no back link and no rule. Under the head sits at most one control row, `.page-bar`: a start slot and an end slot on one centred line (an engine page's filter and sort, the Library's tabs in the end slot, a detail page's meta and actions, a tag's count). The head ends `--step-6` (32px, home's distance) above the next block, and the control row ends `--step-6` above the content. Page-level section headings are `SectionHeading` (16px, 580, an optional count or badge at the end) and sections stand `--space-section` apart; where a page divides them with a rule, it is one hairline with `--space-rule` on each side. The Library groups its newest entries into four shelves and keeps author, platform, source, date, and tags in one readable supporting line.
 
 Mobile has its own physical constraints. Home, Work, AI, More, and Links stay in five fixed tracks above the safe area, while desktop keeps the quieter Home, Work, and More set. Content reserves space beneath the mobile bar, and horizontal tab lists contain their own overscroll.
 
@@ -365,7 +362,7 @@ Two surfaces outside the recipe share its depth. The location card rests on `--l
 |---|---|---|
 | Header chips and nav, mobile bottom navigation | `blur(20px) saturate(170%)` | fixed and short |
 | Veil under the header | `blur(10px)`, masked | one fixed band at a constant radius, hidden at the top of the page |
-| Library tabs, only while stuck | `blur(20px) saturate(170%)` | a 48px strip, off when not stuck |
+| Library tabs, only while stuck | `blur(20px) saturate(170%)` | a 40px strip, off when not stuck |
 | Tooltip, toast | `blur(16px) saturate(180%)` | small and transient |
 | Command palette, location pill over its map | unchanged | an overlay; a map |
 | In-flow glass | none | the canvas behind is flat |

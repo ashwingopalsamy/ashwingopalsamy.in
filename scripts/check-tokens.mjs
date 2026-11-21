@@ -17,7 +17,7 @@ import { parse as parseYaml } from 'yaml';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // go-tour.css is a self-contained code-playground theme: its --code-*/--gt-* palette blocks are token definitions.
-const TOKEN_FILES = new Set(['geometry', 'motion', 'fonts', 'global', 'go-tour'].map((n) => `src/styles/${n}.css`));
+const TOKEN_FILES = new Set(['geometry', 'motion', 'fonts', 'global', 'go-tour', 'lab'].map((n) => `src/styles/${n}.css`));
 const ALLOWED_BREAKPOINTS = ['38rem', '42.5rem', '72rem'];
 const DRIFT_GROUPS = ['colors', 'rounded', 'spacing', 'motion'];
 const DRIFT_SKIP = new Set(['nestingRule', 'rhythm', 'step']); // prose / meta keys

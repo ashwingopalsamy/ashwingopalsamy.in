@@ -161,11 +161,6 @@
   --type-page-title-tracking: -0.04em;
   --type-page-title-leading: 1.04;
 
-  --type-detail-title-size: clamp(1.85rem, 4.5vw, 2.5rem);
-  --type-detail-title-weight: 640;
-  --type-detail-title-tracking: -0.035em;
-  --type-detail-title-leading: 1.08;
-
   --type-section-size: 1rem;
   --type-section-weight: 580;
   --type-section-tracking: -0.01em;
@@ -230,8 +225,10 @@
   --z-overlay: 60;
   --z-frame: 70;
 
-  --focus-ring: 2px solid var(--ink);
-  --focus-offset: 3px;
+  /* one ring: offset-0 components (rows, segments, tiles, swatches,
+     someday rows) keep their offset and take this width and colour */
+  --focus-ring: 1.5px solid color-mix(in oklch, var(--ink) 45%, transparent);
+  --focus-offset: 2px;
 
   /* ------------------------------------------------------------------ */
   /*  motion lives in motion.css; geometry lives in geometry.css.        */
@@ -640,6 +637,16 @@
   outline-offset: var(--focus-offset);
 }
 
+/* No italics: elements italic by browser default render upright. */
+em,
+i,
+cite,
+address,
+dfn,
+var {
+  font-style: normal;
+}
+
 img,
 video,
 canvas {
@@ -751,11 +758,11 @@ body {
   /* html paints the canvas and its sky light; a body fill would cover it */
   background: transparent;
   color: var(--ink);
-  font-family: "Inter Variable", "Inter Fallback", system-ui, -apple-system, sans-serif;
+  font-family: "Geist Variable", "Geist Fallback", system-ui, -apple-system, sans-serif;
   font-size: var(--text-base);
   line-height: var(--leading-normal);
   font-weight: var(--font-normal);
-  font-feature-settings: "cv05", "cv08", "calt", "liga";
+  font-feature-settings: "calt", "liga";
   font-optical-sizing: auto;
   font-synthesis: none;
   overflow-x: clip;
@@ -1215,16 +1222,59 @@ section {
   margin-top: var(--space-section);
 }
 
+/* The head (PageIntro) ends at --step-6, home's distance to its first
+   block, so a section opening the page adds nothing to it, and a section
+   that holds the head starts where every page's title does. */
+.page-intro + section,
+.page-intro + * > section:first-child,
+section:has(> .page-intro) {
+  margin-top: 0;
+}
+
 .page-rule {
   border: 0;
-  height: 1px;
+  height: var(--hairline);
   background: var(--rule);
   margin: var(--space-rule) 0;
   transition: background-color var(--t-color);
 }
 
+/* home's rule is drawn at a full pixel */
+.column-body.home .page-rule {
+  height: 1px;
+}
+
 .page-rule + section {
   margin-top: 0;
+}
+
+/* The control row under a page's head: filters and sort, the library's
+   tabs, a detail page's meta and actions, a tag's count. A start slot and
+   an end slot on one centred line, --step-6 above the content; the end
+   slot keeps the end when it is alone. */
+.page-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--step-3);
+  min-inline-size: 0;
+  margin-block: 0 var(--step-6);
+}
+
+.page-bar__start,
+.page-bar__end {
+  min-inline-size: 0;
+}
+
+.page-bar__end {
+  margin-inline-start: auto;
+}
+
+@media (max-width: 38rem) {
+  .page-bar {
+    gap: var(--step-2);
+  }
 }
 
 .column-body.home {
@@ -1544,7 +1594,7 @@ a {
 .tok-type { color: var(--code-type); }
 .tok-str { color: var(--code-str); }
 .tok-const { color: var(--code-const); }
-.tok-comment { color: var(--code-comment); font-style: italic; }
+.tok-comment { color: var(--code-comment); }
 .tok-punct { color: var(--muted); }
 .tok-op { color: var(--code-kw); }
 

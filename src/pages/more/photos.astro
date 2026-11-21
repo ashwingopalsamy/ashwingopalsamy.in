@@ -168,7 +168,7 @@ const photoSorts: EngineSort[] = [
   }
 
   .photo-draft-note {
-    margin: 0 0 var(--step-4);
+    margin: 0 0 var(--step-6);
     color: var(--muted);
     font-size: var(--text-xs);
   }
@@ -214,11 +214,27 @@ const photoSorts: EngineSort[] = [
     position: relative;
     display: block;
     overflow: hidden;
-    border-radius: var(--r-3);
+    border-radius: var(--tile-r);
     outline: 1px solid var(--edge);
     outline-offset: -1px;
     background: var(--surface-inline-bg);
     transition: outline-color var(--dur-tint) linear;
+  }
+
+  /* a photo is a wide target and takes the row press */
+  @media (prefers-reduced-motion: no-preference) {
+    .photo-link {
+      transition:
+        outline-color var(--dur-tint) linear,
+        transform var(--dur-spring-soft) var(--ease-spring-soft);
+    }
+
+    .photo-link:active {
+      transform: scale(var(--press-scale-inline));
+      transition:
+        outline-color var(--dur-tint) linear,
+        transform var(--dur-press) var(--ease-snap);
+    }
   }
 
   .photo-link:focus-visible {
@@ -276,7 +292,7 @@ const photoSorts: EngineSort[] = [
   .photo-meta {
     margin-block-start: var(--step-1);
     color: var(--muted);
-    font-size: var(--text-xs);
+    font-size: var(--text-ui-sm);
   }
 
   /* The exposure, as the camera saw it, under a fine pointer or focus. The
@@ -292,7 +308,7 @@ const photoSorts: EngineSort[] = [
     background: linear-gradient(180deg, transparent, oklch(0 0 0 / 0.46));
     color: oklch(1 0 0 / 0.94);
     font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
-    font-size: calc(var(--text-xs) * 0.92);
+    font-size: var(--text-xs);
     line-height: 1;
     letter-spacing: 0;
     white-space: nowrap;

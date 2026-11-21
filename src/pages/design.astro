@@ -197,15 +197,15 @@ const jsonLd = {
     </section>
 
     <section id="type" class="design-chapter">
-      <h2>Three typefaces, one job each</h2>
-      <p><span class="col-k">Inter</span> carries navigation, prose, and UI. <span class="col-k">Newsreader Italic</span> gets one serif moment: the naming note for the grey scale, literary asides, and quote attribution. <span class="col-k">JetBrains Mono</span> is for code, tokens, hashes, timestamps, and measurements only. Each font stays inside its lane, which means each one can lean into what it does well.</p>
+      <h2>Two typefaces, one job each</h2>
+      <p><span class="col-k">Geist</span> carries navigation, prose, and UI. There is no serif and no italic. <span class="col-k">JetBrains Mono</span> is for code, tokens, hashes, timestamps, and measurements only. Each font stays inside its lane, which means each one can lean into what it does well.</p>
       <p>Emphasis here comes from value, not weight. A word in <span class="col-k">ink</span> against a sentence in ghost does what italic or bold usually does, without adding typographic clutter. When weight does change, it changes in deliberate steps. Click through them below.</p>
 
       <div class="weight-specimen" data-weight-specimen>
         <div class="specimen-header">
-          <span class="specimen-label">Inter weight ramp</span>
+          <span class="specimen-label">Geist weight ramp</span>
           <div class="ui-seg ui-seg--sm" data-weight-seg>
-            <div class="ui-seg__track" role="group" aria-label="Inter weight">
+            <div class="ui-seg__track" role="group" aria-label="Geist weight">
               <span class="ui-seg__ind" aria-hidden="true"></span>
               {typeWeights.map((w, i) => (
                 <button
@@ -228,11 +228,6 @@ const jsonLd = {
         </div>
       </div>
 
-      <div class="font-specimen font-serif-specimen">
-        <p class="serif-sample">The exact values are in <a href="/design.md" class="ui-link inline-mono" data-astro-prefetch="false">design.md</a>. This page is the part I rewrite when the site teaches me something.</p>
-        <span class="font-label">Newsreader Italic · 400 · 1.55 leading. One serif moment, used sparingly.</span>
-      </div>
-
       <div class="font-specimen font-mono-specimen" data-mono-specimen>
         <div class="specimen-header">
           <span class="specimen-label">Baseline alignment</span>
@@ -247,7 +242,7 @@ const jsonLd = {
             <span class="mono-separator" aria-hidden="true"> vs </span>
             <span class="mono-unshifted">oklch(0.58 0.2 25)</span>
           </p>
-          <p class="mono-explain">Left shifts 1 px down to align optically with Inter. Right sits on the natural baseline. Without the correction, monospace sits slightly high and reads as floating.</p>
+          <p class="mono-explain">Left shifts 1 px down to align optically with Geist. Right sits on the natural baseline. Without the correction, monospace sits slightly high and reads as floating.</p>
         </div>
       </div>
     </section>
@@ -1068,10 +1063,6 @@ const jsonLd = {
     color: var(--ghost);
     font-size: var(--text-md);
     line-height: var(--leading-relaxed);
-    text-align: justify;
-    text-justify: inter-word;
-    hyphens: auto;
-    -webkit-hyphens: auto;
     text-wrap: pretty;
     transition: color var(--t-color);
   }
@@ -1129,9 +1120,8 @@ const jsonLd = {
     background: color-mix(in oklch, var(--ink) 2%, transparent);
     border-radius: 0 var(--r-3) var(--r-3) 0;
     color: var(--muted) !important;
-    font-family: "Newsreader Variable", "Newsreader Fallback", "Iowan Old Style", Georgia, serif;
+    font-family: inherit;
     font-size: var(--text-md) !important;
-    font-style: italic;
     line-height: 1.6 !important;
     text-align: start !important;
   }
@@ -1181,6 +1171,7 @@ const jsonLd = {
   .tonal-swatch {
     --swatch-move: var(--dur-spring-pop) var(--ease-spring-pop);
     position: relative;
+    font-family: inherit;
     display: flex;
     align-items: flex-end;
     justify-content: flex-end;
@@ -1404,10 +1395,6 @@ const jsonLd = {
     color: var(--ink);
     font-size: var(--text-lg);
     line-height: var(--leading-relaxed);
-    text-align: justify;
-    text-justify: inter-word;
-    hyphens: auto;
-    -webkit-hyphens: auto;
     text-wrap: pretty;
   }
 
@@ -1429,16 +1416,6 @@ const jsonLd = {
     color: var(--faint);
     font-size: var(--text-xs);
     line-height: 1.5;
-  }
-
-  .serif-sample {
-    max-inline-size: 100%;
-    margin: 0;
-    color: var(--muted);
-    font-family: "Newsreader Variable", "Newsreader Fallback", "Iowan Old Style", Georgia, serif;
-    font-size: var(--text-lg);
-    font-style: italic;
-    line-height: 1.55;
   }
 
   .mono-stage {
@@ -1488,10 +1465,6 @@ const jsonLd = {
     color: var(--muted);
     font-size: var(--text-sm);
     line-height: 1.55;
-    text-align: justify;
-    text-justify: inter-word;
-    hyphens: auto;
-    -webkit-hyphens: auto;
     text-wrap: pretty;
   }
 
@@ -1549,10 +1522,6 @@ const jsonLd = {
     color: var(--ink);
     font-size: var(--text-md);
     line-height: var(--leading-relaxed);
-    text-align: justify;
-    text-justify: inter-word;
-    hyphens: auto;
-    -webkit-hyphens: auto;
     text-wrap: pretty;
   }
 
@@ -1560,9 +1529,8 @@ const jsonLd = {
     max-inline-size: 100%;
     margin: 0;
     color: var(--muted);
-    font-family: "Newsreader Variable", "Newsreader Fallback", "Iowan Old Style", Georgia, serif;
+    font-family: inherit;
     font-size: var(--text-lg);
-    font-style: italic;
     line-height: 1.5;
   }
 
@@ -1938,10 +1906,6 @@ const jsonLd = {
     color: var(--ghost);
     font-size: var(--text-md);
     line-height: var(--leading-relaxed);
-    text-align: justify;
-    text-justify: inter-word;
-    hyphens: auto;
-    -webkit-hyphens: auto;
     text-wrap: pretty;
     transition: color var(--t-color);
   }

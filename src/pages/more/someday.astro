@@ -122,7 +122,7 @@ function when({ data }: Wish): { label: string; spoken: string } {
 
 <style>
   .engine-draft-note {
-    margin: 0 0 var(--step-4);
+    margin: 0 0 var(--step-6);
     color: var(--muted);
     font-size: var(--text-xs);
   }
@@ -155,7 +155,7 @@ function when({ data }: Wish): { label: string; spoken: string } {
     top: var(--mono-optical-shift);
     color: var(--muted);
     font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
-    font-size: calc(var(--text-xs) * 0.95);
+    font-size: var(--text-xs);
   }
 
   /* One tick an item: ink for done, half ink for planned, a hairline
@@ -216,13 +216,15 @@ function when({ data }: Wish): { label: string; spoken: string } {
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: start;
     gap: var(--step-1) var(--step-3);
-    padding-block: var(--step-4);
+    padding-block: var(--row-pad);
     color: inherit;
     text-decoration: none;
   }
 
+  /* a linked row is a .ui-row: its height, radius, puddle and press */
   .wish__row--link {
     grid-template-columns: auto minmax(0, 1fr) auto var(--step-4);
+    min-block-size: var(--row-min);
     margin-inline: calc(var(--row-bleed) * -1);
     padding-inline: var(--row-bleed);
     border-radius: var(--r-4);
@@ -232,7 +234,7 @@ function when({ data }: Wish): { label: string; spoken: string } {
   .wish__row--link::before {
     content: "";
     position: absolute;
-    inset: var(--step-1) 0;
+    inset: 0;
     z-index: -1;
     border-radius: inherit;
     background: var(--wash);
@@ -252,6 +254,12 @@ function when({ data }: Wish): { label: string; spoken: string } {
     transform: scale(var(--press-scale-inline));
     transition-duration: var(--dur-press);
     transition-timing-function: var(--ease-snap);
+  }
+
+  .wish__row--link:active::before {
+    opacity: 1;
+    background: var(--wash-press);
+    transition: opacity var(--t-color);
   }
 
   /* someday: an empty ring; planned: a ring holding a dot; done: filled,
@@ -329,7 +337,7 @@ function when({ data }: Wish): { label: string; spoken: string } {
     min-inline-size: 13ch;
     color: var(--muted);
     font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
-    font-size: calc(var(--text-xs) * 0.95);
+    font-size: var(--text-xs);
     text-align: end;
   }
 
@@ -348,7 +356,7 @@ function when({ data }: Wish): { label: string; spoken: string } {
   @media (hover: hover) and (pointer: fine) {
     .wish__row--link:hover::before {
       opacity: 1;
-      transition: opacity var(--dur-tint) var(--ease-morph);
+      transition: opacity var(--t-color);
     }
 
     .wish__row--link:hover .wish__go {

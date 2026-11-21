@@ -1,96 +1,33 @@
 ---
-import Icon from "./Icon.astro";
+import PageIntro from "./PageIntro.astro";
 
 interface Props {
   title: string;
   lede?: string;
-  back?: { href: string; label: string };
 }
 
-const { title, lede, back } = Astro.props;
+/* A detail page's head is the page head; its meta and actions are the
+   control row under it. The header chip is the way back. */
+const { title, lede } = Astro.props;
 const hasMeta = Astro.slots.has("meta");
 const hasAction = Astro.slots.has("action");
 ---
 
-<header class="detail-header" data-enter>
-  {back && (
-    <a class="ui-cap ui-cap--quiet ui-cap--32 ui-cap--lead ui-cap--hang detail-back" href={back.href}>
-      <span class="ui-arw ui-arw--back">
-        <Icon name="arrow-left" size={14} strokeWidth={2} />
-        <Icon name="arrow-left" size={14} strokeWidth={2} />
-      </span>
-      <span class="ui-cap__label">{back.label}</span>
-    </a>
-  )}
-  <h1 class="detail-title">{title}</h1>
-  {lede && <p class="detail-lede">{lede}</p>}
-  {(hasMeta || hasAction) && (
-    <div class="detail-meta-bar">
-      {hasMeta && <div class="detail-meta-left"><slot name="meta" /></div>}
-      {hasAction && <div class="detail-meta-actions"><slot name="action" /></div>}
-    </div>
-  )}
-</header>
+<PageIntro title={title} lede={lede} />
+{(hasMeta || hasAction) && (
+  <div class="page-bar detail-meta-bar" data-enter>
+    {hasMeta && <div class="page-bar__start detail-meta-left"><slot name="meta" /></div>}
+    {hasAction && <div class="page-bar__end detail-meta-actions"><slot name="action" /></div>}
+  </div>
+)}
 
 <style>
-  .detail-header {
-    display: flex;
-    flex-direction: column;
-    gap: calc(var(--step) * 5);
-    max-inline-size: 100%;
-    padding-bottom: 1.5rem;
-    margin-bottom: 2.25rem;
-    border-bottom: 1px solid var(--rule);
-    transition: border-color var(--t-color);
-  }
-
-  /* The label sits on the rail; the eyebrow is 12px above the title. */
-  .detail-back {
-    align-self: flex-start;
-    margin-block-end: calc(var(--step-2) * -1);
-  }
-
-  .detail-title,
-  .detail-lede {
-    margin: 0;
-  }
-
-  .detail-title {
-    max-inline-size: 26ch;
-    color: var(--ink);
-    font-size: var(--type-detail-title-size);
-    font-weight: var(--type-detail-title-weight);
-    letter-spacing: var(--type-detail-title-tracking);
-    line-height: var(--type-detail-title-leading);
-    overflow-wrap: anywhere;
-    text-wrap: balance;
-  }
-
-  .detail-lede {
-    max-inline-size: 64ch;
-    color: var(--muted);
-    font-size: clamp(1rem, 0.98rem + 0.15vw, 1.08rem);
-    line-height: 1.62;
-    text-wrap: pretty;
-  }
-
-  .detail-meta-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-start;
-    gap: var(--step-2) var(--step-3);
-    padding-top: 0.25rem;
-    min-inline-size: 0;
-    max-inline-size: 100%;
-  }
-
   .detail-meta-left {
     display: inline-flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--step-2) var(--step-3);
-    font-size: var(--text-sm);
+    font-size: var(--text-ui-sm);
     color: var(--ghost);
     min-inline-size: 0;
   }
@@ -106,7 +43,7 @@ const hasAction = Astro.slots.has("action");
   .detail-meta-left :global(.detail-date),
   .detail-meta-left :global(time) {
     font-family: "JetBrains Mono", "JetBrains Mono Fallback", ui-monospace, monospace;
-    font-size: var(--text-sm);
+    font-size: var(--text-ui-sm);
     color: var(--muted);
     font-variant-numeric: tabular-nums;
   }
@@ -135,23 +72,8 @@ const hasAction = Astro.slots.has("action");
   }
 
   @media (max-width: 38rem) {
-    .detail-header {
-      gap: var(--step-3);
-      padding-bottom: calc(var(--step) * 5);
-      margin-bottom: 1.5rem;
-    }
-
-    .detail-back {
-      margin-block-end: 0;
-    }
-
-    .detail-meta-bar {
-      gap: var(--step-2);
-    }
-
     .detail-meta-left {
       gap: var(--step-1) var(--step-2);
-      font-size: var(--text-sm);
     }
   }
 </style>

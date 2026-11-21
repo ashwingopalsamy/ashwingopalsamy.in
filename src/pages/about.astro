@@ -1,6 +1,7 @@
 ---
 import Page from "../layouts/Page.astro";
 import PageIntro from "../components/PageIntro.astro";
+import SectionHeading from "../components/SectionHeading.astro";
 import { ogPath } from "../lib/og-url";
 
 const ogImage = ogPath("about");
@@ -19,7 +20,7 @@ const ogImage = ogPath("about");
 
   <div class="page-prose" data-enter>
     <section class="about-section">
-      <h2 class="about-h">Engineering and Infrastructure</h2>
+      <SectionHeading title="Engineering and Infrastructure" />
       <p class="about-p">
         I am a <span class="about-k">Staff Software Engineer at Pismo, a Visa company</span>,
         working on distributed payment authorization systems. My work focuses on the ingress
@@ -35,7 +36,7 @@ const ogImage = ogPath("about");
     </section>
 
     <section class="about-section">
-      <h2 class="about-h">Education and Research</h2>
+      <SectionHeading title="Education and Research" />
       <p class="about-p">
         I am currently pursuing a <span class="about-k">Master of Science in Artificial Intelligence at UT Austin</span>,
         studying machine learning foundations alongside my engineering work. I completed my undergraduate degree in Information Technology
@@ -45,7 +46,7 @@ const ogImage = ogPath("about");
     </section>
 
     <section class="about-section">
-      <h2 class="about-h">Location and Craft</h2>
+      <SectionHeading title="Location and Craft" />
       <p class="about-p">
         I work remotely from <span class="about-k">Pollachi, Tamil Nadu</span>, surrounded by
         coconut groves near the foothills of the Western Ghats.
@@ -63,13 +64,6 @@ const ogImage = ogPath("about");
 <style>
   .about-section {
     margin-bottom: 2rem;
-  }
-
-  .about-h {
-    font-size: var(--text-ui);
-    font-weight: 600;
-    color: var(--ink);
-    margin: 2rem 0 0.75rem;
   }
 
   .about-p {
@@ -92,10 +86,6 @@ const ogImage = ogPath("about");
 
   @media (max-width: 38rem) {
     .about-p {
-      text-align: justify;
-      text-justify: inter-word;
-      hyphens: auto;
-      -webkit-hyphens: auto;
       text-wrap: pretty;
     }
   }

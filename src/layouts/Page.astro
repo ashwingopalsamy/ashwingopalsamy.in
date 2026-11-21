@@ -1,8 +1,8 @@
 ---
 import { ClientRouter } from "astro:transitions";
-import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 import geistLatin from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import fontStyles from "../styles/fonts.css?inline";
+import labStyles from "../styles/lab.css?inline";
 // geometry first (global.css consumes --step-*/--r-*), motion last so its
 // retuned duration and easing tokens win over the legacy values.
 import "../styles/geometry.css";
@@ -19,6 +19,7 @@ import { coreMarkdownMirrorPath } from "../lib/urls";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import CommandPalette from "../components/CommandPalette.astro";
+import LabPanel from "../components/LabPanel.astro";
 
 interface Props {
   title?: string;
@@ -112,21 +113,12 @@ const documentTitle = isHome
          head merge never re-parses them on a swap. -->
     <style is:inline data-astro-transition-persist="site-fonts" set:html={fontStyles} />
 
-    <!-- Each viewport preloads only the face it sets body text in. -->
-    <link
-      rel="preload"
-      href={interLatin}
-      as="font"
-      type="font/woff2"
-      media="(min-width: 38.0625rem)"
-      crossorigin
-    />
+    <!-- Body text is set in Geist at every width. -->
     <link
       rel="preload"
       href={geistLatin}
       as="font"
       type="font/woff2"
-      media="(max-width: 38rem)"
       crossorigin
     />
     <script
@@ -297,6 +289,93 @@ const documentTitle = isHome
         });
       })();`}
     />
+    {import.meta.env.DEV && (
+      <script
+        is:inline
+        set:html={`(function () {
+          if (window.__siteLab) {
+            window.__siteLab.stamp(document);
+            return;
+          }
+          var NAMES = ["sans", "quiet", "surfaces", "pager", "arrive"];
+          function load() {
+            try { return localStorage.getItem("lab"); } catch (e) {}
+            return null;
+          }
+          function save(value) {
+            try {
+              if (value) localStorage.setItem("lab", value);
+              else localStorage.removeItem("lab");
+            } catch (e) {}
+          }
+          function only(list) {
+            return NAMES.filter(function (name) { return list.indexOf(name) !== -1; });
+          }
+          var on = only((load() || "").split(/\\s+/));
+          function stamp(target) {
+            var root = target.documentElement;
+            if (on.length) root.setAttribute("data-lab", on.join(" "));
+            else root.removeAttribute("data-lab");
+          }
+          // quiet hides the photo filter, and engine.ts re-reads ?filter= on
+          // init, so a kept value would leave the wall filtered with no
+          // control to clear it. Dropped before the engine runs.
+          function unfilter() {
+            if (on.indexOf("quiet") === -1 || location.pathname.replace(/\\/$/, "") !== "/more/photos") return false;
+            var url = new URL(location.href);
+            if (!url.searchParams.has("filter")) return false;
+            url.searchParams.delete("filter");
+            history.replaceState(history.state, "", url.pathname + url.search + url.hash);
+            return true;
+          }
+          // The panel's markup selects nothing; this is the only writer of
+          // its state, run as soon as the panel is parsed (LabPanel.astro).
+          function render() {
+            document.querySelectorAll("[data-lab-toggle]").forEach(function (el) {
+              el.setAttribute("aria-pressed", String(on.indexOf(el.getAttribute("data-lab-toggle")) !== -1));
+            });
+          }
+          window.__siteLab = { stamp: stamp, render: render };
+          stamp(document);
+          unfilter();
+          document.addEventListener("astro:before-swap", function (event) {
+            stamp(event.newDocument);
+          }, { capture: true });
+          document.addEventListener("astro:after-swap", unfilter);
+          // A toggle applies live; segmented's and masonry's ResizeObservers
+          // re-place the ink and the wall. It reloads only when live cannot
+          // show the result: arrive plays on the first page of a visit, and
+          // a hidden photo filter is dropped before the engine starts.
+          document.addEventListener("click", function (event) {
+            var el = event.target instanceof Element
+              ? event.target.closest("[data-lab-toggle], [data-lab-set]")
+              : null;
+            if (!el) return;
+            var name = el.getAttribute("data-lab-toggle");
+            var set = el.getAttribute("data-lab-set");
+            var was = on.join(" ");
+            if (name) on = on.indexOf(name) === -1 ? only(on.concat(name)) : on.filter(function (n) { return n !== name; });
+            else on = set === "all" ? NAMES.slice() : [];
+            save(on.join(" "));
+            stamp(document);
+            render();
+            var arrived = on.indexOf("arrive") !== -1 && was.split(" ").indexOf("arrive") === -1;
+            if (unfilter() || arrived) location.reload();
+          });
+          document.addEventListener("keydown", function (event) {
+            if (event.key !== "l" && event.key !== "L") return;
+            if (event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
+            var target = event.target;
+            if (target instanceof Element && target.closest("input, textarea, select, [contenteditable]:not([contenteditable='false'])")) return;
+            var panel = document.querySelector("[data-lab-panel]");
+            if (panel) panel.hidden = !panel.hidden;
+          });
+          document.addEventListener("astro:page-load", render);
+          if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", render, { once: true });
+          else render();
+        })();`}
+      />
+    )}
 
     <title>{documentTitle}</title>
     <meta name="description" content={description} />
@@ -382,6 +461,7 @@ const documentTitle = isHome
     <meta name="theme-color" content={CANVAS_DARK} media="(prefers-color-scheme: dark)" />
     <ClientRouter />
     <slot name="head" />
+    {import.meta.env.DEV && <style is:inline data-astro-transition-persist="lab-styles" set:html={labStyles} />}
   </head>
   <body>
     <a href="#main" class="skip-link">Skip to content</a>
@@ -406,6 +486,7 @@ const documentTitle = isHome
     </div>
     <div class="viewport-frame" transition:persist="viewport-frame" aria-hidden="true"></div>
     <div class="page-scrollbar" transition:persist="page-scrollbar" aria-hidden="true"><div class="page-scrollbar-thumb"></div></div>
+    {import.meta.env.DEV && <LabPanel />}
 
     <script>
       import { onPageCleanup, pageSignal } from "../scripts/lifecycle";

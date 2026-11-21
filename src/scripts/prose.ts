@@ -364,7 +364,7 @@ function readThemeVars(theme: string): Record<string, string> {
   const rule = toRgb("--rule", fb.rule);
   const ruleStrong = toRgb("--rule-strong", fb.ruleStrong);
   return {
-    fontFamily: '"Inter Variable", system-ui, -apple-system, sans-serif',
+    fontFamily: '"Geist Variable", system-ui, -apple-system, sans-serif',
     fontSize: "13px",
     background: canvas,
     primaryColor: canvas,
