@@ -177,10 +177,21 @@
    opt-in here. Reduced motion skips the transition in the before-swap
    handler: the new page simply appears. */
 
-/* The pseudo tree must never eat clicks. */
+/* The pseudo tree must never eat clicks. The backdrop repeats the outgoing
+   page's canvas, sky included, at the scroll offset that page is leaving
+   from (--sky-scroll, stamped by the boot in layouts/Page.astro). A root
+   snapshot fading out then uncovers the same light it carried, instead of
+   dipping the sky to flat canvas and back on every navigation. */
 ::view-transition {
   pointer-events: none;
-  background: var(--canvas);
+  background:
+    radial-gradient(
+      var(--sky-rx) var(--sky-ry) at var(--sky-x, 50%) calc(var(--sky-y) - var(--sky-scroll)),
+      var(--sky-glow),
+      var(--canvas)
+    )
+    no-repeat
+    var(--canvas);
 }
 
 ::view-transition-group(*),
