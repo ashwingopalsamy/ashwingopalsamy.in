@@ -239,6 +239,9 @@ const documentTitle = isHome
           var next = event.newDocument;
           sync(next);
           var root = next.documentElement;
+          // The transition backdrop repaints the outgoing page's sky at the
+          // scroll offset it is leaving from (motion.css).
+          root.style.setProperty("--sky-scroll", Math.round(window.scrollY) + "px");
           CARRIED_ROOT_ATTRS.forEach(function (name) {
             var live = document.documentElement.getAttribute(name);
             if (live !== null) root.setAttribute(name, live);

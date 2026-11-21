@@ -40,6 +40,7 @@
   --sky-rx: 85vw;
   --sky-ry: 62vh;
   --sky-y: -14vh;
+  --sky-scroll: 0px;
 
   /* theme-dependent surfaces - components consume these; no dual media blocks */
   --nav-glass-bg: color-mix(in oklch, var(--canvas) 80%, transparent);
@@ -682,10 +683,13 @@ html {
      nothing running; it eases only when the day-part changes. oklab, not
      oklch: the canvas is near-achromatic, so a polar mix would swing the
      hue the short way round (dawn and dusk came out blue). */
+  /* Resolved here, where --sky-tone lives (it does not inherit), so the
+     route transition's backdrop (motion.css) can paint the same light. */
+  --sky-glow: color-mix(in oklab, var(--sky-tone) var(--sky-mix), var(--canvas));
   background:
     radial-gradient(
       var(--sky-rx) var(--sky-ry) at var(--sky-x, 50%) var(--sky-y),
-      color-mix(in oklab, var(--sky-tone) var(--sky-mix), var(--canvas)),
+      var(--sky-glow),
       var(--canvas)
     )
     no-repeat
