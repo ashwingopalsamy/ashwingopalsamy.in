@@ -14,12 +14,12 @@ import type { HastVisitorContext } from "satteri";
 import { iconMarkup } from "../ui-icons";
 import { h, rawNode } from "./hast";
 
-const SITE_HOSTS = new Set(["ashwingopalsamy.in", "localhost", "127.0.0.1"]);
+const SITE_HOSTS = new Set(["ashwingopalsamy.in", "ashwin.here", "localhost", "127.0.0.1"]);
 
 function isInternalHost(hostname: string): boolean {
   const host = hostname.toLowerCase();
   if (SITE_HOSTS.has(host)) return true;
-  if (host.endsWith(".ashwingopalsamy.in")) return true;
+  if (host.endsWith(".ashwingopalsamy.in") || host.endsWith(".ashwin.here")) return true;
   return false;
 }
 
